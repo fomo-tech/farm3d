@@ -26,7 +26,8 @@ import { WORLD_VILLAGES } from '../shared/villageLayout.js';
 import { CharacterCreationModal } from './components/CharacterArrivalModal.jsx';
 import { GameStartScreen } from './components/GameStartScreen.jsx';
 import { LandMarket } from './components/LandMarket.jsx';
-import { CasinoGames } from './components/CasinoGames.jsx';
+import { GameClock, LiveCasinoGames, LiveBusHud, LiveWorldDebug } from './components/LiveHud.jsx';
+import { recordAppRender, transitHudSnapshot } from './game/rendering/HudRuntime.js';
 import { ElderDialogueModal } from './components/ElderDialogueModal.jsx';
 import { OnboardingHUD } from './components/OnboardingHUD.jsx';
 import { HudContextAction } from './components/HudContextAction.jsx';
@@ -37,7 +38,6 @@ import { FloatingPlotBubble } from './components/FloatingPlotBubble.jsx';
 import { OrderBulletinBoard } from './components/OrderBulletinBoard.jsx';
 import { FloatingRewards, emitReward } from './components/FloatingRewards.jsx';
 import { farmAudio } from './game/audio/FarmAudioSystem.js';
-import BusTransitHUD from './components/BusTransitHUD.jsx';
 import {
   Icon3dHand,
   Icon3dHoe,
@@ -165,6 +165,7 @@ function playerFarmTarget(farmId) {
 }
 
 export default function App() {
+  recordAppRender();
   const canvasRef = useRef(null);
   const worldRef = useRef(null);
   const joystickKnobRef = useRef(null);
@@ -183,9 +184,7 @@ export default function App() {
   const [boot, setBoot] = useState({ phase: 'loading', error: '' });
   const [bootProgress, setBootProgress] = useState({ phase: 'init', percentage: 0, message: 'Đang khởi động thế giới 3D…', current: 0, total: 40 });
   const [debugEnabled, setDebugEnabled] = useState(() => new URLSearchParams(window.location.search).get('debug') === '1');
-  const [debug, setDebug] = useState(null);
   const clockRef = useRef(Math.floor(Date.now() / 1000));
-  const [clock, setClock] = useState(clockRef.current);
   const [fishingWater, setFishingWater] = useState(null);
   const [network, setNetwork] = useState({ connected: false, phase: 'connecting', online: 1, queued: 0, attempt: 0 });
   const [casinoResult, setCasinoResult] = useState('Chọn bàn và chờ ván online.');
@@ -210,7 +209,7 @@ export default function App() {
   const [targetDistance, setTargetDistance] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [currentFarmZone, setCurrentFarmZone] = useState(null);
-  const [busTransit, setBusTransit] = useState(null);
+  const busTransitRef = useRef(null);
 
   const hasPendingNotifications =
     ORDERS.some(order => canFillOrder(progress, order)) ||
@@ -274,7 +273,7 @@ export default function App() {
         onVenueState: (venue, label) => setVenueMode(venue ? { venue, label } : null),
         onRegionChange: setWorldRegion,
         onQualityChange: setGraphicsQuality,
-        onBusTransitChange: status => setBusTransit(status),
+        onBusTransitChange: status => { busTransitRef.current = transitHudSnapshot(status); },
         onNpcInteract: npcId => {
           if (npcId === 'village_elder') {
             setDialogueOpen(true);
@@ -468,11 +467,11 @@ export default function App() {
   }, [session]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
+    const timer = window.setInterval(function updateWorldClock() {
       const now = Math.floor(Date.now() / 1000);
       clockRef.current = now;
-      setClock(now);
-      worldRef.current?.setClock(now);
+      if (window.__farmDebug) window.__farmDebug.measure('clock: atmosphere.setTime', () => worldRef.current?.setClock(now));
+      else worldRef.current?.setClock(now);
       const position = worldRef.current?.getPlayerState?.();
       const nextFishing = position && !position.venue ? fishingWaterAt(position.x, position.z) : null;
       setFishingWater(prev => (prev === nextFishing ? prev : nextFishing));
@@ -551,13 +550,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleGlobalKeys);
   }, []);
 
-  useEffect(() => {
-    if (!debugEnabled) return undefined;
-    const refresh = () => setDebug(worldRef.current?.getDebugState() || null);
-    refresh();
-    const timer = window.setInterval(refresh, 1000);
-    return () => window.clearInterval(timer);
-  }, [debugEnabled, boot.phase]);
 
   const animalStatus = livestockSummary(animals);
   const chickenCount = animals.filter(animal => animal.species === 'chicken').length;
@@ -853,7 +845,7 @@ export default function App() {
         />
       )}
 
-      {debugEnabled && debug && <aside className="debug-panel"><b>WORLD DEBUG · F3</b><span>FPS {debug.fps}</span><span>POS {debug.x}, {debug.z}</span><span>CHUNK {debug.chunk}</span><span>MESHES {debug.meshes}</span><span>{debug.worldId}</span></aside>}
+      {debugEnabled && <LiveWorldDebug worldRef={worldRef} />}
       {venueMode && <section className="venue-banner"><b>{venueMode.label}</b><span>Chọn thao tác hoặc đến gần quầy rồi nhấn E</span><div className="venue-banner-actions"><button type="button" onClick={() => setPanel(venueMode.venue === 'supplies' ? 'shop' : venueMode.venue)}>{venueMode.venue === 'casino' ? 'Chơi Tài Xỉu / Bầu Cua' : 'Nói chuyện với chủ tiệm'}</button><button type="button" onClick={() => { setPanel(null); worldRef.current?.exitVenue(); }}>Ra cửa hàng</button></div></section>}
 
       {gameStarted && (
@@ -899,15 +891,7 @@ export default function App() {
             <Icon3dVillageGate size={18} />
             <b>{session.farmAddress?.villageName || worldRegion?.village?.name || 'Thung Lũng Bình Minh'}</b>
           </div>
-          <div className="pt-clock-strip">
-            <span className="pt-clock-icon">{timeIcons[Math.floor((clock % 240) / 60)]}</span>
-            <span className="pt-clock-time">
-              {String(Math.floor((clock % 240) / 10) + 6).padStart(2,'0')}:{String((clock % 10) * 6).padStart(2,'0')}
-            </span>
-            <span className="pt-capsule-dot">·</span>
-            <span className="pt-season-icon">{seasonIcons[Math.floor(clock / 240) % 4]}</span>
-            <span className="pt-season-name">{['Xuân','Hạ','Thu','Đông'][Math.floor(clock / 240) % 4]}</span>
-          </div>
+          <GameClock />
         </div>
 
         {/* Right: Candy Currency Dock & System Bubbles */}
@@ -945,6 +929,26 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {/* Play Together Authentic Beginner Quest HUD Tracker */}
+      {!showCharacterCreation && progress.onboarding && !progress.onboarding.completed && (
+        <OnboardingHUD
+          progress={progress}
+          targetDistance={targetDistance}
+          onNavigateTarget={() => {
+            const myFarm = WORLD_LAYOUT.farms.find(f => f.id === session.farmId) || WORLD_LAYOUT.farms[0];
+            if (myFarm && worldRef.current) {
+              worldRef.current.setObjective({ x: myFarm.x, y: 0, z: myFarm.z });
+              setStatus('Đang dẫn đường tới ô ruộng của bạn!');
+            }
+          }}
+          onTalkToElder={() => {
+            setDialogueOpen(true);
+          }}
+          onOpenGuide={() => setGuideOpen(true)}
+          onOpenOrders={() => setOrdersOpen(true)}
+        />
+      )}
 
       {/* Dismount Bubble */}
       {progress.vehicle !== 'walk' && !venueMode && (
@@ -1063,7 +1067,7 @@ export default function App() {
 
             <div className="pt-phone-status-bar">
               <span className="pt-phone-clock">
-                {String(Math.floor((clock % 240) / 10) + 6).padStart(2,'0')}:{String((clock % 10) * 6).padStart(2,'0')} · {['Xuân','Hạ','Thu','Đông'][Math.floor(clock / 240) % 4]}
+                <GameClock compact />
               </span>
               <div className="pt-phone-status-right">
                 <span className="pt-phone-signal">5G ●●●●</span>
@@ -1270,7 +1274,7 @@ export default function App() {
         {panel === 'city' && <div className="destination-grid"><button onClick={() => setPanel('shop')}><i><Icon3dSprout size={28} /></i><b>Vật tư</b><small>Mua hạt giống theo cấp</small><em>Mở cửa hàng</em></button><button onClick={() => isFeatureLocked(progress, 'casino') ? setStatus('Casino mở sau khi hoàn thành hướng dẫn!') : setPanel('casino')}><i><Icon3dDice size={28} /></i><b>Casino giải trí</b><small>{isFeatureLocked(progress, 'casino') ? 'Khóa tân thủ' : 'Trò chơi xúc xắc may mắn'}</small><em>Vào chơi</em></button><button onClick={() => setPanel('fashion')}><i><Icon3dWardrobe size={28} /></i><b>Thời trang</b><small>Mua và thay trang phục Sophie</small><em>Xem đồ</em></button><button onClick={() => isFeatureLocked(progress, 'vehicles') ? setStatus('Đại lý xe mở sau khi hoàn thành hướng dẫn!') : setPanel('vehicles')}><i><Icon3dCub50 size={28} /></i><b>Đại lý xe</b><small>{isFeatureLocked(progress, 'vehicles') ? 'Khóa tân thủ' : 'Xe đạp cổ & chổi bay'}</small><em>Xem xe</em></button><button onClick={() => setPanel('fishing')}><i><Icon3dFishingRodPro size={28} /></i><b>Đồ câu cá</b><small>Cần câu trúc, cước & mồi câu</small><em>Mở tiệm</em></button></div>}
         {panel === 'fashion' && <div className="item-list">{outfits.map(outfit => { const owned = progress.ownedOutfits.includes(outfit.id); return <button key={outfit.id} onClick={() => buyOutfit(outfit)}><i>{outfit.icon}</i><span><b>{outfit.name}</b><small>{progress.outfit === outfit.id ? 'Đang mặc' : owned ? 'Đã sở hữu' : 'Trang phục mới'}</small></span><em>{owned ? 'Mặc' : `${outfit.cost} xu`}</em></button>; })}</div>}
         {panel === 'vehicles' && <div className="item-list">{vehicles.map(vehicle => { const owned = progress.ownedVehicles.includes(vehicle.id); return <button key={vehicle.id} onClick={() => buyVehicle(vehicle)}><i>{vehicle.icon}</i><span><b>{vehicle.name}</b><small>Tốc độ {vehicle.speed} · {progress.vehicle === vehicle.id ? 'đang dùng' : owned ? 'đã sở hữu' : 'chưa mua'}</small></span><em>{owned ? 'Chọn' : `${vehicle.cost} xu`}</em></button>; })}</div>}
-        {panel === 'casino' && <CasinoGames state={casinoState} now={clock} coins={progress.coins} connected={network.connected} inside={venueMode?.venue === 'casino'} pending={progress.casinoPending} message={casinoResult} onBet={playCasino} />}
+        {panel === 'casino' && <LiveCasinoGames state={casinoState} coins={progress.coins} connected={network.connected} inside={venueMode?.venue === 'casino'} pending={progress.casinoPending} message={casinoResult} onBet={playCasino} />}
         {panel === 'fishing' && (
           <div className="item-list">
             <div className="capacity" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#fff', padding: '10px 14px', borderRadius: '14px', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>
@@ -1344,6 +1348,21 @@ export default function App() {
           progress={progress}
           onClose={() => setGuideOpen(false)}
           onResetTutorial={handleResetTutorial}
+          onNavigateStep={() => {
+            setGuideOpen(false);
+            const step = progress.onboarding?.step;
+            if (step === ONBOARDING_STEPS.FIRST_PLANT) {
+              const myFarm = WORLD_LAYOUT.farms.find(f => f.id === session.farmId) || WORLD_LAYOUT.farms[0];
+              if (myFarm && worldRef.current) {
+                worldRef.current.setObjective({ x: myFarm.x, y: 0, z: myFarm.z });
+                setStatus('Đang dẫn đường tới ô ruộng của bạn!');
+              }
+            } else if (step === ONBOARDING_STEPS.DELIVER_ORDER) {
+              setOrdersOpen(true);
+            } else {
+              setDialogueOpen(true);
+            }
+          }}
         />
       )}
 
@@ -1369,12 +1388,11 @@ export default function App() {
       )}
 
       {/* Bus Transit System HUD (Boarding Prompts & High-Speed Ride Status) */}
-      <BusTransitHUD
-        busTransit={busTransit}
+      <LiveBusHud
+        statusRef={busTransitRef}
         onBoard={busId => worldRef.current?.boardBus(busId)}
         onAlight={() => worldRef.current?.alightBus()}
         onToggleCinematicTour={() => worldRef.current?.toggleCinematicTour()}
-        cinematicTourActive={busTransit?.cinematicTourActive}
       />
 
       {/* Floating Rewards Pop Effect (Juicy Harvest Pop VFX) */}

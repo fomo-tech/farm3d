@@ -2814,6 +2814,70 @@ export function Icon3dHotAirBalloon({ size = 32, className = '' }) {
   );
 }
 
+// 92. La Bàn Dẫn Đường 3D (3D Adventure Compass - Navigation GPS)
+export function Icon3dCompass({ size = 28, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="comp_gold_case" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="25%" stopColor="#fef08a" />
+          <stop offset="65%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
+        </radialGradient>
+        <radialGradient id="comp_dial" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="70%" stopColor="#f0f9ff" />
+          <stop offset="100%" stopColor="#e0f2fe" />
+        </radialGradient>
+        <linearGradient id="comp_needle_n" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fca5a5" />
+          <stop offset="60%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#991b1b" />
+        </linearGradient>
+        <linearGradient id="comp_needle_s" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#94a3b8" />
+          <stop offset="60%" stopColor="#475569" />
+          <stop offset="100%" stopColor="#1e293b" />
+        </linearGradient>
+      </defs>
+
+      {/* Vòng móc dây đeo phía trên */}
+      <circle cx="24" cy="6" r="4" stroke="url(#comp_gold_case)" strokeWidth="2" fill="none" />
+
+      {/* Vỏ la bàn kim loại đồng thau đúc */}
+      <circle cx="24" cy="26" r="19" fill="url(#comp_gold_case)" stroke="#ffffff" strokeWidth="2" />
+      <circle cx="24" cy="26" r="15" fill="#78350f" />
+
+      {/* Mặt kính la bàn trắng ngọc */}
+      <circle cx="24" cy="26" r="14" fill="url(#comp_dial)" />
+
+      {/* Vạch chia độ 4 hướng */}
+      <line x1="24" y1="13" x2="24" y2="16" stroke="#0284c7" strokeWidth="1.8" />
+      <line x1="24" y1="36" x2="24" y2="39" stroke="#64748b" strokeWidth="1.5" />
+      <line x1="11" y1="26" x2="14" y2="26" stroke="#64748b" strokeWidth="1.5" />
+      <line x1="34" y1="26" x2="37" y2="26" stroke="#64748b" strokeWidth="1.5" />
+
+      {/* Chữ N đỏ phương Bắc */}
+      <text x="24" y="20" textAnchor="middle" fill="#dc2626" fontSize="7" fontWeight="900" fontFamily="sans-serif">N</text>
+
+      {/* Kim la bàn kép 3D */}
+      <polygon points="24,14 27,26 24,24" fill="#fca5a5" />
+      <polygon points="24,14 21,26 24,24" fill="url(#comp_needle_n)" />
+      <polygon points="24,38 27,26 24,24" fill="#cbd5e1" />
+      <polygon points="24,38 21,26 24,24" fill="url(#comp_needle_s)" />
+
+      {/* Trục kim loại đính đá ruby ở giữa */}
+      <circle cx="24" cy="25" r="2.5" fill="#facc15" stroke="#78350f" strokeWidth="1" />
+      <circle cx="24" cy="25" r="1" fill="#dc2626" />
+
+      {/* Vệt phản quang bóng kính chéo */}
+      <path d="M 14 20 C 16 16, 22 13, 28 14 C 23 15, 18 18, 14 20 Z" fill="#ffffff" opacity="0.6" />
+    </svg>
+  );
+}
+
+
 
 
 

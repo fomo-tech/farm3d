@@ -9,7 +9,6 @@ import {
   Icon3dOrdersBox,
   Icon3dModernCity,
   Icon3dBike,
-  Icon3dRiceSpike,
   Icon3dStar,
   Icon3dSparkleStar,
   Icon3dCheck,
@@ -18,18 +17,19 @@ import {
   Icon3dHoe,
   Icon3dWateringCan,
   Icon3dBasket,
+  Icon3dCompass,
 } from './icons3d/GameIcons3D.jsx';
 
 const GUIDE_TABS = [
-  { id: 'stamp-book', label: 'Sổ Tân Thủ', icon: <Icon3dStamp size={20} /> },
-  { id: 'barn', label: 'Kho Nông Sản', icon: <Icon3dBackpack size={20} /> },
+  { id: 'stamp-book', label: 'Con Dấu Tân Thủ', icon: <Icon3dStamp size={20} /> },
+  { id: 'barn', label: 'Kho & Sức Chứa', icon: <Icon3dBackpack size={20} /> },
   { id: 'shop', label: 'Cây Trồng & Shop', icon: <Icon3dShopCart size={20} /> },
   { id: 'orders', label: 'Đơn Hàng Xe Tải', icon: <Icon3dOrdersBox size={20} /> },
   { id: 'bus', label: 'Tuyến Xe Buýt', icon: <Icon3dModernCity size={20} /> },
-  { id: 'vehicles', label: 'Phương Tiện', icon: <Icon3dBike size={20} /> },
+  { id: 'vehicles', label: 'Bộ Sưu Tập Xe', icon: <Icon3dBike size={20} /> },
 ];
 
-export function FarmGuideModal({ progress, onClose, onResetTutorial }) {
+export function FarmGuideModal({ progress, onClose, onResetTutorial, onNavigateStep }) {
   const [activeTab, setActiveTab] = useState('stamp-book');
 
   const onboarding = progress?.onboarding;
@@ -42,24 +42,24 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial }) {
       step: ONBOARDING_STEPS.MEET_ELDER,
       stepNumber: 1,
       title: 'Gặp Quản Gia Oliver',
-      desc: 'Đến đài phun nước gặp Quản Gia để nhận gói quà khởi nghiệp tân thủ.',
-      icon: <Icon3dManager size={32} />,
+      desc: 'Đến đài phun nước trung tâm gặp Quản Gia để nhận gói quà khởi nghiệp tân thủ.',
+      icon: <Icon3dManager size={34} />,
       reward: '+50 Xu · 3 Hạt Cà Rốt',
     },
     {
       step: ONBOARDING_STEPS.FIRST_PLANT,
       stepNumber: 2,
       title: 'Vụ Mùa Cà Rốt Đầu Tiên',
-      desc: 'Thực hành 4 bước: Cuốc đất ➔ Gieo hạt ➔ Tưới nước ➔ Thu hoạch sau 8s.',
-      icon: <Icon3dCarrot size={32} />,
+      desc: 'Thực hành 4 bước: Cuốc đất (2) ➔ Gieo hạt (3) ➔ Tưới nước (4) ➔ Thu hoạch sau 8s.',
+      icon: <Icon3dCarrot size={34} />,
       reward: 'Nông Sản Tươi · +40 XP',
     },
     {
       step: ONBOARDING_STEPS.EXPLAIN_SYSTEMS,
       stepNumber: 3,
       title: 'Học Kiến Thức Nông Trại',
-      desc: 'Nắm vững 4 cơ chế vận hành: Sức chứa kho, Cửa hàng vật tư, Xe buýt & Xe tải.',
-      icon: <Icon3dShopCart size={32} />,
+      desc: 'Nắm vững 4 cơ chế vận hành: Sức chứa kho, Cửa hàng vật tư, Tuyến xe buýt & Xe tải.',
+      icon: <Icon3dShopCart size={34} />,
       reward: 'Kiến Thức Vàng · +30 XP',
     },
     {
@@ -67,15 +67,15 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial }) {
       stepNumber: 4,
       title: 'Giao Đơn Hàng Đầu Tiên',
       desc: 'Mở Bảng Đơn Hàng và giao 1 củ cà rốt tươi ngon cho Nhà Hàng Green Valley.',
-      icon: <Icon3dOrdersBox size={32} />,
+      icon: <Icon3dOrdersBox size={34} />,
       reward: '+65 Xu Thưởng · +40 XP',
     },
     {
       step: ONBOARDING_STEPS.CLAIM_REWARD,
       stepNumber: 5,
       title: 'Tốt Nghiệp & Nhận Xe Đạp',
-      desc: 'Gặp Quản Gia Oliver nhận chứng nhận cư dân ưu tú cùng Xe Đạp Thể Thao.',
-      icon: <Icon3dBike size={32} />,
+      desc: 'Gặp Quản Gia Oliver nhận chứng nhận cư dân ưu tú cùng Xe Đạp Thể Thao cực ngầu!',
+      icon: <Icon3dBike size={34} />,
       reward: 'Xe Đạp Thể Thao (10m/s) + 200 Xu',
     },
   ];
@@ -83,6 +83,11 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial }) {
   const completedCount = isCompleted
     ? 5
     : STAMP_MISSIONS.filter(m => currentStep > m.step).length;
+
+  const handleGoToMission = () => {
+    onClose?.();
+    onNavigateStep?.();
+  };
 
   return (
     <div className="pt-onboarding-backdrop" onClick={onClose}>
@@ -93,22 +98,27 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial }) {
         aria-modal="true"
         aria-label="Sổ tay tân thủ Play Together"
       >
-        {/* Book Header with Leather Accent */}
+        {/* Book Header with Leather Accent & Gold Trim */}
         <header className="pt-book-header">
           <div className="pt-book-title-wrap">
             <span className="pt-book-badge">
               <Icon3dSparkleStar size={14} />
-              <span>SỔ TAY CƯ DÂN VIBE CITY</span>
+              <span>HỘ CHIẾU & SỔ CON DẤU TÂN THỦ</span>
               <Icon3dSparkleStar size={14} />
             </span>
-            <h2>Hành Trình Du Lịch & Cẩm Nang Thung Lũng</h2>
+            <h2>Hành Trình Khởi Nghiệp Thung Lũng Vibe City</h2>
           </div>
-          <button type="button" className="pt-book-close-btn" onClick={onClose} aria-label="Đóng sổ tay">
+          <button
+            type="button"
+            className="pt-book-close-btn"
+            onClick={onClose}
+            aria-label="Đóng sổ tay"
+          >
             ✕
           </button>
         </header>
 
-        {/* Tab Selection */}
+        {/* Tab Selection Bar */}
         <div className="pt-book-tabs-bar">
           {GUIDE_TABS.map(tab => (
             <button
@@ -125,14 +135,14 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial }) {
 
         {/* Tab Body */}
         <div className="pt-book-body">
-          {/* TAB 1: STAMP BOOK */}
+          {/* TAB 1: STAMP PASSPORT */}
           {activeTab === 'stamp-book' && (
             <div className="pt-stamp-book-view">
-              {/* Header Card with Progress */}
+              {/* Top Passport Tracker Banner */}
               <div className="pt-stamp-tracker-banner">
                 <div className="pt-stamp-tracker-info">
                   <strong>TIẾN ĐỘ THU THẬP CON DẤU TÂN THỦ</strong>
-                  <p>Hoàn thành chuỗi 5 bước hướng dẫn để nhận đầy đủ con dấu và Xe Đạp Thể Thao!</p>
+                  <p>Hoàn thành đủ 5 con dấu để nhận Xe Đạp Thể Thao tốc độ 10m/s và tốt nghiệp cư dân!</p>
                 </div>
                 <div className="pt-stamp-progress-pill">
                   <span className="pt-stamp-count">{completedCount}/5</span>
@@ -152,7 +162,7 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial }) {
                       key={mission.stepNumber}
                       className={`pt-stamp-card ${stepDone ? 'is-done' : ''} ${stepActive ? 'is-active' : ''} ${stepLocked ? 'is-locked' : ''}`}
                     >
-                      {/* Left: Mission Chibi Icon */}
+                      {/* Left: Mission 3D Icon */}
                       <div className="pt-stamp-card-icon">
                         {mission.icon}
                         <span className="pt-stamp-step-num">{mission.stepNumber}</span>
@@ -164,14 +174,15 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial }) {
                           <b>{mission.title}</b>
                           {stepActive && <span className="pt-tag-active">ĐANG THỰC HIỆN</span>}
                           {stepLocked && <span className="pt-tag-locked">CHƯA MỞ</span>}
+                          {stepDone && <span className="pt-tag-done">ĐÃ HOÀN THÀNH</span>}
                         </div>
                         <p>{mission.desc}</p>
                         <small className="pt-stamp-reward">
-                          <Icon3dGoldCoin size={14} /> {mission.reward}
+                          <Icon3dGoldCoin size={14} /> Phẩn thưởng: <b>{mission.reward}</b>
                         </small>
                       </div>
 
-                      {/* Right: The Iconic Play Together Rubber Stamp */}
+                      {/* Right: The Iconic Play Together Rubber Stamp Seal */}
                       <div className="pt-stamp-seal-wrap">
                         {stepDone ? (
                           <div className="pt-rubber-stamp is-stamped">
@@ -182,9 +193,15 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial }) {
                             </div>
                           </div>
                         ) : stepActive ? (
-                          <div className="pt-stamp-slot active-slot">
+                          <button
+                            type="button"
+                            className="pt-stamp-go-btn"
+                            onClick={handleGoToMission}
+                            title="Đến vị trí làm nhiệm vụ ngay"
+                          >
+                            <Icon3dCompass size={18} />
                             <span>ĐI NGAY</span>
-                          </div>
+                          </button>
                         ) : (
                           <div className="pt-stamp-slot locked-slot">
                             <span>KHÓA</span>
@@ -196,10 +213,10 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial }) {
                 })}
               </div>
 
-              {/* Bottom Milestone Rewards Banner */}
+              {/* Bottom Milestone Road Track */}
               <div className="pt-milestone-banner">
-                <div className="pt-milestone-item">
-                  <div className="pt-mile-icon"><Icon3dGoldCoin size={22} /></div>
+                <div className={`pt-milestone-item ${completedCount >= 1 ? 'is-reached' : ''}`}>
+                  <div className="pt-mile-icon"><Icon3dGoldCoin size={24} /></div>
                   <div className="pt-mile-info">
                     <b>Cột mốc 1 Dấu</b>
                     <small>+50 Xu Khởi Nghiệp</small>
@@ -211,11 +228,11 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial }) {
 
                 <div className="pt-milestone-arrow">➔</div>
 
-                <div className="pt-milestone-item">
-                  <div className="pt-mile-icon"><Icon3dCarrot size={22} /></div>
+                <div className={`pt-milestone-item ${completedCount >= 3 ? 'is-reached' : ''}`}>
+                  <div className="pt-mile-icon"><Icon3dCarrot size={24} /></div>
                   <div className="pt-mile-info">
                     <b>Cột mốc 3 Dấu</b>
-                    <small>Thu hoạch cà rốt & Xu</small>
+                    <small>Thu hoạch Cà rốt & Xu</small>
                   </div>
                   <span className={`pt-mile-status ${completedCount >= 3 ? 'done' : ''}`}>
                     {completedCount >= 3 ? '✓ ĐÃ NHẬN' : 'CHƯA ĐẠT'}
@@ -224,8 +241,8 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial }) {
 
                 <div className="pt-milestone-arrow">➔</div>
 
-                <div className="pt-milestone-item grand">
-                  <div className="pt-mile-icon"><Icon3dBike size={26} /></div>
+                <div className={`pt-milestone-item grand ${isCompleted ? 'is-reached' : ''}`}>
+                  <div className="pt-mile-icon"><Icon3dBike size={28} /></div>
                   <div className="pt-mile-info">
                     <b>Cột mốc 5 Dấu (Tốt nghiệp)</b>
                     <small>Xe Đạp Thể Thao (10m/s) + 200 Xu</small>
@@ -242,7 +259,7 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial }) {
                   type="button"
                   className="pt-reset-tutorial-btn"
                   onClick={onResetTutorial}
-                  title="Chơi lại toàn bộ chuỗi hướng dẫn tân thủ của Quản Gia Oliver"
+                  title="Chơi lại chuỗi hướng dẫn tân thủ của Quản Gia Oliver"
                 >
                   ↺ Chơi Lại Hướng Dẫn Tân Thủ
                 </button>
