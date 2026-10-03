@@ -304,52 +304,6 @@ export function createChibiCarrotMesh(scene, key, progress, options = {}) {
       leafBlade.parent = leafStem;
     });
 
-    // Điểm nhấn Anime Catchlights hoặc Mắt cười khi trưởng thành (Mature Face)
-    if (isMature) {
-      const eyeMat = createToyMaterial(scene, 'mat-toy-eye-dark', '#1e293b', {
-        specularPower: 96,
-        specularLevel: 0.7,
-      });
-      const hlMat = createToyMaterial(scene, 'mat-toy-hl-white', '#ffffff', {
-        emissiveHex: '#ffffff',
-      });
-      const blushMat = createToyMaterial(scene, 'mat-toy-blush-pink', PLAY_TOGETHER_PALETTE.pastels.peachBlush, {
-        emissiveScale: 0.25,
-      });
-
-      // Đôi mắt hạt tròn
-      [-0.14, 0.14].forEach((ex, i) => {
-        const eye = MeshBuilder.CreateSphere(`carrot-eye-${key}-${i}`, {
-          diameter: 0.09,
-          segments: 6,
-        }, scene);
-        eye.position.set(ex, 0.54, 0.3);
-        eye.material = eyeMat;
-        eye.parent = carrotGroup;
-
-        // Điểm sáng catchlight long lanh
-        const hl = MeshBuilder.CreateSphere(`carrot-hl-${key}-${i}`, {
-          diameter: 0.038,
-          segments: 4,
-        }, scene);
-        hl.position.set(ex + 0.018, 0.56, 0.33);
-        hl.material = hlMat;
-        hl.parent = carrotGroup;
-      });
-
-      // Hai bên má hồng phúng phính (Cute Blush)
-      [-0.22, 0.22].forEach((bx, i) => {
-        const blush = MeshBuilder.CreateDisc(`carrot-blush-${key}-${i}`, {
-          radius: 0.07,
-          tessellation: 10,
-        }, scene);
-        blush.position.set(bx, 0.44, 0.28);
-        blush.rotation.y = bx > 0 ? 0.25 : -0.25;
-        blush.material = blushMat;
-        blush.parent = carrotGroup;
-      });
-    }
-
     if (shadows) {
       shadows.addShadowCaster(carrotBody);
     }
@@ -582,25 +536,7 @@ export function createChibiPumpkinMesh(scene, key, progress, options = {}) {
     stem.material = stemMat;
     stem.parent = bodyGroup;
 
-    // Mặt cười Chibi khi chín
-    if (isMature) {
-      const eyeMat = createToyMaterial(scene, 'mat-toy-eye-dark', '#1e293b');
-      [-0.18, 0.18].forEach((ex, i) => {
-        const eye = MeshBuilder.CreateSphere(`pumpkin-eye-${key}-${i}`, { diameter: 0.1, segments: 6 }, scene);
-        eye.position.set(ex, 0.46, 0.42);
-        eye.material = eyeMat;
-        eye.parent = bodyGroup;
-      });
-      const smile = MeshBuilder.CreateTorus(`pumpkin-smile-${key}`, {
-        diameter: 0.18,
-        thickness: 0.035,
-        tessellation: 10,
-      }, scene);
-      smile.rotation.x = Math.PI / 2;
-      smile.position.set(0, 0.35, 0.44);
-      smile.material = eyeMat;
-      smile.parent = bodyGroup;
-    }
+
   }
 
   let starIcon = null;
@@ -696,15 +632,7 @@ export function createChibiTurnipMesh(scene, key, progress, options = {}) {
       blade.parent = leafNode;
     });
 
-    if (isMature) {
-      const eyeMat = createToyMaterial(scene, 'mat-toy-eye-dark', '#1e293b');
-      [-0.14, 0.14].forEach((ex, i) => {
-        const eye = MeshBuilder.CreateSphere(`turnip-eye-${key}-${i}`, { diameter: 0.08, segments: 6 }, scene);
-        eye.position.set(ex, 0.56, 0.38);
-        eye.material = eyeMat;
-        eye.parent = bodyGroup;
-      });
-    }
+
   }
 
   let starIcon = null;

@@ -173,8 +173,8 @@ export function createMeadowTexture(scene, size = 1024) {
   });
 
   dynamic.update();
-  dynamic.uScale = 14;
-  dynamic.vScale = 14;
+  dynamic.uScale = 24;
+  dynamic.vScale = 24;
   return dynamic;
 }
 

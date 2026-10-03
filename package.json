@@ -8,7 +8,10 @@
     "dev:server": "node --watch server/index.js",
     "start:server": "node server/index.js",
     "validate:assets": "node scripts/validate-assets.mjs",
-    "build": "npm run validate:assets && vite build",
+    "validate:farm-layout": "node scripts/validate-farm-layout.mjs",
+    "test:land": "node scripts/test-land-purchase.mjs",
+    "test:camera": "node scripts/test-camera-view.mjs",
+    "build": "npm run validate:assets && npm run validate:farm-layout && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {

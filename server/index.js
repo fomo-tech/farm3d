@@ -1,14 +1,39 @@
 import { createServer } from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
-import { claimFarm, getAssignment, initVillageRegistry, listVillageAssignments, listVillages, positionForLot, villageChannel } from './VillageRegistry.js';
-import { authenticate, farmAction, initGameStore, likeFarm, loadFarms, loadPublicFarmProfiles, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
+import { purchaseFarm, listLandMarket, getAssignment, initVillageRegistry, isAssignedFarm, listVillageAssignments, listVillages, positionForLot, villageChannel, villageForFarm } from './VillageRegistry.js';
+import { authenticate, farmAction, initGameStore, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
+import { FARM_ACTIVE_PLOTS, FARM_LOT_SPEC, FARM_TILE_KEY_PATTERN, farmTilePosition as sharedFarmTilePosition } from '../shared/farmLayout.js';
+import { WORLD_VILLAGES, villageGeometry } from '../shared/villageLayout.js';
 
 const PORT = Number(process.env.MULTIPLAYER_PORT || 8787);
 const TICK_MS = 100;
 const PLAYER_VIEW_RADIUS = 240;
 const FARM_VIEW_RADIUS = 115;
-const MAP_LAYOUT_VERSION = 2;
+const MAP_LAYOUT_VERSION = FARM_LOT_SPEC.version;
+const FARM_LAYOUT = Object.freeze({
+  version: MAP_LAYOUT_VERSION,
+  activePlots: FARM_ACTIVE_PLOTS,
+  columns: FARM_LOT_SPEC.columns,
+  rows: FARM_LOT_SPEC.rows,
+  tileSize: FARM_LOT_SPEC.tileSize,
+  estateWidth: FARM_LOT_SPEC.estateWidth,
+  estateDepth: FARM_LOT_SPEC.estateDepth,
+});
+const FARM_INTERACTION_RADIUS = 6;
+const MAX_PLAYER_SPEED = 32;
+const VALID_VENUES = new Set(['casino', 'fashion', 'vehicles', 'supplies']);
+const ROOM_LAYOUT = Object.freeze({
+  casino: { entrance: { x: -21.4, z: 15.9 }, interior: { x: 210, y: 32, z: -215 } },
+  fashion: { entrance: { x: 21.4, z: -15.9 }, interior: { x: 175, y: 32, z: -215 } },
+  vehicles: { entrance: { x: -21.4, z: -15.9 }, interior: { x: 140, y: 32, z: -215 } },
+  supplies: { entrance: { x: 21.4, z: 15.9 }, interior: { x: 105, y: 32, z: -215 } },
+});
 const clients = new Map();
+const recentActions = new Map();
+const ACTION_CACHE_TTL = 5 * 60_000;
+const authAttempts = new Map();
+const AUTH_WINDOW_MS = 60_000;
+const AUTH_MAX_ATTEMPTS = 12;
 
 const httpServer = createServer((request, response) => {
   response.setHeader('Access-Control-Allow-Origin', '*');
@@ -27,15 +52,76 @@ function safeSend(socket, payload) {
   if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(payload));
 }
 
+function clientAddress(socket) {
+  return socket._socket?.remoteAddress || 'unknown';
+}
+
+function allowAuthAttempt(address) {
+  const now = Date.now();
+  const recent = (authAttempts.get(address) || []).filter(time => now - time < AUTH_WINDOW_MS);
+  if (recent.length >= AUTH_MAX_ATTEMPTS) {
+    authAttempts.set(address, recent);
+    return false;
+  }
+  recent.push(now);
+  authAttempts.set(address, recent);
+  return true;
+}
+
+function actionCacheKey(client, requestId) {
+  return requestId ? `${client.playerId}:${String(requestId).slice(0, 80)}` : null;
+}
+
+function beginAction(client, requestId) {
+  const key = actionCacheKey(client, requestId);
+  if (!key) return { key: null, duplicate: false };
+  const cached = recentActions.get(key);
+  if (cached) {
+    if (cached.responses) cached.responses.forEach(payload => safeSend(client.socket, payload));
+    return { key, duplicate: true };
+  }
+  recentActions.set(key, { createdAt: Date.now(), responses: null });
+  return { key, duplicate: false };
+}
+
+function finishAction(key, responses) {
+  if (key) recentActions.set(key, { createdAt: Date.now(), responses });
+}
+
 function channelPlayers(channelId) {
   return [...clients.values()].filter(client => client.channelId === channelId);
+}
+
+function roomKey(villageId, venue) {
+  return `world:main:${venue || 'overworld'}`;
+}
+
+function isNear(point, x, z, radius) {
+  return Math.hypot(x - point.x, z - point.z) <= radius;
+}
+
+function isRoomTransition(client, x, y, z, venue) {
+  if (venue && ROOM_LAYOUT[venue]) {
+    const room = ROOM_LAYOUT[venue];
+    return client.roomId === roomKey(client.villageId, null)
+      && isNear(room.entrance, client.x, client.z, 18)
+      && isNear(room.interior, x, z, 18)
+      && y >= 20;
+  }
+  if (!venue && client.venue && ROOM_LAYOUT[client.venue]) {
+    const room = ROOM_LAYOUT[client.venue];
+    return isNear(room.interior, client.x, client.z, 22)
+      && isNear(room.entrance, x, z, 18)
+      && y <= 2;
+  }
+  return false;
 }
 
 function broadcastPresence(channelId) {
   const channel = channelPlayers(channelId);
   channel.forEach(client => {
     const players = channel
-      .filter(other => other.venue === client.venue && (other === client || Math.hypot(other.x - client.x, other.z - client.z) <= PLAYER_VIEW_RADIUS))
+      .filter(other => other.roomId === client.roomId && (other === client || Math.hypot(other.x - client.x, other.z - client.z) <= PLAYER_VIEW_RADIUS))
       .map(({ socket, lastSeen, lastPersisted, messages, visibleFarmIds, lastFarmScopeAt, ...player }) => player);
     safeSend(client.socket, { type: 'world_state', serverTime: Date.now(), players });
   });
@@ -44,12 +130,20 @@ function broadcastPresence(channelId) {
 async function publicFarmScope(client, force = false) {
   if (!client.villageId || (!force && Date.now() - client.lastFarmScopeAt < 1000)) return;
   client.lastFarmScopeAt = Date.now();
-  const assignments = await listVillageAssignments(client.villageId);
+  if (client.venue) {
+    if (client.farmScopeKey !== 'interior') {
+      client.farmScopeKey = 'interior';
+      client.visibleFarmIds = new Set();
+      safeSend(client.socket, { type: 'farm_scope', farms: [], crops: {} });
+    }
+    return;
+  }
+  const assignments = await listVillageAssignments();
   const visible = assignments.filter(item => {
-    const position = positionForLot(item.lot);
+    const position = positionForLot(Number(item.farmId.slice(-6)));
     return item.playerId === client.playerId || Math.hypot(position.x - client.x, position.z - client.z) <= FARM_VIEW_RADIUS;
   });
-  const farmIds = visible.map(item => `farm_${String(item.lot).padStart(6, '0')}`);
+  const farmIds = visible.map(item => item.farmId);
   const scopeKey = farmIds.slice().sort().join(',');
   if (!force && scopeKey === client.farmScopeKey) return;
   client.farmScopeKey = scopeKey;
@@ -57,19 +151,30 @@ async function publicFarmScope(client, force = false) {
   const profiles = await loadPublicFarmProfiles(visible.map(item => item.playerId));
   const profileById = new Map(profiles.map(profile => [profile.playerId, profile]));
   const farms = visible.map(item => ({
-    farmId: `farm_${String(item.lot).padStart(6, '0')}`,
+    farmId: item.farmId,
+    villageId: item.villageId,
     lot: item.lot,
-    ...positionForLot(item.lot),
+    ...positionForLot(Number(item.farmId.slice(-6))),
     ...profileById.get(item.playerId),
     online: [...clients.values()].some(other => other.playerId === item.playerId),
   }));
-  safeSend(client.socket, { type: 'farm_scope', farms, crops: await loadFarms(client.villageId, farmIds) });
+  const crops = {};
+  for (const villageId of new Set(visible.map(item => item.villageId))) {
+    Object.assign(crops, await loadFarms(villageId, visible.filter(item => item.villageId === villageId).map(item => item.farmId)));
+  }
+  safeSend(client.socket, { type: 'farm_scope', farms, crops, lots: await listLandMarket() });
 }
 
 function broadcastFarmUpdate(actor, payload) {
   channelPlayers(actor.channelId).forEach(client => {
-    if (client.socket !== actor.socket && client.visibleFarmIds?.has(payload.farmId)) safeSend(client.socket, payload);
+    if (client.socket === actor.socket || client.visibleFarmIds?.has(payload.farmId)) safeSend(client.socket, payload);
   });
+}
+
+function farmTilePosition(farmId, tileKey) {
+  const lot = Number(String(farmId).slice(-6));
+  if (!Number.isInteger(lot) || !FARM_TILE_KEY_PATTERN.test(String(tileKey))) return null;
+  return sharedFarmTilePosition(lot, tileKey);
 }
 
 async function refreshPublicFarms(channelId) {
@@ -87,47 +192,57 @@ function broadcastToChannel(channelId, payload, excludeSocket = null) {
 wss.on('connection', socket => {
   const client = { socket, playerId: null, name: 'Nông dân', channelId: null, farmId: null, villageId: null, x: -45, y: 0, z: 102, rotation: 0, venue: null, lastSeen: Date.now(), lastPersisted: 0, lastFarmScopeAt: 0, farmScopeKey: '', visibleFarmIds: new Set(), messages: [] };
   socket.on('message', async raw => {
+    let message;
     try {
     if (String(raw).length > 16_384) return socket.close(1009, 'Message too large');
     const now = Date.now();
     client.messages = client.messages.filter(time => now - time < 1000);
     if (client.messages.length >= 40) return;
     client.messages.push(now);
-    let message;
     try { message = JSON.parse(String(raw)); } catch { return; }
     if (message.type === 'join') {
       client.playerId = String(message.playerId || '').slice(0, 64);
-      if (!client.playerId) return socket.close(1008, 'Missing player id');
+      if (!/^player_[a-z0-9_-]{8,64}$/i.test(client.playerId)) return socket.close(1008, 'Invalid player id');
+      if (!allowAuthAttempt(clientAddress(socket))) {
+        safeSend(socket, { type: 'auth_error', message: 'Quá nhiều lần đăng nhập. Vui lòng thử lại sau một phút.' });
+        return socket.close(1013, 'Auth rate limit');
+      }
       const account = await authenticate(client.playerId, String(message.sessionToken || ''), message.name);
       if (account.error) { safeSend(socket, { type: 'auth_error', message: account.error }); return socket.close(1008, 'Invalid session'); }
       client.name = account.name;
+      client.vehicle = account.progress?.vehicle || 'walk';
       safeSend(socket, { type: 'account_state', sessionToken: account.token, progress: account.progress, livestock: account.livestock, position: account.position?.layoutVersion === MAP_LAYOUT_VERSION ? account.position : null });
       safeSend(socket, { type: 'village_list', villages: await listVillages() });
       const existing = await getAssignment(client.playerId);
-      if (!existing && !message.villageId) {
-        safeSend(socket, { type: 'village_required', villages: await listVillages() });
-        return;
-      }
-      const assignedLot = await claimFarm(client.playerId, existing?.villageId || String(message.villageId || ''));
-      if (assignedLot.error) {
-        safeSend(socket, { type: 'village_error', message: assignedLot.error, villages: await listVillages() });
-        return;
-      }
+      const assignedLot = existing || { farmId: null, villageId: 'town', villageName: 'Thị trấn', lot: null, spawn: { x: 0, y: 0, z: 18 }, farmConfig: null };
 
       client.farmId = assignedLot.farmId;
       client.villageId = assignedLot.villageId;
       client.channelId = villageChannel(assignedLot.villageId);
+      client.roomId = roomKey(client.villageId, null);
       client.x = assignedLot.spawn.x;
       client.y = assignedLot.spawn.y;
       client.z = assignedLot.spawn.z;
       clients.set(socket, client);
 
+      if (existing && account.position?.layoutVersion === 6 && account.position.villageId === assignedLot.villageId) {
+        const origin = villageGeometry(assignedLot.village.order);
+        const inOldFarmDistrict = Math.abs(account.position.x) <= 70 && account.position.z >= 90 && account.position.z <= 278;
+        account.position = {
+          ...account.position,
+          x: account.position.x + (inOldFarmDistrict ? origin.offsetX : 0),
+          z: account.position.z + (inOldFarmDistrict ? origin.offsetZ : 0),
+          layoutVersion: MAP_LAYOUT_VERSION,
+        };
+        await savePosition(client.playerId, account.position);
+      }
       if (account.position && account.position.villageId === assignedLot.villageId && account.position.layoutVersion === MAP_LAYOUT_VERSION) {
         client.x = Number(account.position.x) || client.x;
         client.y = Number(account.position.y) || 0;
         client.z = Number(account.position.z) || client.z;
         client.rotation = Number(account.position.rotation) || 0;
-        client.venue = account.position.venue || null;
+        client.venue = VALID_VENUES.has(account.position.venue) ? account.position.venue : null;
+        client.roomId = roomKey(client.villageId, client.venue);
       }
 
       safeSend(socket, {
@@ -138,9 +253,12 @@ wss.on('connection', socket => {
         villageName: assignedLot.villageName,
         lot: assignedLot.lot,
         farmId: client.farmId,
-        spawn: assignedLot.spawn,
+        spawn: { x: client.x, y: client.y, z: client.z, venue: client.venue, rotation: client.rotation },
+        farmConfig: assignedLot.farmConfig,
+        farmLayout: FARM_LAYOUT,
         tickMs: TICK_MS,
         layoutVersion: MAP_LAYOUT_VERSION
+        ,roomId: client.roomId
       });
       safeSend(socket, { type: 'village_list', villages: await listVillages() });
       
@@ -150,39 +268,80 @@ wss.on('connection', socket => {
       broadcastPresence(client.channelId);
       return;
     }
-    if (!client.playerId) return;
+    if (!client.playerId || !clients.has(socket)) return;
+    if (message.type === 'resync' && client.villageId) {
+      await publicFarmScope(client, true);
+      broadcastPresence(client.channelId);
+      return;
+    }
+    if (message.type === 'ping') {
+      safeSend(socket, { type: 'pong', sentAt: message.sentAt, serverTime: Date.now() });
+      return;
+    }
     if (message.type === 'move') {
       const x = Number(message.x); const y = Number(message.y || 0); const z = Number(message.z); const rotation = Number(message.rotation);
       if (![x, y, z, rotation].every(Number.isFinite) || Math.abs(x) > 10_000_000 || Math.abs(z) > 10_000_000 || y < 0 || y > 40) return;
       const elapsed = Math.max(.1, (Date.now() - client.lastSeen) / 1000);
       const distance = Math.hypot(x - client.x, z - client.z);
-      if (distance > 20 + elapsed * 12) return;
-      client.x = x; client.y = y; client.z = z; client.rotation = rotation; client.venue = message.venue || null; client.lastSeen = Date.now();
+      const requestedVenue = VALID_VENUES.has(message.venue) ? message.venue : null;
+      const roomTransition = isRoomTransition(client, x, y, z, requestedVenue);
+      if (!roomTransition && distance > 1.5 + elapsed * MAX_PLAYER_SPEED) {
+        safeSend(socket, { type: 'move_ack', accepted: false, x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, serverTime: Date.now() });
+        return;
+      }
+      const previousRoom = client.roomId;
+      client.x = x; client.y = y; client.z = z; client.rotation = rotation; client.venue = requestedVenue; client.roomId = roomKey(client.villageId, client.venue); client.lastSeen = Date.now();
+      safeSend(socket, { type: 'move_ack', accepted: true, x, y, z, rotation, venue: client.venue, roomId: client.roomId, serverTime: Date.now() });
       if (Date.now() - client.lastPersisted > 2000) {
         client.lastPersisted = Date.now();
         savePosition(client.playerId, { x, y, z, rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION });
       }
       await publicFarmScope(client);
+      if (previousRoom !== client.roomId) broadcastPresence(client.channelId);
     }
     if (message.type === 'travel') {
       const x = Number(message.x); const z = Number(message.z);
       if (Number.isFinite(x) && Number.isFinite(z) && Math.abs(x) <= 10_000_000 && Math.abs(z) <= 10_000_000) {
-        const ownFarm = positionForLot(Number(client.farmId?.slice(-6)) || 1);
-        const allowed = [{ x: ownFarm.x + 6, z: ownFarm.z - 4 }, { x: 0, z: 18 }, { x: 126, z: 2 }, { x: 0, z: 320 }].some(point => Math.hypot(x - point.x, z - point.z) < 12);
+        const previousRoom = client.roomId;
+        const ownFarm = client.farmId ? positionForLot(Number(client.farmId.slice(-6))) : null;
+        const allowed = [...(ownFarm ? [{ x: ownFarm.x + 6, z: ownFarm.z - 4 }] : []), { x: 0, z: 18 }, { x: 126, z: 2 }, { x: 0, z: 320 }, ...WORLD_VILLAGES.map(v => v.gate)].some(point => Math.hypot(x - point.x, z - point.z) < 12);
         if (!allowed) return;
-        client.x = x; client.y = Number(message.y || 0); client.z = z; client.venue = message.venue || null; client.lastSeen = Date.now();
+        client.x = x; client.y = Number(message.y || 0); client.z = z; client.venue = VALID_VENUES.has(message.venue) ? message.venue : null; client.lastSeen = Date.now();
+        client.roomId = roomKey(client.villageId, client.venue);
+        safeSend(socket, { type: 'move_ack', x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, serverTime: Date.now() });
         savePosition(client.playerId, { x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION });
+        await publicFarmScope(client, true);
+        if (previousRoom !== client.roomId) broadcastPresence(client.channelId);
       }
     }
     if (message.type === 'farm_action') {
+      const tracked = beginAction(client, message.requestId);
+      if (tracked.duplicate) return;
       const { farmId, tileKey, action, crop, wateredAt, plantedAt } = message;
-      if (!farmId || !tileKey || !action) return;
-      const result = await farmAction(client.playerId, client.villageId, client.farmId, { farmId, tileKey, action, crop, wateredAt, plantedAt });
-      if (result.error) { safeSend(socket, { type: 'action_error', message: result.error }); safeSend(socket, { type: 'farm_sync', farms: await loadFarms(client.villageId) }); return; }
-      safeSend(socket, { type: 'account_state', progress: result.player.progress, livestock: result.player.livestock });
-
-      broadcastFarmUpdate(client, {
+      if (!farmId || !tileKey || !action) { recentActions.delete(tracked.key); return; }
+      if (client.venue) { const response = { type: 'action_error', requestId: message.requestId, message: 'Bạn phải rời cửa hàng trước khi làm ruộng.' }; safeSend(socket, response); finishAction(tracked.key, [response]); return; }
+      const tilePosition = farmTilePosition(farmId, tileKey);
+      if (!tilePosition || Math.hypot(tilePosition.x - client.x, tilePosition.z - client.z) > FARM_INTERACTION_RADIUS) {
+        const response = { type: 'action_error', requestId: message.requestId, message: 'Bạn đang đứng quá xa ô đất.' };
+        safeSend(socket, response); finishAction(tracked.key, [response]);
+        return;
+      }
+      const targetVillage = await villageForFarm(farmId);
+      if (!targetVillage || !(await isAssignedFarm(targetVillage.villageId, farmId))) {
+        const response = { type: 'action_error', requestId: message.requestId, message: 'Nông trại này chưa có chủ sở hữu.' };
+        safeSend(socket, response); finishAction(tracked.key, [response]);
+        return;
+      }
+      const result = await farmAction(client.playerId, targetVillage.villageId, client.farmId, { farmId, tileKey, action, crop, wateredAt, plantedAt });
+      if (result.error) {
+        const errorResponse = { type: 'action_error', requestId: message.requestId, message: result.error };
+        const syncResponse = { type: 'farm_sync', farms: await loadFarms(targetVillage.villageId, [farmId]) };
+        safeSend(socket, errorResponse); safeSend(socket, syncResponse); finishAction(tracked.key, [errorResponse, syncResponse]); return;
+      }
+      const accountResponse = { type: 'account_state', requestId: message.requestId, progress: result.player.progress, livestock: result.player.livestock };
+      const farmResponse = {
         type: 'farm_update',
+        requestId: message.requestId,
         farmId,
         tileKey,
         action,
@@ -190,16 +349,41 @@ wss.on('connection', socket => {
         tileData: result.tileData,
         byPlayer: client.name,
         byPlayerId: client.playerId
-      });
+      };
+      safeSend(socket, accountResponse);
+      broadcastFarmUpdate(client, farmResponse);
+      finishAction(tracked.key, [accountResponse, farmResponse]);
     }
     if (message.type === 'game_action') {
+      const tracked = beginAction(client, message.requestId);
+      if (tracked.duplicate) return;
+      if (message.action === 'buy_land') {
+        const bought = await purchaseFarm(client.playerId, String(message.payload?.farmId || ''));
+        if (bought.error) {
+          const response = { type: 'action_error', requestId: message.requestId, message: bought.error };
+          safeSend(socket, response); finishAction(tracked.key, [response]); return;
+        }
+        const assignment = bought.assignment;
+        client.farmId = assignment.farmId; client.villageId = assignment.villageId;
+        const player = await loadPlayer(client.playerId);
+        const response = { type: 'account_state', requestId: message.requestId, progress: player.progress, livestock: player.livestock, result: { landPurchase: { farmId: assignment.farmId, villageId: assignment.villageId, villageName: assignment.villageName, lot: assignment.lot, farmConfig: assignment.farmConfig } } };
+        await savePosition(client.playerId, { x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION });
+        safeSend(socket, response); finishAction(tracked.key, [response]);
+        await refreshPublicFarms(client.channelId); broadcastPresence(client.channelId); return;
+      }
+      if (!client.farmId && ['claim_seeds', 'upgrade_land', 'upgrade_barn', 'upgrade_home', 'buy_animal', 'feed_animals', 'collect_animals'].includes(message.action)) {
+        const response = { type: 'action_error', requestId: message.requestId, message: 'Bạn cần mua lô đất trước khi sử dụng tính năng nông trại.' };
+        safeSend(socket, response); finishAction(tracked.key, [response]); return;
+      }
       const result = await performAction(client.playerId, String(message.action || ''), message.payload || {});
-      if (result.error) { safeSend(socket, { type: 'action_error', requestId: message.requestId, message: result.error }); return; }
+      if (result.error) { const response = { type: 'action_error', requestId: message.requestId, message: result.error }; safeSend(socket, response); finishAction(tracked.key, [response]); return; }
       client.name = result.player.name;
       client.outfit = result.player.progress.outfit;
       client.vehicle = result.player.progress.vehicle;
       client.homeTier = result.player.progress.homeTier;
-      safeSend(socket, { type: 'account_state', requestId: message.requestId, progress: result.player.progress, livestock: result.player.livestock, result: result.result });
+      const response = { type: 'account_state', requestId: message.requestId, progress: result.player.progress, livestock: result.player.livestock, result: result.result };
+      safeSend(socket, response);
+      finishAction(tracked.key, [response]);
       if (['character_create', 'feed_animals', 'collect_animals', 'upgrade_barn', 'upgrade_home', 'buy_outfit'].includes(message.action)) {
         await refreshPublicFarms(client.channelId);
       }
@@ -212,7 +396,9 @@ wss.on('connection', socket => {
     if (message.type === 'mailbox_heart') {
       const { farmId } = message;
       if (!farmId) return;
-      const liked = await likeFarm(client.playerId, client.villageId, farmId);
+      const village = await villageForFarm(farmId);
+      if (!village || !(await isAssignedFarm(village.villageId, farmId))) return;
+      const liked = await likeFarm(client.playerId, village.villageId, farmId);
       if (liked.error || !liked.added) return;
       broadcastToChannel(client.channelId, {
         type: 'mailbox_notice',
@@ -233,12 +419,14 @@ wss.on('connection', socket => {
       });
     }
     } catch (error) {
+      recentActions.delete(actionCacheKey(client, message?.requestId));
       console.error('WebSocket action failed:', error);
-      safeSend(socket, { type: 'action_error', message: 'Server không thể xử lý yêu cầu.' });
+      safeSend(socket, { type: 'action_error', requestId: message?.requestId, message: 'Server không thể xử lý yêu cầu.' });
     }
   });
   socket.on('close', () => {
     const channelId = client.channelId;
+    if (clients.has(socket)) savePosition(client.playerId, { x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION }).catch(console.error);
     clients.delete(socket);
     broadcastPresence(channelId);
   });
@@ -248,6 +436,20 @@ setInterval(() => {
   const channels = new Set([...clients.values()].map(client => client.channelId));
   channels.forEach(broadcastPresence);
 }, TICK_MS);
+
+setInterval(() => {
+  const cutoff = Date.now() - ACTION_CACHE_TTL;
+  recentActions.forEach((value, key) => { if (value.createdAt < cutoff) recentActions.delete(key); });
+}, 60_000).unref();
+
+setInterval(() => {
+  const cutoff = Date.now() - AUTH_WINDOW_MS;
+  authAttempts.forEach((times, address) => {
+    const active = times.filter(time => time >= cutoff);
+    if (active.length) authAttempts.set(address, active);
+    else authAttempts.delete(address);
+  });
+}, 60_000).unref();
 
 await initGameStore();
 await initVillageRegistry();

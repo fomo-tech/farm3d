@@ -394,29 +394,29 @@ function createCafeStall(scene, position, parent, shadows) {
 /**
  * Factory chính tạo Chợ Phiên Nông Sản Thị Trấn Làng Gió
  */
-export function createFarmersMarket(scene, shadows, foliage, origin = { x: 0, z: 0 }) {
+export function createFarmersMarket(scene, shadows, foliage, origin = { x: -92, z: 140 }) {
   const marketRoot = new TransformNode('farmers-market-root', scene);
   const at = (x, z) => ({ x: x + origin.x, y: 0, z: z + origin.z });
 
-  // 1. Quầy Nông Sản Tươi tại (-12, 0, -137)
-  createProduceStall(scene, at(-12, -137), marketRoot, shadows);
+  // 1. Quầy Nông Sản Tươi tại góc Tây Bắc
+  createProduceStall(scene, at(-8, -6), marketRoot, shadows);
 
-  // 2. Quầy Hoa Tươi & Hạt Giống tại (12, 0, -137)
-  createFlowerStall(scene, at(12, -137), marketRoot, shadows);
+  // 2. Quầy Hoa Tươi & Hạt Giống tại góc Đông Bắc
+  createFlowerStall(scene, at(8, -6), marketRoot, shadows);
 
-  // 3. Quầy Bánh Mì & Bơ Sữa tại (-14, 0, -150)
-  createBakeryStall(scene, at(-14, -150), marketRoot, shadows);
+  // 3. Quầy Bánh Mì & Bơ Sữa tại góc Tây Nam
+  createBakeryStall(scene, at(-8, 6), marketRoot, shadows);
 
-  // 4. Quán Trà Sữa & Cà Phê tại (14, 0, -150)
-  createCafeStall(scene, at(14, -150), marketRoot, shadows);
+  // 4. Quán Trà Sữa & Cà Phê tại góc Đông Nam
+  createCafeStall(scene, at(8, 6), marketRoot, shadows);
 
-  // 5. Cây cảnh & khóm hoa cẩm tú cầu trang trí quảng trường chợ
+  // 5. Cây cảnh & khóm hoa trang trí quảng trường chợ (bố trí nép sát các quầy hàng)
   if (foliage) {
-    foliage.createHydrangeaBush(origin.x - 6, origin.z - 137, 1.1, 'pink');
-    foliage.createHydrangeaBush(origin.x + 6, origin.z - 137, 1.1, 'blue');
-    foliage.createHydrangeaBush(origin.x - 8, origin.z - 150, 1.1, 'purple');
-    foliage.createHydrangeaBush(origin.x + 8, origin.z - 150, 1.1, 'pink');
-    foliage.createFlowerPatch(origin.x, origin.z - 137, 8, 2.2);
+    foliage.createHydrangeaBush(origin.x - 12, origin.z - 6, 1.1, '#10b981');
+    foliage.createHydrangeaBush(origin.x + 12, origin.z - 6, 1.1, '#10b981');
+    foliage.createHydrangeaBush(origin.x - 12, origin.z + 6, 1.1, '#10b981');
+    foliage.createHydrangeaBush(origin.x + 12, origin.z + 6, 1.1, '#10b981');
+    foliage.createFlowerPatch(origin.x, origin.z + 8, 8, 2.0);
   }
 
   return marketRoot;

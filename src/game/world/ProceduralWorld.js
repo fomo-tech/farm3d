@@ -18,7 +18,7 @@ export class ProceduralWorld {
       chunk: center,
       region: zone.key,
       zone,
-      village: villageForChunk(center.x, center.z),
+      village: zone.key === 'countryside' && zone.order != null ? { id: zone.id, name: zone.name } : null,
     };
   }
 

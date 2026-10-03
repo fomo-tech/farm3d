@@ -1,6 +1,9 @@
 import { MongoClient } from 'mongodb';
+import { decodeFarmId, worldFarmId, worldFarmNumber } from '../shared/villageLayout.js';
+import { FARM_ACTIVE_PLOTS, FARM_LOT_SPEC, farmLotPosition, validateFarmLayout } from '../shared/farmLayout.js';
 
 export const LOTS_PER_VILLAGE = 24;
+export const FARM_LAYOUT_VERSION = FARM_LOT_SPEC.version;
 const INITIAL_VILLAGE_COUNT = 12;
 const ICONS = ['🌅', '🌼', '🏞️', '🌬️', '🌾', '🌳', '🌸', '⛰️', '🍀', '🌊', '🍁', '🌻'];
 const NAMES = ['Bình Minh', 'Hoa Mai', 'Ven Sông', 'Đồi Gió', 'An Nhiên', 'Mộc Lan', 'Thanh Hà', 'Phú Điền', 'Tân Lộc', 'Hải Vân', 'Thu Phong', 'Hướng Dương'];
@@ -9,6 +12,7 @@ const DESCRIPTIONS = ['Đồng cỏ yên bình, phù hợp người mới.', 'V�
 const mongo = new MongoClient(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017');
 let villages;
 let assignments;
+let players;
 
 const slugify = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/đ/g, 'd').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 function villageAt(index) {
@@ -19,27 +23,75 @@ function villageAt(index) {
   return { villageId: legacyIds[index] || `${slugify(label)}-${String(index + 1).padStart(3, '0')}`, name: `Làng ${label}`, icon: ICONS[index % ICONS.length], description: DESCRIPTIONS[index % DESCRIPTIONS.length], order: index, createdAt: Date.now() };
 }
 export function positionForLot(lot) {
-  const index = Math.max(0, lot - 1);
-  return { x: -45 + (index % 4) * 30, z: 112 + Math.floor(index / 4) * 28 };
+  return farmLotPosition(lot);
 }
 
 export async function listVillageAssignments(villageId) {
-  return assignments.find({ villageId }, { projection: { _id: 0, playerId: 1, villageId: 1, lot: 1 } }).toArray();
+  const docs = await assignments.find({ ...(villageId ? { villageId } : {}), status: { $ne: 'pending' } }, { projection: { _id: 0, playerId: 1, villageId: 1, lot: 1 } }).toArray();
+  const catalog = await villages.find().toArray();
+  return docs.map(doc => ({ ...doc, farmId: worldFarmId(catalog.find(v => v.villageId === doc.villageId)?.order || 0, doc.lot) }));
+}
+
+export async function isAssignedFarm(villageId, farmId) {
+  const decoded = decodeFarmId(farmId);
+  if (!decoded) return false;
+  const village = await villages.findOne({ order: decoded.order });
+  if (!village || village.villageId !== villageId) return false;
+  return Boolean(await assignments.findOne({ villageId, lot: decoded.lot, status: { $ne: 'pending' } }, { projection: { _id: 1 } }));
+}
+export async function villageForFarm(farmId) {
+  const decoded = decodeFarmId(farmId);
+  return decoded ? villages.findOne({ order: decoded.order }) : null;
 }
 function assignmentResult(doc, village) {
-  const position = positionForLot(doc.lot);
-  return { ...doc, farmId: `farm_${String(doc.lot).padStart(6, '0')}`, villageName: village.name, village: { id: village.villageId, ...village }, spawn: { x: position.x, y: 0, z: position.z - 10 } };
+  const position = positionForLot(worldFarmNumber(village.order, doc.lot));
+  return {
+    ...doc,
+    farmId: worldFarmId(village.order, doc.lot),
+    villageName: village.name,
+    village: { id: village.villageId, ...village },
+    farmConfig: {
+      layoutVersion: doc.layoutVersion || FARM_LAYOUT_VERSION,
+      activePlots: doc.activePlots || FARM_ACTIVE_PLOTS,
+      houseType: doc.houseType || 'starter-house',
+      houseTier: doc.houseTier || 1,
+      barnType: doc.barnType || 'starter-barn',
+      barnTier: doc.barnTier || 1,
+      fenceType: doc.fenceType || 'starter-fence',
+    },
+    spawn: { x: position.x, y: 0, z: position.z - 10 },
+  };
 }
 
 export async function initVillageRegistry() {
+  const layout = validateFarmLayout(INITIAL_VILLAGE_COUNT * LOTS_PER_VILLAGE);
+  if (!layout.valid) throw new Error(`Invalid farm layout: ${layout.errors.join('; ')}`);
   await mongo.connect();
   const db = mongo.db(process.env.MONGODB_DB || 'farm_online_3d');
   villages = db.collection('villages'); assignments = db.collection('farm_assignments');
+  players = db.collection('players');
+  // Recover interrupted purchases. The debit and its receipt are one atomic player write.
+  for await (const reserved of assignments.find({ status: 'pending' })) {
+    const paid = await players.findOne({ playerId: reserved.playerId, 'landPurchase.purchaseId': reserved.purchaseId });
+    if (paid) await assignments.updateOne({ _id: reserved._id }, { $set: { status: 'owned' } });
+    else await assignments.deleteOne({ _id: reserved._id, status: 'pending' });
+  }
   await Promise.all([
     villages.createIndex({ villageId: 1 }, { unique: true }),
     villages.createIndex({ order: 1 }, { unique: true }),
     assignments.createIndex({ playerId: 1 }, { unique: true }),
     assignments.createIndex({ villageId: 1, lot: 1 }, { unique: true }),
+  ]);
+  await assignments.updateMany({}, [
+    { $set: {
+      layoutVersion: FARM_LAYOUT_VERSION,
+      activePlots: { $ifNull: ['$activePlots', FARM_ACTIVE_PLOTS] },
+      houseType: { $ifNull: ['$houseType', 'starter-house'] },
+      houseTier: { $ifNull: ['$houseTier', 1] },
+      barnType: { $ifNull: ['$barnType', 'starter-barn'] },
+      barnTier: { $ifNull: ['$barnTier', 1] },
+      fenceType: { $ifNull: ['$fenceType', 'starter-fence'] },
+    } },
   ]);
   for (let index = 0; index < 4; index += 1) {
     const target = villageAt(index);
@@ -72,24 +124,61 @@ export async function listVillages() {
 export async function getAssignment(playerId) {
   const doc = await assignments.findOne({ playerId });
   if (!doc) return null;
+  if (doc.status === 'pending') {
+    const paid = await players.findOne({ playerId, 'landPurchase.purchaseId': doc.purchaseId });
+    if (!paid) return null;
+    await assignments.updateOne({ _id: doc._id, status: 'pending' }, { $set: { status: 'owned' } });
+    doc.status = 'owned';
+  }
   const village = await villages.findOne({ villageId: doc.villageId });
   return village ? assignmentResult(doc, village) : null;
 }
 
-export async function claimFarm(playerId, requestedVillageId) {
-  const existing = await getAssignment(playerId);
-  if (existing) return existing;
-  const village = await villages.findOne({ villageId: requestedVillageId });
-  if (!village) return { error: 'Vui lòng chọn một làng hợp lệ.' };
-  for (let lot = 1; lot <= LOTS_PER_VILLAGE; lot += 1) {
-    try {
-      const doc = { playerId, villageId: requestedVillageId, lot, claimedAt: Date.now() };
-      await assignments.insertOne(doc);
-      await ensureSupply();
-      return assignmentResult(doc, village);
-    } catch (error) { if (error?.code !== 11000) throw error; const won = await getAssignment(playerId); if (won) return won; }
-  }
-  return { error: `${village.name} đã hết lô trống. Hãy chọn làng khác.` };
+export async function listLandMarket() {
+  const [catalog, occupied] = await Promise.all([villages.find({ order: { $lt: INITIAL_VILLAGE_COUNT } }).sort({ order: 1 }).toArray(), assignments.find().toArray()]);
+  const lots = catalog.flatMap(v => Array.from({ length: LOTS_PER_VILLAGE }, (_, i) => {
+    const lot = i + 1;
+    const position = positionForLot(worldFarmNumber(v.order, lot));
+    const owner = occupied.find(a => a.villageId === v.villageId && a.lot === lot);
+    return { farmId: worldFarmId(v.order, lot), villageId: v.villageId, villageName: v.name, lot, ...position, distance: Math.round(Math.hypot(position.x, position.z)), ownerId: owner?.status !== 'pending' ? owner?.playerId || null : null, available: !owner };
+  }));
+  const farthest = Math.max(...lots.map(l => Math.hypot(l.x, l.z)));
+  const names = await players.find({ playerId: { $in: occupied.map(a => a.playerId) } }, { projection: { playerId: 1, name: 1 } }).toArray();
+  return lots.map(l => ({ ...l, userName: names.find(p => p.playerId === l.ownerId)?.name || null, price: 150 + Math.round(1850 * (1 - Math.hypot(l.x, l.z) / farthest) / 50) * 50 }));
 }
 
-export const villageChannel = villageId => `village:${villageId}`;
+export async function purchaseFarm(playerId, farmId) {
+  const existing = await getAssignment(playerId);
+  if (existing) return { error: 'Bạn đã sở hữu một lô đất.' };
+  const listing = (await listLandMarket()).find(l => l.farmId === farmId);
+  if (!listing?.available) return { error: 'Lô đất không hợp lệ hoặc đã có người mua.' };
+  const village = await villages.findOne({ villageId: listing.villageId });
+  const purchaseId = `${playerId}:${farmId}`;
+  const doc = {
+    playerId,
+    villageId: listing.villageId,
+    lot: listing.lot,
+    status: 'pending', purchaseId, purchasePrice: listing.price,
+    layoutVersion: FARM_LAYOUT_VERSION,
+    activePlots: FARM_ACTIVE_PLOTS,
+    houseType: 'starter-house', houseTier: 1,
+    barnType: 'starter-barn', barnTier: 1,
+    fenceType: 'starter-fence', claimedAt: Date.now(),
+  };
+  try { await assignments.insertOne(doc); }
+  catch (error) { if (error.code === 11000) return { error: 'Lô đất đang được mua hoặc bạn đã sở hữu đất.' }; throw error; }
+  // Unique reservations protect both parcel and buyer. Revision blocks stale economy writes.
+  const paid = await players.updateOne({ playerId, 'progress.onboarding.characterCreated': true, 'progress.coins': { $gte: listing.price }, landPurchase: { $exists: false } }, {
+    $inc: { 'progress.coins': -listing.price, revision: 1 },
+    $set: { landPurchase: { purchaseId, farmId, price: listing.price, purchasedAt: Date.now() }, 'progress.unlockedPlots': 12, 'progress.homeTier': 1, 'progress.barnLevel': 1, 'progress.ownedHomes': ['starter-cabin'], updatedAt: Date.now() },
+  });
+  if (!paid.modifiedCount) {
+    await assignments.deleteOne({ playerId, purchaseId, status: 'pending' });
+    return { error: 'Chưa tạo nhân vật, không đủ xu hoặc bạn đã mua đất.' };
+  }
+  await assignments.updateOne({ playerId, purchaseId }, { $set: { status: 'owned' } });
+  doc.status = 'owned';
+  return { assignment: assignmentResult(doc, village) };
+}
+
+export const villageChannel = () => 'world:main';

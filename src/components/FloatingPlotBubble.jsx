@@ -1,4 +1,10 @@
 import { useEffect, useState } from 'react';
+import {
+  Icon3dHoe,
+  Icon3dSeeds,
+  Icon3dWateringCan,
+  Icon3dBasket,
+} from './icons3d/GameIcons3D.jsx';
 
 export function FloatingPlotBubble({
   world,
@@ -43,21 +49,21 @@ export function FloatingPlotBubble({
   if (!bubbleInfo) return null;
 
   const { data, tile } = bubbleInfo;
-  let icon = '⛏️';
+  let icon = <Icon3dHoe size={32} />;
   let label = 'Cuốc đất';
   let isRipe = false;
 
   if (data.state === 'empty') {
-    icon = '⛏️';
+    icon = <Icon3dHoe size={32} />;
     label = 'Làm đất';
   } else if (data.state === 'tilled') {
-    icon = '🌱';
+    icon = <Icon3dSeeds size={32} />;
     label = 'Gieo hạt';
   } else if (data.state === 'planted') {
-    icon = '💧';
+    icon = <Icon3dWateringCan size={32} />;
     label = 'Tưới nước';
   } else if (data.state === 'watered') {
-    icon = '🧺';
+    icon = <Icon3dBasket size={32} />;
     label = 'Thu hoạch';
     isRipe = true;
   }
@@ -68,9 +74,10 @@ export function FloatingPlotBubble({
 
   return (
     <div className={`floating-action-bubble ${isRipe ? 'ripe-pulse' : ''}`} onClick={handleClick}>
-      <span className="bubble-icon">{icon}</span>
+      <span className="bubble-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</span>
       <span className="bubble-label">{label}</span>
       <small className="bubble-hint">Chạm hoặc bấm E</small>
     </div>
   );
 }
+

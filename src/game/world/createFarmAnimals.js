@@ -45,6 +45,7 @@ export function createFarmAnimals(scene, shadows) {
       scaling: new Vector3(s, s, s),
       shadows,
       name: 'farm-cow-3d',
+      colorTint: Color3.FromHexString('#d6a84e'),
     });
     cow.parent = animalRoot;
 
@@ -215,22 +216,22 @@ export function createFarmAnimals(scene, shadows) {
     });
   }
 
-  // === ĐẶT CÁC CON VẬT VÀO ĐÚNG KHU VỰC CHUỒNG TRANG TRẠI (ANIMAL PEN X:72, Z:112) ===
+  // === ĐẶT CÁC CON VẬT VÀO ĐÚNG KHU VỰC CHUỒNG TRANG TRẠI (ANIMAL PEN X:88, Z:112) ===
   // Bò sữa gặm cỏ trong chuồng trang trại đồng quê
-  createChibiCow(68, 114, Math.PI / 4);
-  createChibiCow(76, 118, -Math.PI / 3);
+  createChibiCow(85, 114, Math.PI / 4);
+  createChibiCow(91, 116, -Math.PI / 3);
 
   // Cừu lông mềm trong đồng cỏ trang trại
-  createChibiSheep(64, 122, Math.PI / 6);
-  createChibiSheep(78, 124, -Math.PI / 4);
+  createChibiSheep(84, 118, Math.PI / 6);
+  createChibiSheep(92, 112, -Math.PI / 4);
 
   // Chú chó Shiba canh cổng Nông Trại Thung Lũng
   createFarmDog(-70, 36, -Math.PI / 3);
   createFarmDog(-74, 34, Math.PI / 4);
 
-  // Ngựa trang trại gần bãi cỏ chuồng trại
-  createFarmHorse(82, 112, Math.PI / 3);
-  createFarmHorse(60, 108, -Math.PI / 4);
+  // Ngựa trang trại trong bãi cỏ chuồng trại (hoàn toàn an toàn khỏi trục đường x=60)
+  createFarmHorse(88, 108, Math.PI / 3);
+  createFarmHorse(94, 114, -Math.PI / 4);
 
   // Chú cáo cam lấp ló bìa rừng thông
   createFarmFox(120, -45, Math.PI / 2);
@@ -255,4 +256,3 @@ export function createFarmAnimals(scene, shadows) {
     }
   };
 }
-

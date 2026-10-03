@@ -247,6 +247,7 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
   // - Ban đêm: Bầu trời Midnight Indigo xanh chàm thẳm, vòm sao lấp lánh, ánh trăng ngọc trai,
   //            đèn lồng làng quê vàng cam ấm áp, bóng râm mềm mại 0.22 không hề đen kịt
   // === 0. VÒM TRỜI PASTEL HOẠT HÌNH PLAY TOGETHER (3D CANDY SKY DOME) ===
+  // === 0. VÒM TRỜI MÀU NƯỚC ĐIỆN ẢNH GHIBLI (GHIBLI WATERCOLOR GRADIENT SKY DOME) ===
   const skyDome = MeshBuilder.CreateSphere('play-together-skydome', {
     diameter: 720,
     segments: 16,
@@ -258,101 +259,108 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
   skyMat.disableLighting = true;
   skyMat.backFaceCulling = false;
 
-  const skyTex = new DynamicTexture('candy-skydome-tex', { width: 512, height: 512 }, scene, true);
+  const skyTex = new DynamicTexture('ghibli-skydome-tex', { width: 512, height: 512 }, scene, true);
   const sctx = skyTex.getContext();
-  // Linear vertical gradient: Top là xanh thiên thanh kẹo ngọt, chân trời là vàng kem bơ ấm áp
+  // Linear vertical gradient 5 tầng: Đỉnh trời xanh cobalt nước biển sâu, chân trời kem bơ ấm áp
   const skyGrad = sctx.createLinearGradient(0, 0, 0, 512);
-  skyGrad.addColorStop(0, '#38bdf8');   // Xanh thiên thanh Play Together
-  skyGrad.addColorStop(0.55, '#7dd3fc'); // Xanh baby blue trong vắt
-  skyGrad.addColorStop(0.85, '#bae6fd'); // Xanh phấn nhạt
-  skyGrad.addColorStop(1.0, '#fffbeb');  // Kem bơ ấm chân trời
+  skyGrad.addColorStop(0, '#0369a1');    // Xanh biếc ngọc lam đậm đỉnh trời (Cobalt Azure)
+  skyGrad.addColorStop(0.30, '#0ea5e9'); // Xanh thiên thanh rực rỡ mộng mơ
+  skyGrad.addColorStop(0.60, '#7dd3fc'); // Xanh ngọc lam dịu mát
+  skyGrad.addColorStop(0.85, '#bae6fd'); // Xanh phấn trong veo
+  skyGrad.addColorStop(1.0, '#fef9c3');  // Kem bơ ấm áp phía chân trời
   sctx.fillStyle = skyGrad;
   sctx.fillRect(0, 0, 512, 512);
   skyTex.update();
 
   skyMat.emissiveTexture = skyTex;
+  skyMat.emissiveColor = Color3.White();
   skyDome.material = skyMat;
 
-  // 4 Keyframes cho chu kỳ ngày/đêm điện ảnh chuẩn Play Together (High-Key Candy Pastel)
-  // Triệt tiêu 100% màu tím bầm/xỉn tối, thế giới luôn rực rỡ vui tươi tràn ngập sức sống
+  // 4 Keyframes cho chu kỳ ngày/đêm điện ảnh chuẩn Studio Ghibli (Painterly Cinematic Balance)
+  // Khắc phục triệt để hiện tượng cháy nắng chói lóa, màu sắc mọng nước và bóng râm mát dịu
   const PHASES = [
     {
       time: 0,
       name: 'dawn',
-      clearColor: new Color4(0.82, 0.90, 0.98, 1),
-      fogColor: new Color3(0.82, 0.90, 0.98),
-      ambIntensity: 0.88,
+      clearColor: new Color4(0.88, 0.93, 0.98, 1),
+      fogColor: new Color3(0.88, 0.93, 0.98),
+      skyColor: Color3.FromHexString('#fed7aa'), // Ánh bình minh cam đào dịu
+      ambIntensity: 0.58, // Cân bằng không làm lóa trắng
       ambColor: Color3.FromHexString('#fbcfe8'), // Hồng phấn ban mai kẹo ngọt
-      ambGround: Color3.FromHexString('#86efac'), // Cỏ non mint pastel
-      sunIntensity: 1.05,
-      sunColor: Color3.FromHexString('#fef08a'), // Vàng chanh tươi sáng
+      ambGround: Color3.FromHexString('#bbf7d0'), // Cỏ non mint pastel tươi
+      sunIntensity: 0.85, // Nắng dịu ấm áp
+      sunColor: Color3.FromHexString('#fde68a'), // Vàng mơ ban mai
       sunDir: new Vector3(-0.65, -0.45, -0.32),
       starAlpha: 0.0,
       moonAlpha: 0.05,
       sunDustRate: 16,
       petalRate: 14,
       fireflyRate: 0,
-      shadowDarkness: 0.20,
-      lampIntensity: 0.15,
+      shadowDarkness: 0.40, // Bóng râm có độ sâu rõ rệt
+      lampIntensity: 0.2,
     },
     {
       time: 60,
       name: 'day',
-      clearColor: new Color4(0.48, 0.80, 0.98, 1), // Bầu trời xanh thiên thanh trong vắt Play Together
-      fogColor: new Color3(0.58, 0.84, 0.98),
-      ambIntensity: 0.96, // Nâng sáng toàn diện, không có bất kỳ góc tối nào
-      ambColor: Color3.FromHexString('#bae6fd'), // Xanh ngọc vòm trời trong veo
-      ambGround: Color3.FromHexString('#a7f3d0'), // Phản xạ cỏ mint tươi sáng hắt lên
-      sunIntensity: 1.18, // Ánh nắng vàng mật ong ấm áp rạng rỡ
-      sunColor: Color3.FromHexString('#fffbeb'),
+      clearColor: new Color4(0.42, 0.74, 0.96, 1), // Bầu trời xanh thiên thanh trong trẻo chuẩn Ghibli
+      fogColor: new Color3(0.68, 0.88, 0.98),
+      skyColor: Color3.White(),
+      ambIntensity: 0.62, // Hạ từ 1.02 xuống 0.62 để vật thể nổi khối 3D, không bị bẹt khối
+      ambColor: Color3.FromHexString('#7dd3fc'), // Xanh ngọc lam bầu trời hắt xuống
+      ambGround: Color3.FromHexString('#86efac'), // Phản xạ cỏ thảo mộc xanh mướt hắt lên
+      sunIntensity: 0.90, // Hạ từ 1.22 xuống 0.90 - Triệt tiêu 100% hiện tượng cháy nắng / lóa trắng
+      sunColor: Color3.FromHexString('#fef3c7'), // Vàng mật ong ấm áp dịu mắt (Honey Amber)
       sunDir: new Vector3(-0.45, -0.85, -0.32),
       starAlpha: 0,
       moonAlpha: 0,
       sunDustRate: 20,
       petalRate: 16,
       fireflyRate: 0,
-      shadowDarkness: 0.22, // Bóng râm mỏng tang, pastel dịu êm
+      shadowDarkness: 0.45, // Bóng râm mát rượi đặc trưng Totoro (không bị mờ xịt)
       lampIntensity: 0.0,
     },
     {
       time: 120,
       name: 'dusk',
-      clearColor: new Color4(0.96, 0.72, 0.78, 1), // Hồng đào pastel hoàng hôn mộng mơ hoạt hình
-      fogColor: new Color3(0.96, 0.72, 0.78),
-      ambIntensity: 0.85,
-      ambColor: Color3.FromHexString('#fbcfe8'), // Hồng dâu phấn ngọt ngào (không dùng tím bầm)
-      ambGround: Color3.FromHexString('#fed7aa'), // Nền đất màu caramel ấm cúng
-      sunIntensity: 1.02,
-      sunColor: Color3.FromHexString('#fde047'), // Vàng cam ấm áp
+      clearColor: new Color4(0.96, 0.70, 0.76, 1), // Hoàng hôn hồng cam đào thơ mộng
+      fogColor: new Color3(0.96, 0.70, 0.76),
+      skyColor: Color3.FromHexString('#fbcfe8'),
+      ambIntensity: 0.55,
+      ambColor: Color3.FromHexString('#f472b6'),
+      ambGround: Color3.FromHexString('#fed7aa'), // Nền đất caramel ấm cúng
+      sunIntensity: 0.80,
+      sunColor: Color3.FromHexString('#fb923c'), // Vàng cam hoàng hôn rực rỡ
       sunDir: new Vector3(-0.82, -0.28, -0.2),
       starAlpha: 0.25,
       moonAlpha: 0.45,
       sunDustRate: 12,
       petalRate: 10,
       fireflyRate: 18,
-      shadowDarkness: 0.18,
+      shadowDarkness: 0.40,
       lampIntensity: 0.95,
     },
     {
       time: 180,
       name: 'night',
-      clearColor: new Color4(0.12, 0.16, 0.28, 1), // Xanh chàm dạ quang lãng mạn
-      fogColor: new Color3(0.12, 0.16, 0.28),
-      ambIntensity: 0.82, // Đêm sáng rõ rực rỡ đèn hoa, không bị tối mò mẫm
-      ambColor: Color3.FromHexString('#38bdf8'), // Vòm trời xanh ngọc bích hắt sáng lung linh
-      ambGround: Color3.FromHexString('#10b981'), // Cỏ ngọc bích mát mắt
-      sunIntensity: 0.75, // Ánh trăng ngọc trai rõ khối 3D nhân vật
-      sunColor: Color3.FromHexString('#e0e7ff'),
+      clearColor: new Color4(0.10, 0.14, 0.25, 1), // Xanh chàm sâu thẳm lung linh
+      fogColor: new Color3(0.10, 0.14, 0.25),
+      skyColor: Color3.FromHexString('#38bdf8'),
+      ambIntensity: 0.45, // Đêm huyền ảo, tôn vinh đèn phố và ánh trăng
+      ambColor: Color3.FromHexString('#38bdf8'),
+      ambGround: Color3.FromHexString('#059669'),
+      sunIntensity: 0.65, // Ánh trăng dịu mát
+      sunColor: Color3.FromHexString('#c7d2fe'), // Lam tím ngọc trai
       sunDir: new Vector3(-0.62, -0.45, 0.65),
-      starAlpha: 1.0, // Ngàn sao lấp lánh rực rỡ
+      starAlpha: 1.0,
       moonAlpha: 1.0,
       sunDustRate: 0,
       petalRate: 4,
       fireflyRate: 36,
-      shadowDarkness: 0.16, // Bóng trăng mờ êm
-      lampIntensity: 1.55, // Đèn lồng & phố thị bừng sáng lung linh
+      shadowDarkness: 0.28,
+      lampIntensity: 1.65, // Đèn phố bừng sáng ấm cúng
     },
   ];
+
 
   return {
     setTime(clockSeconds) {
@@ -387,10 +395,13 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       // Smooth Hermite smoothstep factor
       const s = factor * factor * (3 - 2 * factor);
 
-      // Lerp ClearColor (Clean Anime Sky) & Fog
+      // Lerp ClearColor (Clean Anime Sky) & Fog & SkyDome
       scene.clearColor = Color4.Lerp(k1.clearColor, k2.clearColor, s);
       if (scene.fogColor) {
         scene.fogColor = Color3.Lerp(k1.fogColor, k2.fogColor, s);
+      }
+      if (skyMat) {
+        skyMat.emissiveColor = Color3.Lerp(k1.skyColor, k2.skyColor, s);
       }
 
       // Lerp Lights

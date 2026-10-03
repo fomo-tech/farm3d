@@ -15,37 +15,48 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
   try {
     pipeline = new DefaultRenderingPipeline('cinematic-pipeline', true, scene, [camera]);
     
-    // 1. Khử răng cưa phần cứng siêu sắc nét (4x MSAA + FXAA)
-    pipeline.samples = options.lightweight ? 1 : 4;
-    pipeline.fxaaEnabled = true;
+    const quality = options.quality || (options.lightweight ? 'balanced' : 'ultra');
+    const isUltra = quality === 'ultra';
+    const isEco = quality === 'eco';
 
-    // 2. Làm nét các chi tiết 3D (Sharpening filter) - Khắc phục triệt để hiện tượng mờ nhòe / pixel
-    pipeline.sharpenEnabled = !options.lightweight;
-    pipeline.sharpen.edgeAmount = 0.25;
-    pipeline.sharpen.colorAmount = 1.0;
+    // 1. Khử răng cưa phần cứng siêu sắc nét (4x Hardware MSAA)
+    // Tắt FXAA khi có 4x MSAA để loại bỏ hoàn toàn hiện tượng mờ nhòe (vaseline blur)
+    pipeline.samples = isEco ? 1 : 4;
+    pipeline.fxaaEnabled = isEco ? false : false;
 
-    // 3. Bloom nhẹ nhàng thơ mộng kiểu Studio Ghibli
-    pipeline.bloomEnabled = !options.lightweight;
-    pipeline.bloomThreshold = 0.88;
-    pipeline.bloomWeight = 0.16;
-    pipeline.bloomKernel = 32;
-    pipeline.bloomScale = 0.5;
+    // 2. Bộ lọc làm sắc nét viền 3D (Contrast-Adaptive Edge Sharpening) - Xóa bỏ triệt để mờ nhòe pixel
+    pipeline.sharpenEnabled = !isEco;
+    if (pipeline.sharpen) {
+      pipeline.sharpen.edgeAmount = isUltra ? 0.35 : 0.22;
+      pipeline.sharpen.colorAmount = 1.0;
+    }
 
-    // 4. Tone Mapping ACES Điện Ảnh
+    // 3. Bloom dịu nhẹ cổ tích cho đèn LED Neon & Phản chiếu pha lê Studio Ghibli
+    pipeline.bloomEnabled = isUltra;
+    if (pipeline.bloom) {
+      pipeline.bloomThreshold = 0.82;
+      pipeline.bloomWeight = 0.20;
+      pipeline.bloomKernel = 40;
+      pipeline.bloomScale = 0.5;
+    }
+
+    // 4. Tone Mapping ACES Điện Ảnh Chuẩn Studio Ghibli (Chống Cháy Nắng, Đậm Đà Chi Tiết)
     pipeline.imageProcessingEnabled = true;
     pipeline.imageProcessing.toneMappingEnabled = true;
     pipeline.imageProcessing.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_ACES;
-    pipeline.imageProcessing.contrast = 1.08;
-    pipeline.imageProcessing.exposure = 1.08;
-    pipeline.imageProcessing.vignetteEnabled = false;
+    pipeline.imageProcessing.contrast = 1.16;  // Tương phản điện ảnh sâu lắng, tách bạch nắng và râm
+    pipeline.imageProcessing.exposure = 0.94;  // Hạ từ 1.10 xuống 0.94 - Giữ trọn dải màu, xóa bỏ lóa trắng
+    pipeline.imageProcessing.vignetteEnabled = true;
+    pipeline.imageProcessing.vignetteWeight = 0.15;
+    pipeline.imageProcessing.vignetteColor = new Color4(0.02, 0.06, 0.10, 0);
   } catch (err) {
     console.warn('[CinematicPipeline] Fallback to direct scene processing:', err);
     if (scene.imageProcessingConfiguration) {
       scene.imageProcessingConfiguration.isEnabled = true;
       scene.imageProcessingConfiguration.toneMappingEnabled = true;
       scene.imageProcessingConfiguration.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_ACES;
-      scene.imageProcessingConfiguration.contrast = 1.08;
-      scene.imageProcessingConfiguration.exposure = 1.08;
+      scene.imageProcessingConfiguration.contrast = 1.16;
+      scene.imageProcessingConfiguration.exposure = 0.94;
     }
   }
 
@@ -53,19 +64,50 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     pipeline,
     ssao: null,
     updateFocus: () => {},
-    setCinematicPreset: (preset = 'vibrant') => {
+    setQuality: (quality = 'ultra') => {
+      if (!pipeline) return;
+      if (quality === 'ultra') {
+        pipeline.samples = 4;
+        pipeline.fxaaEnabled = false;
+        pipeline.sharpenEnabled = true;
+        if (pipeline.sharpen) {
+          pipeline.sharpen.edgeAmount = 0.35;
+          pipeline.sharpen.colorAmount = 1.0;
+        }
+        pipeline.bloomEnabled = true;
+      } else if (quality === 'balanced') {
+        pipeline.samples = 2;
+        pipeline.fxaaEnabled = false;
+        pipeline.sharpenEnabled = true;
+        if (pipeline.sharpen) {
+          pipeline.sharpen.edgeAmount = 0.22;
+          pipeline.sharpen.colorAmount = 1.0;
+        }
+        pipeline.bloomEnabled = false;
+      } else if (quality === 'eco') {
+        pipeline.samples = 1;
+        pipeline.fxaaEnabled = false;
+        pipeline.sharpenEnabled = false;
+        pipeline.bloomEnabled = false;
+      }
+    },
+    setCinematicPreset: (preset = 'day') => {
       const config = pipeline?.imageProcessing || scene.imageProcessingConfiguration;
       if (!config) return;
-      if (preset === 'vibrant') {
-        config.contrast = 1.08;
-        config.exposure = 1.08;
+      if (preset === 'day') {
+        config.contrast = 1.16;
+        config.exposure = 0.94;
+      } else if (preset === 'dawn') {
+        config.contrast = 1.14;
+        config.exposure = 0.95;
       } else if (preset === 'dusk') {
-        config.contrast = 1.12;
-        config.exposure = 1.02;
+        config.contrast = 1.18;
+        config.exposure = 0.92;
       } else if (preset === 'night') {
-        config.contrast = 1.05;
-        config.exposure = 1.15;
+        config.contrast = 1.12;
+        config.exposure = 0.98;
       }
     }
   };
 }
+

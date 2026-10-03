@@ -1,13 +1,18 @@
 import { useState } from 'react';
+import { Icon3dNonLa, Icon3dRiceSpike, Icon3dFlower, Icon3dCap, Icon3dCrown, Icon3dHouseCabin, Icon3dMap, Icon3dCheck } from './icons3d/GameIcons3D.jsx';
 
-const AVATAR_ICONS = ['🧑‍🌾', '👩‍🌾', '🤠', '🌾', '🌻', '🍓', '✨'];
+const AVATAR_ICONS = [
+  { id: 'farmer', icon: <Icon3dNonLa size={34} /> }, { id: 'farmer-rice', icon: <Icon3dRiceSpike size={34} /> },
+  { id: 'farmer-flower', icon: <Icon3dFlower size={34} /> }, { id: 'farmer-cap', icon: <Icon3dCap size={34} /> },
+  { id: 'farmer-royal', icon: <Icon3dCrown size={34} /> },
+];
 const STARTER_OUTFITS = [
   { id: 'starter', name: 'Áo phông mộc mạc', color: '#f8fafc', desc: 'Áo thun trắng & jeans đơn giản cho người mới đến' },
 ];
 
 export function CharacterCreationModal({ defaultName = 'Nông Dân Mới', villages = [], defaultVillageId = '', onSubmit }) {
   const [name, setName] = useState(defaultName || 'Nông Dân Mới');
-  const [selectedAvatar, setSelectedAvatar] = useState(AVATAR_ICONS[0]);
+  const [selectedAvatar, setSelectedAvatar] = useState(AVATAR_ICONS[0].id);
   const [selectedOutfit, setSelectedOutfit] = useState(STARTER_OUTFITS[0].id);
   const [farmName, setFarmName] = useState('Nông Trại Bình Minh');
   const [villageId, setVillageId] = useState(defaultVillageId);
@@ -36,7 +41,7 @@ export function CharacterCreationModal({ defaultName = 'Nông Dân Mới', villa
     <div className="onboarding-backdrop">
       <section className="character-creator-card" role="dialog" aria-modal="true">
         <div className="creator-header">
-          <span className="creator-badge">✨ CHÀO MỪNG NÔNG DÂN MỚI</span>
+          <span className="creator-badge"><Icon3dNonLa size={18} /> CHÀO MỪNG NÔNG DÂN MỚI</span>
           <h2>Khởi Tạo Nhân Vật & Nông Trại</h2>
           <p>Thiết lập danh tính của bạn trước khi bước vào Thung Lũng Bình Minh</p>
         </div>
@@ -51,12 +56,12 @@ export function CharacterCreationModal({ defaultName = 'Nông Dân Mới', villa
                 boxShadow: `0 12px 30px ${currentOutfitObj.color}55`,
               }}
             >
-              <span className="preview-emoji">{selectedAvatar}</span>
+              <span className="preview-emoji">{AVATAR_ICONS.find(item => item.id === selectedAvatar)?.icon}</span>
               <div className="preview-hat-glow" />
             </div>
             <strong className="preview-name">{name.trim() || 'Nông Dân Mới'}</strong>
-            <span className="preview-farm">🏡 {farmName.trim() || 'Nông Trại Bình Minh'}</span>
-            <small className="preview-village">{villages.find(item => item.id === villageId)?.icon || '🗺️'} {villages.find(item => item.id === villageId)?.name || 'Chưa chọn làng'}</small>
+            <span className="preview-farm"><Icon3dHouseCabin size={19} /> {farmName.trim() || 'Nông Trại Bình Minh'}</span>
+            <small className="preview-village"><Icon3dMap size={18} /> {villages.find(item => item.id === villageId)?.name || 'Chưa chọn làng'}</small>
             <small className="preview-outfit-tag" style={{ background: `${currentOutfitObj.color}33`, color: '#2b4728' }}>
               Trang phục: {currentOutfitObj.name}
             </small>
@@ -104,7 +109,7 @@ export function CharacterCreationModal({ defaultName = 'Nông Dân Mới', villa
                         className={`village-choice-btn ${villageId === village.id ? 'active' : ''}`}
                         onClick={() => setVillageId(village.id)}
                       >
-                        <i>{village.icon}</i>
+                        <i><Icon3dHouseCabin size={27} /></i>
                         <span><b>{village.name}</b><small>{village.description}</small></span>
                         <em>{full ? 'Đã đầy' : village.provisional ? 'Đang đồng bộ · có thể chọn' : `${village.available}/${village.capacity} lô trống`}</em>
                       </button>
@@ -117,14 +122,14 @@ export function CharacterCreationModal({ defaultName = 'Nông Dân Mới', villa
             <div className="input-group">
               <label>Chọn Biểu Tượng Đại Diện</label>
               <div className="avatar-selection-grid">
-                {AVATAR_ICONS.map(icon => (
+                {AVATAR_ICONS.map(item => (
                   <button
-                    key={icon}
+                    key={item.id}
                     type="button"
-                    className={`avatar-choice-btn ${selectedAvatar === icon ? 'active' : ''}`}
-                    onClick={() => setSelectedAvatar(icon)}
+                    className={`avatar-choice-btn ${selectedAvatar === item.id ? 'active' : ''}`}
+                    onClick={() => setSelectedAvatar(item.id)}
                   >
-                    {icon}
+                    {item.icon}
                   </button>
                 ))}
               </div>
@@ -151,7 +156,7 @@ export function CharacterCreationModal({ defaultName = 'Nông Dân Mới', villa
             </div>
 
             <button type="submit" className="creator-submit-btn" disabled={!villageId}>
-              <span>{villageId ? '🌾 Nhận Nông Trại Và Vào Làng →' : 'Hãy chọn một làng'}</span>
+              <span>{villageId ? <><Icon3dCheck size={22} /> Nhận Nông Trại Và Vào Làng</> : 'Hãy chọn một làng'}</span>
             </button>
           </div>
         </form>

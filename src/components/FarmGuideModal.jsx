@@ -1,11 +1,28 @@
 import { useState } from 'react';
+import {
+  Icon3dBackpack,
+  Icon3dShopCart,
+  Icon3dOrdersBox,
+  Icon3dModernCity,
+  Icon3dBike,
+  Icon3dCarrot,
+  Icon3dRiceSpike,
+  Icon3dSprout,
+  Icon3dFlower,
+  Icon3dLotus,
+  Icon3dCoast,
+  Icon3dWalk,
+  Icon3dCub50,
+  Icon3dTractor,
+  Icon3dHammer,
+} from './icons3d/GameIcons3D.jsx';
 
 const GUIDE_TABS = [
-  { id: 'barn', label: '📦 Kho Nông Sản', title: 'Cơ Chế Kho Chứa & Xử Lý Kho Đầy' },
-  { id: 'shop', label: '🌱 Cửa Hàng', title: 'Cửa Hàng Vật Tư & Cây Trồng' },
-  { id: 'orders', label: '📋 Đơn Hàng', title: 'Bảng Đơn Hàng & Kiếm Tiền Hiệu Quả' },
-  { id: 'bus', label: '🚌 Tuyến Xe Buýt', title: 'Hệ Thống Xe Buýt & Thế Giới Mở' },
-  { id: 'vehicles', label: '🚲 Phương Tiện', title: 'Phương Tiện & Tốc Độ Di Chuyển' },
+  { id: 'barn', label: 'Kho Nông Sản', icon: <Icon3dBackpack size={18} />, title: 'Cơ Chế Kho Chứa & Xử Lý Kho Đầy' },
+  { id: 'shop', label: 'Cửa Hàng', icon: <Icon3dShopCart size={18} />, title: 'Cửa Hàng Vật Tư & Cây Trồng' },
+  { id: 'orders', label: 'Đơn Hàng', icon: <Icon3dOrdersBox size={18} />, title: 'Bảng Đơn Hàng & Kiếm Tiền Hiệu Quả' },
+  { id: 'bus', label: 'Tuyến Xe Buýt', icon: <Icon3dModernCity size={18} />, title: 'Hệ Thống Xe Buýt & Thế Giới Mở' },
+  { id: 'vehicles', label: 'Phương Tiện', icon: <Icon3dBike size={18} />, title: 'Phương Tiện & Tốc Độ Di Chuyển' },
 ];
 
 export function FarmGuideModal({ onClose, onResetTutorial }) {
@@ -32,8 +49,10 @@ export function FarmGuideModal({ onClose, onResetTutorial }) {
               type="button"
               className={`guide-tab-btn ${activeTab === tab.id ? 'active' : ''}`}
               onClick={() => setActiveTab(tab.id)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
-              {tab.label}
+              <span style={{ display: 'inline-flex' }}>{tab.icon}</span>
+              <span>{tab.label}</span>
             </button>
           ))}
         </div>
@@ -43,7 +62,6 @@ export function FarmGuideModal({ onClose, onResetTutorial }) {
           {activeTab === 'barn' && (
             <div className="guide-content-view">
               <div className="guide-callout warning">
-                <span className="callout-icon">⚠️</span>
                 <div>
                   <strong>Chú ý quan trọng: Khi Kho Đầy!</strong>
                   <p>
@@ -59,12 +77,12 @@ export function FarmGuideModal({ onClose, onResetTutorial }) {
                 </div>
                 <div className="detail-card">
                   <b>Cách Giải Quyết Kho Đầy</b>
-                  <p>1. Mở menu <strong>🎒 Kho Đồ</strong> và bấm vào các nông sản để bán bớt lấy Xu.</p>
-                  <p>2. Hoặc mở menu <strong>📦 Đơn Hàng</strong> để đóng gói giao đơn cho dân làng.</p>
+                  <p>1. Mở menu <strong>Kho Đồ</strong> và bấm vào các nông sản để bán bớt lấy Xu.</p>
+                  <p>2. Hoặc mở menu <strong>Đơn Hàng</strong> để đóng gói giao đơn cho dân làng.</p>
                 </div>
                 <div className="detail-card">
                   <b>Nâng Cấp Kho</b>
-                  <p>Mở menu <strong>🔨 Nâng Cấp</strong> ➔ Chọn “Nâng kho”. Mỗi cấp tăng thêm <strong>+20 vị trí chứa</strong>!</p>
+                  <p>Mở menu <strong>Nâng Cấp</strong> ➔ Chọn “Nâng kho”. Mỗi cấp tăng thêm <strong>+20 vị trí chứa</strong>!</p>
                 </div>
               </div>
             </div>
@@ -85,28 +103,28 @@ export function FarmGuideModal({ onClose, onResetTutorial }) {
                   <span>Thời Gian Lớn</span>
                 </div>
                 <div className="crop-row">
-                  <span>🥕 Cà rốt</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dCarrot size={20} /> Cà rốt</span>
                   <span>Cấp 1</span>
                   <span>5 xu</span>
                   <span className="profit">+12 xu</span>
                   <span>1 phút</span>
                 </div>
                 <div className="crop-row">
-                  <span>🌾 Lúa mì</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dRiceSpike size={20} /> Lúa mì</span>
                   <span>Cấp 2</span>
                   <span>12 xu</span>
                   <span className="profit">+30 xu</span>
                   <span>3 phút</span>
                 </div>
                 <div className="crop-row">
-                  <span>🍅 Cà chua</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dSprout size={20} /> Cà chua</span>
                   <span>Cấp 3</span>
                   <span>20 xu</span>
                   <span className="profit">+52 xu</span>
                   <span>5 phút</span>
                 </div>
                 <div className="crop-row">
-                  <span>🍓 Dâu tây</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dFlower size={20} /> Dâu tây</span>
                   <span>Cấp 5</span>
                   <span>45 xu</span>
                   <span className="profit">+120 xu</span>
@@ -119,7 +137,6 @@ export function FarmGuideModal({ onClose, onResetTutorial }) {
           {activeTab === 'orders' && (
             <div className="guide-content-view">
               <div className="guide-callout success">
-                <span className="callout-icon">💡</span>
                 <div>
                   <strong>Bí quyết sinh lời cao nhất!</strong>
                   <p>
@@ -131,7 +148,7 @@ export function FarmGuideModal({ onClose, onResetTutorial }) {
               <div className="guide-grid-details">
                 <div className="detail-card">
                   <b>Cách Giao Đơn</b>
-                  <p>Bấm biểu tượng <strong>📦 Đơn Hàng</strong> ở thanh menu bên phải. Nếu đủ nguyên liệu, nút sẽ sáng màu xanh để bạn bấm giao hàng.</p>
+                  <p>Bấm biểu tượng <strong>Đơn Hàng</strong> ở thanh menu bên phải. Nếu đủ nguyên liệu, nút sẽ sáng màu xanh để bạn bấm giao hàng.</p>
                 </div>
                 <div className="detail-card">
                   <b>Làm Mới Đơn Hàng</b>
@@ -149,19 +166,19 @@ export function FarmGuideModal({ onClose, onResetTutorial }) {
 
               <div className="guide-grid-details">
                 <div className="detail-card">
-                  <b>🏡 Nông Trại Hoa Mai</b>
+                  <b style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon3dRiceSpike size={20} /> Nông Trại Hoa Mai</b>
                   <p>Khu vực trang trại cá nhân, ô đất canh tác, chuồng gà bò và cối xay.</p>
                 </div>
                 <div className="detail-card">
-                  <b>🏙️ Trung Tâm Thành Phố</b>
+                  <b style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon3dModernCity size={20} /> Trung Tâm Thành Phố</b>
                   <p>Quảng trường, cửa hàng vật tư, tiệm thời trang, đại lý xe và sòng bài may mắn.</p>
                 </div>
                 <div className="detail-card">
-                  <b>🎣 Hồ Pha Lê</b>
-                  <p>Cầu gỗ và thác nước hữu tình, địa điểm lý tưởng để thư giãn.</p>
+                  <b style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon3dLotus size={20} /> Hồ Pha Lê</b>
+                  <p>Cầu gỗ và đầm sen hữu tình, địa điểm lý tưởng để thư giãn.</p>
                 </div>
                 <div className="detail-card">
-                  <b>🏖️ Bãi Biển Bình Minh</b>
+                  <b style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon3dCoast size={20} /> Bãi Biển Bình Minh</b>
                   <p>Bờ biển cát trắng, chợ cá ven biển và ngọn hải đăng cổ kính.</p>
                 </div>
               </div>
@@ -172,19 +189,19 @@ export function FarmGuideModal({ onClose, onResetTutorial }) {
             <div className="guide-content-view">
               <div className="guide-grid-details">
                 <div className="detail-card">
-                  <b>🚶 Đi Bộ (Mặc định)</b>
+                  <b style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon3dWalk size={20} /> Đi Bộ (Mặc định)</b>
                   <p>Tốc độ: <strong>7 m/s</strong> · Miễn phí</p>
                 </div>
                 <div className="detail-card highlight-vehicle">
-                  <b>🚲 Xe Đạp Thể Thao</b>
-                  <p>Tốc độ: <strong>10 m/s</strong> (Nhanh hơn 43%) · <em>Phần thưởng tốt nghiệp Onboarding từ Bác Ba!</em></p>
+                  <b style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon3dBike size={20} /> Xe Đạp Thể Thao</b>
+                  <p>Tốc độ: <strong>10 m/s</strong> (Nhanh hơn 43%) · <em>Phần thưởng tốt nghiệp Onboarding từ Quản Gia Oliver!</em></p>
                 </div>
                 <div className="detail-card">
-                  <b>🛵 Xe Máy Điện</b>
+                  <b style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon3dCub50 size={20} /> Xe Máy Điện</b>
                   <p>Tốc độ: <strong>14 m/s</strong> (Gấp đôi đi bộ) · Mua tại Đại Lý Xe với giá 900 xu.</p>
                 </div>
                 <div className="detail-card">
-                  <b>🚜 Máy Kéo Nông Trại</b>
+                  <b style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icon3dTractor size={20} /> Máy Kéo Nông Trại</b>
                   <p>Tốc độ: <strong>18 m/s</strong> · Phương tiện nhanh và mạnh mẽ nhất thung lũng!</p>
                 </div>
               </div>
@@ -195,7 +212,7 @@ export function FarmGuideModal({ onClose, onResetTutorial }) {
         <footer className="guide-footer">
           {onResetTutorial && (
             <button type="button" className="replay-tutorial-btn" onClick={onResetTutorial}>
-              🔄 Chơi lại Luồng Hướng Dẫn Tân Thủ
+              Chơi lại Luồng Hướng Dẫn Tân Thủ
             </button>
           )}
           <button type="button" className="guide-close-action" onClick={onClose}>
@@ -206,3 +223,4 @@ export function FarmGuideModal({ onClose, onResetTutorial }) {
     </div>
   );
 }
+

@@ -57,8 +57,13 @@ const materialCache = new Map();
  * - Tự động tái sử dụng cache theo name để tối ưu 60 FPS
  */
 export function createToyMaterial(scene, name, hexColor, options = {}) {
+  if (!scene) {
+    console.warn(`[createToyMaterial] scene is undefined for material "${name}"`);
+    return null;
+  }
   // Không dùng chung material giữa các Babylon Scene/Engine khác nhau.
-  const cacheKey = `${scene.uid}_${name}_${hexColor}_${options.specularPower || 64}_${options.emissiveHex || 'none'}_${options.alpha ?? 1}`;
+  const sceneId = scene.uid || scene.id || 'default_scene';
+  const cacheKey = `${sceneId}_${name}_${hexColor}_${options.specularPower || 64}_${options.emissiveHex || 'none'}_${options.alpha ?? 1}`;
   if (materialCache.has(cacheKey) && !materialCache.get(cacheKey).isDisposed?.()) {
     return materialCache.get(cacheKey);
   }

@@ -6,17 +6,18 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js'
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
+import { FARM_LOT_SPEC } from '../../../shared/farmLayout.js';
 
 /**
  * Tạo Cổng Nông Trại 3D Tinh Xảo & Biển Tên Sắc Nét và Thùng Thư Giao Lưu Play Together
  */
 export function createFarmGateAndSign(scene, farmConfig, shadows = null, onMailboxClick = null) {
-  const isSouthSide = farmConfig.z < 35;
   const root = new TransformNode(`farm-gate-root-${farmConfig.id}`, scene);
-  root.position.set(farmConfig.x, 0, isSouthSide ? farmConfig.z + 7.0 : farmConfig.z - 7.0);
-  if (isSouthSide) {
-    root.rotation.y = Math.PI;
-  }
+  root.position.set(
+    farmConfig.x + FARM_LOT_SPEC.anchors.gate.x,
+    0,
+    farmConfig.z + FARM_LOT_SPEC.anchors.gate.z,
+  );
 
   const brassMat = createToyMaterial(scene, 'mat-gate-brass-shiny', '#f59e0b', { specularPower: 96, specularLevel: 0.7 });
   const mailboxRed = createToyMaterial(scene, 'mat-mailbox-cherry-red', '#ef4444', { specularPower: 96, specularLevel: 0.65 });
@@ -55,7 +56,7 @@ export function createFarmGateAndSign(scene, farmConfig, shadows = null, onMailb
   gateLantern.parent = root;
 
   // 3. Biển Gỗ Treo Chữ Nổi (Carved Wooden Signboard)
-  const signWidth = 2.6;
+  const signWidth = 3.6;
   const signHeight = 0.85;
   const signBoard = MeshBuilder.CreateBox('gate-sign-board', {
     width: signWidth,
@@ -64,6 +65,7 @@ export function createFarmGateAndSign(scene, farmConfig, shadows = null, onMailb
   }, scene);
   signBoard.position.set(0, 2.35, 0);
   signBoard.parent = root;
+  signBoard.metadata = { type: 'land-sign', farmId: farmConfig.id };
   shadows?.addShadowCaster(signBoard);
 
   // Vẽ chữ sắc nét lên biển gỗ bằng DynamicTexture
@@ -79,17 +81,13 @@ export function createFarmGateAndSign(scene, farmConfig, shadows = null, onMailb
   tctx.strokeStyle = farmConfig.isOwner ? '#d97706' : '#8d6e63';
   tctx.strokeRect(6, 6, 500, 148);
 
-  // Dòng 1: Tiêu đề lô đất
+  // Bảng tên trước lô đất chỉ hiển thị userName.
   tctx.fillStyle = farmConfig.isOwner ? '#92400e' : '#5d4037';
-  tctx.font = 'bold 36px "Segoe UI", Arial, sans-serif';
+  tctx.font = 'bold 42px "Segoe UI", Arial, sans-serif';
   tctx.textAlign = 'center';
   tctx.textBaseline = 'middle';
-  tctx.fillText(farmConfig.isOwner ? '🌾 NÔNG TRẠI CỦA BẠN' : `🏡 LÔ ${farmConfig.lotNumber || '1'}`, 256, 48);
-
-  // Dòng 2: Tên chủ sở hữu
   tctx.fillStyle = farmConfig.isOwner ? '#b45309' : '#3e2723';
-  tctx.font = '600 32px "Segoe UI", Arial, sans-serif';
-  tctx.fillText(farmConfig.owner || 'Nông Dân', 256, 105);
+  tctx.fillText(farmConfig.owner || 'Nông Dân', 256, 80);
 
   textTex.update();
 
@@ -204,18 +202,16 @@ export function createFarmGateAndSign(scene, farmConfig, shadows = null, onMailb
       tctx.strokeRect(6, 6, 500, 148);
 
       tctx.fillStyle = isOwner ? '#92400e' : '#5d4037';
-      tctx.font = 'bold 36px "Segoe UI", Arial, sans-serif';
+      tctx.font = 'bold 42px "Segoe UI", Arial, sans-serif';
       tctx.textAlign = 'center';
       tctx.textBaseline = 'middle';
-      tctx.fillText(isOwner ? '🌾 NÔNG TRẠI CỦA BẠN' : `🏡 LÔ ${farmConfig.lotNumber || '1'}`, 256, 48);
-
       tctx.fillStyle = isOwner ? '#b45309' : '#3e2723';
-      tctx.font = '600 32px "Segoe UI", Arial, sans-serif';
-      tctx.fillText(newOwner || 'Nông Dân', 256, 105);
+      tctx.fillText(newOwner || 'Nông Dân', 256, 80);
       textTex.update();
     },
     dispose() {
       textTex.dispose();
+      signMat.dispose();
       root.dispose();
     },
   };

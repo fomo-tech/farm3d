@@ -37,7 +37,7 @@ function districtSign(scene, district, parent) {
   ctx.strokeStyle = district.color;
   ctx.lineWidth = 12;
   ctx.stroke();
-  texture.drawText(`${district.icon} ${district.label}`, null, 112, '800 48px "Segoe UI", sans-serif', '#273548', null, true, true);
+  texture.drawText(district.label.toUpperCase(), null, 112, '800 46px "Segoe UI", sans-serif', '#273548', null, true, true);
 
   const signMat = new StandardMaterial(`district-sign-mat-${district.id}`, scene);
   signMat.diffuseTexture = texture;
@@ -92,7 +92,12 @@ export function createCityMasterplan(scene, shadows) {
     crossing: material(scene, 'city-crossing-mat', '#fffdf5'),
     stop: material(scene, 'city-stop-mat', '#52b8ce'),
     wood: material(scene, 'city-stop-wood-mat', '#76513a'),
+    chrome: material(scene, 'city-chrome-mat', '#dbe7ef'),
+    glass: material(scene, 'city-glass-mat', '#64d7ed', '#0ea5c6'),
+    neonCyan: material(scene, 'city-neon-cyan', '#06b6d4', '#06b6d4'),
+    neonPink: material(scene, 'city-neon-pink', '#ec4899', '#ec4899'),
   };
+  mats.glass.alpha = 0.82;
 
   // Vành đai giúp nhìn một lần là hiểu cấu trúc thành phố, thay cho các đường rời rạc.
   const ring = MeshBuilder.CreateTorus('city-ring-road', {
@@ -121,6 +126,26 @@ export function createCityMasterplan(scene, shadows) {
   walkRing.material = mats.walk;
   walkRing.parent = root;
 
+  // Hai dải LED ngầm đổi màu bao quanh quảng trường, hiện rõ từ góc camera thứ ba.
+  [41.2, 42.4].forEach((radius, index) => {
+    const led = MeshBuilder.CreateTorus(`city-neon-ring-${index}`, { diameter: radius * 2, thickness: 0.3, tessellation: 96 }, scene);
+    led.position.y = 0.12; led.scaling.y = 0.08; led.material = index ? mats.neonPink : mats.neonCyan; led.parent = root;
+  });
+
+  // Đài phun nước Cyber-Deco thay cho thiết kế bánh kẹo cũ.
+  const fountain = new TransformNode('cyber-deco-fountain', scene);
+  fountain.parent = root;
+  const pool = MeshBuilder.CreateCylinder('cyber-fountain-pool', { diameter: 11.5, height: 0.65, tessellation: 48 }, scene);
+  pool.position.y = 0.33; pool.material = mats.chrome; pool.parent = fountain;
+  const water = MeshBuilder.CreateCylinder('cyber-fountain-water', { diameter: 10.5, height: 0.12, tessellation: 48 }, scene);
+  water.position.y = 0.68; water.material = mats.glass; water.parent = fountain;
+  const crystal = MeshBuilder.CreateCylinder('cyber-fountain-crystal', { diameterTop: 0.4, diameterBottom: 2.8, height: 6.8, tessellation: 6 }, scene);
+  crystal.position.y = 4.05; crystal.material = mats.glass; crystal.parent = fountain; shadows?.addShadowCaster(crystal);
+  [2.1, 3.6].forEach((diameter, index) => {
+    const halo = MeshBuilder.CreateTorus(`cyber-fountain-halo-${index}`, { diameter, thickness: 0.18, tessellation: 32 }, scene);
+    halo.position.y = 2.2 + index * 1.55; halo.material = index ? mats.neonPink : mats.neonCyan; halo.parent = fountain;
+  });
+
   // Bốn trục đi bộ từ vòng ngoài vào quảng trường.
   ground(scene, 'city-promenade-ns', 6, 91, 0, 0, mats.walk, root, 0.055);
   ground(scene, 'city-promenade-ew', 91, 6, 0, 0, mats.walk, root, 0.055);
@@ -133,5 +158,27 @@ export function createCityMasterplan(scene, shadows) {
   transitShelter(scene, -58, 13, Math.PI / 2, root, shadows, mats);
   transitShelter(scene, 58, -13, -Math.PI / 2, root, shadows, mats);
 
-  return { root, districts: WORLD_LAYOUT.cityDistricts };
+  // Trạm sạc EV và đèn đường LED khí động học tại bốn cửa ngõ.
+  [[-57, -15], [57, 15]].forEach(([x, z], index) => {
+    const charger = MeshBuilder.CreateBox(`ev-charger-${index}`, { width: 1.1, height: 2.4, depth: 0.8 }, scene);
+    charger.position.set(x, 1.2, z); charger.material = mats.chrome; charger.parent = root;
+    const screen = MeshBuilder.CreateBox(`ev-charger-screen-${index}`, { width: 0.65, height: 0.7, depth: 0.05 }, scene);
+    screen.position.set(x, 1.55, z - 0.42); screen.material = mats.neonCyan; screen.parent = root;
+  });
+  for (let i = 0; i < 8; i += 1) {
+    const angle = i * Math.PI / 4;
+    const x = Math.cos(angle) * 47;
+    const z = Math.sin(angle) * 47;
+    const pole = MeshBuilder.CreateCylinder(`smart-led-pole-${i}`, { height: 4.8, diameter: 0.18, tessellation: 10 }, scene);
+    pole.position.set(x, 2.4, z); pole.material = mats.chrome; pole.parent = root;
+    const lamp = MeshBuilder.CreateSphere(`smart-led-lamp-${i}`, { diameter: 0.62, segments: 10 }, scene);
+    lamp.position.set(x, 4.85, z); lamp.material = mats.neonCyan; lamp.parent = root;
+  }
+
+  const observer = scene.onBeforeRenderObservable.add(() => {
+    const dt = scene.getEngine().getDeltaTime() / 1000;
+    crystal.rotation.y += dt * 0.45;
+  });
+
+  return { root, fountain, districts: WORLD_LAYOUT.cityDistricts, dispose() { scene.onBeforeRenderObservable.remove(observer); root.dispose(false, true); } };
 }

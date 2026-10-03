@@ -1,5 +1,24 @@
 import { useState } from 'react';
 import { CROPS } from '../game/economy/GameProgress.js';
+import {
+  Icon3dMarketStall,
+  Icon3dGuideBook,
+  Icon3dBackpack,
+  Icon3dBasket,
+  Icon3dGoldCoin,
+  Icon3dCarrot,
+  Icon3dRiceSpike,
+  Icon3dSprout,
+  Icon3dFlower,
+} from './icons3d/GameIcons3D.jsx';
+
+function renderCrop3D(cropId, size = 24) {
+  if (cropId === 'carrot') return <Icon3dCarrot size={size} />;
+  if (cropId === 'wheat') return <Icon3dRiceSpike size={size} />;
+  if (cropId === 'tomato') return <Icon3dSprout size={size} />;
+  if (cropId === 'strawberry') return <Icon3dFlower size={size} />;
+  return <Icon3dSprout size={size} />;
+}
 
 const MARKET_OFFERS = [
   { id: 'off_1', seller: 'Hợp tác xã', crop: 'carrot', amount: 5, price: 50, tag: 'Bán chạy' },
@@ -24,7 +43,9 @@ export function RoadsideShopModal({ progress, onBuyOffer, onClose }) {
         {/* Striped Canopy Roof Header */}
         <div className="shop-canopy-stripe">
           <div className="shop-title-wrap">
-            <span className="shop-icon">🏪</span>
+            <span className="shop-icon" style={{ display: 'inline-flex' }}>
+              <Icon3dMarketStall size={36} />
+            </span>
             <div>
               <small>CHỢ NÔNG DÂN HOA MAI</small>
               <h2>Gian Hàng Ven Đường</h2>
@@ -41,15 +62,19 @@ export function RoadsideShopModal({ progress, onBuyOffer, onClose }) {
             type="button"
             className={`shop-tab-btn ${tab === 'gazette' ? 'active' : ''}`}
             onClick={() => setTab('gazette')}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            📰 Tạp Chí Rao Vặt Thung Lũng
+            <Icon3dGuideBook size={18} />
+            <span>Tạp Chí Rao Vặt Thung Lũng</span>
           </button>
           <button
             type="button"
             className={`shop-tab-btn ${tab === 'my_shop' ? 'active' : ''}`}
             onClick={() => setTab('my_shop')}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            📦 Quầy Hàng Của Bạn
+            <Icon3dBackpack size={18} />
+            <span>Quầy Hàng Của Bạn</span>
           </button>
         </div>
 
@@ -59,7 +84,7 @@ export function RoadsideShopModal({ progress, onBuyOffer, onClose }) {
             <div className="offers-grid">
               {offers.length === 0 ? (
                 <div className="empty-shop-notice">
-                  <span>🧺</span>
+                  <Icon3dBasket size={40} />
                   <p>Hôm nay cả chợ đã bán hết sạch hàng! Hãy quay lại sau nhé.</p>
                 </div>
               ) : (
@@ -71,11 +96,14 @@ export function RoadsideShopModal({ progress, onBuyOffer, onClose }) {
                     <div key={offer.id} className="market-crate-card">
                       <span className="crate-seller-tag">{offer.seller}</span>
                       <div className="crate-crop-display">
-                        <span className="crate-crop-icon">{cropObj.icon}</span>
+                        <span className="crate-crop-icon" style={{ display: 'inline-flex' }}>{renderCrop3D(offer.crop, 26)}</span>
                         <b className="crate-crop-name">{cropObj.name} × {offer.amount}</b>
                       </div>
                       <div className="crate-bottom-row">
-                        <span className="crate-price">🪙 {offer.price}</span>
+                        <span className="crate-price" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          <Icon3dGoldCoin size={18} />
+                          <span>{offer.price}</span>
+                        </span>
                         <button
                           type="button"
                           className="crate-buy-btn"
@@ -104,7 +132,7 @@ export function RoadsideShopModal({ progress, onBuyOffer, onClose }) {
                     const crop = CROPS[cropId];
                     return (
                       <div key={cropId} className="my-stock-crate">
-                        <span className="my-crate-icon">{crop.icon}</span>
+                        <span className="my-crate-icon" style={{ display: 'inline-flex' }}>{renderCrop3D(cropId, 26)}</span>
                         <b>{crop.name}</b>
                         <small>Có: {count} củ trong kho</small>
                         <span className="my-crate-val">Giá thị trường: {crop.sellPrice * 2} xu</span>
@@ -117,9 +145,14 @@ export function RoadsideShopModal({ progress, onBuyOffer, onClose }) {
         </div>
 
         <footer className="shop-footer">
-          <span>Số dư của bạn: <b>🪙 {progress.coins.toLocaleString('vi-VN')} xu</b></span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <span>Số dư của bạn:</span>
+            <Icon3dGoldCoin size={18} />
+            <b>{progress.coins.toLocaleString('vi-VN')} xu</b>
+          </span>
         </footer>
       </section>
     </div>
   );
 }
+

@@ -4,644 +4,696 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
 import { ParticleSystem } from '@babylonjs/core/Particles/particleSystem.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
-import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../../rendering/PlayTogetherTheme.js';
-import {
-  createMarshmallowTree,
-  createCandyFlowerBush,
-  createCandyPebbleRock,
-} from '../createPlayTogetherProps.js';
+import { createToyMaterial } from '../../rendering/PlayTogetherTheme.js';
 
-/**
- * Tạo nhãn biển hiệu Pop-art chuẩn Play Together
- */
-function createPopArtVenueSign(scene, title, icon, colorHex, parent, yPos = 8.4) {
-  const dt = new DynamicTexture(`sign-tex-${title}`, { width: 1024, height: 280 }, scene, true);
-  dt.hasAlpha = true;
-  const ctx = dt.getContext();
-  ctx.clearRect(0, 0, 1024, 280);
-
-  // Khung biển hiệu màu trắng kem bo tròn góc lớn (Chunky Pill Shape)
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.roundRect(16, 16, 992, 248, 56);
-  ctx.fill();
-
-  // Viền ngoài màu kẹo neon nổi bật
-  ctx.strokeStyle = colorHex;
-  ctx.lineWidth = 16;
-  ctx.stroke();
-
-  // Viền chỉ vàng lót phía trong
-  ctx.strokeStyle = '#fef08a';
-  ctx.lineWidth = 6;
-  ctx.beginPath();
-  ctx.roundRect(36, 36, 952, 208, 42);
-  ctx.stroke();
-
-  // Icon và Tên cửa hàng
-  dt.drawText(`${icon} ${title}`, null, 172, '900 76px "Segoe UI", "Nunito", Arial, sans-serif', '#1e293b', null, true, true);
-
-  const mat = new StandardMaterial(`sign-mat-${title}`, scene);
-  mat.diffuseTexture = dt;
-  mat.opacityTexture = dt;
-  mat.emissiveColor = Color3.FromHexString(colorHex).scale(0.35);
-  mat.disableLighting = true;
-
-  const plane = MeshBuilder.CreatePlane(`sign-plane-${title}`, { width: 9.6, height: 2.6 }, scene);
-  plane.position.set(0, yPos, 0);
-  plane.material = mat;
-  plane.billboardMode = Mesh.BILLBOARDMODE_ALL;
-  plane.isPickable = false;
-  plane.parent = parent;
-
-  return plane;
+function makeMat(scene, name, hex, emissiveHex = null, specular = 0.5, specularPower = 90) {
+  const m = new StandardMaterial(name, scene);
+  m.diffuseColor = Color3.FromHexString(hex);
+  m.ambientColor = m.diffuseColor.scale(0.5);
+  m.specularColor = new Color3(specular, specular, specular);
+  m.specularPower = specularPower;
+  if (emissiveHex) m.emissiveColor = Color3.FromHexString(emissiveHex);
+  return m;
 }
 
 /**
- * TẠO TOÀN DIỆN QUẢNG TRƯỜNG PLAY TOGETHER (CENTRAL PLAZA REDESIGN)
+ * Biển hiệu LED Neon 3D phong cách Play Together Metaverse
+ */
+function createNeonMarqueeSign(scene, title, subtitle, accentColor, parent, yPos = 8.8) {
+  const dt = new DynamicTexture(`pt-marquee-tex-${title}`, { width: 1024, height: 320 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  dt.anisotropicFilteringLevel = 16;
+  dt.hasAlpha = true;
+  const ctx = dt.getContext();
+  ctx.clearRect(0, 0, 1024, 320);
+
+  // Khung biển hiệu màu than chì bóng viền bo tròn
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.roundRect(16, 16, 992, 288, 36);
+  ctx.fill();
+
+  // Viền Neon phát sáng
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 14;
+  ctx.stroke();
+
+  // Nền gradient tinh tế
+  const grad = ctx.createLinearGradient(0, 0, 1024, 0);
+  grad.addColorStop(0, '#1e293b');
+  grad.addColorStop(0.5, '#334155');
+  grad.addColorStop(1, '#1e293b');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.roundRect(28, 28, 968, 264, 24);
+  ctx.fill();
+
+  // Tiêu đề chữ nổi phát sáng phong cách Metaverse
+  ctx.font = '900 68px "Montserrat", "Segoe UI", Arial, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.shadowColor = accentColor;
+  ctx.shadowBlur = 24;
+  ctx.fillText(title, 512, 145);
+
+  // Phụ đề chữ nhỏ phong cách Social Game
+  ctx.font = 'bold 30px "Montserrat", "Segoe UI", Arial, sans-serif';
+  ctx.fillStyle = accentColor;
+  ctx.shadowBlur = 12;
+  ctx.fillText(subtitle.toUpperCase(), 512, 215);
+
+  dt.update();
+
+  const signMat = new StandardMaterial(`pt-marquee-mat-${title}`, scene);
+  signMat.diffuseTexture = dt;
+  signMat.opacityTexture = dt;
+  signMat.emissiveColor = Color3.FromHexString(accentColor).scale(0.35);
+  signMat.specularColor = Color3.Black();
+
+  const signPlane = MeshBuilder.CreatePlane(`pt-marquee-plane-${title}`, { width: 8.4, height: 2.7 }, scene);
+  signPlane.position.set(0, yPos, 0);
+  signPlane.material = signMat;
+  signPlane.billboardMode = Mesh.BILLBOARDMODE_Y;
+  signPlane.parent = parent;
+
+  return signPlane;
+}
+
+/**
+ * QUẢNG TRƯỜNG TRUNG TÂM THÀNH PHỐ PLAY TOGETHER (PREMIUM SOCIAL METAVERSE PLAZA)
+ * - Quảng trường bộ hành 92m đá cẩm thạch trắng sứ viền LED Neon Cyan & Magenta
+ * - Trái tim: Đài Phun Nước Trung Tâm Kaia 3 tầng có hồ bơi cẩm thạch, câu cá & nhảy múa
+ * - 5 Mega Venues chuẩn Game Mạng Xã Hội:
+ *   1. 👗 Trendy Fashion Mall (venue: 'fashion')
+ *   2. 🎰 Grand Neon Arcade & Casino Lounge (venue: 'casino')
+ *   3. 🛒 Super Agri-Mart & Green Center (venue: 'supplies')
+ *   4. 🏎️ Motors & Mobility Showroom (venue: 'vehicles')
+ *   5. 🎣 Marina Pro Fishing Tackle & Aquarium (venue: 'fishing')
+ * - 2 Phân khu đất mở rộng tương lai (Future Expansion Plots) ở hai cánh Đông - Tây
  */
 export function createPlayTogetherPlaza(scene, shadows, foliage) {
-  const plazaRoot = new TransformNode('play-together-central-plaza', scene);
+  const plazaRoot = new TransformNode('playtogether-central-plaza-root', scene);
 
   // ========================================================
-  // 1. MẶT BẰNG QUẢNG TRƯỜNG TRÒN KHỔNG LỒ (GRAND PLAZA DISC)
+  // 1. QUẢNG TRƯỜNG ĐÁ CẨM THẠCH TRẮNG SỨ 92M VIỀN LED NEON
   // ========================================================
-  // Đĩa tròn đường kính 86m lát gạch hoa cúc màu kem pastel, viền xanh mint và caramel
-  const plazaDisc = MeshBuilder.CreateCylinder('plaza-grand-disc', {
-    diameter: 86,
-    height: 0.05,
+  const plazaDisc = MeshBuilder.CreateCylinder('pt-plaza-grand-disc', {
+    diameter: 92,
+    height: 0.12,
     tessellation: 64,
   }, scene);
-  plazaDisc.position.set(0, 0.025, 0);
+  plazaDisc.position.set(0, 0.06, 0);
   plazaDisc.parent = plazaRoot;
   plazaDisc.receiveShadows = true;
 
-  const plazaMat = createToyMaterial(scene, 'plaza-biscuit-mat', '#fffdf5', {
-    specularPower: 48,
-    specularLevel: 0.35,
-    ambientBoost: 0.55,
-  });
-
-  // Vẽ họa tiết hoa cúc và vòng tròn đồng tâm pastel lên mặt sàn quảng trường
-  const plazaTex = new DynamicTexture('plaza-pattern-tex', 1024, scene, true);
+  const plazaTex = new DynamicTexture('pt-plaza-surface-tex', 1024, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  plazaTex.anisotropicFilteringLevel = 16;
   const pctx = plazaTex.getContext();
-  pctx.fillStyle = '#fffdf0'; // Nền kem bơ tươi sáng
+
+  // Nền đá cẩm thạch trắng ngọc trai bóng mịn
+  pctx.fillStyle = '#f8fafc';
   pctx.fillRect(0, 0, 1024, 1024);
 
-  // Vành đai ngoài màu xanh mint pastel
-  pctx.strokeStyle = '#a7f3d0';
-  pctx.lineWidth = 36;
-  pctx.beginPath();
-  pctx.arc(512, 512, 480, 0, Math.PI * 2);
-  pctx.stroke();
-
-  // Vành đai giữa màu cam đào pastel
-  pctx.strokeStyle = '#fed7aa';
-  pctx.lineWidth = 20;
-  pctx.beginPath();
-  pctx.arc(512, 512, 380, 0, Math.PI * 2);
-  pctx.stroke();
-
-  // Vòng tròn trong màu hồng phấn
-  pctx.strokeStyle = '#fbcfe8';
-  pctx.lineWidth = 14;
-  pctx.beginPath();
-  pctx.arc(512, 512, 240, 0, Math.PI * 2);
-  pctx.stroke();
-
-  // Họa tiết hoa cúc pastel 8 cánh quanh tâm
-  for (let i = 0; i < 8; i++) {
-    const angle = (i * Math.PI * 2) / 8;
-    const hx = 512 + Math.cos(angle) * 310;
-    const hy = 512 + Math.sin(angle) * 310;
-
-    pctx.fillStyle = '#fef08a';
+  // Vành đai hoa văn đá hoa cương xám khói & vàng gold
+  pctx.strokeStyle = '#e2e8f0';
+  pctx.lineWidth = 4;
+  for (let r = 80; r < 500; r += 50) {
     pctx.beginPath();
-    pctx.arc(hx, hy, 28, 0, Math.PI * 2);
-    pctx.fill();
-
-    pctx.fillStyle = '#f59e0b';
-    pctx.beginPath();
-    pctx.arc(hx, hy, 12, 0, Math.PI * 2);
-    pctx.fill();
+    pctx.arc(512, 512, r, 0, Math.PI * 2);
+    pctx.stroke();
   }
 
+  // 12 nan hoa hướng tâm lát đá cẩm thạch sang trọng
+  for (let a = 0; a < 12; a++) {
+    const rad = (a * Math.PI * 2) / 12;
+    pctx.beginPath();
+    pctx.moveTo(512, 512);
+    pctx.lineTo(512 + Math.cos(rad) * 490, 512 + Math.sin(rad) * 490);
+    pctx.stroke();
+  }
+
+  // Vòng xuyến hoa văn ngôi sao trung tâm (Kaia Star Emblem)
+  pctx.fillStyle = '#fef08a';
+  pctx.beginPath();
+  pctx.arc(512, 512, 140, 0, Math.PI * 2);
+  pctx.fill();
+  pctx.strokeStyle = '#f59e0b';
+  pctx.lineWidth = 8;
+  pctx.stroke();
+
   plazaTex.update();
-  plazaMat.diffuseTexture = plazaTex;
-  plazaDisc.material = plazaMat;
+
+  const matPlaza = new StandardMaterial('pt-plaza-mat', scene);
+  matPlaza.diffuseTexture = plazaTex;
+  matPlaza.specularColor = new Color3(0.4, 0.4, 0.45);
+  matPlaza.specularPower = 90;
+  plazaDisc.material = matPlaza;
+
+  // Dải LED Neon Cyan viền ngoài cùng quảng trường 92m
+  const neonRimOuter = MeshBuilder.CreateTorus('pt-plaza-neon-rim', {
+    diameter: 91.6,
+    thickness: 0.35,
+    tessellation: 64,
+  }, scene);
+  neonRimOuter.position.y = 0.14;
+  neonRimOuter.material = makeMat(scene, 'pt-neon-cyan', '#38bdf8', '#00f2fe', 0.8, 128);
+  neonRimOuter.parent = plazaRoot;
 
   // ========================================================
-  // 2. ĐÀI PHUN NƯỚC BÁNH KEM 3 TẦNG CHUẨN PLAY TOGETHER
+  // 2. TRÁI TIM METAVERSE: ĐÀI PHUN NƯỚC TRUNG TÂM KAIA (GRAND SOCIAL FOUNTAIN)
+  // Đường kính 18m, 3 tầng cẩm thạch, tượng cá heo đôi phun nước, bệ đá cho người chơi ngồi câu cá & tụ họp
   // ========================================================
-  const fountainRoot = new TransformNode('sweet-cake-fountain', scene);
+  const fountainRoot = new TransformNode('pt-grand-central-fountain', scene);
   fountainRoot.position.set(0, 0, 0);
   fountainRoot.parent = plazaRoot;
 
-  const matCream = createToyMaterial(scene, 'fountain-cream', '#ffffff');
-  const matStrawberry = createToyMaterial(scene, 'fountain-strawberry', '#f472b6');
-  const matVanilla = createToyMaterial(scene, 'fountain-vanilla', '#fef08a');
-  const matWaterCyan = createToyMaterial(scene, 'fountain-water-cyan', '#38bdf8', {
-    emissiveHex: '#0284c7',
-    specularPower: 96,
+  const matsFountain = {
+    marbleWhite: makeMat(scene, 'fountain-marble-white', '#ffffff', null, 0.6, 90),
+    marbleGold: makeMat(scene, 'fountain-marble-gold', '#fbbf24', '#f59e0b', 0.7, 100),
+    crystalWater: makeMat(scene, 'fountain-crystal-water', '#38bdf8', '#0284c7', 0.85, 120),
+    dolphinGlass: makeMat(scene, 'fountain-dolphin-glass', '#67e8f9', '#06b6d4', 0.9, 128),
+  };
+  matsFountain.crystalWater.alpha = 0.82;
+  matsFountain.dolphinGlass.alpha = 0.88;
+
+  // Tầng 1: Hồ chính đường kính 18m
+  const pool1 = MeshBuilder.CreateCylinder('fountain-pool-1', { diameter: 18.0, height: 0.9, tessellation: 48 }, scene);
+  pool1.position.y = 0.45;
+  pool1.material = matsFountain.marbleWhite;
+  pool1.parent = fountainRoot;
+  shadows?.addShadowCaster(pool1);
+
+  // Bệ đá tròn viền hồ để người chơi ngồi câu cá & trò chuyện
+  const poolRim1 = MeshBuilder.CreateTorus('fountain-rim-1', { diameter: 18.0, thickness: 0.7, tessellation: 48 }, scene);
+  poolRim1.position.y = 0.9;
+  poolRim1.material = matsFountain.marbleWhite;
+  poolRim1.parent = fountainRoot;
+
+  const water1 = MeshBuilder.CreateCylinder('fountain-water-1', { diameter: 16.8, height: 0.1, tessellation: 48 }, scene);
+  water1.position.y = 0.8;
+  water1.material = matsFountain.crystalWater;
+  water1.parent = fountainRoot;
+
+  // Tầng 2: Bồn giữa đường kính 10.5m
+  const col1 = MeshBuilder.CreateCylinder('fountain-col-1', { diameter: 3.4, height: 1.8, tessellation: 24 }, scene);
+  col1.position.y = 1.7;
+  col1.material = matsFountain.marbleGold;
+  col1.parent = fountainRoot;
+
+  const pool2 = MeshBuilder.CreateCylinder('fountain-pool-2', { diameter: 10.5, height: 0.75, tessellation: 36 }, scene);
+  pool2.position.y = 2.45;
+  pool2.material = matsFountain.marbleWhite;
+  pool2.parent = fountainRoot;
+  shadows?.addShadowCaster(pool2);
+
+  const water2 = MeshBuilder.CreateCylinder('fountain-water-2', { diameter: 9.6, height: 0.1, tessellation: 36 }, scene);
+  water2.position.y = 2.8;
+  water2.material = matsFountain.crystalWater;
+  water2.parent = fountainRoot;
+
+  // Tầng 3: Bồn đỉnh đường kính 5.2m
+  const col2 = MeshBuilder.CreateCylinder('fountain-col-2', { diameter: 2.2, height: 1.6, tessellation: 20 }, scene);
+  col2.position.y = 3.5;
+  col2.material = matsFountain.marbleGold;
+  col2.parent = fountainRoot;
+
+  const pool3 = MeshBuilder.CreateCylinder('fountain-pool-3', { diameter: 5.2, height: 0.65, tessellation: 24 }, scene);
+  pool3.position.y = 4.2;
+  pool3.material = matsFountain.marbleWhite;
+  pool3.parent = fountainRoot;
+
+  // Tượng Cá Heo Đôi Pha Lê Xanh phun nước vươn mình lên đỉnh tháp
+  const dolphinGroup = new TransformNode('fountain-dolphins', scene);
+  dolphinGroup.position.set(0, 5.0, 0);
+  dolphinGroup.parent = fountainRoot;
+
+  [-0.45, 0.45].forEach((dx, didx) => {
+    const dolphin = MeshBuilder.CreateSphere(`dolphin-${didx}`, { diameterX: 0.9, diameterY: 1.8, diameterZ: 0.9, segments: 12 }, scene);
+    dolphin.position.set(dx, 0.8, 0);
+    dolphin.rotation.z = didx === 0 ? 0.35 : -0.35;
+    dolphin.material = matsFountain.dolphinGlass;
+    dolphin.parent = dolphinGroup;
   });
-  matWaterCyan.alpha = 0.85;
 
-  // Tầng 1: Đáy bể tròn đường kính 10.5m
-  const basePool = MeshBuilder.CreateCylinder('fountain-base-pool', {
-    diameter: 10.5,
-    height: 0.7,
-    tessellation: 48,
-  }, scene);
-  basePool.position.y = 0.35;
-  basePool.material = matCream;
-  basePool.parent = fountainRoot;
-  basePool.receiveShadows = true;
-  shadows?.addShadowCaster(basePool);
+  // Hạt nước phun trào lấp lánh (Particle Water Cascade)
+  const sprayEmitter = new TransformNode('fountain-spray-emitter', scene);
+  sprayEmitter.position.set(0, 6.8, 0);
+  sprayEmitter.parent = fountainRoot;
 
-  // Gờ vòm bo tròn mềm mại cho miệng bể (Torus Rim)
-  const poolRim = MeshBuilder.CreateTorus('fountain-pool-rim', {
-    diameter: 10.5,
-    thickness: 0.35,
-    tessellation: 40,
-  }, scene);
-  poolRim.position.y = 0.7;
-  poolRim.material = matStrawberry;
-  poolRim.parent = fountainRoot;
-
-  // Mặt nước hồ đáy xanh ngọc lam
-  const poolWater = MeshBuilder.CreateCylinder('fountain-pool-water', {
-    diameter: 9.8,
-    height: 0.1,
-    tessellation: 40,
-  }, scene);
-  poolWater.position.y = 0.62;
-  poolWater.material = matWaterCyan;
-  poolWater.parent = fountainRoot;
-
-  // Tầng 2: Bánh kem dâu hồng pastel (Đường kính 6.2m)
-  const tier2 = MeshBuilder.CreateCylinder('fountain-tier-2', {
-    diameter: 6.2,
-    height: 0.85,
-    tessellation: 36,
-  }, scene);
-  tier2.position.y = 1.15;
-  tier2.material = matStrawberry;
-  tier2.parent = fountainRoot;
-  tier2.receiveShadows = true;
-
-  const tier2Rim = MeshBuilder.CreateTorus('fountain-tier-2-rim', {
-    diameter: 6.2,
-    thickness: 0.28,
-    tessellation: 32,
-  }, scene);
-  tier2Rim.position.y = 1.58;
-  tier2Rim.material = matCream;
-  tier2Rim.parent = fountainRoot;
-
-  const tier2Water = MeshBuilder.CreateCylinder('fountain-tier-2-water', {
-    diameter: 5.6,
-    height: 0.08,
-    tessellation: 32,
-  }, scene);
-  tier2Water.position.y = 1.52;
-  tier2Water.material = matWaterCyan;
-  tier2Water.parent = fountainRoot;
-
-  // Kẹo hạt rắc M&M trang trí quanh tầng 2
-  const candyColors = ['#f43f5e', '#38bdf8', '#facc15', '#a855f7', '#4ade80'];
-  for (let c = 0; c < 12; c++) {
-    const angle = (c * Math.PI * 2) / 12;
-    const dot = MeshBuilder.CreateSphere(`fountain-candy-${c}`, { diameter: 0.32, segments: 8 }, scene);
-    dot.position.set(Math.cos(angle) * 3.12, 1.15, Math.sin(angle) * 3.12);
-    dot.material = createToyMaterial(scene, `candy-color-${c}`, candyColors[c % candyColors.length]);
-    dot.parent = fountainRoot;
-  }
-
-  // Tầng 3: Bánh kem vani vàng kem (Đường kính 3.4m)
-  const tier3 = MeshBuilder.CreateCylinder('fountain-tier-3', {
-    diameter: 3.4,
-    height: 0.8,
-    tessellation: 32,
-  }, scene);
-  tier3.position.y = 1.95;
-  tier3.material = matVanilla;
-  tier3.parent = fountainRoot;
-
-  const tier3Rim = MeshBuilder.CreateTorus('fountain-tier-3-rim', {
-    diameter: 3.4,
-    thickness: 0.22,
-    tessellation: 28,
-  }, scene);
-  tier3Rim.position.y = 2.35;
-  tier3Rim.material = matCream;
-  tier3Rim.parent = fountainRoot;
-
-  // Đỉnh đài phun nước: NGÔI SAO VÀNG 3D KHỔNG LỒ XOAY TÍT (Chibi Golden Star)
-  const starNode = new TransformNode('fountain-star-spinner', scene);
-  starNode.position.set(0, 3.4, 0);
-  starNode.parent = fountainRoot;
-
-  const starCore = MeshBuilder.CreateSphere('fountain-star-center', { diameter: 1.1, segments: 12 }, scene);
-  starCore.material = createToyMaterial(scene, 'fountain-gold-star', '#facc15', { emissiveHex: '#f59e0b' });
-  starCore.parent = starNode;
-
-  // 5 Cánh sao mập mạp tròn trĩnh
-  for (let i = 0; i < 5; i++) {
-    const angle = (i * Math.PI * 2) / 5 - Math.PI / 2;
-    const cone = MeshBuilder.CreateCylinder(`fountain-star-point-${i}`, {
-      diameterTop: 0.05,
-      diameterBottom: 0.65,
-      height: 0.85,
-      tessellation: 12,
-    }, scene);
-    cone.rotation.z = angle - Math.PI / 2;
-    cone.position.set(Math.cos(angle) * 0.72, Math.sin(angle) * 0.72, 0);
-    cone.material = starCore.material;
-    cone.parent = starNode;
-  }
-
-  // 2 Mắt chớp hoạt hình đáng yêu cho Ngôi sao vàng
-  const starEyeL = MeshBuilder.CreateSphere('star-eye-l', { diameter: 0.2, segments: 8 }, scene);
-  starEyeL.position.set(-0.22, 0.08, 0.48);
-  starEyeL.scaling.set(0.7, 1.2, 0.3);
-  starEyeL.material = createToyMaterial(scene, 'star-eye-mat', '#0f172a');
-  starEyeL.parent = starNode;
-
-  const starEyeR = MeshBuilder.CreateSphere('star-eye-r', { diameter: 0.2, segments: 8 }, scene);
-  starEyeR.position.set(0.22, 0.08, 0.48);
-  starEyeR.scaling.set(0.7, 1.2, 0.3);
-  starEyeR.material = starEyeL.material;
-  starEyeR.parent = starNode;
-
-  // Hệ thống hạt nước phun bồng bềnh lấp lánh (Water Spray Particles)
-  const spray = new ParticleSystem('fountain-water-spray', 32, scene);
-  const ptex = new DynamicTexture('water-drop-tex', 32, scene, false);
-  const pctxDrop = ptex.getContext();
-  pctxDrop.fillStyle = '#38bdf8';
-  pctxDrop.beginPath();
-  pctxDrop.arc(16, 16, 14, 0, Math.PI * 2);
-  pctxDrop.fill();
-  ptex.update();
-
-  spray.particleTexture = ptex;
-  spray.emitter = new Vector3(0, 3.8, 0);
+  const spray = new ParticleSystem('fountain-particles', 120, scene);
+  spray.particleTexture = new Texture('/models/nature/plant_bush.glb', scene);
+  spray.emitter = sprayEmitter;
   spray.minEmitBox = new Vector3(-0.3, 0, -0.3);
-  spray.maxEmitBox = new Vector3(0.3, 0.2, 0.3);
-  spray.color1 = new Color4(0.7, 0.92, 1.0, 0.85);
-  spray.color2 = new Color4(0.35, 0.8, 1.0, 0.65);
-  spray.colorDead = new Color4(0.35, 0.8, 1.0, 0.0);
-  spray.minSize = 0.16;
-  spray.maxSize = 0.35;
+  spray.maxEmitBox = new Vector3(0.3, 0.1, 0.3);
+  spray.color1 = new Color4(0.8, 0.95, 1.0, 0.85);
+  spray.color2 = new Color4(0.3, 0.85, 1.0, 0.5);
+  spray.colorDead = new Color4(0.1, 0.5, 0.9, 0.0);
+  spray.minSize = 0.25;
+  spray.maxSize = 0.65;
   spray.minLifeTime = 1.0;
-  spray.maxLifeTime = 1.6;
-  spray.emitRate = 28;
+  spray.maxLifeTime = 2.2;
+  spray.emitRate = 60;
   spray.gravity = new Vector3(0, -9.81, 0);
-  spray.direction1 = new Vector3(-1.2, 3.8, -1.2);
-  spray.direction2 = new Vector3(1.2, 4.5, 1.2);
-  spray.minEmitPower = 1.5;
-  spray.maxEmitPower = 2.5;
-  spray.updateSpeed = 0.018;
+  spray.direction1 = new Vector3(-2.2, 5.5, -2.2);
+  spray.direction2 = new Vector3(2.2, 6.2, 2.2);
   spray.start();
 
   // ========================================================
-  // 3. TÒA NHÀ 1: 🍕 TIỆM PIZZA & TRÒ CHƠI (PIZZA & ARCADE)
+  // 3. MEGA VENUE 1: 👗 TRENDY FASHION MALL (THIÊN ĐƯỜNG THỜI TRANG & CATWALK)
+  // Tọa lạc tại Đông Nam (x: 29, z: -25), venue: 'fashion'
   // ========================================================
-  const pizzaShopRoot = new TransformNode('venue-pizza-shop', scene);
-  pizzaShopRoot.metadata = { venue: 'casino' }; // Gắn vào minigame cược / casino
-  pizzaShopRoot.position.set(-27, 0, 20);
-  pizzaShopRoot.rotation.y = Math.PI / 4 + 0.15; // Hướng vào tâm quảng trường
-  pizzaShopRoot.parent = plazaRoot;
-
-  // Thân nhà bo cong màu vàng phô mai ấm áp
-  const pizzaBody = MeshBuilder.CreateBox('pizza-shop-body', { width: 11.2, height: 5.2, depth: 8.4 }, scene);
-  pizzaBody.position.y = 2.6;
-  pizzaBody.material = createToyMaterial(scene, 'pizza-body-mat', '#fef08a');
-  pizzaBody.parent = pizzaShopRoot;
-  pizzaBody.receiveShadows = true;
-  shadows?.addShadowCaster(pizzaBody);
-
-  // Chân tường trắng sữa bảo vệ
-  const pizzaPlinth = MeshBuilder.CreateBox('pizza-plinth', { width: 11.6, height: 0.6, depth: 8.8 }, scene);
-  pizzaPlinth.position.y = 0.3;
-  pizzaPlinth.material = createToyMaterial(scene, 'pizza-plinth-mat', '#ffffff');
-  pizzaPlinth.parent = pizzaShopRoot;
-
-  // Mái hiên vòm sọc đỏ - vàng phô mai bo tròn (Awning)
-  const pizzaAwning = MeshBuilder.CreateCylinder('pizza-awning', {
-    diameter: 3.2,
-    height: 10.6,
-    tessellation: 18,
-    arc: 0.5,
-  }, scene);
-  pizzaAwning.rotation.z = Math.PI / 2;
-  pizzaAwning.rotation.y = Math.PI;
-  pizzaAwning.position.set(0, 3.6, 4.5);
-  pizzaAwning.material = createToyMaterial(scene, 'pizza-awning-mat', '#ef4444');
-  pizzaAwning.parent = pizzaShopRoot;
-
-  // Cửa kính lớn tròn mắt mèo
-  const pizzaDoor = MeshBuilder.CreateBox('pizza-door', { width: 2.6, height: 3.2, depth: 0.2 }, scene);
-  pizzaDoor.position.set(0, 1.6, 4.25);
-  pizzaDoor.material = createToyMaterial(scene, 'pizza-door-glass', '#bae6fd', { emissiveHex: '#38bdf8' });
-  pizzaDoor.parent = pizzaShopRoot;
-
-  // NÓC NHÀ: MIẾNG BÁNH PIZZA PHÔ MAI 3D KHỔNG LỒ XOAY TÍT
-  const pizzaSpinner = new TransformNode('pizza-giant-slice', scene);
-  pizzaSpinner.position.set(0, 7.2, 0);
-  pizzaSpinner.parent = pizzaShopRoot;
-
-  const slice = MeshBuilder.CreateCylinder('pizza-crust-slice', {
-    diameter: 6.4,
-    height: 0.85,
-    tessellation: 24,
-    arc: 0.16, // Lát bánh tam giác 60 độ
-  }, scene);
-  slice.rotation.x = Math.PI / 2;
-  slice.material = createToyMaterial(scene, 'pizza-cheese-mat', '#facc15', { emissiveHex: '#eab308' });
-  slice.parent = pizzaSpinner;
-
-  // Viền bánh nướng phồng nâu vàng (Crust rim)
-  const crust = MeshBuilder.CreateTorus('pizza-crust-rim', {
-    diameter: 6.4,
-    thickness: 0.65,
-    tessellation: 20,
-  }, scene);
-  crust.rotation.x = Math.PI / 2;
-  crust.material = createToyMaterial(scene, 'pizza-crust-mat', '#d97706');
-  crust.parent = pizzaSpinner;
-
-  // Các lát xúc xích Pepperoni đỏ mọng
-  for (let p = 0; p < 4; p++) {
-    const pep = MeshBuilder.CreateCylinder(`pizza-pep-${p}`, { diameter: 0.65, height: 0.15, tessellation: 12 }, scene);
-    pep.position.set(0.4 + (p % 2) * 0.9, 0.48, 1.2 + p * 0.7);
-    pep.material = createToyMaterial(scene, `pep-mat-${p}`, '#dc2626');
-    pep.parent = pizzaSpinner;
-  }
-
-  // Biển hiệu Pop-art
-  createPopArtVenueSign(scene, 'TIỆM PIZZA & GAMES', '🍕', '#ef4444', pizzaShopRoot, 8.8);
-
-  // ========================================================
-  // 4. TÒA NHÀ 2: 🥕 SIÊU THỊ TIỆN LỢI CHIBI (KAIA MART)
-  // ========================================================
-  const martRoot = new TransformNode('venue-fresh-mart', scene);
-  martRoot.metadata = { venue: 'supplies' }; // Mua hạt giống / vật tư nông nghiệp
-  martRoot.position.set(27, 0, 20);
-  martRoot.rotation.y = -Math.PI / 4 - 0.15;
-  martRoot.parent = plazaRoot;
-
-  const martBody = MeshBuilder.CreateBox('mart-body', { width: 11.2, height: 5.2, depth: 8.4 }, scene);
-  martBody.position.y = 2.6;
-  martBody.material = createToyMaterial(scene, 'mart-body-mat', '#a7f3d0'); // Xanh mint pastel
-  martBody.parent = martRoot;
-  martBody.receiveShadows = true;
-  shadows?.addShadowCaster(martBody);
-
-  const martPlinth = MeshBuilder.CreateBox('mart-plinth', { width: 11.6, height: 0.6, depth: 8.8 }, scene);
-  martPlinth.position.y = 0.3;
-  martPlinth.material = pizzaPlinth.material;
-  martPlinth.parent = martRoot;
-
-  // Mái vòm tròn kem dâu
-  const martRoof = MeshBuilder.CreateSphere('mart-roof-dome', { diameter: 9.2, segments: 16 }, scene);
-  martRoof.scaling.set(1.1, 0.45, 0.85);
-  martRoof.position.set(0, 5.2, 0);
-  martRoof.material = createToyMaterial(scene, 'mart-roof-mat', '#34d399');
-  martRoof.parent = martRoot;
-
-  // Cửa kính siêu thị
-  const martDoor = MeshBuilder.CreateBox('mart-door', { width: 3.2, height: 3.2, depth: 0.2 }, scene);
-  martDoor.position.set(0, 1.6, 4.25);
-  martDoor.material = pizzaDoor.material;
-  martDoor.parent = martRoot;
-
-  // NÓC NHÀ: CỦ CÀ RỐT CHIBI 3D MẬP MẠP MẮT CƯỜI XOAY NHẸ
-  const carrotSpinner = new TransformNode('mart-giant-carrot', scene);
-  carrotSpinner.position.set(0, 7.0, 0);
-  carrotSpinner.parent = martRoot;
-
-  const carrotRootMesh = MeshBuilder.CreateCylinder('mart-carrot-cone', {
-    diameterTop: 2.2,
-    diameterBottom: 0.4,
-    height: 4.2,
-    tessellation: 20,
-  }, scene);
-  carrotRootMesh.rotation.z = Math.PI / 6; // Hơi nghiêng điệu đà
-  carrotRootMesh.material = createToyMaterial(scene, 'mart-carrot-orange', '#fb923c', { emissiveHex: '#ea580c' });
-  carrotRootMesh.parent = carrotSpinner;
-
-  // Tán lá xanh tròn múp míp
-  for (let leaf = 0; leaf < 3; leaf++) {
-    const l = MeshBuilder.CreateSphere(`mart-carrot-leaf-${leaf}`, { diameter: 1.1, segments: 10 }, scene);
-    l.scaling.set(0.6, 1.6, 0.6);
-    l.position.set(Math.cos(leaf * 2.1) * 0.6 - 0.6, 2.4, Math.sin(leaf * 2.1) * 0.6);
-    l.rotation.z = -0.3;
-    l.material = createToyMaterial(scene, 'mart-carrot-leaf-mat', '#22c55e');
-    l.parent = carrotSpinner;
-  }
-
-  // Mắt cười Chibi
-  const cEyeL = MeshBuilder.CreateSphere('mart-ceye-l', { diameter: 0.28, segments: 8 }, scene);
-  cEyeL.position.set(0.2, 0.4, 1.05);
-  cEyeL.scaling.set(0.7, 1.3, 0.3);
-  cEyeL.material = starEyeL.material;
-  cEyeL.parent = carrotSpinner;
-
-  const cEyeR = MeshBuilder.CreateSphere('mart-ceye-r', { diameter: 0.28, segments: 8 }, scene);
-  cEyeR.position.set(0.9, 0.05, 0.95);
-  cEyeR.scaling.set(0.7, 1.3, 0.3);
-  cEyeR.material = starEyeL.material;
-  cEyeR.parent = carrotSpinner;
-
-  // Biển hiệu Pop-art
-  createPopArtVenueSign(scene, 'SIÊU THỊ NÔNG VỤ', '🥕', '#10b981', martRoot, 9.2);
-
-  // ========================================================
-  // 5. TÒA NHÀ 3: 🎀 TIỆM THỜI TRANG PHẤN HỒNG (PINK BOUTIQUE)
-  // ========================================================
-  const fashionRoot = new TransformNode('venue-fashion-boutique', scene);
+  const fashionRoot = new TransformNode('venue-fashion-boutique-modern', scene);
   fashionRoot.metadata = { venue: 'fashion' };
-  fashionRoot.position.set(27, 0, -20);
-  fashionRoot.rotation.y = -Math.PI * 0.75;
+  fashionRoot.position.set(29, 0, -25);
+  fashionRoot.rotation.y = -Math.PI * 0.25 - 0.1;
   fashionRoot.parent = plazaRoot;
 
-  const fashionBody = MeshBuilder.CreateBox('fashion-body', { width: 11.2, height: 5.2, depth: 8.4 }, scene);
-  fashionBody.position.y = 2.6;
-  fashionBody.material = createToyMaterial(scene, 'fashion-body-mat', '#fbcfe8'); // Hồng pastel
+  const matsFashion = {
+    facadeWhite: makeMat(scene, 'fashion-white', '#ffffff', null, 0.6, 90),
+    roseGold: makeMat(scene, 'fashion-rose-gold', '#fb7185', '#f43f5e', 0.8, 120),
+    glassPink: makeMat(scene, 'fashion-glass-pink', '#fce7f3', '#f43f5e', 0.9, 128),
+    catwalkGlow: makeMat(scene, 'fashion-catwalk-glow', '#f472b6', '#ec4899', 0.8, 100),
+    trimChrome: makeMat(scene, 'fashion-chrome', '#f1f5f9', null, 0.85, 120),
+  };
+  matsFashion.glassPink.alpha = 0.85;
+
+  // Khối đế đá hoa cương nâng cao 0.5m
+  const fashionPlinth = MeshBuilder.CreateBox('fashion-plinth', { width: 17.0, height: 0.5, depth: 13.0 }, scene);
+  fashionPlinth.position.y = 0.25;
+  fashionPlinth.material = matsFashion.facadeWhite;
+  fashionPlinth.parent = fashionRoot;
+  fashionPlinth.receiveShadows = true;
+
+  // Thân chính 2 tầng kính cong thời thượng
+  const fashionBody = MeshBuilder.CreateBox('fashion-body', { width: 16.0, height: 8.5, depth: 12.0 }, scene);
+  fashionBody.position.y = 4.6;
+  fashionBody.material = matsFashion.facadeWhite;
   fashionBody.parent = fashionRoot;
-  fashionBody.receiveShadows = true;
   shadows?.addShadowCaster(fashionBody);
 
-  const fashionPlinth = MeshBuilder.CreateBox('fashion-plinth', { width: 11.6, height: 0.6, depth: 8.8 }, scene);
-  fashionPlinth.position.y = 0.3;
-  fashionPlinth.material = pizzaPlinth.material;
-  fashionPlinth.parent = fashionRoot;
+  // Đại sảnh vách kính Panoramic màu hồng cánh sen phát sáng
+  const fashionGlass = MeshBuilder.CreateBox('fashion-glass-facade', { width: 13.5, height: 6.8, depth: 0.3 }, scene);
+  fashionGlass.position.set(0, 4.2, 6.1);
+  fashionGlass.material = matsFashion.glassPink;
+  fashionGlass.parent = fashionRoot;
 
-  const fashionRoof = MeshBuilder.CreateBox('fashion-roof', { width: 11.8, height: 0.9, depth: 9.0 }, scene);
-  fashionRoof.position.y = 5.4;
-  fashionRoof.material = createToyMaterial(scene, 'fashion-roof-mat', '#f43f5e');
-  fashionRoof.parent = fashionRoot;
+  // Mái đón Canopy bay vòm cong khí động học viền Rose Gold
+  const fashionCanopy = MeshBuilder.CreateCylinder('fashion-canopy', { diameter: 10.5, height: 0.45, tessellation: 36 }, scene);
+  fashionCanopy.scaling.set(1.4, 1.0, 0.8);
+  fashionCanopy.position.set(0, 6.2, 7.5);
+  fashionCanopy.material = matsFashion.roseGold;
+  fashionCanopy.parent = fashionRoot;
+  shadows?.addShadowCaster(fashionCanopy);
 
-  // NÓC NHÀ: CHIẾC NƠ BƯỚM HỒNG 3D KHỔNG LỒ PHÁT SÁNG
-  const bowSpinner = new TransformNode('fashion-giant-bow', scene);
-  bowSpinner.position.set(0, 7.2, 0);
-  bowSpinner.parent = fashionRoot;
+  // Sàn Catwalk phát sáng dẫn thẳng vào cửa
+  const catwalk = MeshBuilder.CreateBox('fashion-catwalk', { width: 4.8, height: 0.22, depth: 7.5 }, scene);
+  catwalk.position.set(0, 0.28, 7.8);
+  catwalk.material = matsFashion.catwalkGlow;
+  catwalk.parent = fashionRoot;
 
-  const matBow = createToyMaterial(scene, 'bow-glow-pink', '#f43f5e', {
-    emissiveHex: '#fb7185',
-    specularPower: 128,
+  // 2 Bệ kính tròn xoay 3D trưng bày ma-nơ-canh thời trang hai bên
+  [-4.2, 4.2].forEach((px, idx) => {
+    const ped = MeshBuilder.CreateCylinder(`fashion-pedestal-${idx}`, { diameter: 2.4, height: 0.6, tessellation: 24 }, scene);
+    ped.position.set(px, 0.55, 6.8);
+    ped.material = matsFashion.trimChrome;
+    ped.parent = fashionRoot;
+
+    // Ma-nơ-canh Chibi cách điệu trên bệ xoay
+    const mannequin = MeshBuilder.CreateSphere(`fashion-model-${idx}`, { diameterX: 0.8, diameterY: 1.6, diameterZ: 0.8, segments: 10 }, scene);
+    mannequin.position.set(px, 1.7, 6.8);
+    mannequin.material = matsFashion.roseGold;
+    mannequin.parent = fashionRoot;
   });
 
-  const bowCenter = MeshBuilder.CreateSphere('bow-center', { diameter: 1.1, segments: 12 }, scene);
-  bowCenter.material = matBow;
-  bowCenter.parent = bowSpinner;
+  createNeonMarqueeSign(scene, 'FASHION MALL', 'Trendy Outfits & Salon', '#f43f5e', fashionRoot, 10.4);
 
-  [-1, 1].forEach(side => {
-    const wing = MeshBuilder.CreateTorus(`bow-wing-${side}`, {
-      diameter: 2.2,
-      thickness: 0.55,
-      tessellation: 20,
-    }, scene);
-    wing.position.set(side * 1.5, 0.2, 0);
-    wing.rotation.y = Math.PI / 2;
-    wing.rotation.z = side * 0.3;
-    wing.material = matBow;
-    wing.parent = bowSpinner;
+  // ========================================================
+  // 4. MEGA VENUE 2: 🎰 GRAND NEON ARCADE & CASINO LOUNGE (CUNG ĐIỆN TRÒ CHƠI)
+  // Tọa lạc tại Tây Nam (x: -29, z: -25), venue: 'casino'
+  // ========================================================
+  const casinoRoot = new TransformNode('venue-casino-modern', scene);
+  casinoRoot.metadata = { venue: 'casino' };
+  casinoRoot.position.set(-29, 0, -25);
+  casinoRoot.rotation.y = Math.PI * 0.25 + 0.1;
+  casinoRoot.parent = plazaRoot;
+
+  const matsCasino = {
+    purpleRoyal: makeMat(scene, 'casino-purple', '#4c1d95', '#6d28d9', 0.7, 90),
+    goldChrome: makeMat(scene, 'casino-gold', '#facc15', '#f59e0b', 0.9, 128),
+    glassNeon: makeMat(scene, 'casino-glass-cyan', '#0284c7', '#38bdf8', 0.85, 120),
+    diceWhite: makeMat(scene, 'casino-dice-white', '#ffffff', '#fef08a', 0.8, 100),
+    diceDot: makeMat(scene, 'casino-dice-dot', '#dc2626', '#b91c1c', 0.9),
+  };
+  matsCasino.glassNeon.alpha = 0.85;
+
+  const casinoPlinth = MeshBuilder.CreateBox('casino-plinth', { width: 17.0, height: 0.5, depth: 13.0 }, scene);
+  casinoPlinth.position.y = 0.25;
+  casinoPlinth.material = matsCasino.purpleRoyal;
+  casinoPlinth.parent = casinoRoot;
+  casinoPlinth.receiveShadows = true;
+
+  const casinoBody = MeshBuilder.CreateBox('casino-body', { width: 16.0, height: 8.8, depth: 12.0 }, scene);
+  casinoBody.position.y = 4.75;
+  casinoBody.material = matsCasino.purpleRoyal;
+  casinoBody.parent = casinoRoot;
+  shadows?.addShadowCaster(casinoBody);
+
+  // Vòm cửa kính Cyber-Deco cao lớn
+  const casinoGlass = MeshBuilder.CreateBox('casino-glass-facade', { width: 13.5, height: 7.0, depth: 0.3 }, scene);
+  casinoGlass.position.set(0, 4.4, 6.1);
+  casinoGlass.material = matsCasino.glassNeon;
+  casinoGlass.parent = casinoRoot;
+
+  // Cột viền kim loại vàng kim hoàng gia
+  [-6.8, 6.8].forEach((cx, idx) => {
+    const col = MeshBuilder.CreateCylinder(`casino-gold-col-${idx}`, { diameter: 0.8, height: 9.0, tessellation: 16 }, scene);
+    col.position.set(cx, 4.75, 6.2);
+    col.material = matsCasino.goldChrome;
+    col.parent = casinoRoot;
+    shadows?.addShadowCaster(col);
   });
 
-  createPopArtVenueSign(scene, 'TIỆM THỜI TRANG', '🎀', '#ec4899', fashionRoot, 8.8);
+  // KHỐI XÚC XẮC 3D NEON KHỔNG LỒ XOAY TRÊN NÓC
+  const diceRoot = new TransformNode('casino-giant-dice-spinner', scene);
+  diceRoot.position.set(0, 11.8, 0);
+  diceRoot.parent = casinoRoot;
+
+  const giantDice = MeshBuilder.CreateBox('giant-dice-cube', { size: 3.4 }, scene);
+  giantDice.material = matsCasino.diceWhite;
+  giantDice.parent = diceRoot;
+  shadows?.addShadowCaster(giantDice);
+
+  // Các chấm tròn đỏ nổi bật trên mặt xúc xắc
+  const dot1 = MeshBuilder.CreateSphere('dice-dot-front', { diameter: 0.8, segments: 10 }, scene);
+  dot1.position.set(0, 0, 1.72);
+  dot1.material = matsCasino.diceDot;
+  dot1.parent = giantDice;
+
+  // Đồng xu vàng kim xoay tròn bên cạnh xúc xắc
+  const goldCoin = MeshBuilder.CreateCylinder('casino-giant-coin', { diameter: 2.8, height: 0.4, tessellation: 32 }, scene);
+  goldCoin.rotation.z = Math.PI / 2;
+  goldCoin.position.set(3.4, 0, 0);
+  goldCoin.material = matsCasino.goldChrome;
+  goldCoin.parent = diceRoot;
+
+  createNeonMarqueeSign(scene, 'GAME & CASINO', 'Lucky Spin · Dice · Arcades', '#fbbf24', casinoRoot, 10.4);
 
   // ========================================================
-  // 6. TÒA NHÀ 4: 🚗 SHOWROOM XE ĐỒ CHƠI & SKATE (SPEEDY MOTORS)
+  // 5. MEGA VENUE 3: 🛒 SUPER AGRI-MART & GREEN CENTER (SIÊU THỊ VẬT TƯ & HẠT GIỐNG)
+  // Tọa lạc tại Đông Bắc (x: 29, z: 25), venue: 'supplies'
   // ========================================================
-  const vehicleRoot = new TransformNode('venue-vehicle-dealer', scene);
+  const martRoot = new TransformNode('venue-agri-mall-modern', scene);
+  martRoot.metadata = { venue: 'supplies' };
+  martRoot.position.set(29, 0, 25);
+  martRoot.rotation.y = -Math.PI * 0.75 + 0.1;
+  martRoot.parent = plazaRoot;
+
+  const matsMart = {
+    pureWhite: makeMat(scene, 'mart-white', '#ffffff', null, 0.5, 80),
+    mintGreen: makeMat(scene, 'mart-mint-green', '#22c55e', '#4ade80', 0.7, 100),
+    glassGreen: makeMat(scene, 'mart-glass-green', '#dcfce7', '#22c55e', 0.85, 120),
+    metalChrome: makeMat(scene, 'mart-chrome', '#e2e8f0', null, 0.85, 120),
+    orangeFruit: makeMat(scene, 'mart-orange-crate', '#ea580c', '#f97316', 0.4),
+  };
+  matsMart.glassGreen.alpha = 0.85;
+
+  const martPlinth = MeshBuilder.CreateBox('mart-plinth', { width: 17.0, height: 0.5, depth: 13.0 }, scene);
+  martPlinth.position.y = 0.25;
+  martPlinth.material = matsMart.pureWhite;
+  martPlinth.parent = martRoot;
+  martPlinth.receiveShadows = true;
+
+  const martBody = MeshBuilder.CreateBox('mart-body', { width: 16.0, height: 8.5, depth: 12.0 }, scene);
+  martBody.position.y = 4.6;
+  martBody.material = matsMart.pureWhite;
+  martBody.parent = martRoot;
+  shadows?.addShadowCaster(martBody);
+
+  const martGlass = MeshBuilder.CreateBox('mart-glass-facade', { width: 13.5, height: 6.8, depth: 0.3 }, scene);
+  martGlass.position.set(0, 4.2, 6.1);
+  martGlass.material = matsMart.glassGreen;
+  martGlass.parent = martRoot;
+
+  // Dải LED xanh Mint chạy viền quanh mái
+  const martRoofBand = MeshBuilder.CreateBox('mart-roof-band', { width: 16.6, height: 0.6, depth: 12.6 }, scene);
+  martRoofBand.position.set(0, 8.8, 0);
+  martRoofBand.material = matsMart.mintGreen;
+  martRoofBand.parent = martRoot;
+
+  // Hàng xe đẩy siêu thị mạ chrome xếp hàng trước cửa (Shopping Carts)
+  [-3.8, -2.4, -1.0].forEach((cx, idx) => {
+    const cart = MeshBuilder.CreateBox(`shopping-cart-${idx}`, { width: 0.9, height: 0.9, depth: 1.2 }, scene);
+    cart.position.set(cx, 0.65, 7.2);
+    cart.material = matsMart.metalChrome;
+    cart.parent = martRoot;
+  });
+
+  // Kệ trưng bày sọt trái cây & hạt giống tươi mới
+  [2.2, 4.2].forEach((kx, kidx) => {
+    const stand = MeshBuilder.CreateBox(`fruit-stand-${kidx}`, { width: 1.4, height: 1.0, depth: 1.2 }, scene);
+    stand.position.set(kx, 0.7, 7.2);
+    stand.material = matsMart.mintGreen;
+    stand.parent = martRoot;
+
+    const fruit = MeshBuilder.CreateSphere(`fruit-bulk-${kidx}`, { diameter: 0.9, segments: 8 }, scene);
+    fruit.position.set(kx, 1.4, 7.2);
+    fruit.material = matsMart.orangeFruit;
+    fruit.parent = martRoot;
+  });
+
+  createNeonMarqueeSign(scene, 'SUPER AGRI-MART', 'Seeds · Supplies · Produce', '#22c55e', martRoot, 10.4);
+
+  // ========================================================
+  // 6. MEGA VENUE 4: 🏎️ MOTORS & MOBILITY SHOWROOM (SHOWROOM SIÊU XE & XE ĐẠP)
+  // Tọa lạc tại Tây Bắc (x: -29, z: 25), venue: 'vehicles'
+  // ========================================================
+  const vehicleRoot = new TransformNode('venue-vehicle-dealer-modern', scene);
   vehicleRoot.metadata = { venue: 'vehicles' };
-  vehicleRoot.position.set(-27, 0, -20);
-  vehicleRoot.rotation.y = Math.PI * 0.75;
+  vehicleRoot.position.set(-29, 0, 25);
+  vehicleRoot.rotation.y = Math.PI * 0.75 - 0.1;
   vehicleRoot.parent = plazaRoot;
 
-  const vehicleBody = MeshBuilder.CreateBox('vehicle-body', { width: 11.2, height: 5.2, depth: 8.4 }, scene);
-  vehicleBody.position.y = 2.6;
-  vehicleBody.material = createToyMaterial(scene, 'vehicle-body-mat', '#bae6fd'); // Xanh baby blue
-  vehicleBody.parent = vehicleRoot;
-  vehicleBody.receiveShadows = true;
-  shadows?.addShadowCaster(vehicleBody);
+  const matsMotor = {
+    darkCharcoal: makeMat(scene, 'motor-charcoal', '#0f172a', null, 0.6, 90),
+    cyanElectric: makeMat(scene, 'motor-cyan', '#00f2fe', '#38bdf8', 0.9, 128),
+    glassBlue: makeMat(scene, 'motor-glass', '#bae6fd', '#0284c7', 0.9, 128),
+    carRed: makeMat(scene, 'motor-car-red', '#ef4444', '#dc2626', 0.8, 120),
+  };
+  matsMotor.glassBlue.alpha = 0.85;
 
-  const vehiclePlinth = MeshBuilder.CreateBox('vehicle-plinth', { width: 11.6, height: 0.6, depth: 8.8 }, scene);
-  vehiclePlinth.position.y = 0.3;
-  vehiclePlinth.material = pizzaPlinth.material;
-  vehiclePlinth.parent = vehicleRoot;
+  const motorPlinth = MeshBuilder.CreateBox('motor-plinth', { width: 17.0, height: 0.5, depth: 13.0 }, scene);
+  motorPlinth.position.y = 0.25;
+  motorPlinth.material = matsMotor.darkCharcoal;
+  motorPlinth.parent = vehicleRoot;
+  motorPlinth.receiveShadows = true;
 
-  // NÓC NHÀ: BỤC XOAY TRƯNG BÀY CHIẾC XE HƠI MUI TRẦN CHIBI MINI
-  const carTurnTable = new TransformNode('car-turntable', scene);
-  carTurnTable.position.set(0, 6.4, 0);
-  carTurnTable.parent = vehicleRoot;
+  const motorBody = MeshBuilder.CreateBox('motor-body', { width: 16.0, height: 8.5, depth: 12.0 }, scene);
+  motorBody.position.y = 4.6;
+  motorBody.material = matsMotor.darkCharcoal;
+  motorBody.parent = vehicleRoot;
+  shadows?.addShadowCaster(motorBody);
 
-  const carPlinth = MeshBuilder.CreateCylinder('car-plinth', { diameter: 4.8, height: 0.4, tessellation: 32 }, scene);
-  carPlinth.material = createToyMaterial(scene, 'car-plinth-mat', '#fef08a');
-  carPlinth.parent = carTurnTable;
+  const motorGlass = MeshBuilder.CreateBox('motor-glass-facade', { width: 13.5, height: 6.8, depth: 0.3 }, scene);
+  motorGlass.position.set(0, 4.2, 6.1);
+  motorGlass.material = matsMotor.glassBlue;
+  motorGlass.parent = vehicleRoot;
 
-  // Chiếc xe hơi Chibi màu vàng chuối
-  const carBody = MeshBuilder.CreateBox('mini-chibi-car-body', { width: 2.8, height: 1.1, depth: 1.8 }, scene);
-  carBody.position.y = 0.8;
-  carBody.material = createToyMaterial(scene, 'chibi-car-paint', '#facc15');
-  carBody.parent = carTurnTable;
+  // Dải cánh gió thể thao trên mái viền LED Cyan
+  const spoilerWing = MeshBuilder.CreateBox('motor-spoiler', { width: 16.6, height: 0.5, depth: 2.2 }, scene);
+  spoilerWing.position.set(0, 9.2, 5.2);
+  spoilerWing.material = matsMotor.cyanElectric;
+  spoilerWing.parent = vehicleRoot;
 
-  const carCabin = MeshBuilder.CreateBox('mini-chibi-car-cabin', { width: 1.6, height: 0.85, depth: 1.5 }, scene);
-  carCabin.position.set(-0.2, 1.45, 0);
-  carCabin.material = pizzaDoor.material;
-  carCabin.parent = carTurnTable;
+  // BỆ XOAY TURNTABLE 3D TRƯNG BÀY XE HƠI THỂ THAO
+  const turntable = MeshBuilder.CreateCylinder('motor-turntable', { diameter: 4.8, height: 0.25, tessellation: 32 }, scene);
+  turntable.position.set(0, 0.3, 7.5);
+  turntable.material = matsMotor.cyanElectric;
+  turntable.parent = vehicleRoot;
 
-  // 4 Bánh xe đen viền chrome
-  [
-    [-1.0, 0.4, -0.9],
-    [-1.0, 0.4, 0.9],
-    [1.0, 0.4, -0.9],
-    [1.0, 0.4, 0.9],
-  ].forEach(([wx, wy, wz], widx) => {
-    const wheel = MeshBuilder.CreateCylinder(`chibi-car-wheel-${widx}`, { diameter: 0.75, height: 0.35, tessellation: 16 }, scene);
-    wheel.rotation.x = Math.PI / 2;
-    wheel.position.set(wx, wy, wz);
-    wheel.material = starEyeL.material;
-    wheel.parent = carTurnTable;
-  });
+  // Mô hình xe thể thao Chibi khí động học trên bệ xoay
+  const carBody = MeshBuilder.CreateBox('motor-show-car', { width: 2.2, height: 0.85, depth: 3.4 }, scene);
+  carBody.position.set(0, 0.85, 7.5);
+  carBody.material = matsMotor.carRed;
+  carBody.parent = vehicleRoot;
+  shadows?.addShadowCaster(carBody);
 
-  createPopArtVenueSign(scene, 'ĐẠI LÝ XE & SKATE', '🚗', '#0284c7', vehicleRoot, 8.8);
+  const carCockpit = MeshBuilder.CreateSphere('motor-car-cockpit', { diameterX: 1.8, diameterY: 1.2, diameterZ: 1.8, segments: 10 }, scene);
+  carCockpit.position.set(0, 1.35, 7.3);
+  carCockpit.material = matsMotor.glassBlue;
+  carCockpit.parent = vehicleRoot;
+
+  createNeonMarqueeSign(scene, 'MOTOR SHOWROOM', 'Supercars · Scooters · Rides', '#00f2fe', vehicleRoot, 10.4);
 
   // ========================================================
-  // 7. CÂY KẸO BÔNG & KHÓM HOA ĐỒ CHƠI QUANH QUẢNG TRƯỜNG
+  // 7. MEGA VENUE 5: 🎣 MARINA PRO FISHING TACKLE & AQUARIUM (CỬA HÀNG ĐỒ CÂU BẾN THUYỀN)
+  // Tọa lạc tại bến nước Nam (x: 0, z: 32), venue: 'fishing'
   // ========================================================
-  const plazaTrees = [
-    { x: -32, z: 0, color: 'mint', scale: 1.35 },
-    { x: 32, z: 0, color: 'sakura', scale: 1.35 },
-    { x: 0, z: 34, color: 'honey', scale: 1.3 },
-    { x: 0, z: -34, color: 'lavender', scale: 1.3 },
-    { x: -24, z: 32, color: 'sakura', scale: 1.25 },
-    { x: 24, z: 32, color: 'mint', scale: 1.25 },
-    { x: -24, z: -32, color: 'honey', scale: 1.25 },
-    { x: 24, z: -32, color: 'lavender', scale: 1.25 },
-  ];
+  const fishingRoot = new TransformNode('venue-fishing-tackle-wharf', scene);
+  fishingRoot.metadata = { venue: 'fishing' };
+  fishingRoot.position.set(0, 0, 32);
+  fishingRoot.rotation.y = Math.PI;
+  fishingRoot.parent = plazaRoot;
 
-  plazaTrees.forEach(t => {
-    createMarshmallowTree(scene, t.x, t.z, {
-      scale: t.scale,
-      colorVariant: t.color,
-      shadows,
+  const matsFishing = {
+    marineTeak: makeMat(scene, 'fishing-teak', '#b45309', null, 0.4, 60),
+    oceanBlue: makeMat(scene, 'fishing-ocean-blue', '#0284c7', '#38bdf8', 0.8, 110),
+    neonMarlin: makeMat(scene, 'fishing-neon-marlin', '#00f2fe', '#38bdf8', 0.95, 128),
+    tankGlass: makeMat(scene, 'fishing-aquarium-glass', '#bae6fd', '#0284c7', 0.9, 128),
+    tackleChrome: makeMat(scene, 'fishing-rod-chrome', '#f8fafc', null, 0.85, 120),
+  };
+  matsFishing.tankGlass.alpha = 0.82;
+
+  // Sàn gỗ du thuyền Teak nâng cao 0.5m
+  const fishingPlinth = MeshBuilder.CreateBox('fishing-wharf-deck', { width: 17.0, height: 0.5, depth: 13.0 }, scene);
+  fishingPlinth.position.y = 0.25;
+  fishingPlinth.material = matsFishing.marineTeak;
+  fishingPlinth.parent = fishingRoot;
+  fishingPlinth.receiveShadows = true;
+
+  const fishingBody = MeshBuilder.CreateBox('fishing-body', { width: 16.0, height: 8.5, depth: 12.0 }, scene);
+  fishingBody.position.y = 4.6;
+  fishingBody.material = matsFishing.oceanBlue;
+  fishingBody.parent = fishingRoot;
+  shadows?.addShadowCaster(fishingBody);
+
+  const fishingGlass = MeshBuilder.CreateBox('fishing-glass-facade', { width: 13.5, height: 6.8, depth: 0.3 }, scene);
+  fishingGlass.position.set(0, 4.2, 6.1);
+  fishingGlass.material = matsFishing.tankGlass;
+  fishingGlass.parent = fishingRoot;
+
+  // TƯỢNG CÁ KIẾM (MARLIN) 3D PHÁT SÁNG NEON KHỔNG LỒ TRÊN NÓC
+  const marlinRoot = new TransformNode('marlin-statue-root', scene);
+  marlinRoot.position.set(0, 10.6, 5.0);
+  marlinRoot.parent = fishingRoot;
+
+  const marlinBody = MeshBuilder.CreateCylinder('marlin-body', { diameterTop: 0.3, diameterBottom: 1.4, height: 4.8, tessellation: 16 }, scene);
+  marlinBody.rotation.z = Math.PI / 3;
+  marlinBody.material = matsFishing.neonMarlin;
+  marlinBody.parent = marlinRoot;
+
+  const marlinSword = MeshBuilder.CreateCylinder('marlin-sword', { diameterTop: 0.05, diameterBottom: 0.3, height: 2.2, tessellation: 10 }, scene);
+  marlinSword.rotation.z = Math.PI / 3;
+  marlinSword.position.set(2.4, 1.4, 0);
+  marlinSword.material = matsFishing.tackleChrome;
+  marlinSword.parent = marlinRoot;
+
+  // BỂ CÁ THỦY SINH ĐẠI DƯƠNG TRƯỚC SẢNH BẾN THUYỀN
+  const aquariumTank = MeshBuilder.CreateBox('fishing-live-aquarium', { width: 4.5, height: 1.8, depth: 1.4 }, scene);
+  aquariumTank.position.set(4.2, 1.2, 7.2);
+  aquariumTank.material = matsFishing.tankGlass;
+  aquariumTank.parent = fishingRoot;
+
+  // Giá cắm các dòng cần câu máy Carbon Pro
+  [-4.2, -2.4].forEach((rx, ridx) => {
+    const rack = MeshBuilder.CreateBox(`tackle-rack-${ridx}`, { width: 1.4, height: 1.6, depth: 0.8 }, scene);
+    rack.position.set(rx, 1.0, 7.2);
+    rack.material = matsFishing.marineTeak;
+    rack.parent = fishingRoot;
+
+    // 3 Cần câu máy vươn cao
+    [-0.4, 0, 0.4].forEach((cx, cidx) => {
+      const rod = MeshBuilder.CreateCylinder(`rod-display-${ridx}-${cidx}`, { diameterTop: 0.04, diameterBottom: 0.1, height: 3.6, tessellation: 8 }, scene);
+      rod.position.set(rx + cx, 2.5, 7.2);
+      rod.rotation.z = 0.15;
+      rod.material = matsFishing.tackleChrome;
+      rod.parent = fishingRoot;
     });
-    createCandyFlowerBush(scene, t.x + 2.0, t.z + 1.5, { scale: 1.15, shadows });
-    createCandyPebbleRock(scene, t.x - 1.8, t.z + 1.2, { scale: 1.1, shadows });
+  });
+
+  createNeonMarqueeSign(scene, 'PRO FISHING TACKLE', 'Rods · Baits · Live Marine Fish', '#38bdf8', fishingRoot, 10.4);
+
+  // ========================================================
+  // 8. QUY HOẠCH CÁC LÔ ĐẤT MỞ RỘNG TƯƠNG LAI (FUTURE EXPANSION LOTS)
+  // Hai phân khu đối xứng Đông - Tây (x: ±42, z: 0) lát granite, viền LED âm sàn, bảng holographic
+  // ========================================================
+  const matExpFloor = makeMat(scene, 'exp-floor-granite', '#1e293b', null, 0.5, 80);
+  const matExpNeon = makeMat(scene, 'exp-neon-amber', '#f59e0b', '#fbbf24', 0.85, 120);
+  const matExpBollard = makeMat(scene, 'exp-bollard-chrome', '#f8fafc', null, 0.8, 120);
+
+  [-42, 42].forEach((ex, eidx) => {
+    const expRoot = new TransformNode(`expansion-lot-${eidx}`, scene);
+    expRoot.position.set(ex, 0, 0);
+    expRoot.parent = plazaRoot;
+
+    // Sàn mặt bằng san nền đá hoa cương hiện đại
+    const groundPlot = MeshBuilder.CreateCylinder(`exp-ground-${eidx}`, { diameter: 16.0, height: 0.1, tessellation: 36 }, scene);
+    groundPlot.position.y = 0.05;
+    groundPlot.material = matExpFloor;
+    groundPlot.receiveShadows = true;
+    groundPlot.parent = expRoot;
+
+    // Vành đai LED âm sàn phát sáng màu vàng hổ phách
+    const ringNeon = MeshBuilder.CreateTorus(`exp-neon-ring-${eidx}`, { diameter: 15.6, thickness: 0.22, tessellation: 36 }, scene);
+    ringNeon.position.y = 0.12;
+    ringNeon.material = matExpNeon;
+    ringNeon.parent = expRoot;
+
+    // Hàng cột trụ mạ chrome thông minh bảo vệ chỉ giới quy hoạch
+    const numBollards = 8;
+    for (let b = 0; b < numBollards; b++) {
+      const angle = (b * Math.PI * 2) / numBollards;
+      const bx = Math.cos(angle) * 7.5;
+      const bz = Math.sin(angle) * 7.5;
+
+      const bollard = MeshBuilder.CreateCylinder(`exp-bollard-${eidx}-${b}`, { diameter: 0.25, height: 1.0, tessellation: 12 }, scene);
+      bollard.position.set(bx, 0.55, bz);
+      bollard.material = matExpBollard;
+      bollard.parent = expRoot;
+      shadows?.addShadowCaster(bollard);
+    }
+
+    createNeonMarqueeSign(
+      scene,
+      eidx === 0 ? 'TÂY METAVERSE' : 'ĐÔNG METAVERSE',
+      'Khu Quy Hoạch Mở Rộng Sau Này',
+      '#fbbf24',
+      expRoot,
+      3.8
+    );
   });
 
   // ========================================================
-  // 8. GHẾ NGHỈ CHÂN & CỘT ĐÈN HOẠT HÌNH BO TRÒN
+  // 9. HỆ THỐNG ĐÈN ĐƯỜNG ĐÔ THỊ HIỆN ĐẠI (TWIN MODERN STREETLAMPS)
   // ========================================================
-  const benchPositions = [
-    { x: -16, z: 0, rot: Math.PI / 2 },
-    { x: 16, z: 0, rot: -Math.PI / 2 },
-    { x: 0, z: 16, rot: 0 },
-    { x: 0, z: -16, rot: Math.PI },
-  ];
+  const matStreetLamp = makeMat(scene, 'pt-street-lamp-post', '#0f172a', null, 0.6, 90);
+  const matStreetGlow = makeMat(scene, 'pt-street-lamp-glow', '#fef08a', '#facc15', 0.95, 128);
 
-  benchPositions.forEach((b, bidx) => {
-    // Ghế gỗ kem bơ bo tròn pastel
-    const bench = MeshBuilder.CreateBox(`plaza-bench-${bidx}`, { width: 3.4, height: 0.5, depth: 1.1 }, scene);
-    bench.position.set(b.x, 0.45, b.z);
-    bench.rotation.y = b.rot;
-    bench.material = createToyMaterial(scene, `bench-mat-${bidx}`, '#fed7aa');
-    bench.parent = plazaRoot;
+  [
+    { x: -18, z: -18 },
+    { x: 18, z: -18 },
+    { x: -18, z: 18 },
+    { x: 18, z: 18 },
+    { x: 0, z: -32 },
+  ].forEach((pos, idx) => {
+    const post = MeshBuilder.CreateCylinder(`pt-lamp-post-${idx}`, { height: 5.6, diameterTop: 0.16, diameterBottom: 0.26, tessellation: 14 }, scene);
+    post.position.set(pos.x, 2.8, pos.z);
+    post.material = matStreetLamp;
+    post.parent = plazaRoot;
+    shadows?.addShadowCaster(post);
 
-    // Cột đèn đường hoạt hình bóng tròn vàng
-    const lampPost = MeshBuilder.CreateCylinder(`plaza-lamp-post-${bidx}`, { diameter: 0.22, height: 4.8, tessellation: 12 }, scene);
-    lampPost.position.set(b.x * 1.35, 2.4, b.z * 1.35);
-    lampPost.material = createToyMaterial(scene, `lamp-post-mat-${bidx}`, '#475569');
-    lampPost.parent = plazaRoot;
+    // Cánh tay đôi uốn cong mạ đen bóng
+    [-1, 1].forEach((side, sidx) => {
+      const arm = MeshBuilder.CreateBox(`pt-lamp-arm-${idx}-${sidx}`, { width: 0.9, height: 0.14, depth: 0.14 }, scene);
+      arm.position.set(pos.x + side * 0.45, 5.4, pos.z);
+      arm.material = matStreetLamp;
+      arm.parent = plazaRoot;
 
-    const lampBulb = MeshBuilder.CreateSphere(`plaza-lamp-bulb-${bidx}`, { diameter: 0.85, segments: 12 }, scene);
-    lampBulb.position.set(b.x * 1.35, 4.8, b.z * 1.35);
-    lampBulb.material = createToyMaterial(scene, `lamp-bulb-mat-${bidx}`, '#fef08a', { emissiveHex: '#facc15' });
-    lampBulb.parent = plazaRoot;
+      const lightBulb = MeshBuilder.CreateSphere(`pt-lamp-bulb-${idx}-${sidx}`, { diameter: 0.6, segments: 10 }, scene);
+      lightBulb.position.set(pos.x + side * 0.9, 5.2, pos.z);
+      lightBulb.material = matStreetGlow;
+      lightBulb.parent = plazaRoot;
+    });
   });
 
-  // VÒNG LẶP XOAY HOẠT HÌNH CHO CÁC ICON 3D TRÊN NÓC
+  // Hoạt hình xoay xúc xắc casino & turntable xe hơi
   scene.onBeforeRenderObservable.add(() => {
     const dt = scene.getEngine().getDeltaTime() / 1000;
-    // Ngôi sao vàng đài phun xoay tít và nhấp nhô
-    starNode.rotation.y += dt * 1.2;
-    starNode.position.y = 3.4 + Math.sin(Date.now() * 0.003) * 0.12;
-
-    // Lát Pizza xoay chậm
-    pizzaSpinner.rotation.y += dt * 0.85;
-
-    // Cà Rốt Chibi lắc lư
-    carrotSpinner.rotation.y += dt * 0.95;
-
-    // Chiếc Nơ Hồng xoay
-    bowSpinner.rotation.y += dt * 0.9;
-
-    // Bục xe hơi xoay trưng bày
-    carTurnTable.rotation.y += dt * 0.75;
+    if (diceRoot) diceRoot.rotation.y += dt * 0.5;
+    if (turntable) turntable.rotation.y += dt * 0.4;
+    if (carBody) carBody.rotation.y += dt * 0.4;
+    if (carCockpit) carCockpit.rotation.y += dt * 0.4;
   });
 
   return {

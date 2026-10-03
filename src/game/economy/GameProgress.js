@@ -33,15 +33,14 @@ export const EXPANSIONS = Object.freeze([
   { plots: 48, cost: 3200, level: 9 },
 ]);
 
-const STORAGE_KEY = 'farm-online-3d-progress-v3';
 const initial = {
   version: 2, coins: 180, gems: 15, xp: 0, level: 1,
   selectedCrop: 'carrot', freeSeeds: 0,
   inventory: { carrot: 0, wheat: 0, tomato: 0, strawberry: 0, egg: 0, milk: 0, flour: 0, cheese: 0, jam: 0 },
   stats: { planted: 0, watered: 0, harvested: 0, orders: 0, animalsFed: 0, crafted: 0 },
-  claimedQuests: [], completedOrders: [], unlockedPlots: 12, barnLevel: 1, toolLevel: 1,
+  claimedQuests: [], completedOrders: [], unlockedPlots: 0, barnLevel: 0, toolLevel: 1,
   outfit: 'starter', ownedOutfits: ['starter'], vehicle: 'walk', ownedVehicles: ['walk'],
-  homeTier: 1, ownedHomes: ['starter-cabin'], casinoPlays: 0,
+  homeTier: 0, ownedHomes: [], casinoPlays: 0,
   onboarding: {
     characterCreated: false,
     step: 0,
@@ -52,25 +51,8 @@ const initial = {
 };
 
 export function loadProgress() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (!saved) return structuredClone(initial);
-    const existingOnboarding = saved.onboarding || (saved.stats?.harvested > 0 && saved.stats?.orders > 0 ? {
-      characterCreated: true,
-      step: ONBOARDING_STEPS.COMPLETED,
-      freeSeedsReceived: true,
-      completed: true,
-      bicycleAwarded: Boolean(saved.ownedVehicles?.includes('bike')),
-    } : null);
-
-    return {
-      ...initial,
-      ...saved,
-      inventory: { ...initial.inventory, ...saved?.inventory },
-      stats: { ...initial.stats, ...saved?.stats },
-      onboarding: { ...initial.onboarding, ...(existingOnboarding || {}) },
-    };
-  } catch { return structuredClone(initial); }
+  // Placeholder only. MongoDB's account_state replaces this after authentication.
+  return JSON.parse(JSON.stringify(initial));
 }
 
 export function isFeatureLocked(progress, featureId) {
@@ -89,10 +71,6 @@ export function isFeatureLocked(progress, featureId) {
     default:
       return false;
   }
-}
-
-export function saveProgress(progress) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
 }
 
 export function levelFromXp(xp) { return Math.min(20, Math.floor(Math.sqrt(xp / 80)) + 1); }

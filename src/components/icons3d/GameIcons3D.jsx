@@ -675,6 +675,41 @@ export function Icon3dNonLa({ size = 32, className = '' }) {
   );
 }
 
+// 26b. Mũ Quản Gia Nông Trang 3D (Farm Manager Hat)
+export function Icon3dManager({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="manager_hat_body" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#d97706" />
+          <stop offset="50%" stopColor="#b45309" />
+          <stop offset="100%" stopColor="#78350f" />
+        </linearGradient>
+        <linearGradient id="manager_ribbon" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#0284c7" />
+          <stop offset="50%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#0369a1" />
+        </linearGradient>
+      </defs>
+      {/* Vành mũ da bò sang trọng uốn cong */}
+      <ellipse cx="24" cy="34" rx="20" ry="7" fill="url(#manager_hat_body)" stroke="#451a03" strokeWidth="2" />
+      {/* Thân chóp mũ cao bồi / quản gia trang trại */}
+      <path
+        d="M 12 33 C 12 20, 16 12, 24 11 C 32 12, 36 20, 36 33 Z"
+        fill="url(#manager_hat_body)"
+        stroke="#451a03"
+        strokeWidth="2.2"
+      />
+      {/* Dải ruy băng xanh hoàng gia thắt quanh mũ */}
+      <path d="M 12.5 30 Q 24 35 35.5 30 L 35.8 33 Q 24 38 12.2 33 Z" fill="url(#manager_ribbon)" stroke="#082f49" strokeWidth="1.2" />
+      {/* Huy hiệu Ngôi Sao Vàng Quản Lý ở giữa nơ */}
+      <polygon points="24,28 25.5,31.5 29,31.5 26,33.5 27,37 24,35 21,37 22,33.5 19,31.5 22.5,31.5" fill="#facc15" stroke="#78350f" strokeWidth="1" />
+      {/* Ánh bóng specular */}
+      <ellipse cx="20" cy="18" rx="2.5" ry="6" fill="#ffffff" opacity="0.45" transform="rotate(-15 20 18)" />
+    </svg>
+  );
+}
+
 // 27. Bông Lúa Nước Vàng 3D (Golden Rice Spike)
 export function Icon3dRiceSpike({ size = 32, className = '' }) {
   return (
