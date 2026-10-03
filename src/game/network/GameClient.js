@@ -77,8 +77,11 @@ export class GameClient {
       this.startHeartbeat();
     });
     this.socket.addEventListener('message', event => {
+      const started = performance.now();
+      let messageType = 'parse';
       try {
         const message = JSON.parse(event.data);
+        messageType = message.type;
         if (message.type === 'welcome') {
           this.joined = true;
           this.retryAttempt = 0;
@@ -124,6 +127,9 @@ export class GameClient {
       } catch (error) {
         console.error('[GameClient] Failed to process server message', error);
         window.__farmDebug?.report(error, 'NETWORK MESSAGE HANDLER');
+      } finally {
+        const elapsed = performance.now() - started;
+        if (elapsed > 50) window.__farmDebug?.report(`${messageType}: ${elapsed.toFixed(1)}ms, ${event.data.length} bytes`, 'SLOW NETWORK CALLBACK');
       }
     });
     this.socket.addEventListener('close', event => {

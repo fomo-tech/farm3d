@@ -378,23 +378,48 @@ export function Icon3dMap({ size = 38, className = '' }) {
   );
 }
 
-// 10. Balo phiêu lưu da bò 3D (Kho đồ / Backpack / Inventory)
+// 10. Balo phiêu lưu da bò 3D (Kho đồ / Backpack / Inventory - Play Together Edition)
 export function Icon3dBackpack({ size = 38, className = '' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 54 54" fill="none" className={`icon-3d ${className}`}>
-      {/* Quai xách trên đỉnh */}
-      <path d="M 21 14 C 21 7, 33 7, 33 14" stroke="#78350f" strokeWidth="3.5" fill="none" strokeLinecap="round" />
-      <path d="M 21 14 C 21 7, 33 7, 33 14" stroke="#fde68a" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="pt_pack_body" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fbbf24" />
+          <stop offset="45%" stopColor="#f59e0b" />
+          <stop offset="85%" stopColor="#d97706" />
+          <stop offset="100%" stopColor="#92400e" />
+        </radialGradient>
+        <radialGradient id="pt_pack_flap" cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="40%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
+        </radialGradient>
+      </defs>
+      {/* Quai xách trên */}
+      <path d="M 18 13 C 18 6, 30 6, 30 13" stroke="#451a03" strokeWidth="4.5" fill="none" strokeLinecap="round" />
+      <path d="M 18 13 C 18 6, 30 6, 30 13" stroke="#fde68a" strokeWidth="2.2" fill="none" strokeLinecap="round" />
 
-      {/* Thân balo bo tròn */}
-      <rect x="12" y="14" width="30" height="32" rx="9" fill="#d97706" stroke="#451a03" strokeWidth="2.2" />
-      {/* Nắp balo */}
-      <path d="M 11 21 C 11 13, 43 13, 43 21 C 37 27, 17 27, 11 21 Z" fill="#92400e" stroke="#451a03" strokeWidth="2" />
+      {/* Thân balo 3D đổ bóng đáy */}
+      <rect x="9" y="16" width="30" height="26" rx="9" fill="#78350f" />
+      <rect x="9" y="14" width="30" height="26" rx="9" fill="url(#pt_pack_body)" stroke="#ffffff" strokeWidth="2.2" />
+
+      {/* Nắp balo bo tròn kẹo ngọt */}
+      <path
+        d="M 9 20 C 9 12, 39 12, 39 20 C 34 26, 14 26, 9 20 Z"
+        fill="url(#pt_pack_flap)"
+        stroke="#451a03"
+        strokeWidth="2"
+      />
+
       {/* Túi phụ phía trước */}
-      <rect x="17" y="27" width="20" height="15" rx="5" fill="#b45309" stroke="#451a03" strokeWidth="1.8" />
-      {/* Khóa cài kim loại mạ vàng */}
-      <rect x="25" y="23" width="4" height="7.5" rx="1.5" fill="#facc15" stroke="#451a03" strokeWidth="1" />
-      <rect x="25" y="32" width="4" height="4.5" rx="1" fill="#facc15" stroke="#451a03" strokeWidth="1" />
+      <rect x="14" y="26" width="20" height="12" rx="4.5" fill="#f59e0b" stroke="#451a03" strokeWidth="1.8" />
+      {/* Quai gài và móc khóa mạ vàng */}
+      <rect x="22" y="21" width="4" height="7.5" rx="1.5" fill="#ffffff" stroke="#451a03" strokeWidth="1.2" />
+      <rect x="22.8" y="22" width="2.4" height="4" rx="0.8" fill="#facc15" />
+      <rect x="22" y="30" width="4" height="4.5" rx="1" fill="#facc15" stroke="#451a03" strokeWidth="1" />
+
+      {/* Điểm phản quang bóng tròn trên nắp */}
+      <ellipse cx="16" cy="17" rx="3.5" ry="1.8" fill="#ffffff" opacity="0.75" transform="rotate(-10 16 17)" />
     </svg>
   );
 }
@@ -2156,20 +2181,86 @@ export function Icon3dPlus({ size = 18, className = '' }) {
   );
 }
 
-// 77. Điện Thoại Thông Minh Kaia 3D (Kaia Smartphone)
+// 77. Điện Thoại Thông Minh Kaia 3D (Kaia Smartphone - Play Together Edition)
 export function Icon3dSmartPhone({ size = 32, className = '' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={`icon-3d ${className}`}>
-      <rect x="8" y="3" width="20" height="30" rx="6" fill="#38bdf8" stroke="#0284c7" strokeWidth="2" />
-      <rect x="10.5" y="6" width="15" height="22" rx="3.5" fill="#ffffff" />
-      <circle cx="18" cy="30.5" r="1.5" fill="#ffffff" />
-      <circle cx="14" cy="11" r="2" fill="#ef4444" />
-      <circle cx="22" cy="11" r="2" fill="#eab308" />
-      <circle cx="14" cy="17" r="2" fill="#22c55e" />
-      <circle cx="22" cy="17" r="2" fill="#a855f7" />
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="phone_body" cx="30%" cy="20%" r="80%">
+          <stop offset="0%" stopColor="#7dd3fc" />
+          <stop offset="50%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#0284c7" />
+        </radialGradient>
+        <linearGradient id="phone_screen" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="25%" stopColor="#e0f2fe" />
+          <stop offset="100%" stopColor="#bae6fd" />
+        </linearGradient>
+      </defs>
+      {/* Bóng đổ thân dưới 3D */}
+      <rect x="11" y="6" width="26" height="38" rx="8" fill="#0369a1" />
+      {/* Khung máy kẹo pastel */}
+      <rect x="11" y="4" width="26" height="37" rx="8" fill="url(#phone_body)" stroke="#ffffff" strokeWidth="2.2" />
+      {/* Màn hình điện thoại bóng loáng */}
+      <rect x="14" y="8" width="20" height="26" rx="5" fill="url(#phone_screen)" stroke="#0284c7" strokeWidth="1.2" />
+      {/* Vệt bóng kính chéo */}
+      <path d="M 14 9 L 26 9 L 14 26 Z" fill="#ffffff" opacity="0.5" />
+      {/* Cụm icon ứng dụng 3D mini */}
+      <rect x="16.5" y="11" width="4.5" height="4.5" rx="1.5" fill="#f87171" />
+      <rect x="23" y="11" width="4.5" height="4.5" rx="1.5" fill="#facc15" />
+      <rect x="29.5" y="11" width="4" height="4.5" rx="1.5" fill="#4ade80" />
+
+      <rect x="16.5" y="18" width="4.5" height="4.5" rx="1.5" fill="#fb923c" />
+      <rect x="23" y="18" width="4.5" height="4.5" rx="1.5" fill="#c084fc" />
+      <rect x="29.5" y="18" width="4" height="4.5" rx="1.5" fill="#38bdf8" />
+
+      <rect x="16.5" y="25" width="4.5" height="4.5" rx="1.5" fill="#ec4899" />
+      <rect x="23" y="25" width="4.5" height="4.5" rx="1.5" fill="#14b8a6" />
+      <rect x="29.5" y="25" width="4" height="4.5" rx="1.5" fill="#6366f1" />
+
+      {/* Loa thoại & Camera tai thỏ */}
+      <circle cx="24" cy="6.2" r="1" fill="#075985" />
+      <rect x="21" y="6" width="6" height="1" rx="0.5" fill="#075985" />
+      {/* Nút Home / Vạch Home bar */}
+      <rect x="20" y="37" width="8" height="2" rx="1" fill="#ffffff" />
     </svg>
   );
-}// 78. Bước Chân Dẫn Đường 3D (Footsteps / Navigation)
+}
+
+// 80. Nút Chơi / Chạm Để Bắt Đầu 3D (Touch Play / Start Button)
+export function Icon3dTouchPlay({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="pt_play_sphere" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="25%" stopColor="#fef08a" />
+          <stop offset="65%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
+        </radialGradient>
+        <linearGradient id="pt_play_tri" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#fef3c7" />
+        </linearGradient>
+      </defs>
+      {/* Vòng nền tròn kẹo nổi 3D */}
+      <circle cx="24" cy="25" r="20" fill="#78350f" />
+      <circle cx="24" cy="22.5" r="19.5" fill="url(#pt_play_sphere)" stroke="#ffffff" strokeWidth="2.5" />
+      {/* Tam giác Play bo tròn mập mạp */}
+      <path
+        d="M 19 14.5 C 19 12.8, 20.8 11.8, 22.2 12.7 L 33.5 19.7 C 34.8 20.6, 34.8 22.6, 33.5 23.4 L 22.2 30.5 C 20.8 31.3, 19 30.3, 19 28.7 Z"
+        fill="url(#pt_play_tri)"
+        stroke="#78350f"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+      {/* Ánh sáng bóng trên đỉnh tam giác */}
+      <circle cx="16" cy="14" r="3" fill="#ffffff" opacity="0.85" />
+      <circle cx="20" cy="11" r="1.5" fill="#ffffff" opacity="0.8" />
+    </svg>
+  );
+}
+// 78. Bước Chân Dẫn Đường 3D (Footsteps / Navigation)
 export function Icon3dFootsteps({ size = 24, className = '' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>

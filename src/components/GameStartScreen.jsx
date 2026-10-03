@@ -8,6 +8,7 @@ import {
   Icon3dLightningBolt,
   Icon3dBatteryEco,
   Icon3dSprout,
+  Icon3dTouchPlay,
 } from './icons3d/GameIcons3D.jsx';
 
 const PLAY_TOGETHER_TIPS = [
@@ -236,11 +237,11 @@ export function GameStartScreen({
             >
               <div className="pt-touch-glow-fx" />
               <div className="pt-touch-shine-sweep" />
-              <Icon3dSparkleStar size={24} className="btn-sparkle left" />
-              <span className="pt-touch-text">CHẠM ĐỂ BẮT ĐẦU</span>
+              <Icon3dTouchPlay size={34} className="btn-play-icon" />
+              <span className="pt-touch-text">Chạm để bắt đầu</span>
               <Icon3dSparkleStar size={24} className="btn-sparkle right" />
             </button>
-            <span className="pt-touch-hint">CHẠM BẤT KỲ ĐÂU ĐỂ VÀO THỊ TRẤN</span>
+            <span className="pt-touch-hint">Chạm bất kỳ đâu để vào thị trấn</span>
           </div>
         )}
 

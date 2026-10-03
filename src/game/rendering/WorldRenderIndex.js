@@ -20,6 +20,8 @@ export function installWorldRenderIndex(scene) {
   const queue = [...scene.meshes];
   const known = new WeakSet(queue);
   const dynamicMeshes = [];
+  const staticMeshes = new WeakSet();
+  const temporaryMeshes = new WeakSet();
   let cursor = 0;
   let indexed = 0;
   let ready = false;
@@ -34,6 +36,7 @@ export function installWorldRenderIndex(scene) {
     if (dynamic(mesh)) dynamicMeshes.push(mesh);
     else {
       tree.addMesh(mesh);
+      staticMeshes.add(mesh);
       indexed++;
     }
   };
@@ -59,6 +62,7 @@ export function installWorldRenderIndex(scene) {
       let handled = 0;
       while (cursor < queue.length && handled < 512) {
         add(queue[cursor++]);
+        queue[cursor - 1] = null;
         handled++;
         if (performance.now() - started >= 4) break;
       }
@@ -71,26 +75,37 @@ export function installWorldRenderIndex(scene) {
   };
 
   const pendingAdded = [];
+  let pendingCursor = 0;
   let pendingTimer = null;
 
   const processPendingAdded = () => {
     pendingTimer = null;
     if (cancelled || scene.isDisposed) return;
     const start = performance.now();
-    while (pendingAdded.length > 0) {
-      const mesh = pendingAdded.shift();
+    while (pendingCursor < pendingAdded.length) {
+      const mesh = pendingAdded[pendingCursor];
+      pendingAdded[pendingCursor++] = null;
       if (!mesh || mesh.isDisposed()) continue;
+      if (temporaryMeshes.has(mesh)) {
+        const index = tree.dynamicContent.indexOf(mesh);
+        if (index >= 0) tree.dynamicContent.splice(index, 1);
+        temporaryMeshes.delete(mesh);
+      }
       if (dynamic(mesh)) {
         tree.dynamicContent.push(mesh);
       } else {
         mesh.computeWorldMatrix(true);
         tree.addMesh(mesh);
+        staticMeshes.add(mesh);
         indexed++;
       }
       if (performance.now() - start >= 1.5) break;
     }
-    if (pendingAdded.length > 0) {
+    if (pendingCursor < pendingAdded.length) {
       pendingTimer = setTimeout(processPendingAdded, 4);
+    } else {
+      pendingAdded.length = 0;
+      pendingCursor = 0;
     }
   };
 
@@ -99,10 +114,24 @@ export function installWorldRenderIndex(scene) {
     known.add(mesh);
     if (!ready) queue.push(mesh);
     else {
+      // New meshes must remain renderable while waiting for their final
+      // parent/transforms and spatial index insertion.
+      tree.dynamicContent.push(mesh);
+      temporaryMeshes.add(mesh);
       pendingAdded.push(mesh);
       if (pendingTimer === null) {
         pendingTimer = setTimeout(processPendingAdded, 4);
       }
+    }
+  });
+  const removed = scene.onMeshRemovedObservable.add(mesh => {
+    const index = dynamicMeshes.indexOf(mesh);
+    if (index >= 0) dynamicMeshes.splice(index, 1);
+    temporaryMeshes.delete(mesh);
+    if (staticMeshes.has(mesh)) {
+      tree.removeMesh(mesh);
+      staticMeshes.delete(mesh);
+      indexed--;
     }
   });
   schedule();
@@ -113,7 +142,7 @@ export function installWorldRenderIndex(scene) {
       indexedMeshes: indexed,
       dynamicCandidates: ready ? tree.dynamicContent.length : scene.meshes.length - indexed,
       spatialIndexReady: ready,
-      spatialIndexPending: Math.max(0, queue.length - cursor) + pendingAdded.length,
+      spatialIndexPending: Math.max(0, queue.length - cursor) + pendingAdded.length - pendingCursor,
     }),
     dispose() {
       cancelled = true;
@@ -124,6 +153,10 @@ export function installWorldRenderIndex(scene) {
         clearTimeout(pendingTimer);
       }
       scene.onNewMeshAddedObservable.remove(added);
+      scene.onMeshRemovedObservable.remove(removed);
+      queue.length = 0;
+      pendingAdded.length = 0;
+      dynamicMeshes.length = 0;
       if (scene._selectionOctree === tree) scene._selectionOctree = null;
       resolveReady();
     },

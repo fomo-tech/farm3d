@@ -128,7 +128,8 @@ export class FarmingSystem {
 
   addTiles(tiles) {
     tiles.forEach(tile => {
-      if (!this.tiles.includes(tile)) this.tiles.push(tile);
+      if (this.tiles.includes(tile)) return;
+      this.tiles.push(tile);
       this.restoreTile(tile);
     });
   }
@@ -456,12 +457,12 @@ export class FarmingSystem {
 
   clearPendingActions() { this.pendingActions.clear(); }
 
-  removeFarmTiles(farmId) {
+  removeFarmTiles(farmId, { preserveState = false } = {}) {
     this.tiles.filter(tile => tile.metadata?.farmId === farmId).forEach(tile => {
       const key = this.key(tile);
       this.crops.get(key)?.root?.dispose();
       this.crops.delete(key);
-      delete this.state[key];
+      if (!preserveState) delete this.state[key];
       this.pendingActions.delete(key);
     });
     this.tiles = this.tiles.filter(tile => tile.metadata?.farmId !== farmId);

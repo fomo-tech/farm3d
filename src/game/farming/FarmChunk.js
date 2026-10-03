@@ -66,6 +66,8 @@ export class FarmChunk {
     this.detailReady = false;
     this.buildingInProgress = false;
     this.state = 'hlod'; // 'hlod' | 'detail' | 'hidden'
+    this.wantsDetail = false;
+    this.lastUsed = performance.now();
     this.gate = null;
     this.home = null;
     this.barn = null;
@@ -493,16 +495,17 @@ export class FarmChunk {
   }
 
   showDetail(scheduler = null, onReady = null) {
+    if (this.evicting) return;
+    this.wantsDetail = true;
+    this.lastUsed = performance.now();
     if (this.state === 'detail') {
-      onReady?.(this.tiles);
       return;
     }
 
-    this.hlodRoot.setEnabled(false);
-    this.interactiveRoot.setEnabled(true);
-    this.buildingRoot.setEnabled(true);
-
     if (this.detailReady) {
+      this.hlodRoot.setEnabled(false);
+      this.interactiveRoot.setEnabled(true);
+      this.buildingRoot.setEnabled(true);
       this.detailRoot.setEnabled(true);
       this.state = 'detail';
       this.root.metadata.detailed = true;
@@ -514,11 +517,16 @@ export class FarmChunk {
     if (!this.buildingInProgress) {
       this.buildingInProgress = true;
       const generator = this.buildDetailIncrementalGenerator((tiles) => {
-        this.detailRoot.setEnabled(true);
-        this.state = 'detail';
-        this.root.metadata.detailed = true;
-        this.root.metadata.lightweight = false;
         onReady?.(tiles);
+        if (this.wantsDetail) {
+          this.hlodRoot.setEnabled(false);
+          this.detailRoot.setEnabled(true);
+          this.interactiveRoot.setEnabled(true);
+          this.buildingRoot.setEnabled(true);
+          this.state = 'detail';
+        } else {
+          this.showHLOD();
+        }
       });
 
       if (scheduler) {
@@ -531,7 +539,7 @@ export class FarmChunk {
   }
 
   showHLOD() {
-    if (this.state === 'hlod') return;
+    this.wantsDetail = false;
     this.detailRoot.setEnabled(false);
     this.interactiveRoot.setEnabled(false);
     this.buildingRoot.setEnabled(false);
@@ -544,13 +552,32 @@ export class FarmChunk {
   setBuildings(home, barn) {
     this.home = home;
     this.barn = barn;
-    if (home?.root) home.root.parent = this.buildingRoot;
-    if (barn?.root) barn.root.parent = this.buildingRoot;
+    if (home?.root) home.root.setParent(this.buildingRoot);
+    if (barn?.root) barn.root.setParent(this.buildingRoot);
   }
 
   setGate(gate) {
     this.gate = gate;
-    if (gate?.root) gate.root.parent = this.buildingRoot;
+    if (gate?.root) gate.root.setParent(this.buildingRoot);
+  }
+
+  *evictDetail() {
+    this.evicting = true;
+    this.showHLOD();
+    // Keep the inexpensive HLOD and shared materials. Dispose individual
+    // detailed meshes across scheduler steps, preserving original asset files.
+    for (const root of [this.detailRoot, this.interactiveRoot]) {
+      for (const mesh of root.getChildMeshes()) {
+        this.shadows?.removeShadowCaster(mesh);
+        if (!mesh.isDisposed()) mesh.dispose(false, false);
+        yield;
+      }
+      for (const node of root.getChildTransformNodes(true)) node.dispose();
+    }
+    this.tiles = [];
+    this.detailReady = false;
+    this.buildingInProgress = false;
+    this.evicting = false;
   }
 
   dispose() {

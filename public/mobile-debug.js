@@ -23,6 +23,15 @@
   const stageTimings = Array.from({ length: 96 }, () => ({ stage: '', start: 0, end: 0, duration: 0 }));
   let stageTimingCursor = 0;
   let stageTimingCount = 0;
+  const slowCallbacks = [];
+  const animationFrames = [];
+  const sessionMetrics = { revision: 'streaming-audit-v2', frames: 0, maxFrameGapMs: 0, frameGapsOver1000: 0, longTasks: 0, maxLongTaskMs: 0 };
+  let lastFramePerformanceAt = 0;
+  function recordCallback(stage, start, end) {
+    if (end - start < 4) return;
+    slowCallbacks.push({ stage, start, end, duration: end - start });
+    if (slowCallbacks.length > 80) slowCallbacks.shift();
+  }
   function finishStage() {
     if (stageStartedAt === null) return;
     const end = performance.now();
@@ -31,6 +40,7 @@
     slot.start = stageStartedAt;
     slot.end = end;
     slot.duration = end - stageStartedAt;
+    recordCallback(runtimeStage, stageStartedAt, end);
     stageTimingCursor = (stageTimingCursor + 1) % stageTimings.length;
     stageTimingCount = Math.min(stageTimingCount + 1, stageTimings.length);
     stageStartedAt = null;
@@ -118,9 +128,22 @@
     stage(stage) { finishStage(); runtimeStage = stage; stageStartedAt = performance.now(); },
     endStage() { finishStage(); runtimeStage = 'outside measured render work'; },
     snapshot(value) { runtimeSnapshot = value; },
+    measure(name, callback) {
+      const start = performance.now();
+      try { return callback(); }
+      finally { recordCallback(name, start, performance.now()); }
+    },
     frame() {
       finishStage();
       const now = Date.now();
+      const frameNow = performance.now();
+      if (worldRunning && document.visibilityState === 'visible' && lastFramePerformanceAt) {
+        const gap = frameNow - lastFramePerformanceAt;
+        sessionMetrics.frames++;
+        sessionMetrics.maxFrameGapMs = Math.max(sessionMetrics.maxFrameGapMs, gap);
+        if (gap > 1000) sessionMetrics.frameGapsOver1000++;
+      }
+      lastFramePerformanceAt = frameNow;
       if (worldRunning && document.visibilityState === 'visible' && now - lastFrameAt > 2000 && now - lastPerformanceWarningAt > 15000) {
         lastPerformanceWarningAt = now;
         const recentStages = stageTimings.slice(0, stageTimingCount).filter(item => item.end > performance.now() - (now - lastFrameAt)).sort((a, b) => b.duration - a.duration).slice(0, 4);
@@ -132,7 +155,7 @@
     },
     stopFrames() { worldRunning = false; },
     ready() { currentStage = 'World ready'; ensureUi(); if (entries.length === 0) panel?.classList.remove('visible'); render(); },
-    getReport() { return { stage: currentStage, runtimeStage, snapshot: runtimeSnapshot, entries: entries.slice(), system: systemReport() }; },
+    getReport() { return { stage: currentStage, runtimeStage, snapshot: runtimeSnapshot, metrics: { ...sessionMetrics }, slowCallbacks: slowCallbacks.slice(), animationFrames: animationFrames.slice(), entries: entries.slice(), system: systemReport() }; },
   };
 
   setInterval(function () {
@@ -166,10 +189,14 @@
       const observer = new PerformanceObserver(list => {
         const task = list.getEntries().reduce((result, entry) => !result || entry.duration > result.duration ? entry : result, null);
         const longest = task?.duration || 0;
+        if (worldRunning && document.visibilityState === 'visible' && longest > 50) {
+          sessionMetrics.longTasks++;
+          sessionMetrics.maxLongTaskMs = Math.max(sessionMetrics.maxLongTaskMs, longest);
+        }
         // A FRAME GAP must not suppress the CPU attribution for that same freeze.
         if (worldRunning && document.visibilityState === 'visible' && longest > 1000 && Date.now() - lastLongTaskWarningAt > 15000) {
           lastLongTaskWarningAt = Date.now();
-          const matches = stageTimings.slice(0, stageTimingCount).filter(item => item.start < task.startTime + task.duration && item.end > task.startTime);
+          const matches = slowCallbacks.filter(item => item.start < task.startTime + task.duration && item.end > task.startTime);
           const slowest = matches.sort((a, b) => b.duration - a.duration).slice(0, 4);
           const detail = slowest.length ? slowest.map(item => `${item.stage}: ${Math.round(item.duration)}ms`).join('; ') : 'Tác vụ ngoài render được đo; chưa xác định nguồn (tải asset, xử lý mạng hoặc GC).';
           report('LONG MAIN THREAD TASK', `JavaScript chiếm ${Math.round(longest)}ms. Các công đoạn đo được trong cùng tác vụ: ${detail}. Đây là thời gian CPU, không phải lỗi mất kết nối.`);
@@ -177,6 +204,25 @@
       });
       observer.observe({ type: 'longtask', buffered: true });
     } catch { /* Not supported in every browser. */ }
+  }
+
+  if (typeof PerformanceObserver !== 'undefined' && PerformanceObserver.supportedEntryTypes?.includes('long-animation-frame')) {
+    const observer = new PerformanceObserver(list => {
+      for (const entry of list.getEntries()) {
+        if (!worldRunning || entry.duration < 100) continue;
+        const scripts = entry.scripts.map(script => ({
+          duration: Math.round(script.duration), invoker: script.invoker,
+          sourceURL: script.sourceURL, sourceFunctionName: script.sourceFunctionName,
+          sourceCharPosition: script.sourceCharPosition, forcedLayoutMs: Math.round(script.forcedStyleAndLayoutDuration || 0),
+        })).sort((a, b) => b.duration - a.duration).slice(0, 5);
+        animationFrames.push({ start: entry.startTime, duration: Math.round(entry.duration), scripts });
+        if (animationFrames.length > 30) animationFrames.shift();
+        if (entry.duration > 1000 && scripts.length) {
+          report('SLOW FRAME SOURCE', JSON.stringify({ duration: Math.round(entry.duration), scripts }));
+        }
+      }
+    });
+    observer.observe({ type: 'long-animation-frame', buffered: false });
   }
 
   window.addEventListener('error', function (event) {
@@ -190,7 +236,7 @@
   window.addEventListener('unhandledrejection', function (event) { report('UNHANDLED PROMISE', event.reason); });
   window.addEventListener('offline', function () { report('NETWORK', 'Thiết bị đã mất kết nối mạng'); });
   document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible') { lastFrameAt = Date.now(); lastTickAt = Date.now(); blockedSince = 0; }
+    if (document.visibilityState === 'visible') { lastFrameAt = Date.now(); lastTickAt = Date.now(); blockedSince = 0; lastFramePerformanceAt = 0; }
   });
   document.addEventListener('DOMContentLoaded', ensureUi);
 

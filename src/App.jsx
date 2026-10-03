@@ -320,7 +320,7 @@ export default function App() {
         setStatus(phaseText[state.phase] || 'Đang kiểm tra kết nối…');
       },
       onState: (players, serverTime) => {
-        setNetwork(previous => ({ ...previous, online: players.length + 1 }));
+        setNetwork(previous => previous.online === players.length + 1 ? previous : ({ ...previous, online: players.length + 1 }));
         worldRef.current?.syncRemotePlayers(players, serverTime);
       },
       onMoveAck: state => worldRef.current?.correctPlayerPosition(state),
@@ -935,8 +935,14 @@ export default function App() {
             <span className="pt-pill-val">{progress.gems}</span>
           </div>
 
-          <button type="button" className="hud-header-button" onClick={() => handleMenuClick('inventory')} aria-label="Mở túi đồ" title="Túi đồ (B / I)"><Icon3dBackpack size={24} /></button>
-          <button type="button" className="hud-header-button hud-menu-button" onClick={() => setPhoneOpen(true)} aria-label="Mở menu" title="Menu (P)"><Icon3dSmartPhone size={23} /><span>Menu</span>{hasPendingNotifications && <i className="hud-menu-ping" />}</button>
+          <button type="button" className="pt-candy-btn pt-bag-btn" onClick={() => handleMenuClick('inventory')} aria-label="Mở túi đồ" title="Túi đồ (B / I)">
+            <Icon3dBackpack size={26} />
+          </button>
+          <button type="button" className="pt-candy-btn pt-phone-btn" onClick={() => setPhoneOpen(true)} aria-label="Mở menu" title="Menu (P)">
+            <Icon3dSmartPhone size={26} />
+            <span className="pt-btn-label">Menu</span>
+            {hasPendingNotifications && <i className="pt-menu-ping" />}
+          </button>
         </div>
       </header>
 

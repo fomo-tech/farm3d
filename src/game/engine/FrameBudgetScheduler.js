@@ -2,18 +2,19 @@
  * FrameBudgetScheduler.js
  * Global Frame-Budget Scheduler for Open-World Streaming & Asynchronous World Building.
  * 
- * Guarantees 60 FPS (16.67ms frame budget):
+ * Cooperative scheduling: individual iterator steps must remain small.
  * - Renders: ~8-10ms
  * - Game Logic / Physics: ~1-2ms
  * - Streaming & Mesh Instantiation: MAX 2.5ms
  * 
- * Never allows CPU streaming tasks to block the main thread or cause frame drops.
+ * A synchronous step cannot be preempted; overruns are measured and reported.
  */
 
 export class FrameBudgetScheduler {
   constructor(budgetMs = 2.5) {
     this.budgetMs = budgetMs;
     this.queue = [];
+    this.stats = { steps: 0, maxStepMs: 0, lastBatchMs: 0, overruns: 0 };
   }
 
   /**
@@ -25,7 +26,7 @@ export class FrameBudgetScheduler {
     if (id) {
       // Remove any existing pending task with the same ID to prevent redundant work
       const existingIdx = this.queue.findIndex(item => item.id === id);
-      if (existingIdx >= 0) this.queue.splice(existingIdx, 1);
+      if (existingIdx >= 0) this.queue.splice(existingIdx, 1)[0].task.return?.();
     }
     const item = { task, priority, id };
     this.queue.push(item);
@@ -47,6 +48,8 @@ export class FrameBudgetScheduler {
       let finished = false;
 
       try {
+        const stepStart = performance.now();
+        windowSafeDebug()?.stage(`stream job: ${current.id || 'anonymous'}`);
         if (typeof current.task.next === 'function') {
           // Generator or iterator step
           const result = current.task.next();
@@ -57,6 +60,13 @@ export class FrameBudgetScheduler {
         } else {
           finished = true;
         }
+        const stepMs = performance.now() - stepStart;
+        this.stats.steps++;
+        this.stats.maxStepMs = Math.max(this.stats.maxStepMs, stepMs);
+        if (stepMs > 50) {
+          this.stats.overruns++;
+          windowSafeDebug()?.report(`${current.id}: ${stepMs.toFixed(1)}ms`, 'STREAM JOB OVERRUN');
+        }
       } catch (err) {
         console.warn('[FrameBudgetScheduler] Lỗi khi xử lý tác vụ streaming:', err);
         finished = true;
@@ -66,19 +76,24 @@ export class FrameBudgetScheduler {
         this.queue.shift();
       }
     }
+    this.stats.lastBatchMs = performance.now() - start;
   }
 
   cancel(id) {
     if (!id) return;
     const idx = this.queue.findIndex(item => item.id === id);
-    if (idx >= 0) this.queue.splice(idx, 1);
+    if (idx >= 0) this.queue.splice(idx, 1)[0].task.return?.();
   }
 
   clear() {
+    for (const item of this.queue) item.task.return?.();
     this.queue.length = 0;
   }
 
   getPendingCount() {
     return this.queue.length;
   }
+  getStats() { return { ...this.stats, pending: this.queue.length }; }
 }
+
+function windowSafeDebug() { return typeof window === 'undefined' ? null : window.__farmDebug; }
