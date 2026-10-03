@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "test:rendering": "node scripts/test-color-grading.mjs && node scripts/test-hud-runtime.mjs && node scripts/test-graphics-settings.mjs && node scripts/test-farm-streaming-grid.mjs && node scripts/test-texture-grain.mjs && node scripts/test-model-placement.mjs && node scripts/test-model-spawn-queue.mjs",
     "dev": "vite --host 0.0.0.0",
     "dev:server": "node --watch server/index.js",
     "start:server": "node server/index.js",
@@ -14,6 +15,8 @@
     "test:camera": "node scripts/test-camera-view.mjs",
     "test:venues-casino": "node scripts/test-venues-casino.mjs",
     "test:shop-meshes": "node scripts/test-shop-meshes.mjs",
+    "test:streaming": "node scripts/test-streaming-lifecycle.mjs && node scripts/test-world-render-index.mjs && node scripts/test-world-chunk-streamer.mjs && node scripts/test-foliage-chunks.mjs && node scripts/test-fog-streaming.mjs && node scripts/test-collision-system.mjs && node scripts/test-runtime-safety.mjs",
+    "test:streaming-report": "node scripts/verify-streaming-report.mjs",
     "build": "npm run validate:assets && npm run validate:farm-layout && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },

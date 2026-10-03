@@ -47,4 +47,35 @@ assert.equal(slow.entries.get('slow').state, 'unloaded');
 assert.equal(slowEvents.at(-1), 'proxy');
 slow.dispose();
 streamer.dispose();
+// Meter-based detail limits must work even inside the same grid neighbourhood.
+const metres = new WorldChunkStreamer({ detailRadius: 3, keepRadius: 4 });
+let finish;
+let unloaded = 0;
+metres.register('flowers', 0, 0, {
+  detailDistance: 20, keepDistance: 30,
+  load: () => new Promise(resolve => { finish = resolve; }),
+  unload: () => unloaded++,
+});
+metres.update({ x: 25, z: 0 }, undefined, 1000);
+await flush();
+assert.equal(metres.getStats().pendingNear, 0);
+assert.equal(metres.entries.get('flowers').state, 'unloaded');
+metres.update({ x: 10, z: 0 }, undefined, 1200);
+await flush();
+assert.equal(metres.getStats().pendingNear, 1);
+metres.update({ x: 35, z: 0 }, undefined, 1400);
+finish(true);
+await flush();
+assert.equal(metres.entries.get('flowers').state, 'unloaded');
+assert.equal(unloaded, 1);
+metres.update({ x: 10, z: 0 }, undefined, 1600);
+await flush();
+finish(true);
+await flush();
+assert.equal(metres.entries.get('flowers').state, 'ready');
+metres.update({ x: 25, z: 0 }, undefined, 1800);
+assert.equal(metres.entries.get('flowers').state, 'ready');
+metres.update({ x: 35, z: 0 }, undefined, 2000);
+assert.equal(metres.entries.get('flowers').state, 'unloaded');
+metres.dispose();
 console.log('PASS: chunk detail, far LOD, eviction and return traversal');

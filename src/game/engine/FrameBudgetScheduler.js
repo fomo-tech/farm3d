@@ -69,6 +69,8 @@ export class FrameBudgetScheduler {
         }
       } catch (err) {
         console.warn('[FrameBudgetScheduler] Lỗi khi xử lý tác vụ streaming:', err);
+        windowSafeDebug()?.report(err, `STREAM JOB FAILED: ${current.id || 'anonymous'}`);
+        current.task.return?.();
         finished = true;
       }
 

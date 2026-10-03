@@ -17,6 +17,8 @@ import { Vector3, Matrix, Quaternion } from '@babylonjs/core/Maths/math.vector.j
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
+import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData.js';
 import '@babylonjs/core/Meshes/thinInstanceMesh.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { FARM_CONFIG } from '../config.js';
@@ -138,8 +140,8 @@ export class FarmChunk {
       specularPower: 28,
     });
 
-    const leafBright = createToyMaterial(scene, 'mat-tree-leaf-bright', '#4ade80', { ambientScale: 0.6 });
-    const leafMid = createToyMaterial(scene, 'mat-tree-leaf-mid', '#22c55e', { ambientScale: 0.55 });
+    const leafBright = createToyMaterial(scene, 'mat-tree-leaf-bright', '#79aa63', { ambientScale: 0.4 });
+    const leafMid = createToyMaterial(scene, 'mat-tree-leaf-mid', '#52864e', { ambientScale: 0.4 });
     const appleRed = createToyMaterial(scene, 'mat-tree-apple-red', '#ef4444', { emissiveHex: '#dc2626', specularPower: 96 });
 
     return { soilMat, grassMat, borderMat, stonePathMat, fenceMat, lanternMat, planterMat, flowerMat, leafBright, leafMid, appleRed };
@@ -192,15 +194,30 @@ export class FarmChunk {
     // 4. Khối tượng trưng nhà và ruộng
     const field = MeshBuilder.CreateBox(`hlod-field-${this.farmId}`, { width: 7.2, height: 0.08, depth: 4.8 }, scene);
     field.position.set(0, 0.13, -1.5);
-    field.material = this.materials.borderMat;
+    field.material = this.materials.soilMat;
     field.isPickable = false;
     field.parent = this.hlodRoot;
 
     const cabin = MeshBuilder.CreateBox(`hlod-cabin-${this.farmId}`, { width: 3.1, height: 2.1, depth: 2.7 }, scene);
     cabin.position.set(-5.2, 1.1, 3.8);
-    cabin.material = this.materials.stonePathMat;
+    cabin.material = createToyMaterial(scene, 'hlod-house-cream', '#dccdb4', { specularLevel: 0.04 });
     cabin.isPickable = false;
     cabin.parent = this.hlodRoot;
+    // A tiny gabled silhouette rather than a white debug cube, even before
+    // detail is ready. One 8-triangle mesh, shared roof material, no texture.
+    const roof = new Mesh(`hlod-roof-${this.farmId}`, scene);
+    const data = new VertexData();
+    data.positions = [-1.8,0,-1.6, 1.8,0,-1.6, 0,0.9,-1.6,
+      -1.8,0,1.6, 1.8,0,1.6, 0,0.9,1.6];
+    // Babylon's default left-handed front faces use clockwise winding.
+    data.indices = [0,1,2, 3,5,4, 0,5,3, 0,2,5, 1,5,2, 1,4,5, 0,4,1, 0,3,4];
+    data.normals = [];
+    VertexData.ComputeNormals(data.positions, data.indices, data.normals);
+    data.applyToMesh(roof);
+    roof.position.set(-5.2, 2.15, 3.8);
+    roof.material = createToyMaterial(scene, 'hlod-roof-terracotta', '#bd8063', { specularLevel: 0.03 });
+    roof.isPickable = false;
+    roof.parent = this.hlodRoot;
   }
 
   *buildDetailIncrementalGenerator(onComplete) {

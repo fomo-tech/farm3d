@@ -31,19 +31,21 @@ export class WorldChunkStreamer {
     this.lastUpdate = now;
     const center = chunkAt(position.x, position.z);
     this.center = center;
+    this.position = { x: position.x, z: position.z };
     const queued = [];
     let detailed = 0;
     let unloaded = 0;
     for (const entry of this.entries.values()) {
       const distance = Math.max(Math.abs(entry.cell.x - center.x), Math.abs(entry.cell.z - center.z));
+      const metres = Math.hypot(entry.x - position.x, entry.z - position.z);
       if (entry.state === 'ready') detailed++;
-      if (distance <= this.detailRadius) {
+      if (distance <= this.detailRadius && metres <= (entry.detailDistance ?? Infinity)) {
         entry.lastUsed = now;
         if (entry.state === 'unloaded') {
           const ahead = (entry.x - position.x) * forward.x + (entry.z - position.z) * forward.z;
           queued.push({ entry, score: distance * 100 - Math.min(50, ahead / this.cellSize) });
         }
-      } else if (distance > this.keepRadius && entry.state === 'ready' && unloaded < 3) {
+      } else if ((distance > this.keepRadius || metres > (entry.keepDistance ?? Infinity)) && entry.state === 'ready' && unloaded < 3) {
         entry.unload?.();
         entry.showLod?.();
         entry.state = 'unloaded';
@@ -53,7 +55,8 @@ export class WorldChunkStreamer {
     }
     if (detailed > this.maxDetailed) {
       const victims = [...this.entries.values()].filter(entry => entry.state === 'ready'
-        && Math.max(Math.abs(entry.cell.x - center.x), Math.abs(entry.cell.z - center.z)) > this.detailRadius)
+        && (Math.max(Math.abs(entry.cell.x - center.x), Math.abs(entry.cell.z - center.z)) > this.detailRadius
+          || Math.hypot(entry.x - position.x, entry.z - position.z) > (entry.detailDistance ?? Infinity)))
         .sort((a, b) => a.lastUsed - b.lastUsed);
       for (const entry of victims.slice(0, detailed - this.maxDetailed)) {
         entry.unload?.();
@@ -72,7 +75,8 @@ export class WorldChunkStreamer {
       if (success !== false) {
         const current = this.center;
         const distance = current ? Math.max(Math.abs(entry.cell.x - current.x), Math.abs(entry.cell.z - current.z)) : 0;
-        if (distance > this.keepRadius) {
+        const metres = this.position ? Math.hypot(entry.x - this.position.x, entry.z - this.position.z) : 0;
+        if (distance > this.keepRadius || metres > (entry.keepDistance ?? Infinity)) {
           entry.unload?.();
           entry.showLod?.();
           entry.state = 'unloaded';
@@ -92,7 +96,8 @@ export class WorldChunkStreamer {
       if (entry.state === 'ready') ready++;
       if (this.center) {
         const distance = Math.max(Math.abs(entry.cell.x - this.center.x), Math.abs(entry.cell.z - this.center.z));
-        if (distance <= this.detailRadius && entry.state !== 'ready') pendingNear++;
+        const metres = Math.hypot(entry.x - this.position.x, entry.z - this.position.z);
+        if (distance <= this.detailRadius && metres <= (entry.detailDistance ?? Infinity) && entry.state !== 'ready') pendingNear++;
       }
     }
     return { entries: this.entries.size, ready, pendingNear, loading: !!this.loading };

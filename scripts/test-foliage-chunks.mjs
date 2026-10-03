@@ -30,11 +30,26 @@ foliage.lastChunkUpdate = -1000;
 foliage.updateChunks();
 const group = foliage.chunks.get('0:0').groups.get('oak');
 assert.equal(group.proxy.isEnabled(), true);
-assert.equal(group.meshes.length, 0, 'far detailed meshes are evicted from memory');
+assert.equal(group.meshes.length, 1, 'recent detail stays cached');
+assert.equal(group.meshes[0].isEnabled(), false);
+const cachedMesh = group.meshes[0];
 scene.activeCamera.target.set(0, 0, 0);
 foliage.lastChunkUpdate = -1000;
 foliage.updateChunks();
 assert.equal(group.meshes[0].thinInstanceCount, 100, 'returning restores the same tree assets');
+assert.equal(group.meshes[0], cachedMesh, 'returning reuses GPU buffers');
+// Visit more cells than the cache budget, then leave all of them.
+for (let i = 1; i <= 40; i++) {
+  const x = i * 1000;
+  foliage._queueChunkInstance('oak', { x, y: 0, z: 0, scale: 1, rotY: 0 });
+  scene.activeCamera.target.set(x, 0, 0);
+  for (let step = 0; step < 4; step++) { foliage.lastChunkUpdate = -1000; foliage.updateChunks(); }
+}
+scene.activeCamera.target.set(100000, 0, 100000);
+for (let step = 0; step < 100; step++) { foliage.lastChunkUpdate = -1000; foliage.updateChunks(); }
+assert.ok([...foliage.chunks.values()].filter(chunk => [...chunk.groups.values()].some(g => g.meshes.length)).length <= 32,
+  'cold foliage detail respects the cache limit');
+assert.equal(group.requests.length, 100, 'eviction preserves tree placements');
 scene.activeCamera = null;
 scene.dispose();
 engine.dispose();

@@ -58,7 +58,7 @@ export const WORLD_PALETTE = Object.freeze({
   lanternCore: '#fef08a',       // Tim đèn phát sáng dịu mắt
 
   // 6. Cây cỏ & Tự nhiên
-  foliageOakGreen: '#3eae78',   // Tán lá xanh lam nhẹ, tách khỏi cỏ
+  foliageOakGreen: '#61965b',   // Tán lá xanh dịu, tách khỏi cỏ nhưng không neon
   foliageMapleGold: '#f59e0b',  // Lá phong vàng rực rỡ
   foliageSakuraPink: '#f472b6', // Hoa anh đào / mộc lan
   waterCrystalBlue: '#61d5e8',  // Nước hồ trong vắt xanh ngọc lam

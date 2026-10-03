@@ -3,8 +3,8 @@
  * High-Performance GPU Hardware Instancing System for Farm3D Open World.
  * 
  * Replaces heavy GLTF individual clones with ultra-fast GPU Hardware Instancing:
- * - 1,500 trees rendered in EXACTLY 5 Draw Calls (1 draw call per tree type).
- * - Zero CPU clone overhead, 0 frame drops, solid 60+ FPS.
+ * Draw calls scale with visible cells and prototype parts, not tree count.
+ * Cache nearby detail; evict cold cells gradually with an explicit limit.
  * - Dynamic shadow distance culling (< 70m from player).
  * - Static world matrix freezing (`freezeWorldMatrix()`) for instantaneous rendering.
  */
@@ -83,9 +83,9 @@ export class FoliageInstancingEngine {
 
   _createStylizedPrototype(typeKey) {
     const color = {
-      oak: '#31b66e', pine: '#277c70', maple: '#f59e52',
-      sakura: '#f3a9cf', palm: '#3fc98a', bush: '#40a16b',
-    }[typeKey] || '#31b66e';
+      oak: '#61965b', pine: '#417b65', maple: '#c6a557',
+      sakura: '#df9fbd', palm: '#76a56b', bush: '#668b55',
+    }[typeKey] || '#61965b';
     const makeMaterial = (suffix, hex, ambient = 0.45) => {
       const mat = new StandardMaterial(`foliage-prototype-${typeKey}-${suffix}-mat`, this.scene);
       mat.diffuseColor = Color3.FromHexString(hex);
@@ -96,12 +96,12 @@ export class FoliageInstancingEngine {
     };
     const canopyMat = makeMaterial('canopy', color);
     const highlightMat = makeMaterial('highlight', {
-      oak: '#55cf7e', pine: '#3f9a78', maple: '#ffc066',
-      sakura: '#ffd0e5', palm: '#5dde8c', bush: '#66c77d',
+      oak: '#8ab36b', pine: '#699c78', maple: '#dbc17a',
+      sakura: '#e9c6d5', palm: '#98be80', bush: '#87a668',
     }[typeKey] || color, 0.5);
     const shadowMat = makeMaterial('shadow', {
-      oak: '#238e59', pine: '#1c675b', maple: '#d86f3d',
-      sakura: '#d87faf', palm: '#229e67', bush: '#287e51',
+      oak: '#426d45', pine: '#325f50', maple: '#a37e43',
+      sakura: '#bb809f', palm: '#4a7c59', bush: '#456b45',
     }[typeKey] || color, 0.4);
     const result = [];
     const finish = (mesh, mat, position, rotation = null) => {
@@ -161,7 +161,7 @@ export class FoliageInstancingEngine {
     const key = `${cell.x}:${cell.z}`;
     let chunk = this.chunks.get(key);
     if (!chunk) {
-      chunk = { x: cell.x, z: cell.z, groups: new Map(), detailed: false };
+      chunk = { x: cell.x, z: cell.z, groups: new Map(), detailed: false, lastUsed: 0 };
       this.chunks.set(key, chunk);
     }
     let group = chunk.groups.get(typeKey);
@@ -244,6 +244,7 @@ export class FoliageInstancingEngine {
     for (const chunk of this.chunks.values()) {
       const distance = Math.max(Math.abs(chunk.x - center.x), Math.abs(chunk.z - center.z));
       const shouldDetail = distance <= (chunk.detailed ? 2 : 1);
+      if (shouldDetail) chunk.lastUsed = now;
       if (shouldDetail === chunk.detailed) continue;
       if (!shouldDetail && evicted >= 1) continue;
       chunk.detailed = shouldDetail;
@@ -261,7 +262,7 @@ export class FoliageInstancingEngine {
             for (const mesh of group.meshes) {
               mesh.setEnabled(true);
             }
-            group.dirty = false;
+            // Retain queued placement changes; cached buffers may be stale.
           } else {
             group.dirty = true;
           }
@@ -285,6 +286,23 @@ export class FoliageInstancingEngine {
       if (next) this._buildGroup(chunk, next[0], next[1]);
       if (![...chunk.groups.values()].some(group => group.dirty)) this.dirtyChunks.delete(key);
       if (++built >= 3 || performance.now() - now > 4) break;
+    }
+    // Returning to a recently visited cell reuses buffers. Only cold detail
+    // over the cache limit is released; placement records and LOD stay intact.
+    const cached = [...this.chunks.values()].filter(chunk =>
+      [...chunk.groups.values()].some(group => group.meshes.length));
+    if (cached.length > 32 && performance.now() - now < 4) {
+      const victim = cached.filter(chunk => !chunk.detailed &&
+        Math.max(Math.abs(chunk.x - center.x), Math.abs(chunk.z - center.z)) > 5)
+        .sort((a, b) => (a.lastUsed || 0) - (b.lastUsed || 0))[0];
+      if (victim) {
+        const group = [...victim.groups.values()].find(group => group.meshes.length);
+        for (const mesh of group.meshes) {
+          this.shadows?.removeShadowCaster(mesh);
+          mesh.dispose(false, false);
+        }
+        group.meshes = [];
+      }
     }
   }
 

@@ -141,7 +141,14 @@ console.log(`✓ Initialized ${riverBoxes.length} river barrier colliders in Wor
 
 // Test Case A: Player tries to walk/drive into river where there is NO bridge (e.g., at z = 140, river center x ~ 218)
 // Player starts at x = 200, z = 140, attempts dx = +18m towards river
-const blockedResult = collisionSystem.resolveMovement(200, 140, 18, 0);
+function walkAcross(x, z, distance) {
+  let result = { x, z };
+  for (let travelled = 0; travelled < distance; travelled++) {
+    result = collisionSystem.resolveMovement(result.x, result.z, Math.min(1, distance - travelled), 0);
+  }
+  return result;
+}
+const blockedResult = walkAcross(200, 140, 18);
 if (blockedResult.x < 210) {
   console.log(`✓ Vehicle/Player blocked at riverbank (target x=218, stopped at x=${blockedResult.x.toFixed(2)})! Cannot enter water without bridge.`);
 } else {
@@ -151,7 +158,7 @@ if (blockedResult.x < 210) {
 
 // Test Case B: Player crosses river ON BRIDGE 2 (Highway 86 at z = 86)
 // Player moves from x = 200, z = 86 to x = 224, z = 86
-const bridgeCrossResult = collisionSystem.resolveMovement(200, 86, 24, 0);
+const bridgeCrossResult = walkAcross(200, 86, 24);
 if (bridgeCrossResult.x >= 223) {
   console.log(`✓ Vehicle/Player successfully drove across Bridge 2 on Highway 86 (final x=${bridgeCrossResult.x.toFixed(2)})!`);
 } else {
@@ -160,7 +167,7 @@ if (bridgeCrossResult.x >= 223) {
 }
 
 // Test Case C: Player crosses river ON BRIDGE 1 (Highway -234 at z = -234)
-const bridge1Result = collisionSystem.resolveMovement(195, -234, 20, 0);
+const bridge1Result = walkAcross(195, -234, 20);
 if (bridge1Result.x >= 214) {
   console.log(`✓ Vehicle/Player successfully drove across Bridge 1 on Highway -234 (final x=${bridge1Result.x.toFixed(2)})!`);
 } else {

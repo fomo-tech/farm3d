@@ -1,0 +1,96 @@
+import assert from 'node:assert/strict';
+import { NullEngine } from '@babylonjs/core/Engines/nullEngine.js';
+import { Scene } from '@babylonjs/core/scene.js';
+import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
+import { FarmChunk } from '../src/game/farming/FarmChunk.js';
+import { FrameBudgetScheduler } from '../src/game/engine/FrameBudgetScheduler.js';
+import { installWorldRenderIndex } from '../src/game/rendering/WorldRenderIndex.js';
+import { createOpenAirCorral } from '../src/game/farming/createOpenAirCorral.js';
+import { FarmingSystem } from '../src/game/farming/FarmingSystem.js';
+
+const engine = new NullEngine();
+const scene = new Scene(engine);
+// Avoid canvas-backed texture generation in Node; test the real lifecycle
+// against simple shared materials and the real Babylon scene graph.
+const initMaterials = FarmChunk.prototype._initMaterials;
+FarmChunk.prototype._initMaterials = () => ({});
+const farm = new FarmChunk(scene, { id: 'farm_test', x: 125, z: -90, owner: 'Test' });
+const lodRoof = scene.getMeshByName('hlod-roof-farm_test');
+const roofNormals = lodRoof.getVerticesData('normal');
+assert.ok(roofNormals[7] > 0 && roofNormals[16] > 0,
+  'both ridge vertices must have outward/upward normals in Babylon left-handed coordinates');
+FarmChunk.prototype._initMaterials = initMaterials;
+const scheduler = new FrameBudgetScheduler(0.001);
+const farming = Object.create(FarmingSystem.prototype);
+Object.assign(farming, { playerFarmId: 'farm_test', tiles: [], state: {}, crops: new Map(),
+  pendingActions: new Set(), getUnlockedPlots: () => 12, materials: { tilled: {} } });
+farming.applyRemoteFarmAction({ farmId: 'farm_test', tileKey: '0:0', action: 'till' });
+assert.equal(farming.state['0:0'].state, 'tilled', 'updates are retained before meshes load');
+let registrations = 0;
+farm.showDetail(scheduler, () => registrations++);
+assert.equal(farm.hlodRoot.isEnabled(), true, 'keep HLOD during construction');
+scheduler.update();
+farm.showHLOD();
+while (scheduler.getPendingCount()) scheduler.update(100);
+assert.equal(farm.detailReady, true);
+assert.equal(farm.detailRoot.isEnabled(), false, 'late completion must not revive departed detail');
+assert.equal(registrations, 1);
+farming.addTiles(farm.tiles);
+assert.equal(farm.tiles[0].metadata.state, 'tilled', 'new tile restores retained server state');
+farming.removeFarmTiles('farm_test', { preserveState: true });
+assert.equal(farming.state['0:0'].state, 'tilled', 'eviction preserves gameplay data');
+const meshCount = scene.meshes.length;
+for (let i = 0; i < 10; i++) {
+  farm.showDetail(scheduler);
+  farm.showHLOD();
+}
+assert.equal(scene.meshes.length, meshCount, 'ten LOD switches must not recreate meshes');
+assert.equal(scheduler.getPendingCount(), 0);
+const home = new TransformNode('home', scene);
+home.position.set(120, 0, -85);
+const worldPosition = home.getAbsolutePosition().clone();
+farm.setBuildings({ root: home }, null);
+home.computeWorldMatrix(true);
+assert.ok(Vector3.Distance(home.getAbsolutePosition(), worldPosition) < 0.001, 'world placement survives farm parenting');
+farm.showDetail(scheduler);
+assert.equal(home.isEnabled(), true);
+farm.showHLOD();
+assert.equal(home.isEnabled(), false);
+farm.showDetail(scheduler);
+assert.equal(home.isEnabled(), true, 'cached buildings reappear after demotion');
+const firstCorral = createOpenAirCorral(scene, null, { x: 0, z: 0 }, { farmId: 'corral1' });
+const secondCorral = createOpenAirCorral(scene, null, { x: 20, z: 0 }, { farmId: 'corral2' });
+const sharedMaterial = scene.getMaterialByName('mat-corral-post-chunky');
+assert.ok(sharedMaterial);
+firstCorral.dispose();
+assert.equal(scene.getMaterialByName('mat-corral-post-chunky'), sharedMaterial,
+  'eviction cannot dispose materials referenced by a resident corral');
+secondCorral.dispose();
+
+const index = installWorldRenderIndex(scene);
+await index.ready;
+const late = MeshBuilder.CreateBox('late-static', {}, scene);
+await new Promise(resolve => setTimeout(resolve, 0));
+assert.ok(scene.selectionOctree.dynamicContent.includes(late), 'queued meshes render immediately');
+await new Promise(resolve => setTimeout(resolve, 30));
+const beforeRemoval = index.getStats().indexedMeshes;
+late.dispose();
+assert.equal(index.getStats().indexedMeshes, beforeRemoval - 1);
+assert.ok(!scene.selectionOctree.dynamicContent.includes(late));
+farm.showHLOD();
+scheduler.enqueue(farm.evictDetail(), 0, 'evict');
+while (scheduler.getPendingCount()) scheduler.update(100);
+assert.equal(farm.detailReady, false);
+assert.equal(farm.hlodRoot.isEnabled(), true);
+farm.showDetail(scheduler);
+while (scheduler.getPendingCount()) scheduler.update(100);
+assert.equal(farm.detailReady, true, 'evicted detail can rebuild');
+let cancelled = false;
+scheduler.enqueue((function* () { try { yield; } finally { cancelled = true; } })(), 0, 'cancel');
+scheduler.update(0.001);
+scheduler.cancel('cancel');
+assert.equal(cancelled, true, 'cancellation closes generators');
+index.dispose(); scene.dispose(); engine.dispose();
+console.log('PASS: stale builds, cached LOD, world transforms, visible pending index, disposal and cancellation');

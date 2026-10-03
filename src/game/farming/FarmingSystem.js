@@ -166,6 +166,7 @@ export class FarmingSystem {
     const cropObj = createCropMesh(this.scene, cropType.id, progress, key);
     const position = worldPosition(tile);
     cropObj.root.position.set(position.x, position.y + 0.1, position.z);
+    if (tile.parent) cropObj.root.setParent(tile.parent);
 
     const tagMesh = (node) => {
       node.metadata = { type: 'crop', tile, mature: progress >= 1, stage, crop: cropType.id };
@@ -383,12 +384,18 @@ export class FarmingSystem {
 
   applyRemoteFarmAction({ farmId, tileKey, action, crop, tileData }) {
     this.pendingActions.delete(`${farmId}:${tileKey}`);
+    // Server state must outlive mesh residency. A streamed-out tile still
+    // receives updates and restores the latest state when its chunk returns.
+    const storageKey = farmId === this.playerFarmId ? tileKey : `${farmId}:${tileKey}`;
+    if (action === 'till') this.state[storageKey] = tileData || { state: 'tilled' };
+    else if (action === 'plant') this.state[storageKey] = tileData || { state: 'planted', crop: crop || 'carrot', plantedAt: Date.now() };
+    else if (action === 'water') this.state[storageKey] = tileData || { ...this.state[storageKey], state: 'watered', wateredAt: Date.now() };
+    else if (action === 'harvest') this.state[storageKey] = { state: 'tilled' };
     const tile = this.tiles.find(t => {
       const tFarmId = t.metadata?.farmId || this.playerFarmId;
       return tFarmId === farmId && `${t.metadata.column}:${t.metadata.row}` === tileKey;
     });
     if (!tile) return;
-    const storageKey = this.key(tile);
 
     if (action === 'till') {
       this.state[storageKey] = { state: 'tilled' };
@@ -435,7 +442,7 @@ export class FarmingSystem {
   update() {
     const now = performance.now();
     for (const [, cropEntry] of this.crops) {
-      cropEntry?.animate?.(now);
+      if (cropEntry?.root?.isEnabled()) cropEntry.animate?.(now);
     }
     for (const tile of this.tiles) {
       const data = this.state[this.key(tile)];

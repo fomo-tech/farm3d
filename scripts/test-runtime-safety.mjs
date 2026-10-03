@@ -11,12 +11,18 @@ assert.ok(Number.isFinite(collision.resolveMovement(0, 18, .1, 0).x));
 let now = 100000;
 const timers = [];
 const storage = new Map();
+const performanceObservers = new Map();
+class TestPerformanceObserver {
+  static supportedEntryTypes = ['longtask', 'long-animation-frame'];
+  constructor(callback) { this.callback = callback; }
+  observe({ type }) { performanceObservers.set(type, this.callback); }
+}
 class TestDate extends Date {
   constructor(...args) { super(...(args.length ? args : [now])); }
   static now() { return now; }
 }
 const context = {
-  Date: TestDate, URLSearchParams, Error,
+  Date: TestDate, URLSearchParams, Error, PerformanceObserver: TestPerformanceObserver,
   performance: { now() { return now; } },
   location: { search: '', hostname: 'localhost', href: 'http://localhost/' },
   navigator: { onLine: true },
@@ -42,5 +48,13 @@ assert.equal(debug.getReport().entries.find(entry => entry.type === 'FRAME GAP')
 debug.snapshot({ x: 1, z: 2, fps: 60, movement: { input: true, speed: 0, collided: true } });
 for (let i = 0; i < 15; i++) { now += 2000; debug.frame(); timers[0](); }
 assert.ok(debug.getReport().entries.some(entry => entry.type === 'MOVEMENT BLOCKED'));
+debug.measure('slow network callback', () => { now += 1200; });
+performanceObservers.get('longtask')({ getEntries: () => [{ startTime: now - 1200, duration: 1200 }] });
+assert.ok(debug.getReport().entries.some(entry => entry.type === 'LONG MAIN THREAD TASK' && /slow network callback/.test(entry.message)));
+performanceObservers.get('long-animation-frame')({ getEntries: () => [{ startTime: now, duration: 1300,
+  scripts: [{ duration: 1200, invoker: 'timer', sourceURL: '/src/example.js',
+    sourceFunctionName: 'expensiveCallback', sourceCharPosition: 42, forcedStyleAndLayoutDuration: 0 }] }] });
+assert.equal(debug.getReport().animationFrames[0].scripts[0].sourceFunctionName, 'expensiveCallback');
+assert.ok(debug.getReport().entries.some(entry => entry.type === 'SLOW FRAME SOURCE'));
 debug.stopFrames();
 console.log('PASS: bounded collision, freeze watchdog, persisted reports and blocked-movement diagnostics');

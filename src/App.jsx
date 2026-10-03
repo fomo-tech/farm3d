@@ -164,6 +164,11 @@ function playerFarmTarget(farmId) {
   return { x: farm.x + 6, z: farm.z - 4 };
 }
 
+function createMeasuredWorld(...args) {
+  const create = () => new FarmWorld(...args);
+  return window.__farmDebug ? window.__farmDebug.measure('initial world construction', create) : create();
+}
+
 export default function App() {
   recordAppRender();
   const canvasRef = useRef(null);
@@ -223,7 +228,7 @@ export default function App() {
     try {
       window.__farmDebug?.mark('Creating Babylon world');
       setBoot({ phase: 'loading', error: '' });
-      world = new FarmWorld(canvasRef.current, setStatus, {
+      world = createMeasuredWorld(canvasRef.current, setStatus, {
         initialLocation: initialLocationRef.current,
         onBootProgress: progressInfo => {
           setBootProgress(progressInfo);

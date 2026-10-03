@@ -14,6 +14,7 @@ function mat(scene, name, hex, emissiveHex = null) {
 }
 
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
+import { getWorldChunkStreamer } from './WorldChunkStreamer.js';
 import {
   createMarshmallowTree,
   createCandyFlowerBush,
@@ -221,21 +222,42 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
         MODEL_PATHS.foliage.flowerPurple,
       ];
 
+      let stems = [];
+      const load = () => {
+      const jobs = [];
       for (let i = 0; i < count; i++) {
         const angle = (i / count) * Math.PI * 2 + (i % 3) * 0.35;
         const dist = 0.4 + ((i * 17) % 10) / 10 * (radius - 0.5);
         const fx = Math.cos(angle) * dist;
         const fz = Math.sin(angle) * dist;
         const model = flowerModels[i % flowerModels.length];
+        jobs.push(new Promise(resolve => {
         const flw = spawnModelSync(scene, model, {
           position: new Vector3(fx, 0, fz),
           rotation: new Vector3(0, Math.random() * Math.PI * 2, 0),
           scaling: new Vector3(1.6, 1.6, 1.6),
           shadows: null,
           name: `flw-${i}`,
+          parent: root,
+          showFallback: false,
+          onLoaded: () => resolve(true),
+          onError: () => resolve(false),
         });
-        flw.parent = root;
+        stems.push(flw);
+        flw.onDisposeObservable.addOnce(() => resolve(false));
+        if (flw.metadata?.blockedOnRoad) resolve(false);
+        }));
       }
+      return Promise.all(jobs).then(() => true);
+      };
+      const unregister = getWorldChunkStreamer(scene).register(`flower-patch-${root.uniqueId}`, x, z, {
+        detailDistance: 80, keepDistance: 112, load,
+        unload: () => { const old = stems; stems = []; old.forEach(node => { if (!node.isDisposed()) node.dispose(false, false); }); },
+        // Tiny flowers are distance-culled at far LOD; meadow texture supplies
+        // distant flower specks. Original GLBs remain cached, never deleted.
+        showLod: () => {}, hideLod: () => {},
+      });
+      root.onDisposeObservable.addOnce(unregister);
       return root;
     },
 

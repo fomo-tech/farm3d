@@ -59,6 +59,8 @@
       `Stage: ${currentStage}`,
       `Runtime stage: ${runtimeStage}`,
       `Last runtime snapshot: ${textOf(runtimeSnapshot)}`,
+      `Runtime counters: ${textOf(sessionMetrics)}`,
+      `React profile: ${textOf(window.__farmReactMetrics || null)}`,
       `Time: ${new Date().toISOString()}`,
       `Viewport: ${innerWidth}x${innerHeight} @ DPR ${devicePixelRatio || 1}`,
       `Online: ${navigator.onLine}`,
@@ -155,7 +157,7 @@
     },
     stopFrames() { worldRunning = false; },
     ready() { currentStage = 'World ready'; ensureUi(); if (entries.length === 0) panel?.classList.remove('visible'); render(); },
-    getReport() { return { stage: currentStage, runtimeStage, snapshot: runtimeSnapshot, metrics: { ...sessionMetrics }, slowCallbacks: slowCallbacks.slice(), animationFrames: animationFrames.slice(), entries: entries.slice(), system: systemReport() }; },
+    getReport() { return { stage: currentStage, runtimeStage, snapshot: runtimeSnapshot, metrics: { ...sessionMetrics }, react: window.__farmReactMetrics || null, slowCallbacks: slowCallbacks.slice(), animationFrames: animationFrames.slice(), entries: entries.slice(), system: systemReport() }; },
   };
 
   setInterval(function () {

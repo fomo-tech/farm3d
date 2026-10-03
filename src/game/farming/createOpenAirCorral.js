@@ -444,6 +444,7 @@ export function createOpenAirCorral(scene, shadows, position = { x: 0, y: 0, z: 
   // Hiệu ứng thở & gật gù nhai cỏ của chú bò
   let animTime = Math.random() * 10;
   const animObserver = scene.onBeforeRenderObservable.add(() => {
+    if (!root.isEnabled()) return;
     const dt = scene.getEngine().getDeltaTime() / 1000;
     animTime += dt * 1.8;
     headRoot.rotation.x = Math.sin(animTime) * 0.09;
@@ -458,7 +459,8 @@ export function createOpenAirCorral(scene, shadows, position = { x: 0, y: 0, z: 
     petRoot,
     dispose() {
       if (animObserver) scene.onBeforeRenderObservable.remove(animObserver);
-      root.dispose(false, true);
+      // Toy materials are scene-shared. Another resident chunk still uses them.
+      root.dispose(false, false);
     },
   };
 }

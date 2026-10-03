@@ -1,6 +1,7 @@
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
 import { WORLD_PALETTE } from './worldDesignSystem.js';
+import { addTextureGrain } from './TextureWorkerPool.js';
 
 /**
  * 1. THẢM CỎ ĐỒNG QUÊ COZY GHIBLI & ZELDA (HOÀN TOÀN KHÔNG CÒN BÀN CỜ / PIXEL LƯỚI VUÔNG)
@@ -19,15 +20,15 @@ export function createMeadowTexture(scene, size = 1024) {
 
   // 1. Nền cỏ xanh tươi mát mọng nước ngập tràn ánh nắng (Ghibli Radiant Sunny Meadow)
   const baseGrad = ctx.createLinearGradient(0, 0, size, size);
-  baseGrad.addColorStop(0.0, '#4ade80');
-  baseGrad.addColorStop(0.35, '#22c55e');
-  baseGrad.addColorStop(0.7, '#16a34a');
-  baseGrad.addColorStop(1.0, '#4ade80');
+  baseGrad.addColorStop(0.0, '#80ae61');
+  baseGrad.addColorStop(0.35, '#759f59');
+  baseGrad.addColorStop(0.7, '#69954f');
+  baseGrad.addColorStop(1.0, '#80ae61');
   ctx.fillStyle = baseGrad;
   ctx.fillRect(0, 0, size, size);
 
   // 2. Các vệt loang màu nước tự nhiên (Watercolor organic patches)
-  const patchColors = ['#86efac', '#a7f3d0', '#4ade80', '#bef264'];
+  const patchColors = ['#a3bb7d', '#b5c791', '#91af70', '#b7bf82'];
   for (let i = 0; i < 54; i++) {
     const px = ((i * 137) % size);
     const py = ((i * 241) % size);
@@ -61,7 +62,7 @@ export function createMeadowTexture(scene, size = 1024) {
       ctx.fill();
     } else {
       // Khóm cỏ non
-      ctx.fillStyle = '#bbf7d0';
+      ctx.fillStyle = '#a6c58d';
       ctx.fillRect(fx, fy, 2, 4);
       ctx.fillRect(fx + 2, fy - 1, 2, 5);
     }
@@ -69,23 +70,12 @@ export function createMeadowTexture(scene, size = 1024) {
 
   // 4. Vi vân sợi cỏ siêu mịn
   const imgData = ctx.getImageData(0, 0, size, size);
-  const data = imgData.data;
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const idx = (y * size + x) * 4;
-      const nx = (x / size) * Math.PI * 2;
-      const ny = (y / size) * Math.PI * 2;
-      const wave = Math.sin(nx * 4) * Math.cos(ny * 4) + Math.sin(nx * 8 + ny * 8) * 0.4;
-      const noise = wave * 3.5;
-
-      data[idx] = Math.min(255, Math.max(0, data[idx] + noise * 0.7));
-      data[idx + 1] = Math.min(255, Math.max(0, data[idx + 1] + noise));
-      data[idx + 2] = Math.min(255, Math.max(0, data[idx + 2] + noise * 0.5));
-    }
-  }
-  ctx.putImageData(imgData, 0, 0);
-
   dynamic.update();
+  addTextureGrain(scene, imgData.data, size, size, pixels => {
+    if (scene.isDisposed || !dynamic.getInternalTexture()) return;
+    ctx.putImageData(new ImageData(pixels, size, size), 0, 0);
+    dynamic.update();
+  });
   dynamic.wrapU = Texture.WRAP_ADDRESSMODE;
   dynamic.wrapV = Texture.WRAP_ADDRESSMODE;
   dynamic.uScale = 1;

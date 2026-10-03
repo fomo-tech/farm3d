@@ -7,6 +7,8 @@ import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { MODEL_PATHS, resolveModelAsset } from './AssetRegistry.js';
 import { getWorldChunkStreamer } from '../world/WorldChunkStreamer.js';
+import { modelWorldPosition, modelSubtreePredicate, attachVillageHouse } from './ModelPlacement.js';
+import { ModelSpawnQueue } from './ModelSpawnQueue.js';
 import { ROAD_SAFETY_CONFIG, isRoadResourceBlocked, recordBlockedRoadResource } from '../world/RoadSafetyZone.js';
 
 export { MODEL_PATHS } from './AssetRegistry.js';
@@ -15,19 +17,14 @@ const cachesByScene = new WeakMap();
 let spawnCounter = 0;
 const spawnQueues = new WeakMap();
 
-function yieldModelSpawn(scene) {
+function yieldModelSpawn(scene, priority, relevant) {
   let queue = spawnQueues.get(scene);
-  if (!queue) { queue = []; spawnQueues.set(scene, queue); }
-  return new Promise(resolve => {
-    queue.push(resolve);
-    if (queue.length !== 1) return;
-    const next = () => {
-      queue[0]?.();
-      queue.shift();
-      if (queue.length) setTimeout(next, 16);
-    };
-    setTimeout(next, 16);
-  });
+  if (!queue) {
+    queue = new ModelSpawnQueue();
+    spawnQueues.set(scene, queue);
+    scene.onDisposeObservable.addOnce(() => { queue.dispose(); spawnQueues.delete(scene); });
+  }
+  return queue.request(priority, relevant);
 }
 
 function getSceneCache(scene) {
@@ -156,13 +153,14 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
   const {
     position = Vector3.Zero(), rotation = Vector3.Zero(), scaling = new Vector3(1, 1, 1), shadows = null,
     name = 'model-instance', parent = null, onLoaded = null, onError = null, colorTint = null, showFallback = true, streamable = false,
-    allowOnRoad = false,
+    allowOnRoad = false, selectNodeName = null,
   } = options;
 
   // Road Corridor Safety Guard: Block resource/model from spawning on road corridors
   if (!allowOnRoad && ROAD_SAFETY_CONFIG?.blockRoadResources) {
-    const worldX = position.x + (parent?.position?.x || 0);
-    const worldZ = position.z + (parent?.position?.z || 0);
+    const world = modelWorldPosition(position, parent);
+    const worldX = world.x;
+    const worldZ = world.z;
     if (isRoadResourceBlocked(worldX, worldZ, 0.6)) {
       recordBlockedRoadResource(name || String(idOrUrl), worldX, worldZ);
       const blockedNode = new TransformNode(`blocked-road-resource-${name}`, scene);
@@ -188,7 +186,9 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
   const materialize = () => {
     const epoch = loadEpoch;
     return loadModelContainer(scene, idOrUrl).then(async (container) => {
-    await yieldModelSpawn(scene);
+    const canSpawn = await yieldModelSpawn(scene, selectNodeName ? 100 : (/house|barn|corral|manor/.test(name) ? 20 : 0),
+      () => !root.isDisposed() && !scene.isDisposed && epoch === loadEpoch);
+    if (!canSpawn) return false;
     if (root.isDisposed() || scene.isDisposed || epoch !== loadEpoch) return false;
     if (!container) {
       root.metadata.assetStatus = 'failed';
@@ -200,7 +200,10 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
     try {
       window.__farmDebug?.stage(`instantiate asset: ${idOrUrl}`);
       instance = container.instantiateModelsToScene(
-        (sourceName) => `${sourceName}_inst_${instanceId}`, false, { doNotInstantiate: Boolean(colorTint) }
+        (sourceName) => `${sourceName}_inst_${instanceId}`, false, {
+          doNotInstantiate: Boolean(colorTint),
+          predicate: selectNodeName ? modelSubtreePredicate(container, selectNodeName) : undefined,
+        }
       );
       instance.rootNodes.forEach((node) => { node.parent = root; });
       activeInstance = instance;
@@ -267,26 +270,11 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
 }
 
 export function spawnVillageHouse(scene, houseIdx = 0, options = {}) {
-  const { position = Vector3.Zero(), rotation = Vector3.Zero(), scaling = new Vector3(3.6, 3.6, 3.6), shadows = null, name = 'village-house' } = options;
+  const { position = Vector3.Zero(), rotation = Vector3.Zero(), scaling = new Vector3(3.6, 3.6, 3.6), shadows = null, name = 'village-house', parent = null } = options;
   return spawnModelSync(scene, MODEL_PATHS.village, {
-    position, rotation, scaling, shadows, name,
+    position, rotation, scaling, shadows, name, parent, selectNodeName: `house${houseIdx}`,
     onLoaded: ({ root, instance }) => {
-      const targetName = `house${houseIdx}`;
-      let targetNode = null;
-      instance.rootNodes.forEach((node) => {
-        if (node.name.toLowerCase().includes('ground')) node.setEnabled(false);
-        const visit = (child) => {
-          if (child.name.includes(targetName)) targetNode = child;
-          child.getChildren?.().forEach(visit);
-        };
-        visit(node);
-      });
-      if (!targetNode) return;
-      instance.rootNodes.forEach((node) => {
-        if (node !== targetNode && !node.isDescendantOf?.(targetNode)) node.setEnabled(false);
-      });
-      targetNode.parent = root;
-      targetNode.position.set(0, 0, 0);
+      attachVillageHouse(root, instance, `house${houseIdx}`);
     },
   });
 }

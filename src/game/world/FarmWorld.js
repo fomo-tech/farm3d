@@ -22,6 +22,8 @@ import { VENUE_LAYOUT } from '../../../shared/venueLayout.js';
 import { createFarmPlot } from '../farming/createFarmPlot.js';
 import { FrameBudgetScheduler } from '../engine/FrameBudgetScheduler.js';
 import { FarmChunk } from '../farming/FarmChunk.js';
+import { FarmStreamingGrid } from './FarmStreamingGrid.js';
+import { getTextureWorkerStats } from './TextureWorkerPool.js';
 import { createPlayer } from '../player/createPlayer.js';
 import { createPlayerNameplate } from '../player/createPlayerNameplate.js';
 import { createOpenWorld } from './createOpenWorld.js';
@@ -352,6 +354,7 @@ export class FarmWorld {
     this.farmBuildings = new Map();
     this.farmEstateRoots = new Map();
     this.farmChunks = new Map();
+    this.farmStreamingGrid = new FarmStreamingGrid(WORLD_LAYOUT.farms);
     this.venueMeshesMap = new Map();
     this.currentVenueMeshes = null;
     this.scheduler = new FrameBudgetScheduler(2.5);
@@ -639,15 +642,15 @@ export class FarmWorld {
     // === HỆ THỐNG CHIẾU SÁNG 4 TẦNG CHUẨN HIGH-KEY COZY FARMY ===
     // 1. Tầng 1: Skylight vòm trời thiên thanh nâng sáng toàn cảnh + Ground Bounce xanh mint hắt lên gầm
     const ambient = new HemisphericLight('ambient', new Vector3(0, 1, 0), scene);
-    ambient.intensity = 1.25;
+    ambient.intensity = 0.88;
     ambient.diffuse = Color3.FromHexString('#e6f4ff');
-    ambient.groundColor = Color3.FromHexString('#86c354');
+    ambient.groundColor = Color3.FromHexString('#b1bea5');
     this.ambient = ambient;
 
     // 2. Tầng 2: Key Sunlight vàng kem mật ong ấm áp rạng rỡ (Góc xiên 55 độ)
     const sun = new DirectionalLight('sun', new Vector3(-0.45, -0.85, -0.32), scene);
     sun.position = new Vector3(35, 55, 25);
-    sun.intensity = 1.95;
+    sun.intensity = 1.05;
     sun.diffuse = Color3.FromHexString('#fff0db');
     // Frustum bóng đổ cố định 56m bám theo người chơi: 36.5 texels/m với 2048px map (chuẩn sắc nét Cozy Farmy)
     sun.shadowFrustumSize = 56;
@@ -1199,11 +1202,10 @@ export class FarmWorld {
         this.cinematic.updateFocus(Vector3.Distance(camera.position, player.mesh.position));
       }
       if (!this.currentVenue) {
-        if (performance.now() - (this.lastVillageDetailAt || 0) > 1000) {
+        if (performance.now() - (this.lastVillageDetailAt || 0) > 250) {
           this.lastVillageDetailAt = performance.now();
-          let nearestDetail = null;
-          let nearestDetailDistance = 55;
-          const detailedNeighbours = [];
+          const selected = this.farmStreamingGrid.select(player.root.position, this.farmChunks, this.playerFarmId);
+          this.lastFarmDetailSelection = selected;
           window.__farmDebug?.stage('farm visibility');
           WORLD_LAYOUT.farms.forEach(farm => {
             const distance = Math.hypot(farm.x - player.root.position.x, farm.z - player.root.position.z);
@@ -1215,35 +1217,23 @@ export class FarmWorld {
             if (distance <= 280 && estate && !estate.isEnabled()) {
               estate.setEnabled(true);
             }
-            if (distance < nearestDetailDistance && estate?.metadata?.lightweight) {
-              nearestDetail = farm;
-              nearestDetailDistance = distance;
-            }
-            if (estate?.metadata?.detailed && farm.id !== this.playerFarmId) {
-              detailedNeighbours.push({ farm, distance });
+            const chunk = this.farmChunks.get(farm.id);
+            if (selected.has(farm.id) && chunk && !chunk.wantsDetail) {
+              const profile = this.publicFarms?.find(item => item.farmId === farm.id);
+              this.ensureDetailedFarm(farm.id, farm.id === this.playerFarmId,
+                profile?.userName || farm.owner, profile?.homeTier || 1, profile?.barnLevel || 1);
+            } else if (!selected.has(farm.id) && chunk?.wantsDetail) {
+              this.demoteUnoccupiedFarm(farm.id);
             }
           });
-          // Detailed farms contain many interactive meshes and model instances.
-          // Keep only the two closest neighbours resident. Public visibility is
-          // data permission, not a reason to retain its 3D instance forever.
-          detailedNeighbours.sort((a, b) => a.distance - b.distance);
+          // Active selection follows distance, not the number of old detailed
+          // roots. Keep a bounded cold LRU cache and the player's own estate.
           const cached = [...this.farmChunks.values()].filter(chunk => chunk.detailReady && chunk.farmId !== this.playerFarmId);
           if (cached.length > 8) {
             const victim = cached.filter(chunk => !chunk.wantsDetail && !chunk.evicting &&
               Math.hypot(chunk.farm.x - player.root.position.x, chunk.farm.z - player.root.position.z) > 260)
               .sort((a, b) => a.lastUsed - b.lastUsed)[0];
             if (victim) this.evictFarmCache(victim);
-          }
-          const eviction = detailedNeighbours.length > 2
-            ? detailedNeighbours[detailedNeighbours.length - 1]
-            : detailedNeighbours.find(item => item.distance > 90);
-          if (eviction) {
-            window.__farmDebug?.stage(`farm unload: ${eviction.farm.id}`);
-            this.demoteUnoccupiedFarm(eviction.farm.id);
-          } else if (nearestDetail && detailedNeighbours.length < 2) {
-            window.__farmDebug?.stage(`farm detail: ${nearestDetail.id}`);
-            const profile = this.publicFarms?.find(item => item.farmId === nearestDetail.id);
-            this.ensureDetailedFarm(nearestDetail.id, nearestDetail.id === this.playerFarmId, profile?.userName || nearestDetail.owner);
           }
         }
         window.__farmDebug?.stage('world partition');
@@ -1634,7 +1624,13 @@ export class FarmWorld {
       nearbyShadowCasters: this.getNearbyShadowCount?.() ?? null,
       streamingScheduler: this.scheduler?.getStats(),
       farmCache: { built: [...this.farmChunks.values()].filter(farm => farm.detailReady).length,
-        building: [...this.farmChunks.values()].filter(farm => farm.buildingInProgress).length },
+        building: [...this.farmChunks.values()].filter(farm => farm.buildingInProgress).length,
+        selected: this.lastFarmDetailSelection?.size || 0,
+        active: [...this.farmChunks.values()].filter(farm => farm.state === 'detail').length },
+      textureWorker: getTextureWorkerStats(this.scene),
+      upgradedHomesReady: [...this.farmBuildings.values()].filter(building => building.homeTier >= 2 &&
+        building.home?.root?.getChildTransformNodes().some(node =>
+          String(node.metadata?.asset || '').includes('village') && node.metadata?.assetStatus === 'ready')).length,
       fogStreaming: this.fogStreaming?.getState?.() ?? null,
       // Full mesh-name grouping is intentionally excluded from the hot path.
       // It allocated thousands of temporary regex strings while chunks streamed.
@@ -1670,6 +1666,13 @@ export class FarmWorld {
     const ownedFarm = farms.find(farm => farm.farmId === this.playerFarmId);
     if (ownedFarm) this.ensureDetailedFarm(ownedFarm.farmId, true,
       ownedFarm.userName || ownedFarm.name, ownedFarm.homeTier || 1, ownedFarm.barnLevel || 1);
+    // Scope can arrive after an estate was already promoted. Its active terrain
+    // must still receive the public home/corral instead of staying empty forever.
+    for (const profile of farms) {
+      if (profile.farmId === ownedFarm?.farmId || !this.farmChunks.get(profile.farmId)?.wantsDetail) continue;
+      this.ensureFarmBuildings(profile.farmId, profile.homeTier || 1, profile.barnLevel || 1,
+        profile.userName || profile.name || 'Nông dân');
+    }
     this.updateFarmSigns(this.remotePlayerState || []);
     this.applyRemoteFarmSync(crops);
   }

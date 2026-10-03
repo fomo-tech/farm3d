@@ -331,7 +331,7 @@ export function createStarterFarmhouse(scene, shadowGenerator, position) {
     smokeSystem,
     dispose() {
       smokeSystem.dispose();
-      root.dispose(false, true);
+      root.dispose(false, false);
     },
   };
 }
@@ -351,6 +351,7 @@ export function createUpgradedFarmhouse(scene, shadowGenerator, position) {
     rotation: new Vector3(0, Math.PI, 0),
     shadows: shadowGenerator,
     name: 'manor-house-3d',
+    parent: root,
   });
   manorModel.parent = root;
 
@@ -361,6 +362,7 @@ export function createUpgradedFarmhouse(scene, shadowGenerator, position) {
       scaling: new Vector3(1.3, 1.3, 1.3),
       shadows: shadowGenerator,
       name: `manor-lantern-3d-${idx}`,
+      parent: root,
     });
     lantern.parent = root;
   });
@@ -372,6 +374,7 @@ export function createUpgradedFarmhouse(scene, shadowGenerator, position) {
     scaling: new Vector3(1.5, 1.5, 1.5),
     shadows: shadowGenerator,
     name: 'manor-cart-3d',
+    parent: root,
   });
   cart.parent = root;
 

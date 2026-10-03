@@ -1,4 +1,5 @@
-import { Component } from 'react';
+import { Component, Profiler } from 'react';
+import { recordReactCommit } from './game/rendering/HudRuntime.js';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import './styles.css';
@@ -36,7 +37,7 @@ class GameErrorBoundary extends Component {
 }
 
 createRoot(document.getElementById('root')).render(
-  <GameErrorBoundary><App /></GameErrorBoundary>,
+  <GameErrorBoundary><Profiler id="Game HUD" onRender={recordReactCommit}><App /></Profiler></GameErrorBoundary>,
 );
 
 window.__farmDebug?.mark('React mounted');

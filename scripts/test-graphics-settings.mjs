@@ -13,11 +13,14 @@ for (const quality of ['ultra', 'balanced', 'eco']) {
 }
 const adaptive = new RenderResolutionController();
 for (let i = 0; i < 200; i++) adaptive.sample(30);
+// Current crisp-render policy preserves native scale above 30 FPS.
+assert.equal(adaptive.scale, 1);
+for (let i = 0; i < 125; i++) adaptive.sample(40);
 assert.equal(adaptive.scale, .95);
 adaptive.sample(5000);
 assert.equal(adaptive.scale, .95);
-for (let i = 0; i < 2000; i++) adaptive.sample(30);
-assert.equal(adaptive.scale, .75);
+for (let i = 0; i < 2000; i++) adaptive.sample(40);
+assert.equal(adaptive.scale, .85);
 for (let i = 0; i < 4000; i++) adaptive.sample(16);
 assert.equal(adaptive.scale, 1);
 

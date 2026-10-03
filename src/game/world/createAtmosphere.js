@@ -63,7 +63,9 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
     grad.addColorStop(1.00, cGround);   // Hòa sắc viền mặt đất (Ground Blend)
     sctx.fillStyle = grad;
     sctx.fillRect(0, 0, 256, 512);
-    skyTex.update(false);
+    if (typeof window !== 'undefined' && window.__farmDebug) {
+      window.__farmDebug.measure('clock: sky texture upload', () => skyTex.update(false));
+    } else skyTex.update(false);
   }
 
   skyMat.emissiveTexture = skyTex;
@@ -535,10 +537,10 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       trans: Color3.FromHexString('#f472b6'),
       haze: Color3.FromHexString('#fde047'),
       ground: Color3.FromHexString('#fed7aa'),
-      ambIntensity: 0.95,
+      ambIntensity: 0.78,
       ambColor: Color3.FromHexString('#fdf2e9'),
       ambGround: Color3.FromHexString('#cee9c7'),
-      sunIntensity: 1.55,
+      sunIntensity: 0.90,
       sunColor: Color3.FromHexString('#ffe5bc'),
       sunDir: new Vector3(-0.82, -0.32, -0.25),
       sunDiscAlpha: 0.85,
@@ -563,10 +565,10 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       trans: Color3.FromHexString('#bae6fd'),
       haze: Color3.FromHexString('#f0f9ff'),
       ground: Color3.FromHexString('#f8fafc'),
-      ambIntensity: 1.25,
+      ambIntensity: 0.88,
       ambColor: Color3.FromHexString('#e6f4ff'),
-      ambGround: Color3.FromHexString('#86c354'),
-      sunIntensity: 1.95,
+      ambGround: Color3.FromHexString('#b1bea5'),
+      sunIntensity: 1.05,
       sunColor: Color3.FromHexString('#fff0db'),
       sunDir: new Vector3(-0.45, -0.85, -0.32),
       sunDiscAlpha: 1.0,
@@ -591,11 +593,11 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       trans: Color3.FromHexString('#f43f5e'),
       haze: Color3.FromHexString('#fb923c'),
       ground: Color3.FromHexString('#fed7aa'),
-      ambIntensity: 0.95,
+      ambIntensity: 0.78,
       ambColor: Color3.FromHexString('#fef3c7'),
       ambGround: Color3.FromHexString('#e9d8b8'),
-      sunIntensity: 1.55,
-      sunColor: Color3.FromHexString('#f97316'),
+      sunIntensity: 0.82,
+      sunColor: Color3.FromHexString('#ffdab9'),
       sunDir: new Vector3(0.85, -0.22, 0.22),
       sunDiscAlpha: 0.95,
       starAlpha: 0.35,
@@ -621,7 +623,7 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       ground: Color3.FromHexString('#042f2e'),
       ambIntensity: 0.52,
       ambColor: Color3.FromHexString('#a5b4fc'),
-      ambGround: Color3.FromHexString('#059669'),
+      ambGround: Color3.FromHexString('#738c87'),
       sunIntensity: 0.65,
       sunColor: Color3.FromHexString('#c7d2fe'),
       sunDir: new Vector3(-0.62, -0.45, 0.65),
@@ -643,6 +645,8 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
 
   return {
     setTime(clockSeconds) {
+      const trace = (label, action) => typeof window !== 'undefined' && window.__farmDebug
+        ? window.__farmDebug.measure(`clock: ${label}`, action) : action();
       const cycleTime = clockSeconds % 240;
 
       let k1 = PHASES[0];
@@ -686,12 +690,15 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
         renderSkyGradient(curZenith, curUpper, curTrans, curHaze, curGround);
       }
 
+      trace('clear / fog', () => {
       // Lerp ClearColor & Fog
       scene.clearColor = Color4.Lerp(k1.clearColor, k2.clearColor, s);
       if (scene.fogColor) {
         scene.fogColor = Color3.Lerp(k1.fogColor, k2.fogColor, s);
       }
+      });
 
+      trace('lights / shadows', () => {
       // Lerp Lights
       ambientLight.intensity = k1.ambIntensity + (k2.ambIntensity - k1.ambIntensity) * s;
       ambientLight.diffuse = Color3.Lerp(k1.ambColor, k2.ambColor, s);
@@ -711,7 +718,9 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       const curLamp = k1.lampIntensity + (k2.lampIntensity - k1.lampIntensity) * s;
       villageNightLight.intensity = curLamp;
       plazaNightLight.intensity = curLamp;
+      });
 
+      trace('celestial alpha', () => {
       // Cập nhật Mặt Trời Anime
       const sunAlpha = k1.sunDiscAlpha + (k2.sunDiscAlpha - k1.sunDiscAlpha) * s;
       sunMat.alpha = sunAlpha;
@@ -728,6 +737,7 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       // Cập nhật Cực Quang
       const curAurora = k1.auroraAlpha + (k2.auroraAlpha - k1.auroraAlpha) * s;
       auroraMat.alpha = curAurora;
+      });
 
       // Cập nhật mây
       const curCloudTint = Color3.Lerp(k1.cloudTint, k2.cloudTint, s);
@@ -736,7 +746,9 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       cumulusMat.diffuseColor = curCloudTint;
 
       // Cập nhật preset điện ảnh
-      cinematic?.setCinematicPreset(currentPhase);
+      if (typeof window !== 'undefined' && window.__farmDebug) {
+        window.__farmDebug.measure('clock: cinematic preset', () => cinematic?.setCinematicPreset(currentPhase));
+      } else cinematic?.setCinematicPreset(currentPhase);
 
       // Hạt khí quyển
       const curDustRate = Math.round(k1.sunDustRate + (k2.sunDustRate - k1.sunDustRate) * s);
