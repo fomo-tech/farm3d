@@ -6,80 +6,125 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js'
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
-
-const ROUTE = [
-  new Vector3(0, 0, -118),
-  new Vector3(0, 0, 3),
-  new Vector3(-118, 0, 3),
-  new Vector3(0, 0, 3),
-  new Vector3(132, 0, 3),
-  new Vector3(0, 0, 3),
-  new Vector3(0, 0, 180),
-  new Vector3(0, 0, 3),
-];
+import { getScenicPoiDescriptor } from '../world/createScenicLandscapes.js';
 
 function makeMat(scene, name, hex, emissiveHex = null) {
   return createToyMaterial(scene, name, hex, { emissiveHex });
 }
 
 /**
- * Creates a charming European wooden bus stop shelter with bench and lantern.
+ * Draws a sharp vector bus silhouette onto 2D canvas context without emojis.
  */
-function createBusStopShelter(scene, x, z, label, materials) {
+function drawBusIcon(ctx, cx, cy, size = 64, color = '#ffffff') {
+  ctx.save();
+  ctx.translate(cx, cy);
+  const s = size / 100;
+  ctx.scale(s, s);
+
+  // Main chassis rounded box
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(-42, -26, 84, 52, 10);
+  ctx.fill();
+
+  // Glass windows
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.roundRect(-36, -20, 22, 20, 4);
+  ctx.roundRect(-8, -20, 20, 20, 4);
+  ctx.roundRect(18, -20, 20, 20, 4);
+  ctx.fill();
+
+  // Headlights
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.arc(-36, 14, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Wheels
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath();
+  ctx.arc(-22, 26, 9, 0, Math.PI * 2);
+  ctx.arc(22, 26, 9, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#cbd5e1';
+  ctx.beginPath();
+  ctx.arc(-22, 26, 4, 0, Math.PI * 2);
+  ctx.arc(22, 26, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/**
+ * Creates a European/Ghibli wooden bus stop shelter with bench, timetable sign and lantern.
+ * Local -Z is the OPEN FRONT facing the street.
+ * Local +Z is the BACK WALL.
+ */
+function createBusStopShelter(scene, x, z, label, routeBadges, materials, rotationY = 0) {
   const root = new TransformNode(`bus-stop-${label}`, scene);
   root.position.set(x, 0, z);
+  root.rotation.y = rotationY;
 
-  // 1. Sàn gỗ tự nhiên
-  const platform = MeshBuilder.CreateBox(`stop-platform-${label}`, { width: 5.6, height: 0.22, depth: 3.4 }, scene);
-  platform.position.set(2.2, 0.11, 1.2);
+  // 1. Sàn gỗ nâng cao
+  const platform = MeshBuilder.CreateBox(`stop-plat-${label}`, { width: 5.6, height: 0.22, depth: 3.2 }, scene);
+  platform.position.set(0, 0.11, 0);
   platform.material = materials.timber;
   platform.parent = root;
 
-  // 2. 4 cột trụ gỗ tròn vững chãi
-  [[0, 0], [4.4, 0], [0, 2.4], [4.4, 2.4]].forEach(([px, pz], i) => {
+  // Vạch kẻ vàng đón xe trên lề đường (y = 0.09 chống z-fighting, nằm ở mép trước đón xe)
+  const curbLine = MeshBuilder.CreatePlane(`stop-curb-${label}`, { width: 6.2, height: 0.4 }, scene);
+  curbLine.rotation.x = Math.PI / 2;
+  curbLine.position.set(0, 0.09, -1.75);
+  curbLine.material = materials.signYellow;
+  curbLine.parent = root;
+
+  // 2. 4 cột trụ gỗ tròn
+  [[-2.2, -1.1], [2.2, -1.1], [-2.2, 1.1], [2.2, 1.1]].forEach(([px, pz], i) => {
     const post = MeshBuilder.CreateCylinder(`stop-post-${label}-${i}`, { height: 3.2, diameter: 0.22, tessellation: 12 }, scene);
     post.position.set(px, 1.6, pz);
     post.material = materials.timber;
     post.parent = root;
   });
 
-  // Vách gỗ chắn gió phía sau
+  // Vách kính & gỗ chắn gió phía sau (ở +Z)
   const backPanel = MeshBuilder.CreateBox(`stop-back-${label}`, { width: 4.4, height: 2.2, depth: 0.08 }, scene);
-  backPanel.position.set(2.2, 1.8, 2.38);
+  backPanel.position.set(0, 1.8, 1.1);
   backPanel.material = materials.bench;
   backPanel.parent = root;
 
-  // 3. Mái ngói đôi chữ V ấm cúng (Loại bỏ hoàn toàn khối lăng trụ tam giác thô)
-  const roofL = MeshBuilder.CreateBox(`stop-roof-l-${label}`, { width: 5.8, height: 0.12, depth: 2.1 }, scene);
-  roofL.position.set(2.2, 3.45, 0.45);
+  // 3. Mái ngói đôi chữ V ấm cúng
+  const roofL = MeshBuilder.CreateBox(`stop-roof-l-${label}`, { width: 5.8, height: 0.12, depth: 2.0 }, scene);
+  roofL.position.set(0, 3.42, -0.65);
   roofL.rotation.x = -0.32;
   roofL.material = materials.tileRoof;
   roofL.parent = root;
 
-  const roofR = MeshBuilder.CreateBox(`stop-roof-r-${label}`, { width: 5.8, height: 0.12, depth: 2.1 }, scene);
-  roofR.position.set(2.2, 3.45, 1.95);
+  const roofR = MeshBuilder.CreateBox(`stop-roof-r-${label}`, { width: 5.8, height: 0.12, depth: 2.0 }, scene);
+  roofR.position.set(0, 3.42, 0.65);
   roofR.rotation.x = 0.32;
   roofR.material = materials.tileRoof;
   roofR.parent = root;
 
-  const roofRidge = MeshBuilder.CreateBox(`stop-roof-ridge-${label}`, { width: 6.0, height: 0.18, depth: 0.35 }, scene);
-  roofRidge.position.set(2.2, 3.82, 1.2);
+  const roofRidge = MeshBuilder.CreateBox(`stop-roof-ridge-${label}`, { width: 6.0, height: 0.18, depth: 0.32 }, scene);
+  roofRidge.position.set(0, 3.75, 0);
   roofRidge.material = materials.timber;
   roofRidge.parent = root;
 
-  // 4. Băng ghế gỗ nghỉ chân
-  const benchSeat = MeshBuilder.CreateBox(`stop-bench-${label}`, { width: 3.6, height: 0.14, depth: 0.75 }, scene);
-  benchSeat.position.set(2.2, 0.65, 1.8);
+  // 4. Băng ghế gỗ (tựa lưng vào vách sau +Z, nhìn ra mặt đường -Z)
+  const benchSeat = MeshBuilder.CreateBox(`stop-bench-${label}`, { width: 3.6, height: 0.14, depth: 0.72 }, scene);
+  benchSeat.position.set(0, 0.65, 0.6);
   benchSeat.material = materials.bench;
   benchSeat.parent = root;
 
-  // 5. Cột biển báo dừng xe buýt cổ điển có bảng tên trạm
+  // 5. Cột biển báo dừng xe buýt cổ điển
   const signPole = MeshBuilder.CreateCylinder(`stop-sign-pole-${label}`, { height: 3.2, diameter: 0.12 }, scene);
-  signPole.position.set(-0.8, 1.6, 0);
+  signPole.position.set(-2.8, 1.6, -1.0);
   signPole.material = materials.timber;
   signPole.parent = root;
 
-  // Bảng hiệu tròn xe buýt phong cách Châu Âu
+  // Bảng hiệu tròn xe buýt vector không emoji
   const badgeDT = new DynamicTexture(`dt-bus-sign-${label}`, { width: 256, height: 256 }, scene, false);
   const bCtx = badgeDT.getContext();
   bCtx.fillStyle = '#f59e0b';
@@ -89,22 +134,35 @@ function createBusStopShelter(scene, x, z, label, materials) {
   bCtx.strokeStyle = '#ffffff';
   bCtx.lineWidth = 10;
   bCtx.stroke();
-  badgeDT.drawText('🚌', null, 115, 'bold 72px "Segoe UI", Arial', '#ffffff', null, true, true);
-  badgeDT.drawText(label, null, 185, 'bold 36px "Segoe UI", Arial', '#1e293b', null, true, true);
+
+  // Vẽ biểu tượng xe buýt vector
+  drawBusIcon(bCtx, 128, 92, 70, '#ffffff');
+
+  // Tên trạm và tuyến
+  bCtx.fillStyle = '#1e293b';
+  bCtx.font = 'bold 26px "Segoe UI", Arial, sans-serif';
+  bCtx.textAlign = 'center';
+  bCtx.textBaseline = 'middle';
+  bCtx.fillText(label, 128, 168);
+
+  bCtx.fillStyle = '#0f766e';
+  bCtx.font = 'bold 20px "Segoe UI", Arial, sans-serif';
+  bCtx.fillText(routeBadges || 'BUS STOP', 128, 202);
+  badgeDT.update();
 
   const badgeMat = new StandardMaterial(`mat-bus-sign-${label}`, scene);
   badgeMat.diffuseTexture = badgeDT;
-  badgeMat.emissiveColor = new Color3(0.3, 0.2, 0.05);
+  badgeMat.emissiveColor = new Color3(0.4, 0.3, 0.1);
 
-  const signBadge = MeshBuilder.CreateCylinder(`stop-sign-badge-${label}`, { height: 0.08, diameter: 1.1, tessellation: 24 }, scene);
+  const signBadge = MeshBuilder.CreateCylinder(`stop-sign-badge-${label}`, { height: 0.08, diameter: 1.25, tessellation: 24 }, scene);
   signBadge.rotation.x = Math.PI / 2;
-  signBadge.position.set(-0.8, 2.7, 0);
+  signBadge.position.set(-2.8, 2.7, -1.0);
   signBadge.material = badgeMat;
   signBadge.parent = root;
 
-  // 6. Đèn lồng treo 3D cổ điển ấm áp
+  // 6. Đèn lồng treo 3D cổ điển
   spawnModelSync(scene, MODEL_PATHS.town.lantern, {
-    position: new Vector3(2.2, 2.7, 1.2),
+    position: new Vector3(0, 2.7, 0),
     scaling: new Vector3(1.1, 1.1, 1.1),
     parent: root,
     name: `bus-stop-lantern-${label}`,
@@ -114,145 +172,149 @@ function createBusStopShelter(scene, x, z, label, materials) {
 }
 
 /**
- * Creates the Vintage Retro 3D Bus with rolling wheels, chrome bumpers, and headlights.
+ * Creates an electronic LED destination board texture.
  */
-export function createBusRoute(scene, shadows) {
-  const materials = {
-    timber: makeMat(scene, 'bus-stop-timber', '#543621'),
-    bench: makeMat(scene, 'bus-stop-bench', '#8b5a2b'),
-    tileRoof: makeMat(scene, 'bus-stop-roof', '#b93b2a'),
-    signYellow: makeMat(scene, 'bus-stop-sign', '#f59e0b', '#d97706'),
-    lanternGlow: makeMat(scene, 'bus-stop-glow', '#fef08a', '#eab308'),
+function createLedSignTexture(scene, id, text, routeNum, colorHex = '#38bdf8') {
+  const dt = new DynamicTexture(`dt-led-${id}`, { width: 512, height: 128 }, scene, false);
+  const ctx = dt.getContext();
+  ctx.fillStyle = '#020617';
+  ctx.fillRect(0, 0, 512, 128);
 
-    // Bus Materials (Play Together Chibi Yellow School Bus)
-    creamBody: makeMat(scene, 'bus-cream', PLAY_TOGETHER_PALETTE.pastels.creamyVanilla),
-    yellowBody: makeMat(scene, 'bus-yellow', PLAY_TOGETHER_PALETTE.pastels.bananaYellow),
-    chrome: makeMat(scene, 'bus-chrome', '#f8fafc'),
-    glass: makeMat(scene, 'bus-glass', '#bae6fd', '#38bdf8'),
-    tire: makeMat(scene, 'bus-tire', '#1e293b'),
-    headlight: makeMat(scene, 'bus-headlight', '#ffffff', '#facc15'),
-    taillight: makeMat(scene, 'bus-taillight', '#ef4444', '#b91c1c'),
-  };
-  materials.glass.alpha = 0.55;
+  // Viền LED
+  ctx.strokeStyle = colorHex;
+  ctx.lineWidth = 6;
+  ctx.strokeRect(6, 6, 500, 116);
 
-  // Create 4 Sheltered Bus Stops
-  createBusStopShelter(scene, 7, -118, 'Thị Trấn', materials);
-  createBusStopShelter(scene, -118, 10, 'Nông Thôn', materials);
-  createBusStopShelter(scene, 132, 10, 'Vùng Hồ', materials);
-  createBusStopShelter(scene, 7, 180, 'Bãi Biển', materials);
+  // Badge tuyến
+  ctx.fillStyle = colorHex;
+  ctx.beginPath();
+  ctx.roundRect(16, 16, 100, 96, 12);
+  ctx.fill();
 
-  // Root Node for Moving Bus
-  const root = new TransformNode('vintage-valley-bus', scene);
+  ctx.fillStyle = '#020617';
+  ctx.font = '900 44px "Segoe UI", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(routeNum, 66, 66);
 
-  // 1. Lower Body (Play Together Banana Yellow)
-  const lowerBody = MeshBuilder.CreateBox('bus-lower-body', {
-    width: 3.4,
-    height: 1.4,
-    depth: 7.6,
-  }, scene);
-  lowerBody.position.y = 1.3;
-  lowerBody.material = materials.yellowBody;
+  // Tên điểm đến
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = 'bold 36px "Segoe UI", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(text, 130, 66);
+
+  dt.update();
+  return dt;
+}
+
+/**
+ * Creates one Chibi Retro Bus for the fleet.
+ */
+function createChibiBus(scene, shadows, config, materials) {
+  const root = new TransformNode(config.id, scene);
+  const bodyMat = makeMat(scene, `mat-body-${config.id}`, config.bodyColor);
+  const accentMat = makeMat(scene, `mat-accent-${config.id}`, config.accentColor);
+  const ledDT = createLedSignTexture(scene, config.id, config.routeName, config.routeCode, config.ledColor || '#38bdf8');
+  const ledMat = new StandardMaterial(`mat-led-${config.id}`, scene);
+  ledMat.diffuseTexture = ledDT;
+  ledMat.emissiveTexture = ledDT;
+  ledMat.emissiveColor = new Color3(0.9, 0.9, 0.9);
+
+  // 1. Lower Body Chassis
+  const lowerBody = MeshBuilder.CreateBox(`${config.id}-lower-body`, { width: 3.4, height: 1.45, depth: 7.6 }, scene);
+  lowerBody.position.y = 1.35;
+  lowerBody.material = bodyMat;
   lowerBody.parent = root;
 
-  // 2. Upper Body & Roof (Cream White)
-  const upperBody = MeshBuilder.CreateBox('bus-upper-body', {
-    width: 3.2,
-    height: 1.3,
-    depth: 7.2,
-  }, scene);
-  upperBody.position.y = 2.65;
-  upperBody.material = materials.creamBody;
+  // 2. Upper Body
+  const upperBody = MeshBuilder.CreateBox(`${config.id}-upper-body`, { width: 3.2, height: 1.35, depth: 7.2 }, scene);
+  upperBody.position.y = 2.7;
+  upperBody.material = accentMat;
   upperBody.parent = root;
 
   // Rounded Dome Roof Cap
-  const roof = MeshBuilder.CreateCylinder('bus-roof-dome', {
-    diameter: 3.6,
-    height: 7.4,
-    tessellation: 16,
-  }, scene);
+  const roof = MeshBuilder.CreateCylinder(`${config.id}-roof`, { diameter: 3.6, height: 7.4, tessellation: 16 }, scene);
   roof.rotation.x = Math.PI / 2;
   roof.scaling.set(0.28, 1.0, 0.95);
-  roof.position.y = 3.35;
-  roof.material = materials.creamBody;
+  roof.position.y = 3.42;
+  roof.material = accentMat;
   roof.parent = root;
 
-  // 3. Panoramic Windows (Front curved windshield & side windows)
-  const frontWindshield = MeshBuilder.CreateBox('bus-windshield', {
-    width: 2.8,
-    height: 1.1,
-    depth: 0.2,
-  }, scene);
-  frontWindshield.rotation.x = 0.15;
-  frontWindshield.position.set(0, 2.6, 3.62);
+  // 3. Panoramic Windows
+  const frontWindshield = MeshBuilder.CreateBox(`${config.id}-windshield`, { width: 2.8, height: 1.15, depth: 0.15 }, scene);
+  frontWindshield.rotation.x = 0.14;
+  frontWindshield.position.set(0, 2.65, 3.62);
   frontWindshield.material = materials.glass;
   frontWindshield.parent = root;
 
-  const rearWindow = MeshBuilder.CreateBox('bus-rear-window', {
-    width: 2.6,
-    height: 1.0,
-    depth: 0.2,
-  }, scene);
-  rearWindow.position.set(0, 2.6, -3.62);
+  const rearWindow = MeshBuilder.CreateBox(`${config.id}-rear-window`, { width: 2.6, height: 1.0, depth: 0.15 }, scene);
+  rearWindow.position.set(0, 2.65, -3.62);
   rearWindow.material = materials.glass;
   rearWindow.parent = root;
 
   [-1.62, 1.62].forEach((sx, i) => {
-    const sideWin = MeshBuilder.CreateBox(`bus-side-win-${i}`, {
-      width: 0.15,
-      height: 1.0,
-      depth: 5.6,
-    }, scene);
-    sideWin.position.set(sx, 2.6, 0);
+    const sideWin = MeshBuilder.CreateBox(`${config.id}-side-win-${i}`, { width: 0.12, height: 1.05, depth: 5.6 }, scene);
+    sideWin.position.set(sx, 2.65, 0);
     sideWin.material = materials.glass;
     sideWin.parent = root;
   });
 
-  // 4. Chrome Bumpers (Front & Rear)
-  const frontBumper = MeshBuilder.CreateBox('bus-front-bumper', { width: 3.6, height: 0.35, depth: 0.4 }, scene);
+  // 4. LED Route Displays (Front & Sides)
+  const frontSign = MeshBuilder.CreatePlane(`${config.id}-front-sign`, { width: 2.4, height: 0.5 }, scene);
+  frontSign.position.set(0, 3.25, 3.68);
+  frontSign.material = ledMat;
+  frontSign.parent = root;
+
+  // 5. Chrome Bumpers
+  const frontBumper = MeshBuilder.CreateBox(`${config.id}-f-bumper`, { width: 3.6, height: 0.35, depth: 0.4 }, scene);
   frontBumper.position.set(0, 0.8, 3.9);
   frontBumper.material = materials.chrome;
   frontBumper.parent = root;
 
-  const rearBumper = MeshBuilder.CreateBox('bus-rear-bumper', { width: 3.6, height: 0.35, depth: 0.4 }, scene);
+  const rearBumper = MeshBuilder.CreateBox(`${config.id}-r-bumper`, { width: 3.6, height: 0.35, depth: 0.4 }, scene);
   rearBumper.position.set(0, 0.8, -3.9);
   rearBumper.material = materials.chrome;
   rearBumper.parent = root;
 
-  // 5. Round Glowing Headlights & Red Taillights
+  // 6. Round Glowing Headlights & Red Taillights
   [-1.2, 1.2].forEach((hx, i) => {
-    const headlight = MeshBuilder.CreateSphere(`bus-headlight-${i}`, { diameter: 0.55, segments: 8 }, scene);
-    headlight.position.set(hx, 1.4, 3.8);
+    const headlight = MeshBuilder.CreateSphere(`${config.id}-headlight-${i}`, { diameter: 0.55, segments: 8 }, scene);
+    headlight.position.set(hx, 1.4, 3.82);
     headlight.material = materials.headlight;
     headlight.parent = root;
 
-    const taillight = MeshBuilder.CreateSphere(`bus-taillight-${i}`, { diameter: 0.45, segments: 6 }, scene);
-    taillight.position.set(hx, 1.4, -3.8);
+    const taillight = MeshBuilder.CreateSphere(`${config.id}-taillight-${i}`, { diameter: 0.45, segments: 6 }, scene);
+    taillight.position.set(hx, 1.4, -3.82);
     taillight.material = materials.taillight;
     taillight.parent = root;
   });
 
-  // 6. 4 Rolling Rubber Tires with Chrome Hubcaps
+  // 7. Hazard Blinker Lights (Amber)
+  const blinkers = [];
+  [-1.5, 1.5].forEach((bx, i) => {
+    [-3.7, 3.7].forEach((bz, j) => {
+      const bl = MeshBuilder.CreateSphere(`${config.id}-blinker-${i}-${j}`, { diameter: 0.3, segments: 6 }, scene);
+      bl.position.set(bx, 1.7, bz);
+      bl.material = materials.blinkerOff;
+      bl.parent = root;
+      blinkers.push(bl);
+    });
+  });
+
+  // 8. 4 Rolling Rubber Tires
   const wheels = [];
   [-1.65, 1.65].forEach(wx => {
     [-2.3, 2.3].forEach(wz => {
-      const wheelNode = new TransformNode('bus-wheel-node', scene);
+      const wheelNode = new TransformNode(`${config.id}-wheel-node`, scene);
       wheelNode.position.set(wx, 0.65, wz);
       wheelNode.parent = root;
 
-      const tire = MeshBuilder.CreateCylinder('bus-tire-mesh', {
-        height: 0.42,
-        diameter: 1.28,
-        tessellation: 16,
-      }, scene);
+      const tire = MeshBuilder.CreateCylinder(`${config.id}-tire`, { height: 0.42, diameter: 1.28, tessellation: 16 }, scene);
       tire.rotation.z = Math.PI / 2;
       tire.material = materials.tire;
       tire.parent = wheelNode;
 
-      const hubcap = MeshBuilder.CreateCylinder('bus-hubcap-mesh', {
-        height: 0.45,
-        diameter: 0.65,
-        tessellation: 12,
-      }, scene);
+      const hubcap = MeshBuilder.CreateCylinder(`${config.id}-hubcap`, { height: 0.45, diameter: 0.65, tessellation: 12 }, scene);
       hubcap.rotation.z = Math.PI / 2;
       hubcap.material = materials.chrome;
       hubcap.parent = wheelNode;
@@ -261,36 +323,512 @@ export function createBusRoute(scene, shadows) {
     });
   });
 
+  // 9. Passenger Seating Node (where player sits inside bus)
+  const passengerSeatNode = new TransformNode(`${config.id}-seat`, scene);
+  passengerSeatNode.position.set(0.7, 1.35, -0.6);
+  passengerSeatNode.parent = root;
+
+  // Passenger Cabin Interior Bench
+  const seatMesh = MeshBuilder.CreateBox(`${config.id}-cabin-seat`, { width: 1.4, height: 0.45, depth: 1.8 }, scene);
+  seatMesh.position.set(0.7, 1.05, -0.6);
+  seatMesh.material = materials.bench;
+  seatMesh.parent = root;
+
   if (shadows) {
     [lowerBody, upperBody, frontBumper].forEach(m => shadows.addShadowCaster(m));
   }
 
-  let segment = 0;
-  let progress = 0;
-  root.position.copyFrom(ROUTE[0]);
+  // Pre-calculate segment lengths for route
+  const waypoints = config.waypoints;
+  const segmentLengths = [];
+  for (let i = 0; i < waypoints.length; i++) {
+    const nextIdx = (i + 1) % waypoints.length;
+    const len = Vector3.Distance(waypoints[i], waypoints[nextIdx]);
+    segmentLengths.push(len);
+  }
+
+  // Initial placement offset so buses are spaced out nicely
+  let currentSegment = config.initialSegment || 0;
+  let segmentProgress = config.initialProgress || 0;
+  root.position.copyFrom(waypoints[currentSegment]);
+
+  // Bus FSM State
+  // 'CRUISING' | 'BRAKING' | 'DWELLING' | 'ACCELERATING'
+  let state = 'CRUISING';
+  const CRUISE_SPEED = config.cruiseSpeed || 48.0; // 48 m/s (~173 km/h express speed)
+  let currentSpeed = CRUISE_SPEED;
+  let dwellTimer = 0;
+  const maxDwellTime = 4.0; // 4.0s dwell at stations (snappy, no long waiting)
+  let currentStation = null;
+  let nextStation = config.stops[0] || null;
+  let blinkerPulse = 0;
 
   return {
+    id: config.id,
+    routeCode: config.routeCode,
+    routeName: config.routeName,
+    bodyColor: config.bodyColor,
     root,
-    update(delta) {
-      const start = ROUTE[segment];
-      const end = ROUTE[(segment + 1) % ROUTE.length];
-      const length = Vector3.Distance(start, end);
+    passengerSeatNode,
+    getCurrentStation: () => currentStation,
+    getNextStation: () => nextStation,
+    getCurrentSpeed: () => currentSpeed,
+    getState: () => state,
+    getDwellRemaining: () => Math.max(0, maxDwellTime - dwellTimer),
+    isDwelling: () => state === 'DWELLING',
 
-      progress += (15 * delta) / length;
-      if (progress >= 1) {
-        progress = 0;
-        segment = (segment + 1) % ROUTE.length;
+    update(delta) {
+      const segLen = segmentLengths[currentSegment] || 1;
+
+      // Check upcoming station along route
+      const upcomingStop = config.stops.find(s => s.waypointIndex === (currentSegment + 1) % waypoints.length);
+
+      if (state === 'CRUISING') {
+        currentSpeed = CRUISE_SPEED;
+        // Turn off blinkers
+        blinkers.forEach(b => { b.material = materials.blinkerOff; });
+
+        // If approaching a scheduled stop within 28m, start smooth braking
+        if (upcomingStop) {
+          const distToEnd = (1 - segmentProgress) * segLen;
+          if (distToEnd <= 28.0) {
+            state = 'BRAKING';
+          }
+        }
+      } else if (state === 'BRAKING') {
+        const distToEnd = Math.max(0.1, (1 - segmentProgress) * segLen);
+        currentSpeed = Math.max(4.0, CRUISE_SPEED * Math.sqrt(distToEnd / 28.0));
+      } else if (state === 'DWELLING') {
+        currentSpeed = 0;
+        dwellTimer += delta;
+
+        // Pulse amber hazard blinkers
+        blinkerPulse += delta * 8;
+        const blinkerOn = Math.sin(blinkerPulse) > 0;
+        blinkers.forEach(b => { b.material = blinkerOn ? materials.blinkerOn : materials.blinkerOff; });
+
+        if (dwellTimer >= maxDwellTime) {
+          dwellTimer = 0;
+          state = 'ACCELERATING';
+          currentStation = null;
+        }
+      } else if (state === 'ACCELERATING') {
+        currentSpeed = Math.min(CRUISE_SPEED, currentSpeed + delta * 26.0);
+        if (currentSpeed >= CRUISE_SPEED * 0.95) {
+          state = 'CRUISING';
+        }
       }
 
-      const currentStart = ROUTE[segment];
-      const currentEnd = ROUTE[(segment + 1) % ROUTE.length];
-      Vector3.LerpToRef(currentStart, currentEnd, progress, root.position);
-      root.rotation.y = Math.atan2(currentEnd.x - currentStart.x, currentEnd.z - currentStart.z);
+      // Progress along route
+      if (state !== 'DWELLING') {
+        const moveDist = currentSpeed * delta;
+        segmentProgress += moveDist / segLen;
 
-      // Rotate wheels as bus travels
-      wheels.forEach(w => {
-        w.rotation.x += delta * 12;
-      });
+        if (segmentProgress >= 1.0) {
+          segmentProgress = 0;
+          currentSegment = (currentSegment + 1) % waypoints.length;
+
+          // Check if arrived at a station stop
+          const arrivedStop = config.stops.find(s => s.waypointIndex === currentSegment);
+          if (arrivedStop && state === 'BRAKING') {
+            state = 'DWELLING';
+            dwellTimer = 0;
+            currentStation = arrivedStop;
+            // Update next station target
+            const stopIdx = config.stops.findIndex(s => s.id === arrivedStop.id);
+            nextStation = config.stops[(stopIdx + 1) % config.stops.length];
+          }
+        }
+      }
+
+      // Update position & rotation
+      const curStart = waypoints[currentSegment];
+      const curEnd = waypoints[(currentSegment + 1) % waypoints.length];
+      Vector3.LerpToRef(curStart, curEnd, segmentProgress, root.position);
+
+      const targetYaw = Math.atan2(curEnd.x - curStart.x, curEnd.z - curStart.z);
+      // Smooth yaw rotation
+      let diff = targetYaw - root.rotation.y;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      root.rotation.y += diff * Math.min(1, delta * 12);
+
+      // Rotate wheels with actual transit speed
+      if (currentSpeed > 0.1) {
+        wheels.forEach(w => {
+          w.rotation.x += delta * (currentSpeed * 1.8);
+        });
+      }
+    },
+  };
+}
+
+/**
+ * Creates the entire 8-bus inter-village fleet and 16 correctly oriented shelters.
+ */
+export function createBusRoute(scene, shadows) {
+  const materials = {
+    timber: makeMat(scene, 'bus-stop-timber', '#543621'),
+    bench: makeMat(scene, 'bus-stop-bench', '#8b5a2b'),
+    tileRoof: makeMat(scene, 'bus-stop-roof', '#b93b2a'),
+    signYellow: makeMat(scene, 'bus-stop-sign', '#f59e0b', '#d97706'),
+    chrome: makeMat(scene, 'bus-chrome', '#f8fafc'),
+    glass: makeMat(scene, 'bus-glass', '#bae6fd', '#38bdf8'),
+    tire: makeMat(scene, 'bus-tire', '#1e293b'),
+    headlight: makeMat(scene, 'bus-headlight', '#ffffff', '#fef08a'),
+    taillight: makeMat(scene, 'bus-taillight', '#ef4444', '#b91c1c'),
+    blinkerOff: makeMat(scene, 'bus-blinker-off', '#78350f'),
+    blinkerOn: makeMat(scene, 'bus-blinker-on', '#f59e0b', '#fbbf24'),
+  };
+  materials.glass.alpha = 0.55;
+
+  // 16 Chibi Ghibli Bus Stop Shelters - 100% CORRECTLY FACING ROADS:
+  // - Shelters along East side of North-South road (x = 0): face West (-X) -> rot = Math.PI / 2
+  // - Shelters along South side of East-West roads: face North (+Z) -> rot = Math.PI
+  // - Shelters along North side of East-West roads: face South (-Z) -> rot = 0
+  const shelters = [
+    // 1. Trục Đại lộ Bắc - Nam (x = 0): đặt ở x = 5.2, quay mặt sang Tây (-X) về phía lòng đường
+    { x: 5.2, z: 18, name: 'Quảng Trường Trung Tâm', badge: 'T1 · T2 · T3 · T4', rot: Math.PI / 2 },
+    { x: 5.2, z: 86, name: 'Làng Bình Minh', badge: 'T1 · T2', rot: Math.PI / 2 },
+    { x: 5.2, z: 330, name: 'Bãi Biển Bình Minh', badge: 'Tuyến 02', rot: Math.PI / 2 },
+    { x: 5.2, z: -394, name: 'Làng Phú Điền', badge: 'Tuyến 03', rot: Math.PI / 2 },
+
+    // 2. Trục Quốc Lộ 86 (z = 86): đặt ở lề Nam z = 80.8, quay mặt sang Bắc (+Z) về phía lòng đường
+    { x: -300, z: 80.8, name: 'Làng Hoa Mai', badge: 'Tuyến 01', rot: Math.PI },
+    { x: -594, z: 80.8, name: 'Làng Đồi Gió', badge: 'Tuyến 01', rot: Math.PI },
+    { x: 300, z: 80.8, name: 'Làng Ven Sông', badge: 'T1 · T4', rot: Math.PI },
+    { x: 594, z: 80.8, name: 'Làng An Nhiên', badge: 'Tuyến 01', rot: Math.PI },
+
+    // 3. Trục Quốc Lộ Nam 406 (z = 406): đặt ở lề Nam z = 400.8, quay mặt sang Bắc (+Z) về phía lòng đường
+    { x: -300, z: 400.8, name: 'Làng Thu Phong', badge: 'Tuyến 02', rot: Math.PI },
+    { x: 300, z: 400.8, name: 'Làng Hướng Dương', badge: 'Tuyến 02', rot: Math.PI },
+
+    // 4. Trục Quốc Lộ Bắc -234 (z = -234): đặt ở lề Nam z = -239.2, quay mặt sang Bắc (+Z) về phía lòng đường
+    { x: -300, z: -239.2, name: 'Làng Thanh Hà', badge: 'Tuyến 03', rot: Math.PI },
+    { x: -594, z: -239.2, name: 'Làng Mộc Lan', badge: 'Tuyến 03', rot: Math.PI },
+    { x: 300, z: -239.2, name: 'Làng Tân Lộc', badge: 'Tuyến 03', rot: Math.PI },
+    { x: 594, z: -239.2, name: 'Làng Hải Vân', badge: 'Tuyến 03', rot: Math.PI },
+
+    // 5. Trục Phố Chợ & Vùng Hồ (z = 3): đặt ở lề Bắc z = 8.2, quay mặt sang Nam (-Z) về phía lòng đường
+    { x: -118, z: 8.2, name: 'Phố Chợ Phía Tây', badge: 'Tuyến 04', rot: 0 },
+    { x: 132, z: 8.2, name: 'Hồ Pha Lê', badge: 'Tuyến 04', rot: 0 },
+  ];
+
+  shelters.forEach(s => {
+    createBusStopShelter(scene, s.x, s.z, s.name, s.badge, materials, s.rot);
+  });
+
+  // Fleet Waypoints & Stops:
+  // Tốc độ Siêu Tốc Express: 48.0 m/s (~173 km/h - di chuyển cực nhanh qua các làng mà vẫn 100% vật lý 3D)
+  const CRUISE_SPEED = 48.0;
+
+  // ROUTE 01: Hoa Mai Express - Highway 86
+  const route01Waypoints = [
+    new Vector3(0, 0, 18),    // 0: Trạm Trung Tâm
+    new Vector3(0, 0, 86),    // 1: Trạm Bình Minh
+    new Vector3(-300, 0, 86), // 2: Trạm Hoa Mai
+    new Vector3(-594, 0, 86), // 3: Trạm Đồi Gió
+    new Vector3(-612, 0, 86), // 4: Turnaround Tây
+    new Vector3(-594, 0, 86), // 5: Trạm Đồi Gió
+    new Vector3(-300, 0, 86), // 6: Trạm Hoa Mai
+    new Vector3(0, 0, 86),    // 7: Trạm Bình Minh
+    new Vector3(300, 0, 86),  // 8: Trạm Ven Sông
+    new Vector3(594, 0, 86),  // 9: Trạm An Nhiên
+    new Vector3(612, 0, 86),  // 10: Turnaround Đông
+    new Vector3(594, 0, 86),  // 11: Trạm An Nhiên
+    new Vector3(300, 0, 86),  // 12: Trạm Ven Sông
+    new Vector3(0, 0, 86),    // 13: Trạm Bình Minh
+  ];
+  const route01Stops = [
+    { id: 'stop-center', name: 'Quảng Trường Trung Tâm', waypointIndex: 0 },
+    { id: 'stop-bm', name: 'Làng Bình Minh', waypointIndex: 1 },
+    { id: 'stop-hm', name: 'Làng Hoa Mai', waypointIndex: 2 },
+    { id: 'stop-dg', name: 'Làng Đồi Gió', waypointIndex: 3 },
+    { id: 'stop-vs', name: 'Làng Ven Sông', waypointIndex: 8 },
+    { id: 'stop-an', name: 'Làng An Nhiên', waypointIndex: 9 },
+  ];
+
+  // ROUTE 02: Biển Xanh Coastal - Highway 406
+  const route02Waypoints = [
+    new Vector3(0, 0, 18),    // 0: Trạm Trung Tâm
+    new Vector3(0, 0, 86),    // 1: Trạm Bình Minh
+    new Vector3(0, 0, 330),   // 2: Trạm Bãi Biển
+    new Vector3(0, 0, 406),   // 3: Ngã tư QL 406
+    new Vector3(-300, 0, 406),// 4: Trạm Thu Phong
+    new Vector3(-315, 0, 406),// 5: Turnaround Thu Phong
+    new Vector3(0, 0, 406),   // 6: Ngã tư
+    new Vector3(300, 0, 406), // 7: Trạm Hướng Dương
+    new Vector3(315, 0, 406), // 8: Turnaround Hướng Dương
+    new Vector3(0, 0, 406),   // 9: Ngã tư
+    new Vector3(0, 0, 330),   // 10: Trạm Bãi Biển
+    new Vector3(0, 0, 86),    // 11: Trạm Bình Minh
+  ];
+  const route02Stops = [
+    { id: 'stop-center', name: 'Quảng Trường Trung Tâm', waypointIndex: 0 },
+    { id: 'stop-bm', name: 'Làng Bình Minh', waypointIndex: 1 },
+    { id: 'stop-beach', name: 'Bãi Biển Bình Minh', waypointIndex: 2 },
+    { id: 'stop-tp', name: 'Làng Thu Phong', waypointIndex: 4 },
+    { id: 'stop-hd', name: 'Làng Hướng Dương', waypointIndex: 7 },
+  ];
+
+  // ROUTE 03: Cao Nguyên Highland - Northern Highway -234 & Phu Dien
+  const route03Waypoints = [
+    new Vector3(0, 0, 18),     // 0: Trạm Trung Tâm
+    new Vector3(0, 0, -234),   // 1: Ngã tư QL -234
+    new Vector3(-300, 0, -234),// 2: Trạm Thanh Hà
+    new Vector3(-594, 0, -234),// 3: Trạm Mộc Lan
+    new Vector3(-612, 0, -234),// 4: Turnaround Tây
+    new Vector3(-300, 0, -234),// 5: Trạm Thanh Hà
+    new Vector3(0, 0, -234),   // 6: Ngã tư
+    new Vector3(0, 0, -394),   // 7: Trạm Phú Điền
+    new Vector3(0, 0, -408),   // 8: Turnaround Phú Điền
+    new Vector3(0, 0, -234),   // 9: Ngã tư
+    new Vector3(300, 0, -234), // 10: Trạm Tân Lộc
+    new Vector3(594, 0, -234), // 11: Trạm Hải Vân
+    new Vector3(612, 0, -234), // 12: Turnaround Đông
+    new Vector3(300, 0, -234), // 13: Trạm Tân Lộc
+    new Vector3(0, 0, -234),   // 14: Ngã tư
+  ];
+  const route03Stops = [
+    { id: 'stop-center', name: 'Quảng Trường Trung Tâm', waypointIndex: 0 },
+    { id: 'stop-th', name: 'Làng Thanh Hà', waypointIndex: 2 },
+    { id: 'stop-ml', name: 'Làng Mộc Lan', waypointIndex: 3 },
+    { id: 'stop-pd', name: 'Làng Phú Điền', waypointIndex: 7 },
+    { id: 'stop-tl', name: 'Làng Tân Lộc', waypointIndex: 10 },
+    { id: 'stop-hv', name: 'Làng Hải Vân', waypointIndex: 11 },
+  ];
+
+  // ROUTE 04: Hồ Pha Lê Scenic - West Market & Crystal Lake & Ven Song
+  const route04Waypoints = [
+    new Vector3(0, 0, 18),     // 0: Trạm Trung Tâm
+    new Vector3(0, 0, 3),      // 1: Ngã ba
+    new Vector3(-118, 0, 3),   // 2: Trạm Phố Chợ Phía Tây
+    new Vector3(-128, 0, 3),   // 3: Turnaround Chợ Tây
+    new Vector3(0, 0, 3),      // 4: Trung tâm
+    new Vector3(132, 0, 3),    // 5: Trạm Hồ Pha Lê
+    new Vector3(145, 0, 3),    // 6: Turnaround Hồ
+    new Vector3(0, 0, 3),      // 7: Trung tâm
+    new Vector3(0, 0, 86),     // 8: Trạm Bình Minh
+    new Vector3(300, 0, 86),   // 9: Trạm Ven Sông
+    new Vector3(0, 0, 86),     // 10: Trạm Bình Minh
+  ];
+  const route04Stops = [
+    { id: 'stop-center', name: 'Quảng Trường Trung Tâm', waypointIndex: 0 },
+    { id: 'stop-market', name: 'Phố Chợ Phía Tây', waypointIndex: 2 },
+    { id: 'stop-lake', name: 'Hồ Pha Lê', waypointIndex: 5 },
+    { id: 'stop-vs', name: 'Làng Ven Sông', waypointIndex: 9 },
+  ];
+
+  // === ĐỘI HÌNH 8 XE BUÝT CHIBI CHẠY LIÊN TỤC SONG SONG (Hạn chế tối đa thời gian chờ) ===
+  // Tuyến 01: 2 xe chạy đối xứng trục QL 86
+  const bus1A = createChibiBus(scene, shadows, {
+    id: 'bus-01A',
+    routeCode: '01A',
+    routeName: 'Hoa Mai Express',
+    bodyColor: PLAY_TOGETHER_PALETTE.pastels.bananaYellow,
+    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
+    ledColor: '#facc15',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route01Waypoints,
+    stops: route01Stops,
+    initialSegment: 0,
+    initialProgress: 0.1,
+  }, materials);
+
+  const bus1B = createChibiBus(scene, shadows, {
+    id: 'bus-01B',
+    routeCode: '01B',
+    routeName: 'Hoa Mai Express',
+    bodyColor: '#fb923c', // Cam mật ong Chibi
+    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
+    ledColor: '#fb923c',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route01Waypoints,
+    stops: route01Stops,
+    initialSegment: 7,
+    initialProgress: 0.4,
+  }, materials);
+
+  // Tuyến 02: 2 xe chạy đối xứng trục Biển & Làng Nam 406
+  const bus2A = createChibiBus(scene, shadows, {
+    id: 'bus-02A',
+    routeCode: '02A',
+    routeName: 'Biển Xanh Coastal',
+    bodyColor: '#34d399',
+    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
+    ledColor: '#34d399',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route02Waypoints,
+    stops: route02Stops,
+    initialSegment: 0,
+    initialProgress: 0.1,
+  }, materials);
+
+  const bus2B = createChibiBus(scene, shadows, {
+    id: 'bus-02B',
+    routeCode: '02B',
+    routeName: 'Biển Xanh Coastal',
+    bodyColor: '#2dd4bf', // Xanh mòng két ngọc bích
+    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
+    ledColor: '#2dd4bf',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route02Waypoints,
+    stops: route02Stops,
+    initialSegment: 6,
+    initialProgress: 0.5,
+  }, materials);
+
+  // Tuyến 03: 2 xe chạy đối xứng trục Cao Nguyên & Làng Bắc -234
+  const bus3A = createChibiBus(scene, shadows, {
+    id: 'bus-03A',
+    routeCode: '03A',
+    routeName: 'Cao Nguyên Line',
+    bodyColor: '#fb7185',
+    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
+    ledColor: '#fb7185',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route03Waypoints,
+    stops: route03Stops,
+    initialSegment: 0,
+    initialProgress: 0.1,
+  }, materials);
+
+  const bus3B = createChibiBus(scene, shadows, {
+    id: 'bus-03B',
+    routeCode: '03B',
+    routeName: 'Cao Nguyên Line',
+    bodyColor: '#a78bfa', // Tím hoa cà Lavender
+    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
+    ledColor: '#a78bfa',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route03Waypoints,
+    stops: route03Stops,
+    initialSegment: 8,
+    initialProgress: 0.5,
+  }, materials);
+
+  // Tuyến 04: 2 xe chạy đối xứng vòng Phố Chợ, Hồ Pha Lê & Ven Sông
+  const bus4A = createChibiBus(scene, shadows, {
+    id: 'bus-04A',
+    routeCode: '04A',
+    routeName: 'Hồ Pha Lê Scenic',
+    bodyColor: '#38bdf8',
+    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
+    ledColor: '#38bdf8',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route04Waypoints,
+    stops: route04Stops,
+    initialSegment: 0,
+    initialProgress: 0.1,
+  }, materials);
+
+  const bus4B = createChibiBus(scene, shadows, {
+    id: 'bus-04B',
+    routeCode: '04B',
+    routeName: 'Hồ Pha Lê Scenic',
+    bodyColor: '#818cf8', // Lam chàm hoàng gia
+    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
+    ledColor: '#818cf8',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route04Waypoints,
+    stops: route04Stops,
+    initialSegment: 5,
+    initialProgress: 0.5,
+  }, materials);
+
+  const buses = [bus1A, bus1B, bus2A, bus2B, bus3A, bus3B, bus4A, bus4B];
+
+  // Transit Management State
+  let activeRidingBusId = null;
+
+  return {
+    buses,
+
+    getNearbyBoardableBus(playerPos, radius = 6.5) {
+      if (activeRidingBusId) return null;
+      for (const bus of buses) {
+        if (bus.isDwelling()) {
+          const dist = Vector3.Distance(bus.root.position, playerPos);
+          if (dist <= radius) {
+            return {
+              bus,
+              dist,
+              station: bus.getCurrentStation(),
+              dwellRemaining: bus.getDwellRemaining(),
+            };
+          }
+        }
+      }
+      return null;
+    },
+
+    boardBus(busId, playerRoot) {
+      const bus = buses.find(b => b.id === busId);
+      if (!bus) return false;
+      activeRidingBusId = busId;
+      // Snap player into bus cabin
+      playerRoot.position.copyFrom(bus.passengerSeatNode.getAbsolutePosition());
+      playerRoot.rotation.y = bus.root.rotation.y;
+      return true;
+    },
+
+    alightBus(playerRoot) {
+      if (!activeRidingBusId) return false;
+      const bus = buses.find(b => b.id === activeRidingBusId);
+      activeRidingBusId = null;
+      if (bus && playerRoot) {
+        // Drop player safely onto the sidewalk platform beside the bus door
+        const forward = bus.root.forward;
+        const right = new Vector3(forward.z, 0, -forward.x);
+        const exitPos = bus.root.position.add(right.scale(3.4));
+        exitPos.y = 0;
+        playerRoot.position.copyFrom(exitPos);
+      }
+      return true;
+    },
+
+    getActiveRide() {
+      if (!activeRidingBusId) return null;
+      const bus = buses.find(b => b.id === activeRidingBusId);
+      if (!bus) return null;
+      return {
+        busId: bus.id,
+        routeCode: bus.routeCode,
+        routeName: bus.routeName,
+        bodyColor: bus.bodyColor,
+        speed: Math.round(bus.getCurrentSpeed()),
+        isDwelling: bus.isDwelling(),
+        dwellRemaining: Math.ceil(bus.getDwellRemaining()),
+        currentStation: bus.getCurrentStation()?.name || null,
+        nextStation: bus.getNextStation()?.name || null,
+        scenicPoi: getScenicPoiDescriptor(bus.root.position),
+        busRoot: bus.root,
+        passengerSeatNode: bus.passengerSeatNode,
+      };
+    },
+
+    isPlayerRiding() {
+      return Boolean(activeRidingBusId);
+    },
+
+    update(delta, playerPos) {
+      // Update each bus in the 8-bus fleet
+      buses.forEach(b => b.update(delta));
+
+      const activeRide = this.getActiveRide();
+      const nearbyBoardable = playerPos ? this.getNearbyBoardableBus(playerPos) : null;
+
+      return {
+        activeRide,
+        nearbyBoardable: nearbyBoardable ? {
+          busId: nearbyBoardable.bus.id,
+          routeCode: nearbyBoardable.bus.routeCode,
+          routeName: nearbyBoardable.bus.routeName,
+          bodyColor: nearbyBoardable.bus.bodyColor,
+          stationName: nearbyBoardable.station?.name || 'Trạm xe buýt',
+          dwellRemaining: Math.ceil(nearbyBoardable.dwellRemaining),
+        } : null,
+      };
     },
   };
 }

@@ -4,6 +4,7 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { createToyMaterial } from '../../rendering/PlayTogetherTheme.js';
 
@@ -335,20 +336,25 @@ export function createRoadsideShop(scene, shadows, position = { x: -8, y: 0, z: 
     pole.parent = root;
   });
 
-  // 4. Bảng hiệu gỗ chữ nổi "ROADSIDE SHOP"
-  const signDT = new DynamicTexture('roadside-sign-tex', { width: 1024, height: 256 }, scene, true);
+  // 4. Bảng hiệu gỗ chữ nổi "ROADSIDE SHOP" (2048x512 High-Res)
+  const signDT = new DynamicTexture('roadside-sign-tex', { width: 2048, height: 512 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  signDT.anisotropicFilteringLevel = 16;
   signDT.hasAlpha = true;
   const sctx = signDT.getContext();
+  sctx.imageSmoothingEnabled = true;
+  sctx.imageSmoothingQuality = 'high';
   sctx.fillStyle = '#78350f';
   sctx.beginPath();
-  sctx.roundRect(16, 16, 992, 224, 32);
+  sctx.roundRect(32, 32, 1984, 448, 64);
   sctx.fill();
   sctx.strokeStyle = '#fef08a';
-  sctx.lineWidth = 12;
+  sctx.lineWidth = 24;
   sctx.stroke();
-  sctx.font = '900 68px "Nunito", "Segoe UI", Arial, sans-serif';
+  sctx.font = '900 136px "Nunito", "Segoe UI", Arial, sans-serif';
   sctx.fillStyle = '#fffdf0';
-  sctx.fillText('ROADSIDE SHOP', 240, 150);
+  sctx.textAlign = 'center';
+  sctx.textBaseline = 'middle';
+  sctx.fillText('ROADSIDE SHOP', 1024, 256);
   signDT.update();
 
   const signMat = new StandardMaterial('roadside-sign-mat', scene);

@@ -94,7 +94,8 @@ function createLakePier(scene, parent, materials, shadows) {
  */
 function createGlampingPark(scene, parent, materials, shadows) {
   const campRoot = new TransformNode('glamping-beach-park', scene);
-  campRoot.position.set(0, 0, 350);
+  // Đặt trên bãi cát phía Đông x = 38 để giải phóng 100% trục đại lộ bãi biển x = 0
+  campRoot.position.set(38, 0, 345);
   campRoot.parent = parent;
 
   // 2 Lều Glamping hình chóp nón vải Canvas cao cấp
@@ -160,6 +161,7 @@ export function createVietnameseCountryside(scene, shadows) {
     fire: mat(scene, 'suburban-fire-glow', '#f97316', '#fbbf24'),
     grassPasture: mat(scene, 'pasture-green-grass', '#86efac'),
   };
+  materials.grassPasture.zOffset = -1;
 
   // 1. HÀNG RÀO GỖ TRẮNG NÔNG TRANG NGOẠI Ô (WHITE PICKET FENCES)
   // Phân chia ranh giới trang trại và đường đi bộ (chừa trọn vẹn lòng đại lộ trung tâm x = -10 .. 10)

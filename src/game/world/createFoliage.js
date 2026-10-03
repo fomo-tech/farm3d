@@ -20,14 +20,36 @@ import {
   createCandyPebbleRock,
 } from './createPlayTogetherProps.js';
 
+function harmonizeGreenTree({ childMeshes }) {
+  const updated = new Set();
+  childMeshes.forEach(mesh => {
+    const material = mesh.material;
+    if (!material || updated.has(material)) return;
+    updated.add(material);
+    if (/leaf|foliage|canopy/i.test(material.name)) {
+      const green = Color3.FromHexString('#22c55e');
+      if (material.albedoColor) material.albedoColor = green;
+      if (material.diffuseColor) material.diffuseColor = green;
+      material.metallic = 0;
+      material.roughness = 0.78;
+    } else if (/bark|trunk/i.test(material.name)) {
+      const bark = Color3.FromHexString('#78350f');
+      if (material.albedoColor) material.albedoColor = bark;
+      if (material.diffuseColor) material.diffuseColor = bark;
+      material.metallic = 0;
+      material.roughness = 0.88;
+    }
+  });
+}
+
 export function createFoliageFactory(scene, shadows) {
   const materials = {
-    trunk: mat(scene, 'tree-trunk-mat', '#9c6a42'),
-    leafTop: mat(scene, 'tree-leaf-top', '#a3e862'),
-    leafMid: mat(scene, 'tree-leaf-mid', '#78cf42'),
-    leafBot: mat(scene, 'tree-leaf-bot', '#54b42b'),
+    trunk: mat(scene, 'tree-trunk-mat', '#78350f'),
+    leafTop: mat(scene, 'tree-leaf-top', '#86efac'),
+    leafMid: mat(scene, 'tree-leaf-mid', '#22c55e'),
+    leafBot: mat(scene, 'tree-leaf-bot', '#16a34a'),
     apple: mat(scene, 'tree-apple-mat', '#f43f5e', '#be123c'),
-    wood: mat(scene, 'foliage-wood-mat', '#9c6a42'),
+    wood: mat(scene, 'foliage-wood-mat', '#78350f'),
     stone: mat(scene, 'well-stone-mat', '#9ca3af'),
     roof: mat(scene, 'well-roof-mat', '#e11d48'),
     water: mat(scene, 'well-water-mat', '#38bdf8', '#0284c7'),
@@ -36,44 +58,45 @@ export function createFoliageFactory(scene, shadows) {
     hat: mat(scene, 'scarecrow-hat', '#d97706'),
     petalColors: ['#fde047', '#fb923c', '#f43f5e', '#a855f7', '#ffffff'].map((hex, i) => mat(scene, `petal-${i}`, hex)),
     stem: mat(scene, 'flower-stem', '#4ade80'),
-    bushLeaf: mat(scene, 'bush-leaf', '#4ade80'),
+    bushLeaf: mat(scene, 'bush-leaf', '#16a34a'),
     ironBlack: mat(scene, 'lamp-iron', '#334155'),
   };
 
   return {
     createMarshmallowTree(x, z, scale = 1.0, colorVariant = 'mint') {
-      return createMarshmallowTree(scene, x, z, { scale, colorVariant, shadows });
+      return createMarshmallowTree(scene, x, z, { scale: scale * 1.5, colorVariant, shadows });
     },
 
     createCandyFlowerBush(x, z, scale = 1.0) {
-      return createCandyFlowerBush(scene, x, z, { scale, shadows });
+      return createCandyFlowerBush(scene, x, z, { scale: scale * 1.4, shadows });
     },
 
     createCandyPebbleRock(x, z, scale = 1.0, colorHex = '#94a3b8') {
-      return createCandyPebbleRock(scene, x, z, { scale, colorHex, shadows });
+      return createCandyPebbleRock(scene, x, z, { scale: scale * 1.4, colorHex, shadows });
     },
 
     createCloudTree(x, z, scale = 1.0, withShadows = true) {
       const treeModel = Math.random() > 0.5 ? MODEL_PATHS.trees.oak : MODEL_PATHS.trees.detailed;
-      const s = scale * 1.6;
+      const s = scale * 4.2;
       return spawnModelSync(scene, treeModel, {
         position: new Vector3(x, 0, z),
         rotation: new Vector3(0, Math.random() * Math.PI * 2, 0),
         scaling: new Vector3(s, s, s),
         shadows: withShadows ? shadows : null,
         name: 'cozy-tree',
+        onLoaded: harmonizeGreenTree,
       });
     },
 
     createSakuraTree(x, z, scale = 1.0, withShadows = true) {
-      const s = scale * 1.5;
+      const s = scale * 3.8;
       return spawnModelSync(scene, MODEL_PATHS.trees.oak, {
         position: new Vector3(x, 0, z),
         rotation: new Vector3(0, Math.random() * Math.PI * 2, 0),
         scaling: new Vector3(s, s, s),
         shadows: withShadows ? shadows : null,
         name: 'sakura-tree',
-        colorTint: Color3.FromHexString('#ffb6c1'),
+        colorTint: Color3.FromHexString('#f472b6'),
       });
     },
 
@@ -82,7 +105,7 @@ export function createFoliageFactory(scene, shadows) {
      */
     createAlpinePine(x, z, scale = 1.0, withShadows = true) {
       const pineModel = Math.random() > 0.5 ? MODEL_PATHS.trees.pine : MODEL_PATHS.trees.pineRound;
-      const s = scale * 1.8;
+      const s = scale * 4.6;
       return spawnModelSync(scene, pineModel, {
         position: new Vector3(x, 0, z),
         rotation: new Vector3(0, Math.random() * Math.PI * 2, 0),
@@ -94,7 +117,7 @@ export function createFoliageFactory(scene, shadows) {
 
     createTropicalPalm(x, z, scale = 1.0, tiltAngle = 0.22, withShadows = true) {
       const palmModel = Math.random() > 0.5 ? MODEL_PATHS.trees.palmBend : MODEL_PATHS.trees.palm;
-      const s = scale * 1.6;
+      const s = scale * 4.0;
       return spawnModelSync(scene, palmModel, {
         position: new Vector3(x, 0, z),
         rotation: new Vector3(0, Math.random() * Math.PI * 2, 0),
@@ -106,7 +129,7 @@ export function createFoliageFactory(scene, shadows) {
 
     createGoldenMaple(x, z, scale = 1.0, withShadows = true) {
       const mapleModel = Math.random() > 0.5 ? MODEL_PATHS.trees.fall : MODEL_PATHS.trees.oakFall;
-      const s = scale * 1.7;
+      const s = scale * 4.0;
       return spawnModelSync(scene, mapleModel, {
         position: new Vector3(x, 0, z),
         rotation: new Vector3(0, Math.random() * Math.PI * 2, 0),
@@ -120,7 +143,7 @@ export function createFoliageFactory(scene, shadows) {
       if (typeof colorHex === 'number') {
         [colorHex, scale] = [scale, colorHex];
       }
-      const s = (scale || 1.0) * 1.5;
+      const s = (scale || 1.0) * 2.5;
       return spawnModelSync(scene, MODEL_PATHS.foliage.bushDetailed, {
         position: new Vector3(x, 0, z),
         rotation: new Vector3(0, Math.random() * Math.PI * 2, 0),
@@ -186,7 +209,7 @@ export function createFoliageFactory(scene, shadows) {
         const flw = spawnModelSync(scene, model, {
           position: new Vector3(fx, 0, fz),
           rotation: new Vector3(0, Math.random() * Math.PI * 2, 0),
-          scaling: new Vector3(1.2, 1.2, 1.2),
+          scaling: new Vector3(1.6, 1.6, 1.6),
           shadows,
           name: `flw-${i}`,
         });

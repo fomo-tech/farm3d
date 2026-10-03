@@ -13,5 +13,5 @@ export const FARM_CONFIG = Object.freeze({
   estateWidth: FARM_LOT_SPEC.estateWidth,
   estateDepth: FARM_LOT_SPEC.estateDepth,
   playerSpeed: 7,
-  worldSize: 2200,
+  worldSize: 4200,
 });

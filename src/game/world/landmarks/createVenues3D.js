@@ -4,6 +4,7 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { MODEL_PATHS, spawnModelSync } from '../../rendering/ModelAssetManager.js';
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../../rendering/PlayTogetherTheme.js';
@@ -13,30 +14,33 @@ function makeMat(scene, name, hex, emissiveHex = null) {
 }
 
 function worldLabel(scene, text, parent, color, subtitle = '') {
-  const texture = new DynamicTexture(`label-venue-${text}`, { width: 1024, height: 280 }, scene, true);
+  const texture = new DynamicTexture(`label-venue-${text}`, { width: 2048, height: 560 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  texture.anisotropicFilteringLevel = 16;
   texture.hasAlpha = true;
   const ctx = texture.getContext();
-  ctx.clearRect(0, 0, 1024, 280);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.clearRect(0, 0, 2048, 560);
 
   // Biển hiệu Pop-art Play Together trắng sứ viền màu kẹo ngọt bo tròn múp míp
   ctx.fillStyle = '#ffffff';
   ctx.beginPath();
-  ctx.roundRect(16, 16, 992, 248, 56);
+  ctx.roundRect(32, 32, 1984, 496, 112);
   ctx.fill();
 
   ctx.strokeStyle = color;
-  ctx.lineWidth = 16;
+  ctx.lineWidth = 32;
   ctx.stroke();
 
   // Viền chỉ phụ bên trong
   ctx.strokeStyle = '#fef08a';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(34, 34, 956, 212);
+  ctx.lineWidth = 8;
+  ctx.strokeRect(68, 68, 1912, 424);
 
   // Tiêu đề chính đậm màu than hiện đại
-  texture.drawText(text, null, 142, '900 68px "Segoe UI", Arial, sans-serif', '#0f172a', null, true, true);
+  texture.drawText(text, null, 284, '900 136px "Segoe UI", Arial, sans-serif', '#0f172a', null, true, true);
   if (subtitle) {
-    texture.drawText(subtitle, null, 215, 'bold 36px "Segoe UI", Arial, sans-serif', color, null, true, true);
+    texture.drawText(subtitle, null, 430, 'bold 72px "Segoe UI", Arial, sans-serif', color, null, true, true);
   }
 
   const labelMat = new StandardMaterial(`venue-label-mat-${text}`, scene);

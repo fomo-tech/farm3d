@@ -4,6 +4,7 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
 
 function makeMat(scene, name, hex, emissiveHex = null) {
   const m = new StandardMaterial(name, scene);
@@ -29,20 +30,24 @@ function createCrate(scene, x, y, z, parent, rotY = 0, rotX = 0) {
 }
 
 /**
- * Tạo bảng hiệu viết phấn đen sắc nét cho quầy hàng
+ * Tạo bảng hiệu viết phấn đen sắc nét cho quầy hàng (1024x256 High-Res)
  */
 function createStallSign(scene, text, colorHex, parent, width = 3.6, height = 0.75, y = 3.5) {
-  const dt = new DynamicTexture(`stall-sign-${text}`, { width: 512, height: 128 }, scene, false);
+  const dt = new DynamicTexture(`stall-sign-${text}`, { width: 1024, height: 256 }, scene, false, Texture.TRILINEAR_SAMPLINGMODE);
+  dt.anisotropicFilteringLevel = 16;
   dt.hasAlpha = true;
   const ctx = dt.getContext();
-  ctx.clearRect(0, 0, 512, 128);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.clearRect(0, 0, 1024, 256);
   ctx.fillStyle = '#1e293b';
-  ctx.roundRect(6, 6, 500, 116, 20);
+  ctx.beginPath();
+  ctx.roundRect(12, 12, 1000, 232, 40);
   ctx.fill();
   ctx.strokeStyle = colorHex;
-  ctx.lineWidth = 8;
+  ctx.lineWidth = 16;
   ctx.stroke();
-  dt.drawText(text, null, 76, 'bold 36px "Segoe UI", Arial, sans-serif', '#ffffff', null, true, true);
+  dt.drawText(text, null, 152, 'bold 72px "Segoe UI", Arial, sans-serif', '#ffffff', null, true, true);
 
   const mat = new StandardMaterial(`stall-sign-mat-${text}`, scene);
   mat.diffuseTexture = dt;

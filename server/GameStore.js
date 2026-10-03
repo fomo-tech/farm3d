@@ -2,6 +2,7 @@ import { MongoClient } from 'mongodb';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { FARM_TILE_KEY_PATTERN } from '../shared/farmLayout.js';
 import { decodeFarmId } from '../shared/villageLayout.js';
+import { FISHING_GEAR, LAKE_FISH, fishingWaterAt } from '../shared/fishing.js';
 
 const mongo = new MongoClient(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017', {
   serverSelectionTimeoutMS: 5000,
@@ -65,6 +66,7 @@ const EXPANSIONS = [{ plots: 24, cost: 500, level: 3 }, { plots: 36, cost: 1400,
 
 const initialProgress = () => ({
   version: 3, coins: 180, gems: 15, xp: 0, level: 1, selectedCrop: 'carrot', freeSeeds: 0,
+  fishing: { ownedRods: [], equippedRod: null, bait: { bait_worm: 0, bait_lure: 0 }, equippedBait: null, fish: {}, pending: null },
   inventory: { carrot: 0, wheat: 0, tomato: 0, strawberry: 0, egg: 0, milk: 0, flour: 0, cheese: 0, jam: 0 },
   stats: { planted: 0, watered: 0, harvested: 0, orders: 0, animalsFed: 0, crafted: 0 },
   claimedQuests: [], completedOrders: [], unlockedPlots: 0, barnLevel: 0, toolLevel: 1,
@@ -139,14 +141,64 @@ async function savePlayer(player) {
   return player;
 }
 
+// Casino stakes and payouts use the same revision guard as other purchases.
+// A pending stake is persisted so a restart can refund an unfinished round.
+export async function casinoPlaceBet(playerId, roundId, game, choice, amount) {
+  if (!['tai-xiu', 'bau-cua'].includes(game) || ![10, 50, 100].includes(amount)) return { error: 'Mức cược không hợp lệ.' };
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const player = await loadPlayer(playerId);
+    if (!player) return { error: 'Không tìm thấy người chơi.' };
+    const pending = { ...(player.progress.casinoPending || {}) };
+    if (pending[roundId]) return { error: 'Bạn đã đặt cược trong ván này.' };
+    if (player.progress.coins < amount) return { error: 'Không đủ xu.' };
+    pending[roundId] = { game, choice, amount, createdAt: Date.now() };
+    player.progress.casinoPending = pending;
+    player.progress.coins -= amount;
+    if (await savePlayer(player)) return { player };
+  }
+  return { error: 'Giao dịch đang bận, vui lòng thử lại.' };
+}
+
+export async function casinoSettleBet(playerId, roundId, reward) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const player = await loadPlayer(playerId);
+    const pending = player?.progress.casinoPending?.[roundId];
+    if (!pending) return null;
+    const next = { ...player.progress.casinoPending };
+    delete next[roundId];
+    player.progress.casinoPending = next;
+    player.progress.coins += reward;
+    player.progress.casinoPlays += 1;
+    if (await savePlayer(player)) return { player, bet: pending };
+  }
+  throw new Error(`Casino payout contention: ${playerId}`);
+}
+
+export async function casinoRefundStale(playerId, activeRoundIds = []) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const player = await loadPlayer(playerId);
+    if (!player) return null;
+    const pending = { ...(player.progress.casinoPending || {}) };
+    const stale = Object.entries(pending).filter(([id, bet]) => !activeRoundIds.includes(id) || Date.now() - bet.createdAt > 90_000);
+    if (!stale.length) return player;
+    stale.forEach(([id, bet]) => { player.progress.coins += bet.amount; delete pending[id]; });
+    player.progress.casinoPending = pending;
+    if (await savePlayer(player)) return player;
+  }
+  return loadPlayer(playerId);
+}
+
 function requireItems(progress, items) { return Object.entries(items).every(([id, count]) => (progress.inventory[id] || 0) >= count); }
 function consume(progress, items) { Object.entries(items).forEach(([id, count]) => { progress.inventory[id] -= count; }); }
 
-export async function performAction(playerId, action, payload = {}) {
+export async function performAction(playerId, action, payload = {}, context = {}) {
   const player = docToPlayer(await collections.players.findOne({ playerId }));
   if (!player) return { error: 'Không tìm thấy người chơi.' };
   const p = player.progress;
+  p.fishing = { ownedRods: [], equippedRod: null, bait: {}, equippedBait: null, fish: {}, pending: null, ...p.fishing };
+  p.fishing.bait = { bait_worm: 0, bait_lure: 0, ...p.fishing.bait };
   const fail = error => ({ error, player });
+  const fishingZone = () => context.venue ? null : fishingWaterAt(context.x, context.z);
   if (action === 'character_create') { if (p.onboarding.characterCreated) return fail('Nhân vật đã được tạo.'); player.name = String(payload.name || player.name).slice(0, 24); p.outfit = 'starter'; p.onboarding.characterCreated = true; p.onboarding.step = 1; }
   else if (action === 'select_crop') { if (!CROPS[payload.crop] || p.level < CROPS[payload.crop].level) return fail('Hạt giống chưa mở khóa.'); p.selectedCrop = payload.crop; }
   else if (action === 'sell_item') { const crop = CROPS[payload.id]; const amount = Math.max(1, Math.min(99, Number(payload.amount) || 1)); if (!crop || (p.inventory[payload.id] || 0) < amount) return fail('Không đủ nông sản.'); p.inventory[payload.id] -= amount; p.coins += crop.sellPrice * amount; }
@@ -159,7 +211,12 @@ export async function performAction(playerId, action, payload = {}) {
   else if (action === 'upgrade_home') { if (p.homeTier >= 2 || p.level < 4 || p.coins < 1800) return fail('Chưa đủ điều kiện nâng nhà.'); p.coins -= 1800; p.homeTier = 2; if (!p.ownedHomes.includes('cozy-manor')) p.ownedHomes.push('cozy-manor'); }
   else if (action === 'buy_vehicle') { const cost = VEHICLES[payload.id]; if (cost == null) return fail('Xe không hợp lệ.'); if (!p.ownedVehicles.includes(payload.id)) { if (p.coins < cost) return fail('Không đủ xu mua xe.'); p.coins -= cost; p.ownedVehicles.push(payload.id); } p.vehicle = payload.id; }
   else if (action === 'buy_outfit') { const cost = OUTFITS[payload.id]; if (cost == null) return fail('Trang phục không hợp lệ.'); if (!p.ownedOutfits.includes(payload.id)) { if (p.coins < cost) return fail('Không đủ xu mua trang phục.'); p.coins -= cost; p.ownedOutfits.push(payload.id); } p.outfit = payload.id; }
-  else if (action === 'casino') { const bet = [10, 50, 100].includes(Number(payload.bet)) ? Number(payload.bet) : 0; if (!bet || p.coins < bet) return fail('Mức cược không hợp lệ.'); const playerRoll = 1 + Math.floor(Math.random() * 6); const houseRoll = 1 + Math.floor(Math.random() * 6); const reward = playerRoll > houseRoll ? bet * 2 : playerRoll === houseRoll ? bet : 0; p.coins += reward - bet; p.casinoPlays += 1; if (!(await savePlayer(player))) return fail('Xung đột giao dịch, vui lòng thử lại.'); return { player, result: { playerRoll, houseRoll, reward, bet } }; }
+  else if (action === 'fishing_buy') { const gear = FISHING_GEAR[payload.id]; if (!gear || p.coins < gear.cost) return fail('Không đủ xu hoặc đồ câu không hợp lệ.'); if (payload.id.startsWith('rod_')) { if (p.fishing.ownedRods.includes(payload.id)) return fail('Bạn đã có cần câu này.'); p.fishing.ownedRods.push(payload.id); p.fishing.equippedRod = payload.id; } else p.fishing.bait[payload.id] += gear.count; p.coins -= gear.cost; }
+  else if (action === 'fishing_equip') { if (payload.id?.startsWith('rod_')) { if (!p.fishing.ownedRods.includes(payload.id)) return fail('Bạn chưa có cần câu này.'); p.fishing.equippedRod = payload.id; } else if (payload.id === null || FISHING_GEAR[payload.id] && (p.fishing.bait[payload.id] || 0) > 0) p.fishing.equippedBait = payload.id; else return fail('Bạn không có loại mồi này.'); }
+  else if (action === 'fishing_cast') { const zone = fishingZone(); if (!zone) return fail('Hãy đứng sát bờ hồ, sông, ao hoặc biển để câu.'); if (!p.fishing.equippedRod || !p.fishing.ownedRods.includes(p.fishing.equippedRod)) return fail('Hãy trang bị cần câu trước.'); if (p.fishing.pending && Date.now() < p.fishing.pending.expiresAt) return fail('Phao vẫn đang ở dưới nước.'); if (p.fishing.equippedBait) { if (!(p.fishing.bait[p.fishing.equippedBait] > 0)) return fail('Đã hết mồi câu.'); p.fishing.bait[p.fishing.equippedBait] -= 1; } const now = Date.now(); const catchTable = { lake: ['carp','perch','golden_carp'], pond: ['perch','carp','golden_carp'], river: ['river_catfish','river_barb','golden_carp'], sea: ['sea_mackerel','sea_snapper','golden_carp'] }; const rareChance = p.fishing.equippedBait === 'bait_lure' ? 0.2 : 0.06; const fishId = Math.random() < rareChance ? catchTable[zone][2] : catchTable[zone][Math.floor(Math.random() * 2)]; p.fishing.pending = { zone, biteAt: now + 2500 + Math.floor(Math.random() * 2500), expiresAt: now + 10000, fishId }; }
+  else if (action === 'fishing_reel') { const pending = p.fishing.pending; if (!pending || fishingZone() !== pending.zone) return fail('Hãy ở lại vùng nước đã thả phao.'); const now = Date.now(); if (now < pending.biteAt || now > pending.expiresAt) return fail('Cá chưa cắn hoặc đã bơi đi.'); p.fishing.pending = null; p.fishing.fish[pending.fishId] = (p.fishing.fish[pending.fishId] || 0) + 1; p.xp += 5; return (await savePlayer(player)) ? { player, result: { fishCaught: pending.fishId } } : fail('Xung đột giao dịch, vui lòng thử lại.'); }
+  else if (action === 'fishing_sell') { const fish = LAKE_FISH[payload.id]; if (!fish || !(p.fishing.fish[payload.id] > 0)) return fail('Bạn không có cá này.'); p.fishing.fish[payload.id] -= 1; p.coins += fish.price; }
+  else if (action === 'casino') return fail('Hãy tham gia bàn Tài Xỉu hoặc Bầu Cua online.');
   else if (action === 'feed_animals') { if (!player.livestock.length) return fail('Bạn chưa có vật nuôi.'); if (p.coins < 20) return fail('Không đủ xu mua thức ăn.'); const now = Date.now(); p.coins -= 20; p.xp += 5; p.stats.animalsFed += 1; player.livestock = player.livestock.map(a => ({ ...a, fedAt: now, productReadyAt: now + (a.species === 'chicken' ? 90_000 : 180_000) })); }
   else if (action === 'collect_animals') { const now = Date.now(); let eggs = 0; let milk = 0; player.livestock = player.livestock.map(a => { if (!a.productReadyAt || a.productReadyAt > now) return a; a.species === 'chicken' ? eggs++ : milk++; return { ...a, productReadyAt: 0 }; }); if (!eggs && !milk) return fail('Sản phẩm chưa sẵn sàng.'); if (inventoryCount(p) + eggs + milk > barnCapacity(p)) return fail('Kho đã đầy.'); p.inventory.egg += eggs; p.inventory.milk += milk; p.xp += (eggs + milk) * 10; }
   else if (action === 'claim_seeds') { if (p.onboarding.step !== 1) return fail('Chưa đến bước nhận hạt giống.'); if (!p.onboarding.freeSeedsReceived) { p.freeSeeds += 3; p.coins += 50; p.onboarding.freeSeedsReceived = true; } p.onboarding.step = 2; }

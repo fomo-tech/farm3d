@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Icon3dGoldCoin, Icon3dSparkleStar } from './icons3d/GameIcons3D.jsx';
 
 let rewardListeners = [];
 
@@ -15,7 +16,7 @@ export function FloatingRewards() {
       const newItem = {
         id: Math.random().toString(36).slice(2),
         text: reward.text,
-        icon: reward.icon || '🪙',
+        icon: reward.icon || <Icon3dGoldCoin size={22} />,
         color: reward.color || '#f59e0b',
         x: reward.x ?? window.innerWidth / 2 + (Math.random() * 80 - 40),
         y: reward.y ?? window.innerHeight / 2 + (Math.random() * 60 - 30),
@@ -50,7 +51,7 @@ export function FloatingRewards() {
         >
           <span className="reward-icon">{item.icon}</span>
           <span className="reward-text" style={{ color: item.color }}>{item.text}</span>
-          <span className="reward-sparkles">✨</span>
+          <span className="reward-sparkles"><Icon3dSparkleStar size={16} /></span>
         </div>
       ))}
     </div>

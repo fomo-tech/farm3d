@@ -4,6 +4,8 @@ import {
   Icon3dOrdersBox,
   Icon3dCarrot,
   Icon3dRiceSpike,
+  Icon3dTomato,
+  Icon3dStrawberry,
   Icon3dSprout,
   Icon3dFlower,
   Icon3dGoldCoin,
@@ -14,8 +16,8 @@ import {
 function renderCropIcon(id, size = 20) {
   if (id === 'carrot') return <Icon3dCarrot size={size} />;
   if (id === 'wheat') return <Icon3dRiceSpike size={size} />;
-  if (id === 'tomato') return <Icon3dSprout size={size} />;
-  if (id === 'strawberry') return <Icon3dFlower size={size} />;
+  if (id === 'tomato') return <Icon3dTomato size={size} />;
+  if (id === 'strawberry') return <Icon3dStrawberry size={size} />;
   return <Icon3dSprout size={size} />;
 }
 

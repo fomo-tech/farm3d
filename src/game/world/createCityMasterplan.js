@@ -3,8 +3,10 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { WORLD_LAYOUT } from './worldLayout.js';
+import { WORLD_PALETTE } from './worldDesignSystem.js';
 
 function material(scene, name, hex, emissive = null) {
   const result = new StandardMaterial(name, scene);
@@ -26,18 +28,21 @@ function ground(scene, name, width, depth, x, z, mat, parent, y = 0.035) {
 }
 
 function districtSign(scene, district, parent) {
-  const texture = new DynamicTexture(`district-sign-${district.id}`, { width: 640, height: 180 }, scene, true);
+  const texture = new DynamicTexture(`district-sign-${district.id}`, { width: 1280, height: 360 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  texture.anisotropicFilteringLevel = 16;
   texture.hasAlpha = true;
   const ctx = texture.getContext();
-  ctx.clearRect(0, 0, 640, 180);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.clearRect(0, 0, 1280, 360);
   ctx.fillStyle = '#fffdf5';
   ctx.beginPath();
-  ctx.roundRect(10, 10, 620, 160, 42);
+  ctx.roundRect(20, 20, 1240, 320, 84);
   ctx.fill();
   ctx.strokeStyle = district.color;
-  ctx.lineWidth = 12;
+  ctx.lineWidth = 24;
   ctx.stroke();
-  texture.drawText(district.label.toUpperCase(), null, 112, '800 46px "Segoe UI", sans-serif', '#273548', null, true, true);
+  texture.drawText(district.label.toUpperCase(), null, 224, '800 92px "Segoe UI", sans-serif', '#273548', null, true, true);
 
   const signMat = new StandardMaterial(`district-sign-mat-${district.id}`, scene);
   signMat.diffuseTexture = texture;
@@ -86,10 +91,10 @@ export function createCityMasterplan(scene, shadows) {
   const root = new TransformNode('city-masterplan-v3', scene);
   root.metadata = { zone: 'city', layoutVersion: WORLD_LAYOUT.version };
   const mats = {
-    asphalt: material(scene, 'city-ring-road-mat', '#cfb993'),
-    curb: material(scene, 'city-curb-mat', '#fff3d7'),
-    walk: material(scene, 'city-pedestrian-mat', '#f7e7c6'),
-    crossing: material(scene, 'city-crossing-mat', '#fffdf5'),
+    asphalt: material(scene, 'city-ring-road-mat', WORLD_PALETTE.roadStone),
+    curb: material(scene, 'city-curb-mat', '#d4b8a8'),
+    walk: material(scene, 'city-pedestrian-mat', WORLD_PALETTE.sidewalkCream),
+    crossing: material(scene, 'city-crossing-mat', '#ded6c8', '#faf5ee'),
     stop: material(scene, 'city-stop-mat', '#52b8ce'),
     wood: material(scene, 'city-stop-wood-mat', '#76513a'),
     chrome: material(scene, 'city-chrome-mat', '#dbe7ef'),
@@ -97,6 +102,10 @@ export function createCityMasterplan(scene, shadows) {
     neonCyan: material(scene, 'city-neon-cyan', '#06b6d4', '#06b6d4'),
     neonPink: material(scene, 'city-neon-pink', '#ec4899', '#ec4899'),
   };
+  mats.asphalt.zOffset = -1;
+  mats.curb.zOffset = -1;
+  mats.walk.zOffset = -2;
+  mats.crossing.zOffset = -4;
   mats.glass.alpha = 0.82;
 
   // Vành đai giúp nhìn một lần là hiểu cấu trúc thành phố, thay cho các đường rời rạc.

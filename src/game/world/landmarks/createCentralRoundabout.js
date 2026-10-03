@@ -4,6 +4,7 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
 
 function makeMat(scene, name, hex, emissiveHex = null) {
   const m = new StandardMaterial(name, scene);
@@ -39,18 +40,22 @@ function createDirectionalSign(scene, text, directionAngle, colorHex, parent, yO
   arrowTip.material = plankMat;
   arrowTip.parent = signNode;
 
-  // Dynamic texture cho chữ chỉ hướng
-  const dt = new DynamicTexture(`dt-sign-${text}`, { width: 512, height: 128 }, scene, false);
+  // Dynamic texture cho chữ chỉ hướng (1024x256 High-Res)
+  const dt = new DynamicTexture(`dt-sign-${text}`, { width: 1024, height: 256 }, scene, false, Texture.TRILINEAR_SAMPLINGMODE);
+  dt.anisotropicFilteringLevel = 16;
   dt.hasAlpha = true;
   const ctx = dt.getContext();
-  ctx.clearRect(0, 0, 512, 128);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.clearRect(0, 0, 1024, 256);
   ctx.fillStyle = '#1e293b';
-  ctx.roundRect(8, 8, 496, 112, 16);
+  ctx.beginPath();
+  ctx.roundRect(16, 16, 992, 224, 32);
   ctx.fill();
   ctx.strokeStyle = colorHex;
-  ctx.lineWidth = 8;
+  ctx.lineWidth = 16;
   ctx.stroke();
-  dt.drawText(text, null, 78, 'bold 36px "Segoe UI", Arial, sans-serif', '#ffffff', null, true, true);
+  dt.drawText(text, null, 156, 'bold 72px "Segoe UI", Arial, sans-serif', '#ffffff', null, true, true);
 
   const textMat = new StandardMaterial(`text-mat-${text}`, scene);
   textMat.diffuseTexture = dt;

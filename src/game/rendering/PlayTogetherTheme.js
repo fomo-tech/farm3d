@@ -11,7 +11,7 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 export const PLAY_TOGETHER_PALETTE = {
   pastels: {
     skyBlue: '#70d6ff',
-    mintGreen: '#a0f48b',
+    mintGreen: '#65c990',
     butterYellow: '#ffea79',
     coralOrange: '#ff9770',
     strawberryPink: '#ff70a6',

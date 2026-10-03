@@ -1,9 +1,11 @@
 import { createServer } from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { purchaseFarm, listLandMarket, getAssignment, initVillageRegistry, isAssignedFarm, listVillageAssignments, listVillages, positionForLot, villageChannel, villageForFarm } from './VillageRegistry.js';
-import { authenticate, farmAction, initGameStore, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
+import { authenticate, casinoRefundStale, farmAction, initGameStore, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
+import { casinoState, placeCasinoBet, tickCasino } from './CasinoRooms.js';
 import { FARM_ACTIVE_PLOTS, FARM_LOT_SPEC, FARM_TILE_KEY_PATTERN, farmTilePosition as sharedFarmTilePosition } from '../shared/farmLayout.js';
 import { WORLD_VILLAGES, villageGeometry } from '../shared/villageLayout.js';
+import { VENUE_LAYOUT } from '../shared/venueLayout.js';
 
 const PORT = Number(process.env.MULTIPLAYER_PORT || 8787);
 const TICK_MS = 100;
@@ -21,14 +23,13 @@ const FARM_LAYOUT = Object.freeze({
 });
 const FARM_INTERACTION_RADIUS = 6;
 const MAX_PLAYER_SPEED = 32;
-const VALID_VENUES = new Set(['casino', 'fashion', 'vehicles', 'supplies']);
-const ROOM_LAYOUT = Object.freeze({
-  casino: { entrance: { x: -21.4, z: 15.9 }, interior: { x: 210, y: 32, z: -215 } },
-  fashion: { entrance: { x: 21.4, z: -15.9 }, interior: { x: 175, y: 32, z: -215 } },
-  vehicles: { entrance: { x: -21.4, z: -15.9 }, interior: { x: 140, y: 32, z: -215 } },
-  supplies: { entrance: { x: 21.4, z: 15.9 }, interior: { x: 105, y: 32, z: -215 } },
-});
+const VALID_VENUES = new Set(['casino', 'fashion', 'vehicles', 'supplies', 'fishing']);
+const ROOM_LAYOUT = VENUE_LAYOUT;
 const clients = new Map();
+function broadcastCasinoState() {
+  const payload = { type: 'casino_state', games: casinoState(), serverTime: Date.now() };
+  clients.forEach(client => safeSend(client.socket, payload));
+}
 const recentActions = new Map();
 const ACTION_CACHE_TTL = 5 * 60_000;
 const authAttempts = new Map();
@@ -209,6 +210,8 @@ wss.on('connection', socket => {
       }
       const account = await authenticate(client.playerId, String(message.sessionToken || ''), message.name);
       if (account.error) { safeSend(socket, { type: 'auth_error', message: account.error }); return socket.close(1008, 'Invalid session'); }
+      const recovered = await casinoRefundStale(client.playerId, Object.values(casinoState()).map(round => round.id));
+      if (recovered) account.progress = recovered.progress;
       client.name = account.name;
       client.vehicle = account.progress?.vehicle || 'walk';
       safeSend(socket, { type: 'account_state', sessionToken: account.token, progress: account.progress, livestock: account.livestock, position: account.position?.layoutVersion === MAP_LAYOUT_VERSION ? account.position : null });
@@ -224,6 +227,7 @@ wss.on('connection', socket => {
       client.y = assignedLot.spawn.y;
       client.z = assignedLot.spawn.z;
       clients.set(socket, client);
+      safeSend(socket, { type: 'casino_state', games: casinoState(), serverTime: Date.now() });
 
       if (existing && account.position?.layoutVersion === 6 && account.position.villageId === assignedLot.villageId) {
         const origin = villageGeometry(assignedLot.village.order);
@@ -285,6 +289,7 @@ wss.on('connection', socket => {
       const distance = Math.hypot(x - client.x, z - client.z);
       const requestedVenue = VALID_VENUES.has(message.venue) ? message.venue : null;
       const roomTransition = isRoomTransition(client, x, y, z, requestedVenue);
+      if (requestedVenue !== client.venue && !roomTransition) return;
       if (!roomTransition && distance > 1.5 + elapsed * MAX_PLAYER_SPEED) {
         safeSend(socket, { type: 'move_ack', accepted: false, x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, serverTime: Date.now() });
         return;
@@ -306,7 +311,9 @@ wss.on('connection', socket => {
         const ownFarm = client.farmId ? positionForLot(Number(client.farmId.slice(-6))) : null;
         const allowed = [...(ownFarm ? [{ x: ownFarm.x + 6, z: ownFarm.z - 4 }] : []), { x: 0, z: 18 }, { x: 126, z: 2 }, { x: 0, z: 320 }, ...WORLD_VILLAGES.map(v => v.gate)].some(point => Math.hypot(x - point.x, z - point.z) < 12);
         if (!allowed) return;
-        client.x = x; client.y = Number(message.y || 0); client.z = z; client.venue = VALID_VENUES.has(message.venue) ? message.venue : null; client.lastSeen = Date.now();
+        // Fast travel always lands outdoors; a client must cross a validated
+        // venue doorway before it may join an interior room or place bets.
+        client.x = x; client.y = 0; client.z = z; client.venue = null; client.lastSeen = Date.now();
         client.roomId = roomKey(client.villageId, client.venue);
         safeSend(socket, { type: 'move_ack', x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, serverTime: Date.now() });
         savePosition(client.playerId, { x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION });
@@ -357,6 +364,22 @@ wss.on('connection', socket => {
     if (message.type === 'game_action') {
       const tracked = beginAction(client, message.requestId);
       if (tracked.duplicate) return;
+      if (message.action === 'casino_bet') {
+        if (client.venue !== 'casino') {
+          const response = { type: 'action_error', requestId: message.requestId, message: 'Hãy vào hội quán trò chơi để đặt cược.' };
+          safeSend(socket, response); finishAction(tracked.key, [response]); return;
+        }
+        const { game, choice, roundId } = message.payload || {};
+        const amount = Number(message.payload?.amount);
+        const placed = await placeCasinoBet(client.playerId, game, choice, amount, roundId);
+        if (placed.error) {
+          const response = { type: 'action_error', requestId: message.requestId, message: placed.error };
+          safeSend(socket, response); finishAction(tracked.key, [response]); return;
+        }
+        const response = { type: 'account_state', requestId: message.requestId, progress: placed.player.progress, result: { casinoBet: { game, roundId: placed.roundId, choice, amount } } };
+        safeSend(socket, response); finishAction(tracked.key, [response]);
+        broadcastCasinoState(); return;
+      }
       if (message.action === 'buy_land') {
         const bought = await purchaseFarm(client.playerId, String(message.payload?.farmId || ''));
         if (bought.error) {
@@ -375,7 +398,7 @@ wss.on('connection', socket => {
         const response = { type: 'action_error', requestId: message.requestId, message: 'Bạn cần mua lô đất trước khi sử dụng tính năng nông trại.' };
         safeSend(socket, response); finishAction(tracked.key, [response]); return;
       }
-      const result = await performAction(client.playerId, String(message.action || ''), message.payload || {});
+      const result = await performAction(client.playerId, String(message.action || ''), message.payload || {}, { x: client.x, z: client.z, venue: client.venue });
       if (result.error) { const response = { type: 'action_error', requestId: message.requestId, message: result.error }; safeSend(socket, response); finishAction(tracked.key, [response]); return; }
       client.name = result.player.name;
       client.outfit = result.player.progress.outfit;
@@ -436,6 +459,21 @@ setInterval(() => {
   const channels = new Set([...clients.values()].map(client => client.channelId));
   channels.forEach(broadcastPresence);
 }, TICK_MS);
+
+let casinoTickRunning = false;
+setInterval(async () => {
+  if (casinoTickRunning) return;
+  casinoTickRunning = true;
+  try {
+    const changed = await tickCasino(({ playerId, game, roundId, choice, amount, reward, result, player }) => {
+      for (const client of clients.values()) if (client.playerId === playerId) {
+        safeSend(client.socket, { type: 'account_state', progress: player.progress, result: { casinoSettlement: { game, roundId, choice, amount, reward, result } } });
+      }
+    });
+    if (changed) broadcastCasinoState();
+  } catch (error) { console.error('Casino round settlement failed:', error); }
+  finally { casinoTickRunning = false; }
+}, 500);
 
 setInterval(() => {
   const cutoff = Date.now() - ACTION_CACHE_TTL;

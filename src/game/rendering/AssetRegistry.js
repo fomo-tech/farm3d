@@ -1,10 +1,18 @@
 // Nguồn sự thật duy nhất cho model 3D. Không import Babylon để Node kiểm tra trước build.
 export const MODEL_PATHS = Object.freeze({
   trees: Object.freeze({
-    oak: '/models/nature/tree_oak.glb', default: '/models/nature/tree_default.glb', detailed: '/models/nature/tree_detailed.glb',
-    pine: '/models/nature/tree_pineDefaultA.glb', pineRound: '/models/nature/tree_pineRoundA.glb', pineTall: '/models/nature/tree_pineTallA.glb',
-    palm: '/models/nature/tree_palm.glb', palmBend: '/models/nature/tree_palmBend.glb', fall: '/models/nature/tree_default_fall.glb',
-    oakFall: '/models/nature/tree_oak_fall.glb', fat: '/models/nature/tree_fat.glb', small: '/models/nature/tree_small.glb',
+    oak: '/models/nature/tree_detailed.glb',
+    default: '/models/nature/tree_detailed.glb',
+    detailed: '/models/nature/tree_detailed.glb',
+    pine: '/models/nature/tree_pineTallA_detailed.glb',
+    pineRound: '/models/nature/tree_pineRoundA.glb',
+    pineTall: '/models/nature/tree_pineTallA_detailed.glb',
+    palm: '/models/nature/tree_palmDetailedTall.glb',
+    palmBend: '/models/nature/tree_palmBend.glb',
+    fall: '/models/nature/tree_detailed_fall.glb',
+    oakFall: '/models/nature/tree_oak_fall.glb',
+    fat: '/models/nature/tree_fat.glb',
+    small: '/models/nature/tree_oak.glb',
   }),
   foliage: Object.freeze({
     bush: '/models/nature/plant_bush.glb', bushDetailed: '/models/nature/plant_bushDetailed.glb', bushLarge: '/models/nature/plant_bushLarge.glb',
@@ -15,7 +23,15 @@ export const MODEL_PATHS = Object.freeze({
     turnip: '/models/nature/crop_turnip.glb', wheatA: '/models/nature/crops_wheatStageA.glb', wheatB: '/models/nature/crops_wheatStageB.glb',
     leafsA: '/models/nature/crops_leafsStageA.glb', leafsB: '/models/nature/crops_leafsStageB.glb',
   }),
-  rocks: Object.freeze({ large: '/models/nature/rock_largeA.glb', small: '/models/nature/rock_smallA.glb', tall: '/models/nature/rock_tallA.glb' }),
+  rocks: Object.freeze({
+    large: '/models/nature/rock_largeA.glb',
+    largeB: '/models/nature/rock_largeB.glb',
+    small: '/models/nature/rock_smallA.glb',
+    tall: '/models/nature/rock_tallA.glb',
+    tallB: '/models/nature/rock_tallB.glb',
+    cliff: '/models/nature/cliff_large_rock.glb',
+    cliffRock: '/models/nature/cliff_rock.glb',
+  }),
   town: Object.freeze({
     windmill: '/models/town/windmill.glb', watermill: '/models/town/watermill.glb', cart: '/models/town/cart.glb', cartHigh: '/models/town/cart-high.glb',
     lantern: '/models/town/lantern.glb', stallRed: '/models/town/stall-red.glb', stallGreen: '/models/town/stall-green.glb',
@@ -24,7 +40,7 @@ export const MODEL_PATHS = Object.freeze({
     bridgeWood: '/models/nature/bridge_wood.glb', bridgeStone: '/models/nature/bridge_stone.glb',
   }),
   animals: Object.freeze({
-    cow: '/models/animals/cow.gltf', alpaca: '/models/animals/alpaca.gltf', shiba: '/models/animals/shiba.gltf', fox: '/models/animals/fox.glb',
+    cow: '/models/animals/cow.glb', alpaca: '/models/animals/alpaca.glb', shiba: '/models/animals/shiba.glb', fox: '/models/animals/fox.glb',
     duck: '/models/animals/duck.glb', horse: '/models/animals/horse.glb', stork: '/models/animals/stork.glb',
   }),
   village: '/models/village.glb',

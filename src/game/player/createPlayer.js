@@ -10,12 +10,12 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
 
   // High-quality Stylized Chibi Anime Character
   const human = buildHumanMesh(scene, 'local-player', {
-    outfitId: controls.getOutfitId?.() || 'farmer',
-    outfitColor: controls.getOutfitColor?.() || '#fef3c7',
+    outfitId: controls.getOutfitId?.() || 'starter',
+    outfitColor: controls.getOutfitColor?.() || '#f8fafc',
     skinColor: '#fce7d2',
-    hairColor: '#4a2c1d',
+    hairColor: '#76503b',
     overallsColor: '#2563eb',
-    bootsColor: '#78350f',
+    bootsColor: '#f7f0e6',
     hasHat: false,
     shadows: shadowGenerator,
   });
@@ -34,16 +34,48 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
   let airborne = false;
   let autoTarget = null;
   let onArrive = null;
-  const down = event => keys.add(event.code);
+  let autoTargetStuckFrames = 0;
+  const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight']);
+  const isEditing = target => target instanceof Element && Boolean(target.closest('input, textarea, select, [contenteditable="true"]'));
+  const down = event => {
+    if (isEditing(event.target) || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.code === 'Space' && !airborne && !controls.isRidingBus?.()) {
+      airborne = true;
+      jumpVelocity = 6.8;
+      jumpGroundY = root.position.y;
+      event.preventDefault();
+      return;
+    }
+    if (movementKeys.has(event.code)) {
+      keys.add(event.code);
+      if (event.code.startsWith('Arrow')) event.preventDefault();
+    }
+  };
   const up = event => keys.delete(event.code);
+  const clearKeys = () => keys.clear();
+  const onVisibilityChange = () => { if (document.hidden) clearKeys(); };
   window.addEventListener('keydown', down);
   window.addEventListener('keyup', up);
+  window.addEventListener('blur', clearKeys);
+  document.addEventListener('visibilitychange', onVisibilityChange);
 
 
   return {
     root,
     human,
     update(delta) {
+      const frameDelta = Math.min(Math.max(Number(delta) || 0, 0), 0.1);
+      if (controls.isRidingBus?.()) {
+        autoTarget = null;
+        onArrive = null;
+        airborne = false;
+        human.torsoNode.position.y = 1.1;
+        human.leftLeg.rotation.x = -1.2;
+        human.rightLeg.rotation.x = -1.2;
+        human.leftArm.rotation.x = -0.4;
+        human.rightArm.rotation.x = -0.4;
+        return;
+      }
       const horizontal = (Number(keys.has('KeyD') || keys.has('ArrowRight')) - Number(keys.has('KeyA') || keys.has('ArrowLeft'))) + virtualInput.x;
       const vertical = (Number(keys.has('KeyW') || keys.has('ArrowUp')) - Number(keys.has('KeyS') || keys.has('ArrowDown'))) + virtualInput.y;
       const hasManualInput = horizontal !== 0 || vertical !== 0;
@@ -59,46 +91,97 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
         direction = forward.scale(vertical).add(right.scale(horizontal));
         autoTarget = null;
         onArrive = null;
+        autoTargetStuckFrames = 0;
         isMoving = true;
       } else if (autoTarget) {
         direction.copyFrom(autoTarget).subtractInPlace(root.position);
         direction.y = 0;
         if (direction.length() <= 0.28) {
-          root.position.x = autoTarget.x;
-          root.position.z = autoTarget.z;
+          const finalStep = controls.resolveMovement?.(
+            root.position.x, root.position.z,
+            autoTarget.x - root.position.x, autoTarget.z - root.position.z,
+          ) || { x: autoTarget.x, z: autoTarget.z };
+          const arrived = Math.hypot(finalStep.x - autoTarget.x, finalStep.z - autoTarget.z) < 0.06;
+          root.position.x = finalStep.x;
+          root.position.z = finalStep.z;
           autoTarget = null;
           const action = onArrive;
           onArrive = null;
-          action?.();
-          human.animate(delta, false, 0);
+          autoTargetStuckFrames = 0;
+          if (arrived) action?.();
+          human.animate(frameDelta, false, 0);
           return;
         }
         isMoving = true;
       }
 
+      let actualSpeed = 0;
       if (isMoving && direction.lengthSquared() > 0.0001) {
         direction.normalize();
-        root.position.addInPlace(direction.scale(speed * delta));
-        root.rotation.y = Math.atan2(direction.x, direction.z);
+        const moveDist = speed * frameDelta;
+        const dx = direction.x * moveDist;
+        const dz = direction.z * moveDist;
+        const prevX = root.position.x;
+        const prevZ = root.position.z;
+
+        if (controls.resolveMovement) {
+          const resolved = controls.resolveMovement(prevX, prevZ, dx, dz);
+          root.position.x = resolved.x;
+          root.position.z = resolved.z;
+
+          if (autoTarget) {
+            const movedDistSq = (resolved.x - prevX) ** 2 + (resolved.z - prevZ) ** 2;
+            if (resolved.collided && movedDistSq < 0.0001) {
+              autoTargetStuckFrames++;
+              if (autoTargetStuckFrames > 30) {
+                autoTarget = null;
+                onArrive = null;
+                autoTargetStuckFrames = 0;
+              }
+            } else {
+              autoTargetStuckFrames = 0;
+            }
+          }
+        } else {
+          root.position.x += dx;
+          root.position.z += dz;
+        }
+        const moved = Math.hypot(root.position.x - prevX, root.position.z - prevZ);
+        actualSpeed = frameDelta > 0 ? moved / frameDelta : 0;
+        if (moved > 0.0001) root.rotation.y = Math.atan2(direction.x, direction.z);
       }
+      const visiblyMoving = actualSpeed > 0.05;
+
+      // Natural 3D terrain height adaptation (smoothly climb knolls without sinking)
+      const targetGroundY = controls.getTerrainHeight ? controls.getTerrainHeight(root.position.x, root.position.z) : 0;
 
       if (airborne) {
-        jumpVelocity -= 18 * delta;
-        root.position.y += jumpVelocity * delta;
-        if (root.position.y <= jumpGroundY) {
-          root.position.y = jumpGroundY;
+        jumpVelocity -= 18 * frameDelta;
+        root.position.y += jumpVelocity * frameDelta;
+        if (root.position.y <= targetGroundY) {
+          root.position.y = targetGroundY;
           jumpVelocity = 0;
           airborne = false;
+          jumpGroundY = targetGroundY;
         }
+      } else {
+        const diff = targetGroundY - root.position.y;
+        if (Math.abs(diff) > 0.001) {
+          // Responsive 16x frame delta lerp for seamless, stable slope movement
+          root.position.y += diff * Math.min(1.0, 16.0 * frameDelta);
+        } else {
+          root.position.y = targetGroundY;
+        }
+        jumpGroundY = root.position.y;
       }
 
       // If driving a vehicle, apply driving posture and rotate wheels
       if (vehicleRigs.hasVehicle()) {
-        vehicleRigs.update(delta, isMoving, speed);
+        vehicleRigs.update(frameDelta, visiblyMoving, actualSpeed);
         human.torsoNode.position.y = 1.15;
         human.leftArm.rotation.x = -0.6;
         human.rightArm.rotation.x = -0.6;
-        if (isMoving) {
+        if (visiblyMoving) {
           const pedCycle = (Date.now() * 0.008 * speed) / 4;
           human.leftLeg.rotation.x = Math.sin(pedCycle) * 0.45;
           human.rightLeg.rotation.x = -Math.sin(pedCycle) * 0.45;
@@ -108,7 +191,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
         }
       } else {
         // Procedural walking / breathing animation
-        human.animate(delta, isMoving, speed);
+        human.animate(frameDelta, visiblyMoving, actualSpeed);
       }
     },
     moveTo(target, callback) {
@@ -162,6 +245,8 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
     dispose() {
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
+      window.removeEventListener('blur', clearKeys);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
     },
   };
 }

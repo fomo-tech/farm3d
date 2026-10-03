@@ -7,6 +7,7 @@ import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTextur
 import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { createToyMaterial } from '../../rendering/PlayTogetherTheme.js';
+import { createRusticSignboard } from '../worldDesignSystem.js';
 
 function makeMat(scene, name, hex, emissiveHex = null, specular = 0.5, specularPower = 64) {
   const m = new StandardMaterial(name, scene);
@@ -16,6 +17,17 @@ function makeMat(scene, name, hex, emissiveHex = null, specular = 0.5, specularP
   m.specularPower = specularPower;
   if (emissiveHex) m.emissiveColor = Color3.FromHexString(emissiveHex);
   return m;
+}
+
+export function createCafeDeck(scene, root, deckMaterial) {
+  // Plaza top is y=0.12. Keep the cafe's entire upper surface above it;
+  // the old deck top was also y=0.12 and z-fought with the plaza disc.
+  const deck = MeshBuilder.CreateBox('cafe-outdoor-deck', { width: 11.5, height: 0.18, depth: 8.2 }, scene);
+  deck.position.set(0, 0.23, 0); // bottom .14, top .32
+  deck.material = deckMaterial;
+  deck.parent = root;
+  deck.receiveShadows = true;
+  return deck;
 }
 
 /**
@@ -126,35 +138,37 @@ export function createConcertStage(scene, shadows, position = { x: 28, y: 0, z: 
   topBeamBack.material = mats.trussMetal;
   topBeamBack.parent = root;
 
-  // 3. MÀN HÌNH LED CONG KHỔNG LỒ PHÍA SAU SÂN KHẤU (CURVED LED BACKDROP SCREEN)
-  const ledTex = new DynamicTexture('stage-led-screen-tex', { width: 1024, height: 512 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  // 3. MÀN HÌNH LED CONG KHỔNG LỒ PHÍA SAU SÂN KHẤU (CURVED LED BACKDROP SCREEN - 2048x1024 High-Res)
+  const ledTex = new DynamicTexture('stage-led-screen-tex', { width: 2048, height: 1024 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
   ledTex.anisotropicFilteringLevel = 16;
   const ledCtx = ledTex.getContext();
+  ledCtx.imageSmoothingEnabled = true;
+  ledCtx.imageSmoothingQuality = 'high';
 
   // Vẽ nền sậm & hiệu ứng Equalizer sóng âm sống động
   ledCtx.fillStyle = '#020617';
-  ledCtx.fillRect(0, 0, 1024, 512);
+  ledCtx.fillRect(0, 0, 2048, 1024);
 
   // Gradient ánh sáng sân khấu
-  const ledGrad = ledCtx.createLinearGradient(0, 0, 1024, 0);
+  const ledGrad = ledCtx.createLinearGradient(0, 0, 2048, 0);
   ledGrad.addColorStop(0, '#3b0764');
   ledGrad.addColorStop(0.5, '#0284c7');
   ledGrad.addColorStop(1, '#831843');
   ledCtx.fillStyle = ledGrad;
-  ledCtx.fillRect(16, 16, 992, 480);
+  ledCtx.fillRect(32, 32, 1984, 960);
 
   // Vẽ các cột sóng âm Equalizer phát sáng
   const numBars = 32;
-  const barWidth = 24;
-  const barGap = 6;
-  const startX = (1024 - (numBars * (barWidth + barGap))) / 2;
+  const barWidth = 48;
+  const barGap = 12;
+  const startX = (2048 - (numBars * (barWidth + barGap))) / 2;
 
   for (let b = 0; b < numBars; b++) {
-    const barHeight = 80 + Math.sin(b * 0.4) * 60 + Math.cos(b * 0.9) * 45;
+    const barHeight = 160 + Math.sin(b * 0.4) * 120 + Math.cos(b * 0.9) * 90;
     const bx = startX + b * (barWidth + barGap);
-    const by = 420 - barHeight;
+    const by = 840 - barHeight;
 
-    const barGrad = ledCtx.createLinearGradient(0, by, 0, 420);
+    const barGrad = ledCtx.createLinearGradient(0, by, 0, 840);
     barGrad.addColorStop(0, '#f43f5e');
     barGrad.addColorStop(0.4, '#fbbf24');
     barGrad.addColorStop(0.8, '#00f2fe');
@@ -162,23 +176,23 @@ export function createConcertStage(scene, shadows, position = { x: 28, y: 0, z: 
 
     ledCtx.fillStyle = barGrad;
     ledCtx.beginPath();
-    ledCtx.roundRect(bx, by, barWidth, barHeight, 6);
+    ledCtx.roundRect(bx, by, barWidth, barHeight, 12);
     ledCtx.fill();
   }
 
   // Tiêu đề chữ nổi phát sáng "KAIA LIVE CONCERT"
-  ledCtx.font = '900 64px "Montserrat", "Segoe UI", Arial, sans-serif';
+  ledCtx.font = '900 128px "Montserrat", "Segoe UI", Arial, sans-serif';
   ledCtx.fillStyle = '#ffffff';
   ledCtx.textAlign = 'center';
   ledCtx.shadowColor = '#00f2fe';
-  ledCtx.shadowBlur = 28;
-  ledCtx.fillText('★ KAIA LIVE STAGE ★', 512, 130);
+  ledCtx.shadowBlur = 48;
+  ledCtx.fillText('★ KAIA LIVE STAGE ★', 1024, 260);
 
-  ledCtx.font = 'bold 28px "Montserrat", "Segoe UI", Arial, sans-serif';
+  ledCtx.font = 'bold 56px "Montserrat", "Segoe UI", Arial, sans-serif';
   ledCtx.fillStyle = '#facc15';
   ledCtx.shadowColor = '#f59e0b';
-  ledCtx.shadowBlur = 16;
-  ledCtx.fillText('METAVERSE SOCIAL CONCERT · DANCE & VIBE', 512, 185);
+  ledCtx.shadowBlur = 28;
+  ledCtx.fillText('METAVERSE SOCIAL CONCERT · DANCE & VIBE', 1024, 370);
 
   ledTex.update();
 
@@ -363,33 +377,24 @@ export function createVintageCoffeeVan(scene, shadows, position = { x: -28, y: 0
   root.rotation.y = rotationY;
 
   const mats = {
-    deckFloor: makeMat(scene, 'cafe-deck-floor', '#334155', null, 0.3, 60),
-    airstreamChrome: makeMat(scene, 'cafe-airstream-chrome', '#e2e8f0', null, 0.95, 128),
-    awningStripe: makeMat(scene, 'cafe-awning-stripe', '#f59e0b', '#d97706', 0.4),
-    glassTable: makeMat(scene, 'cafe-glass-table', '#bae6fd', '#38bdf8', 0.9, 128),
-    loungeWoven: makeMat(scene, 'cafe-lounge-woven', '#1e293b', null, 0.3, 50),
-    cushionCream: makeMat(scene, 'cafe-cushion-cream', '#fef9c3', null, 0.2),
-    parasolFabric: makeMat(scene, 'cafe-parasol-fabric', '#f8fafc', null, 0.25),
-    parasolMast: makeMat(scene, 'cafe-parasol-mast', '#0f172a', null, 0.6, 90),
+    deckFloor: makeMat(scene, 'cafe-deck-floor', '#c7a783', null, 0.12, 36),
+    airstreamChrome: makeMat(scene, 'cafe-airstream-chrome', '#e9f2ed', null, 0.25, 64),
+    awningStripe: makeMat(scene, 'cafe-awning-stripe', '#f7c957', null, 0.15, 48),
+    glassTable: makeMat(scene, 'cafe-glass-table', '#c9f1ec', null, 0.22, 64),
+    serviceGlaze: makeMat(scene, 'cafe-service-glaze', '#b9e9e5', null, 0.18, 56),
+    loungeWoven: makeMat(scene, 'cafe-lounge-woven', '#6b8990', null, 0.16, 40),
+    cushionCream: makeMat(scene, 'cafe-cushion-cream', '#fff0d1', null, 0.12),
+    parasolFabric: makeMat(scene, 'cafe-parasol-fabric', '#f9f5e9', null, 0.12),
+    parasolMast: makeMat(scene, 'cafe-parasol-mast', '#567481', null, 0.2, 60),
     edisonWarm: makeMat(scene, 'cafe-edison-bulb', '#fef08a', '#facc15', 0.95, 128),
     plantGreen: makeMat(scene, 'cafe-plant-green', '#10b981', null, 0.2),
   };
-  mats.glassTable.alpha = 0.85;
-
-  // 1. Sàn gỗ composite ngoài trời (Outdoor Decking Pad 11m x 8m)
-  const deck = MeshBuilder.CreateBox('cafe-outdoor-deck', {
-    width: 11.5,
-    height: 0.12,
-    depth: 8.2,
-  }, scene);
-  deck.position.set(0, 0.06, 0);
-  deck.material = mats.deckFloor;
-  deck.parent = root;
-  deck.receiveShadows = true;
+  // 1. Raised patio, visually separate from the plaza paving.
+  createCafeDeck(scene, root, mats.deckFloor);
 
   // 2. Xe Cà Phê Airstream Hiện Đại (5.4m x 2.4m x 2.6m)
   const vanRoot = new TransformNode('cafe-van-body-root', scene);
-  vanRoot.position.set(0, 0, -2.4);
+  vanRoot.position.set(0, 0.20, -2.4);
   vanRoot.parent = root;
 
   const vanBody = MeshBuilder.CreateBox('cafe-van-chassis', { width: 5.4, height: 2.5, depth: 2.3 }, scene);
@@ -411,9 +416,9 @@ export function createVintageCoffeeVan(scene, shadows, position = { x: -28, y: 0
   vanRoof.parent = vanRoot;
 
   // Cửa sổ kính bán cà phê mở rộng
-  const serviceWindow = MeshBuilder.CreateBox('cafe-service-window', { width: 3.4, height: 1.3, depth: 0.15 }, scene);
-  serviceWindow.position.set(0, 1.6, 1.15);
-  serviceWindow.material = mats.glassTable;
+  const serviceWindow = MeshBuilder.CreateBox('cafe-service-window', { width: 3.4, height: 1.3, depth: 0.12 }, scene);
+  serviceWindow.position.set(0, 1.6, 1.27); // back 1.21, van face 1.15
+  serviceWindow.material = mats.serviceGlaze;
   serviceWindow.parent = vanRoot;
 
   // Quầy bar inox phục vụ
@@ -443,16 +448,9 @@ export function createVintageCoffeeVan(scene, shadows, position = { x: -28, y: 0
     bulb.parent = vanRoot;
   }
 
-  // Biển hiệu Neon chữ nổi "KAIA COFFEE LOUNGE"
-  const signBacking = MeshBuilder.CreateBox('cafe-sign-box', { width: 3.2, height: 0.65, depth: 0.1 }, scene);
-  signBacking.position.set(0, 3.15, 0);
-  signBacking.material = mats.parasolMast;
-  signBacking.parent = vanRoot;
-
-  const signNeon = MeshBuilder.CreateBox('cafe-sign-neon', { width: 3.0, height: 0.45, depth: 0.12 }, scene);
-  signNeon.position.set(0, 3.15, 0);
-  signNeon.material = mats.edisonWarm;
-  signNeon.parent = vanRoot;
+  // Biển hiệu gỗ sồi chữ nổi vàng ấm "CÀ PHÊ BÌNH MINH"
+  createRusticSignboard(scene, 'CÀ PHÊ BÌNH MINH', 'Fresh Brew & Pastries', '#f59e0b', vanRoot, 3.4, 1.2)
+    .position.set(0, 3.25, 0);
 
   // 3. KHU VỰC BÀN GHẾ NGOÀI TRỜI (3 BỘ BÀN KÍNH & GHẾ LOUNGE)
   const seatingPositions = [
@@ -463,7 +461,7 @@ export function createVintageCoffeeVan(scene, shadows, position = { x: -28, y: 0
 
   seatingPositions.forEach((pos, sidx) => {
     const setRoot = new TransformNode(`cafe-table-set-${sidx}`, scene);
-    setRoot.position.set(pos.x, 0.12, pos.z);
+    setRoot.position.set(pos.x, 0.32, pos.z);
     setRoot.parent = root;
 
     // Bàn tròn kính chân kim loại
@@ -1169,27 +1167,31 @@ export function createSmartBusShelter(scene, shadows, position = { x: -9.2, y: 0
   curvedCanopy.parent = root;
   shadows?.addShadowCaster(curvedCanopy);
 
-  // 5. Bảng hiển thị kỹ thuật số lộ trình xe buýt (Smart Timetable Screen)
-  const dt = new DynamicTexture('bus-schedule-tex', { width: 512, height: 128 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  // 5. Bảng hiển thị kỹ thuật số lộ trình xe buýt (Smart Timetable Screen - 1024x256 High-Res)
+  const dt = new DynamicTexture('bus-schedule-tex', { width: 1024, height: 256 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  dt.anisotropicFilteringLevel = 16;
   const ctx = dt.getContext();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   ctx.fillStyle = '#020617';
-  ctx.fillRect(0, 0, 512, 128);
+  ctx.fillRect(0, 0, 1024, 256);
 
   ctx.strokeStyle = '#f59e0b';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(4, 4, 504, 120);
+  ctx.lineWidth = 8;
+  ctx.strokeRect(8, 8, 1008, 240);
 
-  ctx.font = 'bold 32px Arial';
+  ctx.font = 'bold 64px Arial';
   ctx.fillStyle = '#fbbf24';
   ctx.shadowColor = '#f59e0b';
-  ctx.shadowBlur = 12;
-  ctx.fillText('BUS 01 : METAVERSE EXP', 24, 50);
+  ctx.shadowBlur = 24;
+  ctx.fillText('BUS 01 : METAVERSE EXP', 48, 100);
 
-  ctx.font = 'bold 28px Arial';
+  ctx.font = 'bold 56px Arial';
   ctx.fillStyle = '#00f2fe';
   ctx.shadowColor = '#00f2fe';
-  ctx.fillText('ARRIVING IN 2 MINS', 24, 95);
+  ctx.shadowBlur = 18;
+  ctx.fillText('ARRIVING IN 2 MINS', 48, 190);
 
   dt.update();
 

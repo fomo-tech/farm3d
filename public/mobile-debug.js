@@ -8,6 +8,9 @@
   let body;
   let badge;
   let currentStage = 'HTML loaded';
+  let lastFrameAt = 0;
+  let lastFrameWarningAt = 0;
+  let worldRunning = false;
 
   function textOf(value) {
     if (value instanceof Error) return value.stack || value.message || String(value);
@@ -80,9 +83,20 @@
   window.__farmDebug = {
     mark(stage) { currentStage = stage; ensureUi(); render(); },
     report(error, source) { report(source || 'APP ERROR', error); },
-    ready() { currentStage = 'World ready'; ensureUi(); if (!forced) panel?.classList.remove('visible'); render(); },
+    frame() { worldRunning = true; lastFrameAt = Date.now(); },
+    stopFrames() { worldRunning = false; },
+    ready() { currentStage = 'World ready'; ensureUi(); if (!forced && entries.length === 0) panel?.classList.remove('visible'); render(); },
     getReport() { return { stage: currentStage, entries: entries.slice(), system: systemReport() }; },
   };
+
+  setInterval(function () {
+    if (!worldRunning || document.visibilityState !== 'visible') return;
+    const now = Date.now();
+    if (now - lastFrameAt >= 8000 && now - lastFrameWarningAt >= 20000) {
+      lastFrameWarningAt = now;
+      report('RENDER STALL', `Không có khung hình mới trong ${Math.round((now - lastFrameAt) / 1000)} giây. Giai đoạn: ${currentStage}. Nếu trang bị khóa hoàn toàn, cảnh báo chỉ hiện khi luồng giao diện hoạt động trở lại.`);
+    }
+  }, 2000);
 
   window.addEventListener('error', function (event) {
     if (event.target && event.target !== window) {
@@ -94,9 +108,12 @@
   }, true);
   window.addEventListener('unhandledrejection', function (event) { report('UNHANDLED PROMISE', event.reason); });
   window.addEventListener('offline', function () { report('NETWORK', 'Thiết bị đã mất kết nối mạng'); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') lastFrameAt = Date.now();
+  });
   document.addEventListener('DOMContentLoaded', ensureUi);
 
   setTimeout(function () {
     if (currentStage !== 'World ready') report('BOOT TIMEOUT', `Game chưa sẵn sàng sau ${Math.round((Date.now() - startedAt) / 1000)} giây`);
-  }, 15000);
+  }, 30000);
 })();

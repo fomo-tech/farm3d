@@ -11,18 +11,23 @@ import { Scene } from '@babylonjs/core/scene.js';
 import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import '@babylonjs/core/Culling/ray.js';
 import { FARM_CONFIG } from '../config.js';
+import { VENUE_LAYOUT } from '../../../shared/venueLayout.js';
 import { createFarmPlot } from '../farming/createFarmPlot.js';
 import { createPlayer } from '../player/createPlayer.js';
+import { createPlayerNameplate } from '../player/createPlayerNameplate.js';
 import { createOpenWorld } from './createOpenWorld.js';
 import { createAnimalPen } from '../livestock/createAnimalPen.js';
 import { createBusRoute } from '../transport/createBusRoute.js';
 import { FarmingSystem } from '../farming/FarmingSystem.js';
 import { createVillageElderNPC } from '../npc/VillageElderNPC.js';
 import { createObjectiveMarker } from './ObjectiveMarker.js';
-import { createMeadowTexture } from './createStylizedTextures.js';
+import { createMeadowTexture, createHoneyPathTexture, createHorizonSkirtTexture } from './createStylizedTextures.js';
+import { WORLD_PALETTE } from './worldDesignSystem.js';
+import { createCountryRoad, createCulDeSac, createZebraCrosswalk } from './createModernRoadSystem.js';
 import { chunkAt } from './WorldPartition.js';
 import { RENDER_CONFIG, WORLD_LAYOUT } from './worldLayout.js';
 import { ProceduralWorld } from './ProceduralWorld.js';
@@ -39,6 +44,43 @@ import { createStylizedGrass } from './createStylizedGrass.js';
 import { createFarmAnimals } from './createFarmAnimals.js';
 import { createVietnameseCountryside } from './createVietnameseCountryside.js';
 import { FARM_LOT_SPEC } from '../../../shared/farmLayout.js';
+import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
+import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
+import { WorldCollisionSystem } from '../physics/WorldCollisionSystem.js';
+import { createScenicLandscapes } from './createScenicLandscapes.js';
+import { createVillageAmenitiesAndGreenbelts } from './createVillageAmenities.js';
+import { getTerrainHeight, MEADOW_KNOLLS } from './TerrainHeightSystem.js';
+import { createInterVillagePlains } from './createInterVillagePlains.js';
+import { createRoadsideMeadows } from './createRoadsideMeadows.js';
+import { FoliageInstancingEngine } from './FoliageInstancingEngine.js';
+import { createGrandWindingRiver, RIVER_CONTROL_POINTS } from './nature/GrandWindingRiver.js';
+
+// Reusable static vector pool to eliminate GC allocations in 60 FPS render loop
+const _TMP_VIEW_FORWARD = new Vector3();
+const _TMP_DESIRED_TARGET = new Vector3();
+
+function isNearGrandRiver(x, z, margin = 12) {
+  if (!RIVER_CONTROL_POINTS || RIVER_CONTROL_POINTS.length < 2) return false;
+  for (let i = 0; i < RIVER_CONTROL_POINTS.length - 1; i++) {
+    const p1 = RIVER_CONTROL_POINTS[i];
+    const p2 = RIVER_CONTROL_POINTS[i + 1];
+    const minX = Math.min(p1.x, p2.x) - margin - 15;
+    const maxX = Math.max(p1.x, p2.x) + margin + 15;
+    const minZ = Math.min(p1.z, p2.z) - margin - 15;
+    const maxZ = Math.max(p1.z, p2.z) + margin + 15;
+    if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
+      const dx = p2.x - p1.x;
+      const dz = p2.z - p1.z;
+      const lenSq = dx * dx + dz * dz;
+      const t = Math.max(0, Math.min(1, ((x - p1.x) * dx + (z - p1.z) * dz) / lenSq));
+      const projX = p1.x + t * dx;
+      const projZ = p1.z + t * dz;
+      const halfW = (p1.w + (p2.w - p1.w) * t) * 0.5 + margin;
+      if (Math.hypot(x - projX, z - projZ) < halfW) return true;
+    }
+  }
+  return false;
+}
 
 function material(scene, name, color) {
   const value = new StandardMaterial(name, scene);
@@ -71,11 +113,49 @@ function createSign(scene, label, position, color) {
   post.parent = root;
 
   // Bảng chỉ dẫn 3D bo góc phong cách Play Together
-  const board = MeshBuilder.CreateBox(`sign-board-${label}`, { width: 2.2, height: 0.7, depth: 0.12 }, scene);
+  const board = MeshBuilder.CreateBox(`sign-board-${label}`, { width: 3.2, height: 0.86, depth: 0.12 }, scene);
   board.position.set(0, 2.45, 0);
   board.material = material(scene, `gate-${label}-material`, color);
   board.parent = root;
   board.metadata = { destination: label };
+
+  const textTexture = new DynamicTexture(`dest-sign-text-${label}`, { width: 1024, height: 320 }, scene, true);
+  const ctx = textTexture.getContext();
+  ctx.fillStyle = '#fff7e8';
+  ctx.fillRect(0, 0, 1024, 320);
+  ctx.strokeStyle = '#715849';
+  ctx.lineWidth = 12;
+  ctx.strokeRect(12, 12, 1000, 296);
+  ctx.fillStyle = '#302a25';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const words = label.split(' ');
+  const lines = [];
+  let line = '';
+  words.forEach(word => {
+    if ((line + ' ' + word).trim().length > 19 && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = `${line} ${word}`.trim();
+    }
+  });
+  if (line) lines.push(line);
+  ctx.font = lines.length > 1 ? '800 94px "Segoe UI", Arial, sans-serif' : '800 112px "Segoe UI", Arial, sans-serif';
+  lines.slice(0, 2).forEach((text, index) => ctx.fillText(text, 512, lines.length > 1 ? 105 + index * 112 : 164, 900));
+  textTexture.update();
+
+  const textMaterial = new StandardMaterial(`dest-sign-text-mat-${label}`, scene);
+  textMaterial.diffuseTexture = textTexture;
+  textMaterial.emissiveColor = Color3.FromHexString('#ffffff').scale(0.08);
+  textMaterial.specularColor = Color3.Black();
+  [0.067, -0.067].forEach((z, index) => {
+    const face = MeshBuilder.CreatePlane(`dest-sign-face-${label}-${index}`, { width: 3.02, height: 0.68 }, scene);
+    face.position.set(0, 2.45, z);
+    face.rotation.y = index ? Math.PI : 0;
+    face.material = textMaterial;
+    face.parent = root;
+  });
 }
 
 function createRemoteAvatar(scene, id, name, color, shadows) {
@@ -83,26 +163,21 @@ function createRemoteAvatar(scene, id, name, color, shadows) {
   const human = buildHumanMesh(scene, `remote-${id}`, {
     outfitColor: color,
     skinColor: '#fcd5b5',
-    hairColor: '#3a2618',
+    hairColor: '#76503b',
     pantsColor: '#2b4162',
     bootsColor: '#5c381e',
     hatRibbonColor: color,
     shadows,
   });
   human.root.parent = root;
-  root.metadata = { playerId: id, playerName: name, target: new Vector3(), targetRotation: 0, human };
+  const nameplate = createPlayerNameplate(scene, root, id, name);
+  root.metadata = { playerId: id, playerName: name, nameplate, target: new Vector3(), targetRotation: 0, human };
   return root;
 }
 
 
 const REMOTE_COLORS = ['#5f91c8', '#e87994', '#8a72b8', '#58a66a', '#d98248', '#3f9d98'];
-const VENUES = {
-  casino: { entrance: { x: -26.0, z: -24.0 }, interior: { x: 210, y: 32, z: -215 }, label: 'Grand Neon Arcade & Casino Lounge', color: '#7c3aed' },
-  fashion: { entrance: { x: 26.0, z: -24.0 }, interior: { x: 175, y: 32, z: -215 }, label: 'Trendy Fashion Mall', color: '#f43f5e' },
-  vehicles: { entrance: { x: -26.0, z: 24.0 }, interior: { x: 140, y: 32, z: -215 }, label: 'Motors & Mobility Showroom', color: '#0284c7' },
-  supplies: { entrance: { x: 26.0, z: 24.0 }, interior: { x: 105, y: 32, z: -215 }, label: 'Super Agri-Mart & Green Center', color: '#16a34a' },
-  fishing: { entrance: { x: 0.0, z: 26.0 }, interior: { x: 70, y: 32, z: -215 }, label: 'Marina Pro Fishing Tackle & Aquarium', color: '#0ea5e9' },
-};
+const VENUES = VENUE_LAYOUT;
 
 function createInterior(scene, kind, config, shadows) {
   const firstMeshIndex = scene.meshes.length;
@@ -126,12 +201,92 @@ function createInterior(scene, kind, config, shadows) {
   counter.metadata = { cityAction: kind }; shadows.addShadowCaster(counter);
   const service = MeshBuilder.CreateBox(`${kind}-service-sign`, { width: 6, height: 1.4, depth: .3 }, scene);
   service.position.set(x, y + 4.3, z + 8.7); service.material = accent; service.metadata = { cityAction: kind };
+  const shopkeepers = { supplies: 'CHỊ MẦM · VẬT TƯ', fashion: 'CÔ SOPHIE · THỜI TRANG', vehicles: 'ANH BẢO · ĐẠI LÝ XE', fishing: 'LÃO NGƯ · ĐỒ CÂU', casino: 'CHÚ LỘC · HỘI QUÁN' };
+  const nameTexture = new DynamicTexture(`${kind}-keeper-name`, { width: 1024, height: 224 }, scene, true);
+  const nameContext = nameTexture.getContext();
+  nameContext.fillStyle = '#fff9e8'; nameContext.fillRect(0, 0, 1024, 224);
+  nameContext.fillStyle = '#4b3650'; nameContext.textAlign = 'center'; nameContext.textBaseline = 'middle';
+  nameContext.font = 'bold 66px Segoe UI, Arial, sans-serif'; nameContext.fillText(shopkeepers[kind], 512, 112, 950);
+  nameTexture.update();
+  const nameMaterial = new StandardMaterial(`${kind}-keeper-name-material`, scene);
+  nameMaterial.diffuseColor = Color3.Black(); nameMaterial.emissiveTexture = nameTexture; nameMaterial.disableLighting = true;
+  const namePlane = MeshBuilder.CreatePlane(`${kind}-keeper-name`, { width: 5.8, height: 1.26 }, scene);
+  namePlane.position.set(x, y + 4.3, z + 8.47); namePlane.rotation.y = Math.PI;
+  namePlane.material = nameMaterial; namePlane.metadata = { cityAction: kind };
   const exit = MeshBuilder.CreateBox(`${kind}-exit-door`, { width: 3, height: 4.2, depth: .4 }, scene);
   exit.position.set(x - 9, y + 2.1, z - 8.8); exit.material = accent; exit.metadata = { cityAction: 'exit' };
   [-8, 8].forEach(offset => {
     const shelf = MeshBuilder.CreateBox(`${kind}-shelf`, { width: 3.2, height: 3.5, depth: 1.4 }, scene);
     shelf.position.set(x + offset, y + 1.75, z + 2); shelf.material = wood; shelf.metadata = { cityAction: kind };
   });
+  const skin = material(scene, `interior-skin-${kind}`, '#f3c9a7');
+  const hair = material(scene, `interior-hair-${kind}`, '#543c35');
+  const shirt = material(scene, `interior-shirt-${kind}`, config.color);
+  const cream = material(scene, `interior-cream-${kind}`, '#fff9ed');
+  const ink = material(scene, `interior-ink-${kind}`, '#353138');
+  function prop(name, shape, size, px, py, pz, mat, action = null) {
+    const mesh = MeshBuilder[shape](`${kind}-${name}`, size, scene);
+    mesh.position.set(x + px, y + py, z + pz);
+    mesh.material = mat;
+    if (action) mesh.metadata = { cityAction: action };
+    return mesh;
+  }
+  // A recognizable shopkeeper, kept behind the service counter and inside the room.
+  prop('keeper-body', 'CreateCylinder', { height: 1.4, diameterTop: .65, diameterBottom: .85, tessellation: 12 }, 0, 1.7, 6.6, shirt, kind);
+  prop('keeper-head', 'CreateSphere', { diameter: .85, segments: 12 }, 0, 2.75, 6.6, skin, kind);
+  prop('keeper-hair', 'CreateSphere', { diameter: .88, segments: 12 }, 0, 3.02, 6.64, hair, kind);
+  [-.17, .17].forEach((offset, index) => {
+    prop(`keeper-eye-${index}`, 'CreateSphere', { diameter: .085, segments: 8 }, offset, 2.78, 6.15, ink, kind);
+  });
+  const display = {
+    supplies: { mat: material(scene, 'shop-prop-seed', '#89bd6b'), name: 'seed-bag' },
+    fashion: { mat: material(scene, 'shop-prop-fabric', '#eb8ba9'), name: 'folded-fabric' },
+    vehicles: { mat: material(scene, 'shop-prop-wheel', '#547b91'), name: 'helmet' },
+    fishing: { mat: material(scene, 'shop-prop-tackle', '#5baab5'), name: 'tackle-box' },
+    casino: { mat: material(scene, 'shop-prop-dice', '#f0d37d'), name: 'dice-table' },
+  }[kind];
+  [-8, 8].forEach((side, index) => {
+    for (let row = 0; row < 2; row += 1) {
+      prop(`${display.name}-${index}-${row}`, 'CreateBox', { width: 1.25, height: .65, depth: .9 }, side, .9 + row * 1.4, 1.5, display.mat, kind);
+    }
+  });
+  if (kind === 'casino') {
+    [-4, 4].forEach((side, index) => {
+      prop(`game-table-${index}`, 'CreateCylinder', { diameter: 3, height: .34, tessellation: 16 }, side, .85, -.5, display.mat, kind);
+      prop(`game-table-leg-${index}`, 'CreateCylinder', { diameter: .35, height: .8, tessellation: 12 }, side, .4, -.5, wood);
+      [-.35, .35].forEach((offset, die) => prop(`game-die-${index}-${die}`, 'CreateBox', { size: .45 }, side + offset, 1.27, -.5, cream, kind));
+    });
+  } else {
+    [-4.5, 4.5].forEach((side, index) => {
+      prop(`display-island-${index}`, 'CreateBox', { width: 2.4, height: .72, depth: 1.3 }, side, .5, -.2, cream, kind);
+      prop(`display-item-${index}`, 'CreateBox', { width: 1.25, height: .6, depth: .75 }, side, 1.18, -.2, display.mat, kind);
+    });
+    if (kind === 'fashion') {
+      [-4.5, 4.5].forEach((side, index) => {
+        prop(`mannequin-neck-${index}`, 'CreateCylinder', { diameter: .18, height: .55 }, side, 1.7, -.2, skin);
+        prop(`mannequin-head-${index}`, 'CreateSphere', { diameter: .52 }, side, 2.2, -.2, cream);
+        prop(`mannequin-dress-${index}`, 'CreateCylinder', { diameterTop: .6, diameterBottom: 1.25, height: 1.1, tessellation: 12 }, side, .95, -.2, display.mat, kind);
+      });
+    } else if (kind === 'vehicles') {
+      [-4.5, 4.5].forEach((side, index) => {
+        [-.65, .65].forEach((offset, wheel) => {
+          const tire = prop(`wheel-${index}-${wheel}`, 'CreateCylinder', { diameter: .65, height: .24, tessellation: 16 }, side + offset, 1.18, -.68, ink, kind);
+          tire.rotation.z = Math.PI / 2;
+        });
+      });
+    } else if (kind === 'fishing') {
+      [-4.5, 4.5].forEach((side, index) => {
+        [-.3, .3].forEach((offset, rod) => {
+          const pole = prop(`rod-${index}-${rod}`, 'CreateCylinder', { diameter: .07, height: 2.6, tessellation: 8 }, side + offset, 2.2, -.2, wood, kind);
+          pole.rotation.z = .22;
+        });
+      });
+    } else if (kind === 'supplies') {
+      [-4.5, 4.5].forEach((side, index) => {
+        [-.4, .4].forEach((offset, sack) => prop(`seed-sack-${index}-${sack}`, 'CreateCylinder', { diameterTop: .45, diameterBottom: .8, height: .85, tessellation: 12 }, side + offset, 1.25, -.2, display.mat, kind));
+      });
+    }
+  }
   scene.meshes.slice(firstMeshIndex).forEach(mesh => {
     mesh.metadata = { ...(mesh.metadata || {}), interiorVenue: kind };
     mesh.setEnabled(false);
@@ -174,11 +329,13 @@ export class FarmWorld {
     this.getQualityDpr = () => {
       const nativeDpr = window.devicePixelRatio || 1;
       if (this.graphicsQuality === 'ultra') {
-        return Math.min(nativeDpr, 2.0);
+        // Cân bằng tối ưu: Giữ 1.0x cho màn hình chuẩn, tối đa 1.15x cho High-DPI để triệt tiêu sụt khung hình
+        if (this.isMobile) return 1.0;
+        return Math.min(Math.max(nativeDpr, 1.0), 1.15);
       } else if (this.graphicsQuality === 'balanced') {
-        return Math.min(nativeDpr, 1.5);
+        return 1.0;
       }
-      return 1.0;
+      return 0.85;
     };
 
     // Bật độ phân giải sắc nét Native Retina 1:1 trên màn hình High-DPI
@@ -186,6 +343,12 @@ export class FarmWorld {
     this.engine.setHardwareScalingLevel(1 / dpr);
     this.remotePlayers = new Map();
     this.farmBuildings = new Map();
+    this.collisionSystem = new WorldCollisionSystem();
+    this.cinematicTourActive = false;
+    this.toggleCinematicTour = () => {
+      this.cinematicTourActive = !this.cinematicTourActive;
+      return this.cinematicTourActive;
+    };
     this.currentVenue = VENUES[callbacks.initialLocation?.venue] ? callbacks.initialLocation.venue : null;
     this.lastVenueTransition = 0;
     this.scene = this.createScene();
@@ -199,9 +362,32 @@ export class FarmWorld {
       // Bỏ qua nếu người dùng đang nhập văn bản trong modal/input
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
       const tools = { Digit1: 'hand', Digit2: 'hoe', Digit3: 'seed', Digit4: 'water', Digit5: 'harvest' };
-      if (tools[event.code]) this.setTool(tools[event.code]);
+      if (tools[event.code] && (tools[event.code] === 'hand' || this.canUseFarmTools())) {
+        this.setTool(tools[event.code]);
+        this.callbacks.onToolChange?.(tools[event.code]);
+      }
+      if (event.code === 'KeyF') {
+        const nearby = this.busRoute?.getNearbyBoardableBus(this.player?.root?.position);
+        if (nearby) {
+          this.busRoute.boardBus(nearby.bus.id, this.player.root);
+          this.onStatus?.(`Đã lên ${nearby.bus.routeName}!`);
+          return;
+        }
+      }
+      if (event.code === 'KeyV' && this.busRoute?.isPlayerRiding()) {
+        const active = this.toggleCinematicTour();
+        this.onStatus?.(active ? 'Chế độ Điện Ảnh 360° Đang Bật' : 'Đã tắt Chế độ Điện Ảnh');
+        return;
+      }
       if (event.code === 'KeyE' || event.code === 'Space') {
+        if (event.code === 'KeyE' && this.busRoute?.isPlayerRiding()) {
+          this.busRoute.alightBus(this.player.root);
+          this.onStatus?.('Đã xuống xe buýt');
+          return;
+        }
         if (event.code === 'Space') event.preventDefault();
+        if (event.code === 'KeyE' && this.currentVenue && this.interactContext()) return;
+        if (event.code === 'KeyE' && this.openNearbyLand()) return;
         if (this.villageElder && this.player) {
           const elderPos = this.villageElder.position;
           const playerPos = this.player.root.position;
@@ -223,9 +409,27 @@ export class FarmWorld {
         this.cinematic.setQuality(preset);
       }
       if (this.shadows) {
-        this.shadows.filteringQuality = preset === 'ultra' ? ShadowGenerator.QUALITY_MEDIUM : ShadowGenerator.QUALITY_LOW;
+        this.shadows.filteringQuality = preset === 'ultra' ? ShadowGenerator.QUALITY_HIGH : (preset === 'balanced' ? ShadowGenerator.QUALITY_MEDIUM : ShadowGenerator.QUALITY_LOW);
       }
       this.callbacks.onQualityChange?.(preset);
+    };
+
+    this.boardBus = (busId) => {
+      if (this.busRoute && this.player) {
+        const res = this.busRoute.boardBus(busId, this.player.root);
+        if (res) this.onStatus?.('Đã lên xe buýt');
+        return res;
+      }
+      return false;
+    };
+
+    this.alightBus = () => {
+      if (this.busRoute && this.player) {
+        const res = this.busRoute.alightBus(this.player.root);
+        if (res) this.onStatus?.('Đã xuống xe buýt');
+        return res;
+      }
+      return false;
     };
 
     this.resize = () => {
@@ -246,32 +450,101 @@ export class FarmWorld {
       if (renderFailed) return;
       try {
         this.scene.render();
+        window.__farmDebug?.frame();
       } catch (error) {
         renderFailed = true;
+        window.__farmDebug?.stopFrames();
+        this.renderFailure = error;
+        this.rejectPendingRender?.(error);
+        this.rejectPendingRender = null;
         console.error('World render failed', error);
         window.__farmDebug?.report(error, 'WORLD RENDER');
         this.callbacks.onFatalError?.(`Lỗi dựng cảnh 3D: ${error?.message || 'WebGL không phản hồi'}`);
       }
     });
     this.engine.onContextLostObservable.add(() => {
+      window.__farmDebug?.stopFrames();
       window.__farmDebug?.report(new Error('WebGL context lost'), 'WEBGL');
       this.callbacks.onFatalError?.('WebGL đã mất kết nối đồ họa. Hãy đóng các tab nặng rồi tải lại game.');
     });
-    this.scene.onAfterRenderObservable.addOnce(() => {
-      this.resize();
-      this.callbacks.onReady?.();
-    });
+    this.startWorldBootPipeline();
     onStatus('Kênh công cộng #01 · 24 online');
+  }
+
+  async startWorldBootPipeline() {
+    try {
+      const report = (phase, percentage, message, current) => this.callbacks.onBootProgress?.({ phase, percentage, message, current, total: 4 });
+      const waitForRenderedFrame = () => new Promise((resolve, reject) => {
+        if (this.renderFailure) { reject(this.renderFailure); return; }
+        const observer = this.scene.onAfterRenderObservable.addOnce(() => {
+          clearTimeout(timer);
+          this.rejectPendingRender = null;
+          resolve();
+        });
+        this.rejectPendingRender = error => {
+          clearTimeout(timer);
+          this.scene.onAfterRenderObservable.remove(observer);
+          reject(error);
+        };
+        const timer = setTimeout(() => {
+          this.scene.onAfterRenderObservable.remove(observer);
+          this.rejectPendingRender = null;
+          reject(new Error('WebGL không vẽ được khung hình đầu tiên sau 45 giây.'));
+        }, 45000);
+      });
+      report('terrain', 18, 'Đang dựng khu vực xuất phát…', 0);
+      await waitForRenderedFrame();
+      if (this.scene.isDisposed) return;
+      report('landscape', 45, 'Đã vẽ nhân vật · đang bổ sung cảnh quan…', 1);
+      await new Promise(resolve => setTimeout(resolve, 0));
+      createScenicLandscapes(this.scene, this.foliage, this.shadows, this.foliageInstancing);
+      report('villages', 66, 'Đang hoàn thiện đường phố và làng mạc…', 2);
+      await new Promise(resolve => setTimeout(resolve, 0));
+      createVillageAmenitiesAndGreenbelts(this.scene, this.foliage, this.shadows, this.foliageInstancing);
+      report('distance', 84, 'Đang hoàn thiện cảnh xa…', 3);
+      await new Promise(resolve => setTimeout(resolve, 0));
+      createInterVillagePlains(this.scene, this.foliage, this.shadows);
+      this.roadsideMeadows = createRoadsideMeadows(this.scene, this.foliageInstancing);
+      report('first-frame', 95, 'Sắp vào game · model chi tiết sẽ hiện dần…', 4);
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      if (this.scene.isDisposed) return;
+      this.resize();
+
+      this.callbacks.onBootProgress?.({
+        phase: 'ready',
+        percentage: 100,
+        message: 'Thế giới đã sẵn sàng!',
+        current: 4,
+        total: 4,
+      });
+
+      // Kích hoạt onReady lên App.jsx
+      this.callbacks.onReady?.();
+    } catch (err) {
+      console.error('[FarmWorld] Lỗi trong pipeline khởi động thế giới:', err);
+      if (!this.renderFailure && !this.scene.isDisposed) {
+        this.callbacks.onFatalError?.(`Lỗi khởi động thế giới: ${err?.message || err}`);
+      }
+    }
   }
 
   createScene() {
     const scene = new Scene(this.engine);
-    this.scene = scene;
-    scene.clearColor = new Color4(0.48, 0.74, 0.95, 1);
+    // Tăng tốc độ khởi tạo: Khóa cờ kiểm tra material dirty khi tạo hàng ngàn mesh ban đầu
+    scene.clearColor = new Color4(0.85, 0.93, 0.99, 1);
     scene.ambientColor = new Color3(0.24, 0.26, 0.28);
-    // Tắt sương mù để thế giới trong vắt, bầu trời trong trẻo sắc nét tuyệt đối, không còn màng trắng đục
-    scene.fogEnabled = false;
+    // Keep nearby villages crystal clear; use distance fog to blend gently into far horizon
+    scene.fogEnabled = true;
+    scene.fogMode = Scene.FOGMODE_LINEAR;
+    scene.fogStart = 350;
+    scene.fogEnd = 1750;
+    scene.fogColor = Color3.FromHexString('#dbeafe');
     scene.skipPointerMovePicking = true;
+
+    // Kích hoạt Anisotropic Filtering 16x toàn diện cho 100% Textures tải về hoặc tạo mới
+    scene.onNewTextureAddedObservable.add(tex => {
+      tex.anisotropicFilteringLevel = 16;
+    });
 
     // Exploration view includes the horizon; farming has a separate overhead preset.
     const camera = new ArcRotateCamera('camera', RENDER_CONFIG.cameraAlpha, RENDER_CONFIG.cameraBeta, RENDER_CONFIG.cameraRadius, Vector3.Zero(), scene);
@@ -287,6 +560,7 @@ export class FarmWorld {
     camera.inertia = 0.5;
     camera.panningSensibility = 0;
     camera.fov = RENDER_CONFIG.cameraFov;
+    camera.minZ = 0.8;
     camera.maxZ = RENDER_CONFIG.cameraFarClip;
     // Disable Babylon's default right-button pan binding: panning is locked
     // to the player, so that binding would consume a drag without rotating.
@@ -304,29 +578,30 @@ export class FarmWorld {
     // === HỆ THỐNG CHIẾU SÁNG 4 TẦNG CHUẨN PLAY TOGETHER (HIGH-KEY RADIANCY) ===
     // 1. Tầng 1: Skylight vòm trời thiên thanh nâng sáng toàn cảnh + Ground Bounce xanh mint hắt lên gầm
     const ambient = new HemisphericLight('ambient', new Vector3(0, 1, 0), scene);
-    ambient.intensity = 0.98;
-    ambient.diffuse = Color3.FromHexString('#bae6fd'); // Xanh Baby Pastel trong vắt Play Together
-    ambient.groundColor = Color3.FromHexString('#a7f3d0'); // Xanh mint tươi sáng hắt lên, xóa sạch 100% mảng tối
+    ambient.intensity = 0.58;
+    ambient.diffuse = Color3.FromHexString('#f8fafc');
+    ambient.groundColor = Color3.FromHexString('#dcfce7');
 
     // 2. Tầng 2: Key Sunlight vàng kem mật ong ấm áp rạng rỡ (Góc xiên 55 độ)
     const sun = new DirectionalLight('sun', new Vector3(-0.45, -0.85, -0.32), scene);
     sun.position = new Vector3(35, 55, 25);
-    sun.intensity = 1.18; // Ánh sáng rực rỡ no màu chuẩn hoạt hình
-    sun.diffuse = Color3.FromHexString('#fffbeb'); // Vàng kem mật ong nhiệt đới
+    sun.intensity = 0.72;
+    sun.diffuse = Color3.FromHexString('#fffbeb');
 
     // 3. Tầng 3: Rim Backlight phụ trợ tạo viền sáng khối Chibi đồ chơi Vinyl
     const rimLight = new DirectionalLight('rim-light', new Vector3(0.45, -0.65, 0.45), scene);
-    rimLight.intensity = 0.32;
+    rimLight.intensity = 0.08;
     rimLight.diffuse = Color3.FromHexString('#f8fafc'); // Viền sáng ngọc trai bồng bềnh
     rimLight.specular = Color3.FromHexString('#fef08a');
 
-    // 4. Tầng 4: Shadow Generator mờ 20% trong suốt mềm mại (Triệt tiêu 100% Shadow Acne)
+    // 4. Tầng 4: Shadow Generator mờ 28% mềm mại (PCF High Quality)
     const shadows = new ShadowGenerator(this.isMobile ? 1024 : 2048, sun);
     shadows.usePercentageCloserFiltering = true;
-    shadows.filteringQuality = this.isMobile ? ShadowGenerator.QUALITY_LOW : ShadowGenerator.QUALITY_MEDIUM;
-    shadows.bias = 0.005;
-    shadows.normalBias = 0.035; // Triệt tiêu răng cưa và sọc rách trên mặt nghiêng
-    shadows.darkness = 0.20; // Bóng râm trong suốt, mờ nhẹ 20% nhìn xuyên qua sàn đá và cỏ
+    shadows.filteringQuality = this.isMobile ? ShadowGenerator.QUALITY_LOW : ShadowGenerator.QUALITY_HIGH;
+    shadows.bias = 0.0015;
+    shadows.normalBias = 0.025; // Triệt tiêu răng cưa và sọc rách trên mặt nghiêng
+    shadows.autoCalcDepthBounds = true; // Thu hẹp dải depth shadow map ôm sát tầm nhìn camera
+    shadows.darkness = 0.28; // Khớp preset ban ngày tươi sáng
     this.shadows = shadows;
     this.rimLight = rimLight;
 
@@ -345,13 +620,33 @@ export class FarmWorld {
     }, scene);
     const groundMat = new StandardMaterial('world-grass-mat', scene);
     groundMat.diffuseColor = Color3.White();
-    groundMat.ambientColor = new Color3(0.35, 0.35, 0.35);
-    groundMat.specularColor = Color3.Black();
+    groundMat.specularColor = new Color3(0.012, 0.012, 0.012);
+    groundMat.specularPower = 16;
     const meadowTex = createMeadowTexture(scene);
     meadowTex.anisotropicFilteringLevel = 16;
+    meadowTex.uScale = 72;
+    meadowTex.vScale = 72;
+    meadowTex.wrapU = Texture.WRAP_ADDRESSMODE;
+    meadowTex.wrapV = Texture.WRAP_ADDRESSMODE;
     groundMat.diffuseTexture = meadowTex;
     ground.material = groundMat;
     ground.receiveShadows = true;
+
+    // === VÀNH ĐAI CHÂN TRỜI VÔ TẬN (SEAMLESS INFINITE HORIZON SKIRT) ===
+    // Đĩa khổng lồ đường kính 6800m chuyển sắc êm ái từ cỏ xanh hòa tan vào sương mù chân trời
+    const skirtDisc = MeshBuilder.CreateDisc('world-ground-skirt', {
+      radius: 3400,
+      tessellation: 64,
+    }, scene);
+    skirtDisc.rotation.x = Math.PI / 2;
+    skirtDisc.position.set(0, -0.4, 0);
+    const skirtMat = new StandardMaterial('world-ground-skirt-mat', scene);
+    skirtMat.diffuseTexture = createHorizonSkirtTexture(scene);
+    skirtMat.specularColor = Color3.Black();
+    skirtMat.fogEnabled = true;
+    skirtMat.disableLighting = true;
+    skirtDisc.material = skirtMat;
+    skirtDisc.receiveShadows = false;
 
     // === GIAI ĐOẠN B: THẢM CỎ MỊN MÀNG TƯƠI SÁNG (Dùng Texture Ghibli chuẩn mịn, bỏ plane cỏ 2D tránh lỗi cỏ bay) ===
     this.stylizedGrass = null;
@@ -369,7 +664,7 @@ export class FarmWorld {
       this.playerFarmId = this.callbacks.getPlayerFarmId?.() || null;
       WORLD_LAYOUT.farms.forEach((farm, index) => {
         const initial = this.callbacks.initialLocation || WORLD_LAYOUT.spawn;
-        const lightweight = farm.id !== this.playerFarmId && Math.hypot(farm.x - initial.x, farm.z - initial.z) > 130;
+        const lightweight = farm.id !== this.playerFarmId && Math.hypot(farm.x - initial.x, farm.z - initial.z) > 240;
         const isOwner = farm.id === this.playerFarmId;
         const ownerName = isOwner ? (this.callbacks.getPlayerName?.() || farm.owner) : farm.owner;
         const tiles = createFarmPlot(scene, {
@@ -436,32 +731,210 @@ export class FarmWorld {
       this.animalPen = createAnimalPen(scene, WORLD_LAYOUT.animalPen, shadows);
       this.busRoute = createBusRoute(scene, shadows);
       this.villageElder = createVillageElderNPC(scene, shadows, WORLD_LAYOUT.villageElder, () => this.callbacks.onNpcInteract?.('village_elder'));
+      const foliage = createFoliageFactory(scene, shadows);
+      this.foliage = foliage;
+      this.foliageInstancing = new FoliageInstancingEngine(scene, shadows);
       this.villageGates = WORLD_LAYOUT.villages.map(village => ({
         villageId: village.id,
-        ...createVillageGate(scene, village.gate, village.name, shadows),
+        ...createVillageGate(scene, village.gate, village.name, shadows, village.id, foliage),
       }));
-      const villageRoadMat = material(scene, 'world-village-lanes', '#d8c49a');
-      const trunk = MeshBuilder.CreateGround('village-world-backbone', { width: 1210, height: 6 }, scene);
-      trunk.position.set(0, 0.025, -650);
-      trunk.material = villageRoadMat;
-      const cityLink = MeshBuilder.CreateGround('city-village-link', { width: 6, height: 600 }, scene);
-      cityLink.position.set(0, 0.025, -350);
-      cityLink.material = villageRoadMat;
+
+      // === ĐẠI THỐNG SÔNG UỐN LƯỢN HOÀN VŨ & HỆ THỐNG CẦU VƯỢT GIAO THÔNG ===
+      this.grandRiver = createGrandWindingRiver(scene, null, shadows);
+      this.collisionSystem.initRiverColliders(this.grandRiver.getCollisionBoxes());
+      // === HỆ THỐNG GIAO THÔNG LIÊN LÀNG & NÔNG TRẠI ĐỒNG BỘ 100% CHUẨN GHIBLI X PLAY TOGETHER ===
+      // 1. Tuyến quốc lộ liên làng Đông - Tây (z = 86) nối trực tiếp 5 cổng làng hàng giữa
+      createCountryRoad(scene, {
+        id: 'regional-highway-86',
+        x: 0,
+        z: 86,
+        length: 1240,
+        width: 6.0,
+        isNorthSouth: false,
+        shadows,
+        hasCenterDashes: true,
+        hasEdgeCurbs: true,
+        hasStreetLamps: !this.isMobile,
+        lampInterval: 64,
+        intersections: [
+          { pos: -600, width: 6.5 },
+          { pos: -300, width: 6.5 },
+          { pos: 0, width: 9.0 },
+          { pos: 300, width: 6.5 },
+          { pos: 600, width: 6.5 },
+        ],
+      });
+
+      // 2. Tuyến quốc lộ liên làng phía Bắc (z = -234) nối 4 cổng làng hàng Bắc
+      createCountryRoad(scene, {
+        id: 'regional-highway-north',
+        x: 0,
+        z: -234,
+        length: 1240,
+        width: 6.0,
+        isNorthSouth: false,
+        shadows,
+        hasCenterDashes: true,
+        hasEdgeCurbs: true,
+        hasStreetLamps: !this.isMobile,
+        lampInterval: 64,
+        intersections: [
+          { pos: -600, width: 6.5 },
+          { pos: -300, width: 6.5 },
+          { pos: 0, width: 6.5 },
+          { pos: 300, width: 6.5 },
+          { pos: 600, width: 6.5 },
+        ],
+      });
+
+      // 3. Tuyến quốc lộ liên làng phía Nam ven biển (z = 406) nối Làng Thu Phong - Biển - Làng Hướng Dương
+      createCountryRoad(scene, {
+        id: 'regional-highway-south',
+        x: 0,
+        z: 406,
+        length: 1240,
+        width: 6.0,
+        isNorthSouth: false,
+        shadows,
+        hasCenterDashes: true,
+        hasEdgeCurbs: true,
+        hasStreetLamps: !this.isMobile,
+        lampInterval: 64,
+        intersections: [
+          { pos: -300, width: 6.5 },
+          { pos: 0, width: 9.0 },
+          { pos: 300, width: 6.5 },
+        ],
+      });
+
+      // 4. Đường vành đai xương sống cực Bắc (z = -650)
+      createCountryRoad(scene, {
+        id: 'world-backbone',
+        x: 0,
+        z: -650,
+        length: 1210,
+        width: 6.0,
+        isNorthSouth: false,
+        shadows,
+        hasCenterDashes: true,
+        hasEdgeCurbs: true,
+        hasStreetLamps: false,
+        intersections: [
+          { pos: -600, width: 6.5 },
+          { pos: -300, width: 6.5 },
+          { pos: 0, width: 6.5 },
+          { pos: 300, width: 6.5 },
+          { pos: 600, width: 6.5 },
+        ],
+      });
+
+      // 5. Trục nối Đô thị - Làng xã (x = 0)
+      createCountryRoad(scene, {
+        id: 'city-village-link',
+        x: 0,
+        z: -350,
+        length: 600,
+        width: 6.0,
+        isNorthSouth: true,
+        shadows,
+        hasCenterDashes: true,
+        hasEdgeCurbs: true,
+        hasStreetLamps: !this.isMobile,
+        lampInterval: 48,
+        intersections: [
+          { pos: -650, width: 7.0 },
+          { pos: -234, width: 7.0 },
+        ],
+      });
+
+      // 6. Mạng lưới đường nhánh, trục làng có vỉa hè & bùng binh cho 12 làng nông trại
       WORLD_LAYOUT.villages.forEach(village => {
         const linkLength = village.gate.z + 650;
-        const link = MeshBuilder.CreateGround(`village-link-${village.id}`, { width: 5.5, height: linkLength }, scene);
-        link.position.set(village.offsetX, 0.026, -650 + linkLength / 2);
-        link.material = villageRoadMat;
-        // Cross streets run between the parcel rows; main village lane is
-        // the central gap between columns, never through a fenced estate.
-        for (let row = 0; row <= 6; row += 1) {
-          const road = MeshBuilder.CreateGround(`village-lane-${village.id}-${row}`, { width: 124, height: 5.5 }, scene);
-          road.position.set(village.offsetX, 0.025, village.offsetZ + 98 + row * 28);
-          road.material = villageRoadMat;
+        // Trục nhánh từ vành đai vào cổng làng (làng Bình Minh dùng đại lộ trung tâm nên không vẽ đè)
+        if (village.id !== 'binh-minh') {
+          createCountryRoad(scene, {
+            id: `link-${village.id}`,
+            x: village.offsetX,
+            z: -650 + linkLength / 2,
+            length: linkLength,
+            width: 5.5,
+            isNorthSouth: true,
+            shadows,
+            hasCenterDashes: true,
+            hasEdgeCurbs: true,
+            hasStreetLamps: false,
+            intersections: [
+              { pos: -650, width: 6.5 },
+              { pos: -234, width: 6.5 },
+              { pos: 86, width: 6.5 },
+              { pos: 406, width: 6.5 },
+            ],
+          });
         }
-        const spine = MeshBuilder.CreateGround(`village-spine-${village.id}`, { width: 5.5, height: 196 }, scene);
-        spine.position.set(village.offsetX, 0.03, village.offsetZ + 182);
-        spine.material = villageRoadMat;
+
+        // Trục đường chính xuyên tâm làng (kèm vỉa hè người đi bộ và ngắt gờ tại 7 ngã tư)
+        const spineLaneCrossings = [0, 1, 2, 3, 4, 5, 6].map(row => ({
+          pos: village.offsetZ + 98 + row * 28,
+          width: 5.2,
+        }));
+        createCountryRoad(scene, {
+          id: `spine-${village.id}`,
+          x: village.offsetX,
+          z: village.offsetZ + 182,
+          length: 196,
+          width: 5.5,
+          isNorthSouth: true,
+          shadows,
+          hasCenterDashes: true,
+          hasEdgeCurbs: true,
+          hasSidewalk: true,
+          sidewalkWidth: 1.6,
+          hasStreetLamps: !this.isMobile,
+          lampInterval: 42,
+          intersections: [
+            { pos: village.gate.z, width: 7.5 },
+            ...spineLaneCrossings,
+          ],
+        });
+
+        // Bùng binh quay đầu xe hình tròn cul-de-sac tại cuối trục chính mỗi làng
+        createCulDeSac(scene, {
+          id: `cul-${village.id}`,
+          x: village.offsetX,
+          z: village.offsetZ + 280,
+          radius: 6.8,
+          shadows,
+        });
+
+        // Vạch sang đường đá ngà chuẩn Ghibli tại cổng làng
+        createZebraCrosswalk(scene, {
+          id: `crosswalk-gate-${village.id}`,
+          x: village.gate.x,
+          z: village.gate.z,
+          width: 7.5,
+          depth: 2.8,
+          isNorthSouth: false,
+        });
+
+        // 7 tuyến đường ngang phân lô nội bộ mỗi làng (ngắt gờ tại điểm giao với trục chính)
+        for (let row = 0; row <= 6; row += 1) {
+          const laneZ = village.offsetZ + 98 + row * 28;
+          createCountryRoad(scene, {
+            id: `lane-${village.id}-${row}`,
+            x: village.offsetX,
+            z: laneZ,
+            length: 124,
+            width: 5.0,
+            isNorthSouth: false,
+            shadows,
+            hasCenterDashes: false,
+            hasEdgeCurbs: true,
+            hasStreetLamps: false,
+            intersections: [
+              { pos: village.offsetX, width: 6.5 },
+            ],
+          });
+        }
       });
       this.objectiveMarker = createObjectiveMarker(scene);
     const initialLocation = this.callbacks.initialLocation;
@@ -470,6 +943,9 @@ export class FarmWorld {
       getVehicle: () => this.callbacks.getVehicle?.() || 'walk',
       getOutfitId: () => this.callbacks.getOutfitId?.() || 'starter',
       getOutfitColor: () => this.callbacks.getOutfitColor?.() || '#f8fafc',
+      isRidingBus: () => this.busRoute?.isPlayerRiding() || false,
+      getTerrainHeight: (x, z) => (this.currentVenue ? 0 : getTerrainHeight(x, z)),
+      resolveMovement: (cx, cz, dx, dz) => this.collisionSystem.resolveMovement(cx, cz, dx, dz, this.currentVenue),
       getCameraBasis: () => {
         const forward = camera.getForwardRay().direction.clone();
         forward.y = 0;
@@ -480,9 +956,12 @@ export class FarmWorld {
       },
     });
     this.player = player;
+    this.localNameplate = createPlayerNameplate(scene, player.root, 'local', this.callbacks.getPlayerName?.());
     if (initialLocation) {
-      player.root.position.y = initialLocation.y || 0;
+      player.root.position.y = initialLocation.y ?? (this.currentVenue ? 0 : getTerrainHeight(player.root.position.x, player.root.position.z));
       player.root.rotation.y = initialLocation.rotation || 0;
+    } else {
+      player.root.position.y = getTerrainHeight(player.root.position.x, player.root.position.z);
     }
     const cameraTarget = new TransformNode('camera-target', scene);
     cameraTarget.position.copyFrom(player.root.position);
@@ -494,14 +973,11 @@ export class FarmWorld {
     if (initialRegion) queueMicrotask(() => this.callbacks.onRegionChange?.(initialRegion));
 
     // Hệ sinh thái Thực vật 3D Đa Dạng (Fluffy Multi-biome Foliage System)
-    const foliage = createFoliageFactory(scene, shadows);
-
-    // Hàng cây xanh mát dọc đại lộ dẫn từ trung tâm xuống thung lũng nông trại (tránh xa 100% các ngã tư)
+    // Hàng cây xanh mát dọc đại lộ dẫn từ trung tâm xuống thung lũng nông trại (tránh xa 100% các ngã tư & QL 86)
     const farmRoadTrees = [
       { x: -11.5, z: 48, type: 'oak', scale: 1.25 }, { x: 11.5, z: 48, type: 'maple', scale: 1.25 },
       { x: -11.5, z: 62, type: 'oak', scale: 1.25 }, { x: 11.5, z: 62, type: 'maple', scale: 1.2 },
       { x: -11.5, z: 74, type: 'sakura', scale: 1.15 }, { x: 11.5, z: 74, type: 'oak', scale: 1.2 },
-      { x: -11.5, z: 86, type: 'maple', scale: 1.2 }, { x: 11.5, z: 86, type: 'oak', scale: 1.2 },
     ];
     farmRoadTrees.forEach(t => {
       if (t.type === 'oak') foliage.createCloudTree(t.x, t.z, t.scale, true);
@@ -523,52 +999,107 @@ export class FarmWorld {
     elderAwning.position.set(-7.4, 2.7, 76.8);
     elderAwning.material = material(scene, 'elder-awning-fabric', '#f59e0b');
 
-    // Phủ thêm cây đa dạng & khóm hoa dại ở các vùng phụ cận (Tuyệt đối không mọc lên bất kỳ con đường nào)
-    const vegetationCount = this.isMobile ? Math.min(80, WORLD_LAYOUT.vegetation.count) : Math.min(160, WORLD_LAYOUT.vegetation.count);
-    for (let index = 0; index < vegetationCount; index += 1) {
-      const x = ((index * 59) % WORLD_LAYOUT.vegetation.width) + WORLD_LAYOUT.vegetation.offsetX;
-      const z = ((index * 97) % WORLD_LAYOUT.vegetation.depth) + WORLD_LAYOUT.vegetation.offsetZ;
+    // Phủ thêm cây đại thụ đa dạng & khóm hoa dại ở các vùng phụ cận theo lưới phân bổ đều, nhịp nhàng
+    const step = this.isMobile ? 36 : 24;
+    let nodeIndex = 0;
+    for (let gx = -330; gx <= 330; gx += step) {
+      for (let gz = -300; gz <= 360; gz += step) {
+        nodeIndex += 1;
+        // Jitter tự nhiên theo hàm sin/cos (phân bổ sinh động, không tạo khoảng trống hoang vắng)
+        const jx = Math.sin(gx * 0.08 + gz * 0.04) * 5.2;
+        const jz = Math.cos(gx * 0.04 - gz * 0.08) * 5.2;
+        const x = gx + jx;
+        const z = gz + jz;
 
-      // Kiểm tra an toàn: Không đè lên bất kỳ trục đường nào
-      const nearMainRoad = Math.abs(x) < 10.5;
-      const nearCrossroads = [98, 126, 154, 182, 210, 238, 266].some(rz => Math.abs(z - rz) < 7.5);
-      const nearSpineRoads = Math.abs(x - 60) < 7.5 || Math.abs(x + 60) < 7.5;
-      const nearEastWestBlvd = Math.abs(z) < 8.5 && Math.abs(x) < 150;
-      const nearBeachRoad = Math.abs(x) < 10.5 && z > 270;
+        // Tuyệt đối không lấn đường giao thông, nông trại, hồ nước, sông uốn lượn hay quảng trường
+        const onRoad = isPointOnRoadCorridor(x, z, 5.8);
+        const onFarmPlots = isPointInsideAnyFarmLot(x, z, 2.0) || WORLD_LAYOUT.farms.some(farm => Math.abs(x - farm.x) < 18 && Math.abs(z - farm.z) < 16);
+        const onLake = (x > 120 && x < 210 && z > -40 && z < 45);
+        const onPlaza = Math.hypot(x, z) < 38;
+        const onRiver = isNearGrandRiver(x, z, 10);
 
-      // Tránh đè lên 24 lô nông trại
-      const onFarmPlots = WORLD_LAYOUT.farms.some(farm => Math.abs(x - farm.x) < 15 && Math.abs(z - farm.z) < 12);
-      // Tránh đè lên mặt hồ nước Pha Lê
-      const onLake = (x > 130 && x < 200 && z > -30 && z < 35);
-      // Tránh đè lên toàn bộ Siêu Quảng Trường Play Together (Bán kính 48m)
-      const onPlaza = (Math.abs(x) < 48 && Math.abs(z) < 48);
+        if (!onRoad && !onFarmPlots && !onLake && !onPlaza && !onRiver) {
+          const variant = (nodeIndex % 4);
+          const nearPlayer = Math.hypot(x, z) < 65;
+          const scaleMod = 1.0 + (nodeIndex % 5) * 0.06;
 
-      if (!nearMainRoad && !nearCrossroads && !nearSpineRoads && !nearEastWestBlvd && !nearBeachRoad && !onFarmPlots && !onLake && !onPlaza) {
-        const variant = (index % 4);
-        const nearPlayer = Math.hypot(x, z) < 65;
-        if (variant === 0) foliage.createCloudTree(x, z, 1.0 + (index % 5) * 0.08, nearPlayer);
-        else if (variant === 1) foliage.createGoldenMaple(x, z, 1.05 + (index % 4) * 0.07, nearPlayer);
-        else if (variant === 2) foliage.createSakuraTree(x, z, 1.1 + (index % 3) * 0.1, nearPlayer);
-        else foliage.createAlpinePine(x, z, 1.1 + (index % 4) * 0.08, nearPlayer);
+          if (this.foliageInstancing) {
+            // Tận dụng GPU Hardware Instancing để duy trì 60 FPS mượt mà
+            if (variant === 0) this.foliageInstancing.spawnOak(x, z, { scale: scaleMod, withShadow: nearPlayer });
+            else if (variant === 1) this.foliageInstancing.spawnMaple(x, z, { scale: scaleMod, withShadow: nearPlayer });
+            else if (variant === 2) this.foliageInstancing.spawnSakura(x, z, { scale: scaleMod, withShadow: nearPlayer });
+            else this.foliageInstancing.spawnPine(x, z, { scale: scaleMod, withShadow: nearPlayer });
+          } else {
+            if (variant === 0) foliage.createCloudTree(x, z, scaleMod, nearPlayer);
+            else if (variant === 1) foliage.createGoldenMaple(x, z, scaleMod, nearPlayer);
+            else if (variant === 2) foliage.createSakuraTree(x, z, scaleMod, nearPlayer);
+            else foliage.createAlpinePine(x, z, scaleMod, nearPlayer);
+          }
 
-        if (index % 3 === 0) {
-          foliage.createFlowerPatch(x + 1.2, z, 6, 1.4);
+          if (nodeIndex % 3 === 0) {
+            foliage.createFlowerPatch(x + 1.4, z, 6, 1.6);
+            if (this.foliageInstancing) {
+              this.foliageInstancing.spawnBush(x - 1.2, z + 0.8, 1.35);
+            }
+          }
         }
       }
     }
 
     WORLD_LAYOUT.destinationSigns.forEach(sign => createSign(scene, sign.label, new Vector3(sign.x, 1.6, sign.z), sign.color));
 
+    let busStatusElapsed = 0;
     scene.onBeforeRenderObservable.add(() => {
       const dt = this.engine.getDeltaTime() / 1000;
       player.update(dt);
-      const viewForward = new Vector3(-Math.cos(camera.alpha), 0, -Math.sin(camera.alpha));
-      const lookAhead = this.currentVenue || this.cameraViewMode === 'farm' ? RENDER_CONFIG.farmCameraLookAhead : RENDER_CONFIG.cameraLookAhead;
-      const desiredCameraTarget = player.root.position.add(viewForward.scale(lookAhead)).add(new Vector3(0, RENDER_CONFIG.cameraTargetHeight, 0));
-      const followAmount = 1 - Math.exp(-RENDER_CONFIG.cameraFollowSpeed * Math.min(dt, 0.1));
+      this.atmosphere?.update(dt);
+      this.grandRiver?.update(dt);
+
+      const isRiding = this.busRoute?.isPlayerRiding();
+      const busTransitStatus = this.busRoute?.update(dt, player.root.position);
+      if (isRiding && busTransitStatus?.activeRide) {
+        const ride = busTransitStatus.activeRide;
+        player.root.position.copyFrom(ride.passengerSeatNode.getAbsolutePosition());
+        player.root.rotation.y = ride.busRoot.rotation.y;
+      }
+      if (busTransitStatus) {
+        busTransitStatus.cinematicTourActive = this.cinematicTourActive;
+      }
+      busStatusElapsed += Math.min(dt, 0.1);
+      if (busStatusElapsed >= 0.2) {
+        busStatusElapsed = 0;
+        this.callbacks.onBusTransitChange?.(busTransitStatus);
+      }
+
+      if (isRiding) {
+        // Nới rộng góc nhìn điện ảnh khi ngồi trên xe buýt
+        camera.radius += (16.5 - camera.radius) * Math.min(1, dt * 2.0);
+        camera.beta += (1.18 - camera.beta) * Math.min(1, dt * 2.0);
+
+        // Chế độ Điện Ảnh 360 độ tự động xoay nhẹ nhàng lướt ngắm cảnh
+        if (this.cinematicTourActive) {
+          camera.alpha += dt * 0.18;
+        }
+      }
+
+      _TMP_VIEW_FORWARD.set(-Math.cos(camera.alpha), 0, -Math.sin(camera.alpha));
+      const lookAhead = isRiding ? 8.0 : (this.currentVenue || this.cameraViewMode === 'farm' ? RENDER_CONFIG.farmCameraLookAhead : RENDER_CONFIG.cameraLookAhead);
+      const targetPos = isRiding && busTransitStatus?.activeRide ? busTransitStatus.activeRide.busRoot.position : player.root.position;
+      const targetYOffset = isRiding ? (RENDER_CONFIG.cameraTargetHeight + 1.2) : RENDER_CONFIG.cameraTargetHeight;
+
+      _TMP_DESIRED_TARGET.copyFrom(targetPos);
+      _TMP_DESIRED_TARGET.x += _TMP_VIEW_FORWARD.x * lookAhead;
+      _TMP_DESIRED_TARGET.y += targetYOffset;
+      _TMP_DESIRED_TARGET.z += _TMP_VIEW_FORWARD.z * lookAhead;
+
+      const followAmount = 1 - Math.exp(-RENDER_CONFIG.cameraFollowSpeed * Math.min(dt, 0.05));
       // Teleports should not leave the camera flying across the whole map.
-      if (Vector3.DistanceSquared(cameraTarget.position, desiredCameraTarget) > 100) cameraTarget.position.copyFrom(desiredCameraTarget);
-      cameraTarget.position.copyFrom(Vector3.Lerp(cameraTarget.position, desiredCameraTarget, followAmount));
+      if (Vector3.DistanceSquared(cameraTarget.position, _TMP_DESIRED_TARGET) > 100) {
+        cameraTarget.position.copyFrom(_TMP_DESIRED_TARGET);
+      } else {
+        Vector3.LerpToRef(cameraTarget.position, _TMP_DESIRED_TARGET, followAmount, cameraTarget.position);
+      }
+
       if (this.cinematic && player.mesh) {
         this.cinematic.updateFocus(Vector3.Distance(camera.position, player.mesh.position));
       }
@@ -578,16 +1109,20 @@ export class FarmWorld {
           WORLD_LAYOUT.farms.forEach(farm => {
             const distance = Math.hypot(farm.x - player.root.position.x, farm.z - player.root.position.z);
             const estate = this.scene.getNodeByName(`farm-estate-${farm.id}`);
-            if (distance > 180 && farm.id !== this.playerFarmId && estate && !estate.metadata?.lightweight) {
-              this.farming?.removeFarmTiles(farm.id);
-              estate.dispose();
-              this.farmBuildings.get(farm.id)?.dispose();
-              this.farmBuildings.delete(farm.id);
-              this.farmGates.filter(g => g.farmId === farm.id).forEach(g => g.dispose());
-              this.farmGates = this.farmGates.filter(g => g.farmId !== farm.id);
-              createFarmPlot(scene, { ...farm, farmId: farm.id, lightweight: true }, shadows);
+            // Tối ưu triệt để: Sử dụng setEnabled thay vì dispose() / createFarmPlot() liên tục gây lag GC
+            if (distance > 280 && farm.id !== this.playerFarmId && estate && estate.isEnabled()) {
+              estate.setEnabled(false);
+              const b = this.farmBuildings.get(farm.id);
+              if (b?.home?.root) b.home.root.setEnabled(false);
+              if (b?.barn?.root) b.barn.root.setEnabled(false);
             }
-            if (distance < 100 && this.scene.getNodeByName(`farm-estate-${farm.id}`)?.metadata?.lightweight) {
+            if (distance <= 280 && estate && !estate.isEnabled()) {
+              estate.setEnabled(true);
+              const b = this.farmBuildings.get(farm.id);
+              if (b?.home?.root) b.home.root.setEnabled(true);
+              if (b?.barn?.root) b.barn.root.setEnabled(true);
+            }
+            if (distance < 240 && estate?.metadata?.lightweight) {
               const profile = this.publicFarms?.find(item => item.farmId === farm.id);
               this.ensureDetailedFarm(farm.id, farm.id === this.playerFarmId, profile?.userName || farm.owner);
             }
@@ -597,13 +1132,11 @@ export class FarmWorld {
         if (regionUpdate) this.callbacks.onRegionChange?.(regionUpdate);
       }
       this.animalPen?.update(performance.now());
-      this.busRoute?.update(this.engine.getDeltaTime() / 1000);
       this.farming?.update();
       this.villageElder?.update(performance.now());
       this.objectiveMarker?.update(performance.now());
       this.updateVenueProximity();
       this.updateFarmZoneProximity();
-      this.atmosphere?.update?.(dt);
       this.openWorld?.update(performance.now(), dt);
       const renderAt = performance.now() + (this.remoteClockOffset || 0) - 180;
       this.remotePlayers.forEach(remote => {
@@ -628,13 +1161,17 @@ export class FarmWorld {
       });
     });
 
+    scene.blockMaterialDirtyMechanism = false;
     return scene;
   }
 
   dispose() {
+    window.__farmDebug?.stopFrames();
     window.removeEventListener('resize', this.resize);
     window.removeEventListener('keydown', this.keydown);
     this.player?.dispose();
+    this.localNameplate?.dispose();
+    this.remotePlayers?.forEach(remote => remote.metadata?.nameplate?.dispose());
     this.atmosphere?.dispose();
     this.stylizedGrass?.dispose();
     this.farmAnimals?.dispose();
@@ -719,6 +1256,10 @@ export class FarmWorld {
     this.player?.setActiveTool(tool);
   }
 
+  setLocalPlayerName(name) {
+    this.localNameplate?.setName(name);
+  }
+
   refreshFarm() { this.farming?.refreshUnlocks(); }
 
   syncRemotePlayers(players, serverTime = Date.now()) {
@@ -728,18 +1269,27 @@ export class FarmWorld {
     this.remoteClockOffset = this.remoteClockOffset == null ? offset : this.remoteClockOffset + (offset - this.remoteClockOffset) * 0.02;
     const active = new Set(players.map(player => player.playerId));
     for (const [id, remote] of this.remotePlayers) {
-      if (!active.has(id)) { remote.dispose(false, false); this.remotePlayers.delete(id); }
+      if (!active.has(id)) {
+        remote.metadata?.nameplate?.dispose();
+        remote.dispose(false, false);
+        this.remotePlayers.delete(id);
+      }
     }
     players.forEach((player, index) => {
       let remote = this.remotePlayers.get(player.playerId);
+      const effectiveY = Number.isFinite(player.y) && player.y !== 0 ? player.y : (player.venue ? 0 : getTerrainHeight(player.x, player.z));
       if (!remote) {
         remote = createRemoteAvatar(this.scene, player.playerId, player.name, REMOTE_COLORS[index % REMOTE_COLORS.length], this.shadows);
-        remote.position.set(player.x, player.y || 0, player.z);
+        remote.position.set(player.x, effectiveY, player.z);
         this.remotePlayers.set(player.playerId, remote);
+      }
+      if (remote.metadata.playerName !== player.name) {
+        remote.metadata.playerName = player.name;
+        remote.metadata.nameplate?.setName(player.name);
       }
       remote.metadata.venue = player.venue || null;
       remote.setEnabled(this.currentVenue ? remote.metadata.venue === this.currentVenue : !remote.metadata.venue);
-      remote.metadata.target.set(player.x, player.y || 0, player.z);
+      remote.metadata.target.set(player.x, effectiveY, player.z);
       remote.metadata.targetRotation = player.rotation || 0;
       if (!remote.metadata.snapshots) remote.metadata.snapshots = [];
       const frames = remote.metadata.snapshots;
@@ -747,10 +1297,10 @@ export class FarmWorld {
       if (last && serverTime <= last.at) return;
       if (last && (last.venue !== player.venue || Math.hypot(player.x - last.x, player.z - last.z) > 8)) {
         frames.length = 0;
-        remote.position.set(player.x, player.y || 0, player.z);
+        remote.position.set(player.x, effectiveY, player.z);
         remote.rotation.y = player.rotation || 0;
       }
-      frames.push({ at: serverTime, x: player.x, y: player.y || 0, z: player.z, rotation: player.rotation || 0, venue: player.venue });
+      frames.push({ at: serverTime, x: player.x, y: effectiveY, z: player.z, rotation: player.rotation || 0, venue: player.venue });
       if (frames.length > 20) frames.shift();
     });
     this.remotePlayerState = players;
@@ -771,10 +1321,12 @@ export class FarmWorld {
     const dz = authoritative.z - this.player.root.position.z;
     const error = Math.hypot(dx, dz);
     if (error <= 0.35) return;
+    const targetY = (Number.isFinite(authoritative.y) && authoritative.y !== 0) ? authoritative.y : (this.currentVenue ? 0 : getTerrainHeight(authoritative.x, authoritative.z));
     if (error > 4) {
-      this.player.root.position.set(authoritative.x, authoritative.y || 0, authoritative.z);
+      this.player.root.position.set(authoritative.x, targetY, authoritative.z);
     } else {
       this.player.root.position.x += dx * 0.35;
+      this.player.root.position.y += (targetY - this.player.root.position.y) * 0.35;
       this.player.root.position.z += dz * 0.35;
     }
     if (Number.isFinite(authoritative.rotation)) this.player.root.rotation.y = authoritative.rotation;
@@ -783,7 +1335,11 @@ export class FarmWorld {
   setPlayerOutfit(idOrColor, color) { this.player?.setOutfit(idOrColor, color); }
 
   travelTo(position) {
-    if (!this.player || !position) return;
+    if (!this.player || !position) return false;
+    if (this.collisionSystem.isColliding(position.x, position.z)) {
+      this.onStatus?.('Điểm đến đang bị công trình chắn. Hãy chọn lối vào khác.');
+      return false;
+    }
     if (this.currentVenue) {
       this.currentVenue = null;
       this.setVenueView(null);
@@ -792,6 +1348,7 @@ export class FarmWorld {
     this.player.stop();
     this.player.root.position.set(position.x, 0, position.z);
     this.onStatus?.(`Đã đến ${position.label || 'điểm đến'}`);
+    return true;
   }
 
   enterVenue(kind) {
@@ -807,6 +1364,7 @@ export class FarmWorld {
     if (!venue || !this.player || this.currentVenue) return;
     this.lastVenueTransition = performance.now();
     this.currentVenue = kind;
+    this.updateFarmZoneProximity();
     this.player.stop();
     this.player.root.position.set(venue.interior.x, venue.interior.y, venue.interior.z - 5.5);
     this.setVenueView(kind);
@@ -832,18 +1390,24 @@ export class FarmWorld {
   }
 
   updateFarmZoneProximity() {
-    if (!this.player || this.currentVenue) return;
+    if (!this.player) return;
     const pos = this.player.root.position;
     let activeFarm = null;
-    for (const farm of WORLD_LAYOUT.farms) {
-      if (Math.abs(pos.x - farm.x) <= 9.0 && Math.abs(pos.z - farm.z) <= 7.5) {
-        activeFarm = farm;
-        break;
+    if (!this.currentVenue) {
+      for (const farm of WORLD_LAYOUT.farms) {
+        if (Math.abs(pos.x - farm.x) <= 9.0 && Math.abs(pos.z - farm.z) <= 7.5) {
+          activeFarm = farm;
+          break;
+        }
       }
     }
     const currentId = activeFarm ? activeFarm.id : null;
     if (this.lastActiveFarmId !== currentId) {
       this.lastActiveFarmId = currentId;
+      if (currentId !== this.playerFarmId) {
+        this.setTool('hand');
+        this.callbacks.onToolChange?.('hand');
+      }
       if (activeFarm) {
         const isOwner = activeFarm.id === this.playerFarmId;
         const myName = this.callbacks.getPlayerName?.() || 'Bạn';
@@ -859,6 +1423,10 @@ export class FarmWorld {
         this.callbacks.onFarmZoneChange?.(null);
       }
     }
+  }
+
+  canUseFarmTools() {
+    return Boolean(this.playerFarmId && !this.currentVenue && this.lastActiveFarmId === this.playerFarmId);
   }
 
   setVenueView(kind = null) {
@@ -906,8 +1474,9 @@ export class FarmWorld {
     if (!venue || !this.player) return;
     this.lastVenueTransition = performance.now();
     this.player.stop();
-    this.player.root.position.set(venue.entrance.x, 0, venue.entrance.z - 5);
+    this.player.root.position.set(venue.exit.x, 0, venue.exit.z);
     this.currentVenue = null;
+    this.updateFarmZoneProximity();
     this.setVenueView(null);
     this.callbacks.onVenueState?.(null, null);
     this.onStatus?.(`Đã ra khỏi ${venue.label}`);
@@ -960,6 +1529,7 @@ export class FarmWorld {
   setPlayerFarmId(farmId, spawnPoint = null) {
     if (spawnPoint) this.callbacks.initialLocation = spawnPoint;
     this.playerFarmId = farmId;
+    this.lastActiveFarmId = undefined;
     this.farming?.setPlayerFarmId(farmId);
     if (farmId) this.ensureDetailedFarm(farmId);
     this.ensurePlayerHome();
@@ -969,7 +1539,21 @@ export class FarmWorld {
     if (spawnPoint && this.player) {
       this.player.stop();
       this.player.root.position.set(spawnPoint.x, spawnPoint.y || 0, spawnPoint.z);
+      this.player.root.rotation.y = Number(spawnPoint.rotation) || 0;
+      this.syncVenueFromPosition(spawnPoint);
     }
+    this.updateFarmZoneProximity();
+  }
+
+  syncVenueFromPosition(position) {
+    const venue = VENUES[position.venue];
+    const isInside = venue && Math.hypot(position.x - venue.interior.x, position.z - venue.interior.z) <= 22 && position.y >= 20;
+    const nextVenue = isInside ? position.venue : null;
+    if (this.currentVenue === nextVenue) return;
+    this.currentVenue = nextVenue;
+    this.updateFarmZoneProximity();
+    this.setVenueView(nextVenue);
+    this.callbacks.onVenueState?.(nextVenue, nextVenue ? VENUES[nextVenue].label : null);
   }
 
   restorePlayerPosition(position) {
@@ -977,6 +1561,7 @@ export class FarmWorld {
     this.player.stop();
     this.player.root.position.set(position.x, position.y || 0, position.z);
     this.player.root.rotation.y = Number(position.rotation) || 0;
+    this.syncVenueFromPosition(position);
   }
 
   ensureDetailedFarm(farmId, isOwner = true, ownerName = null, homeTier = 1, barnLevel = 1) {
@@ -1064,13 +1649,29 @@ export class FarmWorld {
       const remoteOwner = remotePlayers.find(p => p.farmId === gate.farmId);
       const registeredFarm = this.publicFarms?.find(farm => farm.farmId === gate.farmId);
       const listing = this.landListings?.find(l => l.farmId === gate.farmId);
-      const displayName = isOwner ? myName : (remoteOwner?.name || registeredFarm?.userName || registeredFarm?.name || listing?.userName || (listing ? listing.available ? `Đang bán · ${listing.price} xu` : 'Đang giao dịch' : gate.defaultOwner));
-      gate.updateSign(displayName, isOwner);
-
-      // Cập nhật cả Floating 3D Banner trên cao
-      const estateRoot = this.scene.getNodeByName(`farm-estate-${gate.farmId}`);
-      estateRoot?.metadata?.updateBanner?.(displayName, isOwner);
+      const available = Boolean(listing?.available && !isOwner);
+      const owner = isOwner ? myName : available ? '' : (remoteOwner?.name || registeredFarm?.userName || registeredFarm?.name || listing?.userName || (listing ? 'Đang giao dịch' : ''));
+      gate.updateSign({ owner, isOwner, available, price: available ? listing.price : null, lotNumber: gate.lotNumber });
     });
+  }
+
+  openNearbyLand() {
+    if (!this.player || this.currentVenue) return false;
+    const pos = this.player.root.position;
+    let nearest = null;
+    let minDistance = 4.8;
+    this.farmGates?.forEach(gate => {
+      if (gate.farmId === this.playerFarmId) return;
+      const gatePos = gate.root.position;
+      const distance = Math.hypot(pos.x - gatePos.x, pos.z - gatePos.z);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearest = gate;
+      }
+    });
+    if (!nearest) return false;
+    this.callbacks.onLandInteract?.(nearest.farmId);
+    return true;
   }
 
   setLandListings(lots) {

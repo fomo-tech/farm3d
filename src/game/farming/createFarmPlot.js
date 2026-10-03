@@ -1,10 +1,8 @@
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
-import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
-import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
 import { FARM_CONFIG } from '../config.js';
 import { createSoilTexture, createMeadowTexture } from '../world/createStylizedTextures.js';
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
@@ -22,7 +20,6 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
   root.position.set(origin.x, 0, origin.z);
 
   const isOwner = Boolean(origin.isOwner);
-  const ownerName = origin.owner || (isOwner ? 'Bạn' : 'Hàng xóm');
 
   // 1. Materials phong cách Ghibli x Play Together
   let soilMat = scene.getMaterialByName('mat-soil-base-rich');
@@ -42,7 +39,7 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     grassMat.specularColor = new Color3(0.04, 0.04, 0.04);
   }
 
-  const borderMat = createToyMaterial(scene, isOwner ? 'mat-toy-border-owner' : 'mat-toy-border-neighbor', isOwner ? PLAY_TOGETHER_PALETTE.farm.honeyWood : '#94a3b8', {
+  const borderMat = createToyMaterial(scene, isOwner ? 'mat-toy-border-owner' : 'mat-toy-border-neighbor', isOwner ? PLAY_TOGETHER_PALETTE.farm.honeyWood : '#c5a07a', {
     specularPower: 64,
     specularLevel: 0.35,
     ambientScale: 0.52,
@@ -82,6 +79,61 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
 
   if (origin.lightweight) {
     root.metadata = { detailed: false, lightweight: true };
+    const halfW = estateWidth / 2;
+    const halfD = estateDepth / 2;
+
+    // 4 Cột mốc địa chính bằng đá granite thấp ở 4 góc phân định rõ ranh giới lô đất
+    [[-halfW, -halfD], [halfW, -halfD], [-halfW, halfD], [halfW, halfD]].forEach(([cx, cz], i) => {
+      const peg = MeshBuilder.CreateCylinder(`plot-peg-${i}`, { height: 0.45, diameter: 0.28, tessellation: 8 }, scene);
+      peg.position.set(cx, 0.225, cz);
+      peg.material = borderMat;
+      peg.parent = root;
+    });
+
+    // Gờ gỗ sồi thấp viền quanh 4 cạnh khu đất (không bọc kín hàng rào cao để tầm nhìn thoáng đãng)
+    const curbFL = MeshBuilder.CreateBox('lw-curb-fl', { width: halfW - 2.4, height: 0.14, depth: 0.16 }, scene);
+    curbFL.position.set(-halfW / 2 - 1.2, 0.08, -halfD);
+    curbFL.material = borderMat;
+    curbFL.parent = root;
+
+    const curbFR = MeshBuilder.CreateBox('lw-curb-fr', { width: halfW - 2.4, height: 0.14, depth: 0.16 }, scene);
+    curbFR.position.set(halfW / 2 + 1.2, 0.08, -halfD);
+    curbFR.material = borderMat;
+    curbFR.parent = root;
+
+    const curbB = MeshBuilder.CreateBox('lw-curb-b', { width: estateWidth, height: 0.14, depth: 0.16 }, scene);
+    curbB.position.set(0, 0.08, halfD);
+    curbB.material = borderMat;
+    curbB.parent = root;
+
+    const curbL = MeshBuilder.CreateBox('lw-curb-l', { width: 0.16, height: 0.14, depth: estateDepth }, scene);
+    curbL.position.set(-halfW, 0.08, 0);
+    curbL.material = borderMat;
+    curbL.parent = root;
+
+    const curbR = MeshBuilder.CreateBox('lw-curb-r', { width: 0.16, height: 0.14, depth: estateDepth }, scene);
+    curbR.position.set(halfW, 0.08, 0);
+    curbR.material = borderMat;
+    curbR.parent = root;
+
+    // Lối vào cổng lát đá phiến tự nhiên nối từ lề đường
+    const apron = MeshBuilder.CreateBox('lw-apron', { width: 4.4, height: 0.08, depth: 3.2 }, scene);
+    apron.position.set(0, 0.075, -halfD + 1.5);
+    apron.material = stonePathMat;
+    apron.parent = root;
+
+    // Biển gỗ cắm mốc thông tin lô đất đang mở bán
+    const signPost = MeshBuilder.CreateCylinder('lw-sign-post', { height: 1.1, diameter: 0.1, tessellation: 8 }, scene);
+    signPost.position.set(2.6, 0.55, -halfD + 1.2);
+    signPost.material = borderMat;
+    signPost.parent = root;
+
+    const signBoard = MeshBuilder.CreateBox('lw-sign-board', { width: 1.1, height: 0.5, depth: 0.08 }, scene);
+    signBoard.position.set(2.6, 0.95, -halfD + 1.2);
+    signBoard.material = stonePathMat;
+    signBoard.parent = root;
+
+    // 100% diện tích bên trong là thảm cỏ phẳng sạch sẽ, không cắm cây hay luống cày giả lấn đất của người chơi
     return [];
   }
 
@@ -97,13 +149,24 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
   entryPath.parent = root;
   entryPath.receiveShadows = true;
 
+  // Ram dốc lát đá phiến nối từ mép đường giao thông vào thẳng cổng trang trại (Driveway Apron)
+  const drivewayApron = MeshBuilder.CreateBox(`estate-driveway-${origin.farmId}`, {
+    width: 3.8,
+    depth: 3.2,
+    height: 0.07,
+  }, scene);
+  drivewayApron.position.set(0, 0.075, -11.2);
+  drivewayApron.material = stonePathMat;
+  drivewayApron.receiveShadows = true;
+  drivewayApron.parent = root;
+
   // Hành lang đá ngang kết nối ruộng sang Nhà và Chuồng
   const midWalkway = MeshBuilder.CreateBox(`estate-mid-walkway-${origin.farmId}`, {
     width: 14.8,
-    depth: 2.0,
+    depth: 1.8,
     height: 0.08,
   }, scene);
-  midWalkway.position.set(0, 0.11, 0.6);
+  midWalkway.position.set(0, 0.11, 0.8);
   midWalkway.material = stonePathMat;
   midWalkway.parent = root;
   midWalkway.receiveShadows = true;
@@ -147,34 +210,6 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     stone.material = pathStoneMat;
     stone.parent = root;
   });
-
-  // Hòm thư gỗ đỏ vintage có cờ vàng cạnh cổng trước bên phải
-  const mailboxPost = MeshBuilder.CreateCylinder(`mailbox-post-${origin.farmId}`, {
-    height: 1.15,
-    diameter: 0.12,
-    tessellation: 10,
-  }, scene);
-  mailboxPost.position.set(3.4, 0.58, -8.8);
-  mailboxPost.material = borderMat;
-  mailboxPost.parent = root;
-
-  const mailboxBody = MeshBuilder.CreateBox(`mailbox-box-${origin.farmId}`, {
-    width: 0.42,
-    height: 0.35,
-    depth: 0.6,
-  }, scene);
-  mailboxBody.position.set(3.4, 1.2, -8.8);
-  mailboxBody.material = createToyMaterial(scene, 'mat-toy-mailbox-red', '#ef4444', { specularPower: 64, specularLevel: 0.4 });
-  mailboxBody.parent = root;
-
-  const mailboxFlag = MeshBuilder.CreateBox(`mailbox-flag-${origin.farmId}`, {
-    width: 0.04,
-    height: 0.24,
-    depth: 0.14,
-  }, scene);
-  mailboxFlag.position.set(3.64, 1.3, -8.7);
-  mailboxFlag.material = createToyMaterial(scene, 'mat-toy-mailbox-flag', '#fbbf24', { emissiveHex: '#f59e0b' });
-  mailboxFlag.parent = root;
 
   // Hai bồn hoa đón khách trước hiên cổng
   const planterMat = createToyMaterial(scene, 'mat-toy-planter', '#b7794f', { specularPower: 24, ambientScale: 0.58 });
@@ -281,15 +316,20 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
   const cropsX = FARM_CONFIG.anchors?.crops?.x ?? 0.0;
   const cropsZ = FARM_CONFIG.anchors?.crops?.z ?? -3.0;
 
-  // Khung bờ gỗ sồi trang nhã viền quanh toàn bộ 12 ô đất
-  const cropsFrame = MeshBuilder.CreateBox(`crops-frame-${origin.farmId}`, {
-    width: totalW + colSpacing + 0.32,
-    depth: totalD + rowSpacing + 0.32,
-    height: 0.12,
-  }, scene);
-  cropsFrame.position.set(cropsX, 0.07, cropsZ);
-  cropsFrame.material = borderMat;
-  cropsFrame.parent = root;
+  // An open perimeter, not a solid beige slab behind/over the soil beds.
+  const bedWidth = totalW + colSpacing;
+  const bedDepth = totalD + rowSpacing;
+  [
+    { width: bedWidth + 0.24, depth: 0.12, x: cropsX, z: cropsZ - bedDepth / 2 - 0.06 },
+    { width: bedWidth + 0.24, depth: 0.12, x: cropsX, z: cropsZ + bedDepth / 2 + 0.06 },
+    { width: 0.12, depth: bedDepth, x: cropsX - bedWidth / 2 - 0.06, z: cropsZ },
+    { width: 0.12, depth: bedDepth, x: cropsX + bedWidth / 2 + 0.06, z: cropsZ },
+  ].forEach((edge, index) => {
+    const rim = MeshBuilder.CreateBox(`crops-frame-edge-${origin.farmId}-${index}`, { width: edge.width, depth: edge.depth, height: 0.12 }, scene);
+    rim.position.set(edge.x, 0.13, edge.z);
+    rim.material = borderMat;
+    rim.parent = root;
+  });
 
   // Cọc gỗ tiêu cắm đầu bờ ruộng xinh xắn
   const cropStake = MeshBuilder.CreateCylinder(`crops-stake-${origin.farmId}`, { height: 0.95, diameter: 0.1, tessellation: 8 }, scene);
@@ -304,15 +344,20 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
 
   const tiles = [];
   if (origin.renderTiles === false) {
-    const dormantSoil = MeshBuilder.CreateBox(`dormant-soil-${origin.farmId}`, {
-      width: totalW + colSpacing - 0.1,
-      depth: totalD + rowSpacing - 0.1,
-      height: 0.16,
-    }, scene);
-    dormantSoil.position.set(cropsX, 0.13, cropsZ);
-    dormantSoil.material = soilMat;
-    dormantSoil.receiveShadows = true;
-    dormantSoil.parent = root;
+    const previewSoil = createToyMaterial(scene, 'mat-estate-preview-soil', '#9c7458', {
+      ambientScale: 0.48, specularLevel: 0.06, specularPower: 24,
+    });
+    for (let row = 0; row < FARM_CONFIG.plotRows; row += 1) {
+      for (let column = 0; column < FARM_CONFIG.plotColumns; column += 1) {
+        const bed = MeshBuilder.CreateBox(`preview-bed-soil-${origin.farmId}-${column}-${row}`, {
+          width: colSpacing - 0.22, depth: rowSpacing - 0.22, height: 0.12,
+        }, scene);
+        bed.position.set(cropsX + column * colSpacing - totalW / 2, 0.17, cropsZ + row * rowSpacing - totalD / 2);
+        bed.material = previewSoil;
+        bed.receiveShadows = true;
+        bed.parent = root;
+      }
+    }
   } else for (let row = 0; row < FARM_CONFIG.plotRows; row += 1) {
     for (let column = 0; column < FARM_CONFIG.plotColumns; column += 1) {
       const tile = MeshBuilder.CreateBox(`soil-${origin.farmId}-${column}-${row}`, {
@@ -339,11 +384,11 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     }
   }
 
-  // 7. Hàng rào gỗ cọc tròn sơn trắng sứ bo vòm (Chunky White Picket Fence)
+  // 7. Low, warm picket fence; the entrance remains an unobstructed gap.
   const halfW = estateWidth / 2;
   const halfD = estateDepth / 2;
-  const fenceHeight = 0.72;
-  const railRadius = 0.06;
+  const fenceHeight = 0.92;
+  const railRadius = 0.075;
 
   function createRoundRail(name, length, pos, isZ = false) {
     const rail = MeshBuilder.CreateCylinder(name, {
@@ -371,7 +416,7 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
 
       const picketPost = MeshBuilder.CreateCylinder(`picket-post-${i}`, {
         height: fenceHeight,
-        diameter: 0.1,
+        diameter: 0.14,
         tessellation: 10,
       }, scene);
       picketPost.position.set(px, fenceHeight / 2 + 0.08, pz);
@@ -379,7 +424,7 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
       picketPost.parent = root;
 
       const cap = MeshBuilder.CreateSphere(`picket-cap-${i}`, {
-        diameter: 0.12,
+        diameter: 0.18,
         segments: 8,
       }, scene);
       cap.position.set(px, fenceHeight + 0.08, pz);
@@ -393,17 +438,17 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
   // Cạnh sau
   createRoundRail('fence-back-top', estateWidth, new Vector3(0, fenceHeight * 0.8 + 0.08, halfD));
   createRoundRail('fence-back-bot', estateWidth, new Vector3(0, fenceHeight * 0.35 + 0.08, halfD));
-  createPickets(new Vector3(-halfW + 0.4, 0, halfD), new Vector3(halfW - 0.4, 0, halfD), 12);
+  createPickets(new Vector3(-halfW + 0.4, 0, halfD), new Vector3(halfW - 0.4, 0, halfD), 18);
 
   // Cạnh trái
   createRoundRail('fence-left-top', estateDepth, new Vector3(-halfW, fenceHeight * 0.8 + 0.08, 0), true);
   createRoundRail('fence-left-bot', estateDepth, new Vector3(-halfW, fenceHeight * 0.35 + 0.08, 0), true);
-  createPickets(new Vector3(-halfW, 0, -halfD + 0.4), new Vector3(-halfW, 0, halfD - 0.4), 10);
+  createPickets(new Vector3(-halfW, 0, -halfD + 0.4), new Vector3(-halfW, 0, halfD - 0.4), 16);
 
   // Cạnh phải
   createRoundRail('fence-right-top', estateDepth, new Vector3(halfW, fenceHeight * 0.8 + 0.08, 0), true);
   createRoundRail('fence-right-bot', estateDepth, new Vector3(halfW, fenceHeight * 0.35 + 0.08, 0), true);
-  createPickets(new Vector3(halfW, 0, -halfD + 0.4), new Vector3(halfW, 0, halfD - 0.4), 10);
+  createPickets(new Vector3(halfW, 0, -halfD + 0.4), new Vector3(halfW, 0, halfD - 0.4), 16);
 
   // Mặt trước chừa cửa rộng ở giữa (5.5m)
   const frontWing = (estateWidth - 5.5) / 2;
@@ -449,54 +494,10 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     }
   });
 
-  // 9. Floating 3D Farm Banner (Biển hiệu 3D nổi trên cao luôn xoay về người chơi)
-  const bannerPlane = MeshBuilder.CreatePlane(`farm-banner-${origin.farmId}`, { width: 5.2, height: 1.35 }, scene);
-  bannerPlane.position.set(0, 4.0, -halfD - 0.4);
-  bannerPlane.billboardMode = Mesh.BILLBOARDMODE_Y;
-  bannerPlane.parent = root;
-
-  const bannerTex = new DynamicTexture(`banner-tex-${origin.farmId}`, { width: 512, height: 140 }, scene, true);
-  const bctx = bannerTex.getContext();
-
-  function renderBannerText(name, owned) {
-    bctx.clearRect(0, 0, 512, 140);
-    bctx.fillStyle = owned ? '#d97706' : '#475569';
-    bctx.beginPath();
-    bctx.roundRect(8, 8, 496, 124, 20);
-    bctx.fill();
-
-    bctx.fillStyle = owned ? '#fef3c7' : '#f8fafc';
-    bctx.beginPath();
-    bctx.roundRect(14, 14, 484, 112, 16);
-    bctx.fill();
-
-    bctx.fillStyle = owned ? '#b45309' : '#334155';
-    bctx.font = 'bold 36px "Segoe UI", Arial, sans-serif';
-    bctx.textAlign = 'center';
-    bctx.textBaseline = 'middle';
-    bctx.fillStyle = owned ? '#92400e' : '#1e293b';
-    bctx.fillText(name || 'Nông Dân', 256, 70);
-    bannerTex.update();
-  }
-
-  renderBannerText(ownerName, isOwner);
-
-  const bannerMat = new StandardMaterial(`banner-mat-${origin.farmId}`, scene);
-  bannerMat.diffuseTexture = bannerTex;
-  bannerMat.emissiveTexture = bannerTex;
-  bannerMat.specularColor = Color3.Black();
-  bannerMat.backFaceCulling = false;
-  bannerPlane.material = bannerMat;
-  root.onDisposeObservable.addOnce(() => {
-    bannerTex.dispose();
-    bannerMat.dispose();
-  });
-
   root.metadata = {
     detailed: origin.renderTiles !== false,
     farmLayoutVersion: FARM_CONFIG.layoutVersion,
     footprint: { width: estateWidth, depth: estateDepth },
-    updateBanner: (newName, newIsOwner) => renderBannerText(newName, newIsOwner),
   };
 
   return tiles;

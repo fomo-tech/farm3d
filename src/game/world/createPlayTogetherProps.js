@@ -31,7 +31,7 @@ export function createMarshmallowTree(scene, x, z, options = {}) {
 
   // Chọn bộ màu tán lá theo variant
   let canopyMainHex = PLAY_TOGETHER_PALETTE.pastels.mintGreen;
-  let canopyTopHex = '#bbf7d0';
+  let canopyTopHex = '#a9dfb7';
   if (colorVariant === 'sakura') {
     canopyMainHex = PLAY_TOGETHER_PALETTE.pastels.strawberryPink;
     canopyTopHex = PLAY_TOGETHER_PALETTE.pastels.peachBlush;
@@ -50,13 +50,13 @@ export function createMarshmallowTree(scene, x, z, options = {}) {
 
   const canopyMat = createToyMaterial(scene, `mat-canopy-${colorVariant}`, canopyMainHex, {
     specularPower: 72,
-    specularLevel: 0.4,
+    specularLevel: 0.18,
     ambientScale: 0.48,
   });
 
   const canopyTopMat = createToyMaterial(scene, `mat-canopy-top-${colorVariant}`, canopyTopHex, {
     specularPower: 80,
-    specularLevel: 0.45,
+    specularLevel: 0.20,
     ambientScale: 0.52,
   });
 

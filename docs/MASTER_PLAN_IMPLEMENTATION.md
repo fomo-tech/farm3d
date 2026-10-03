@@ -1,28 +1,33 @@
-# Master Plan Implementation
+# Master Plan & Architecture Bible: Quy hoạch Thế giới Farm3D
 
-Nguồn thiết kế: “Đô thị hiện đại & thế giới nông trại Việt Nam”. Repository và dữ liệu MongoDB là nguồn sự thật kỹ thuật.
+Nguồn thiết kế: Đô thị sinh thái ấm cúng & Thế giới Nông trại Ghibli Việt Nam. Repository và dữ liệu authoritative server là nguồn sự thật kỹ thuật.
 
-## Phân tích kiến trúc
+## 1. Quy hoạch Phân khu Đề xuất
 
-- Quy hoạch client và dữ liệu server được tách biệt: cảnh quan chỉ mô tả hình học; quyền sở hữu lô, cây trồng, vật nuôi và vị trí người chơi tiếp tục do server xác nhận.
-- `WORLD_LAYOUT` là nguồn tọa độ duy nhất. Không đặt trigger cửa hàng tách rời vị trí công trình.
-- Model 3D đi qua `AssetRegistry` và `ModelAssetManager`; cảnh quan procedural không được chứa logic kinh tế.
-- Thiết bị di động dùng cùng layout nhưng giảm hiệu ứng hậu kỳ và số lượng vegetation.
-
-## Trạng thái triển khai
-
-| Giai đoạn | Trạng thái | Nội dung |
+| Khu vực | Quy hoạch đề xuất | Định hướng thị giác & Kỹ thuật |
 | --- | --- | --- |
-| 1. HUD vector | Đang triển khai | Topbar, đồng hồ, minimap, di chuyển, xuống xe, shop/kho/xưởng/map và màn hình tạo nhân vật đã chuyển sang SVG 3D. Các modal phụ còn cần chuẩn hóa. |
-| 2. Downtown | Đã có nền tảng | Vành đai, promenade, crosswalk, trạm xe buýt, EV charging, smart LED, neon ring và Cyber-Deco fountain. Trigger bốn cửa hàng đã khớp công trình thật. |
-| 3. Nông trại Việt | Đã có nền tảng | 24 lô server-driven, ruộng lúa phụ trợ, bờ tre, ụ rơm và vùng xưởng. |
-| 4. Động vật quê | Đã có nền tảng | Trâu nước procedural có animation, vũng mương, bò vàng, vịt và chuồng hiện hữu. |
-| 5. Sen & làng chài | Đã có nền tảng | Hồ sen hiện hữu, cầu khỉ, thuyền thúng, dàn phơi lưới và lửa trại. |
+| **Trung tâm** | Quảng trường thoáng, một công trình biểu tượng rõ ràng; chừa tầm nhìn và lối đi từ điểm xuất phát. | Đài phun nước hoàng gia Kaia 3 tầng cẩm thạch trắng tại `(0, 0, 0)`. Điểm xuất phát `(0, 18)` giải phóng hoàn toàn đạo cụ che chắn, mở rộng tầm nhìn panorama 360°. |
+| **Phía tây** | Phố chợ, quán cà phê, cửa hàng; mái ngói, biển hiệu gỗ và đèn vàng ấm. | Chuỗi cửa hàng thương mại, quán cà phê Airstream/Vintage, chợ phiên nông sản tại `x: -30..-80`. Mái ngói đỏ cam Terracotta, biển hiệu gỗ sồi chữ nổi, đèn vàng Edison ấm áp. |
+| **Phía đông** | Đường dạo ven hồ, cầu nhỏ, bến câu cá và hàng cây tạo khoảng nghỉ thị giác. | Hồ Pha Lê `x: 120..180`. Bến câu cá & Pro Fishing Tackle dời sang bờ hồ `(x: 135, z: 6)`. Đường dạo ven hồ lát sỏi, cầu gỗ qua hồ sen, liễu rủ và thông đồi tạo khoảng nghỉ thị giác dịu mát. |
+| **Trục phía nam** | Đại lộ cây xanh dẫn từ thị trấn qua các làng đến bãi biển; biển chỉ đường nhất quán. | Đại lộ Nam rộng 8.5m + vỉa hè sỏi kem bơ (`z: 46 -> 340`). Hàng cây sồi và phong vàng rợp bóng ngoài vỉa hè `|x| = 11m`, biển chỉ dẫn cọc gỗ đồng bộ dẫn thẳng tới Bãi biển Bình Minh `(z: 340)`. |
+| **12 làng** | Giữ cấu trúc lô hiện tại, nhưng chia thành các nhóm có cổng làng, cây trồng và màu nhấn riêng để dễ nhận diện. | Giữ nguyên 288 lô đất (24 lô x 12 làng) tương thích 100% server. Chia làm 6 nhóm bản sắc: Ban Mai (vàng cúc), Thủy Trúc (xanh ngọc, tre), Đồi Thông (tím, thông), Mộc Lan (hồng pastel), Mùa Gặt (cam đất, rơm rạ), Thu Vàng (vàng hướng dương, phong). |
+| **Từng nông trại** | Một bộ mẫu thống nhất cho nhà, chuồng, ruộng, hàng rào và lối vào; cho phép tùy biến mà không làm bố cục lộn xộn. | Bộ khung chuẩn `FARM_LOT_SPEC`: Nhà chính Ghibli mái ngói dốc, chuồng trại gia súc máng gỗ, 12 ô ruộng canh tác (4x3), hàng rào gỗ cọc thấp, lối đi rải sỏi từ cổng vào sân. |
 
-## Việc còn lại để đạt production art hoàn chỉnh
+## 2. Lộ trình Triển khai 5 Bước
 
-1. Thay toàn bộ hình khối tạm của năm tòa nhà bằng bộ model tối ưu cùng một art bible.
-2. Chuẩn hóa các modal phụ còn emoji sang `GameIcons3D`.
-3. Dùng thin instances cho lúa, tre và sen trước khi tăng mật độ cảnh quan.
-4. Thêm LOD, occlusion và budget đo draw-call theo từng thiết bị.
-5. Chạy E2E cho luồng tạo nhân vật, vào/ra cả bốn cửa hàng, canh tác và reconnect.
+1. **Bước 1 (Đã hoàn thành nền tảng)**:
+   - Chốt bảng màu, vật liệu, kiểu mái nhà, cây và biển hiệu (`src/game/world/worldDesignSystem.js`).
+   - Dọn sạch các đạo cụ che chắn tầm nhìn tại điểm xuất phát `(x: 0, z: 18)`. Dời bến câu cá sang bờ hồ phía Đông `(x: 135, z: 6)`.
+   - Mở thông trục đường và cổng Nam để nhìn thẳng ra đại lộ cây xanh.
+2. **Bước 2**:
+   - Làm hoàn chỉnh một lát cắt mẫu (Vertical Slice): Điểm xuất phát `(0, 18)` → Quảng trường đài phun nước `(0, 0)` → Phố chợ phía Tây `(x: -34, z: 6)`.
+   - Đạt chuẩn chất lượng ánh sáng, chi tiết mặt tiền mái ngói, biển hiệu gỗ và đèn vàng ấm áp.
+3. **Bước 3**:
+   - Quy hoạch lại phân cấp đường: Trục chính đô thị (Boulevard 8.5m), đường vào làng (5.5m), lối đi trong nông trại (sỏi rải 2.2m).
+   - Đặt công trình bám sát theo tuyến đường thay vì rải độc lập.
+4. **Bước 4**:
+   - Áp dụng bộ nhận diện cảnh quan (cổng làng, cây đặc trưng, khóm hoa, màu nhấn) cho toàn bộ 12 làng.
+   - Hoàn thiện dải hồ Pha Lê và bãi biển duyên hải Bình Minh.
+5. **Bước 5**:
+   - Tinh chỉnh chiếu sáng chu kỳ ngày/đêm điện ảnh 4 pha (Dawn, Day, Dusk, Night), sương nhẹ (soft fog), bóng đổ mềm và tối ưu LOD/Draw call theo khoảng cách.
+

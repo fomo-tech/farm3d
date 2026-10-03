@@ -1,10 +1,8 @@
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
-import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
-import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
 import { FARM_LOT_SPEC } from '../../../shared/farmLayout.js';
 
@@ -25,88 +23,80 @@ export function createFarmGateAndSign(scene, farmConfig, shadows = null, onMailb
   const darkWood = createToyMaterial(scene, 'mat-gate-darkwood-warm', PLAY_TOGETHER_PALETTE.farm.honeyWood);
   const postSpacing = 3.8;
 
-  // 1. Cổng Gỗ 3D & Hàng Rào Nghệ Thuật (3D Fence Gate & Fences)
-  const gateScale = 3.2;
-  const gate3D = spawnModelSync(scene, MODEL_PATHS.town.fenceGate, {
-    position: new Vector3(0, 0, 0),
-    scaling: new Vector3(gateScale, gateScale, gateScale),
-    shadows,
-    name: `fence-gate-3d-${farmConfig.id}`,
-  });
-  gate3D.parent = root;
-
-  // Hai hàng rào 3D nối dài hai bên cổng
-  [-3.2, 3.2].forEach((offset, idx) => {
-    const fence = spawnModelSync(scene, MODEL_PATHS.town.fence, {
-      position: new Vector3(offset, 0, 0),
-      scaling: new Vector3(gateScale, gateScale, gateScale),
-      shadows,
-      name: `fence-wing-3d-${farmConfig.id}-${idx}`,
-    });
-    fence.parent = root;
+  // The entrance is an open 5.5 m gap. Match the plot's cream fence instead of
+  // placing a second, oversized wooden gate model over its posts and path.
+  const entranceMat = createToyMaterial(scene, 'mat-farm-entrance-cream', '#f7f0df', { specularLevel: 0.12 });
+  [-2.75, 2.75].forEach((x, index) => {
+    const post = MeshBuilder.CreateCylinder(`gate-post-${farmConfig.id}-${index}`, { height: 1.12, diameter: 0.22, tessellation: 12 }, scene);
+    post.position.set(x, 0.56, -1);
+    post.material = entranceMat;
+    post.parent = root;
+    const cap = MeshBuilder.CreateSphere(`gate-post-cap-${farmConfig.id}-${index}`, { diameter: 0.28, segments: 10 }, scene);
+    cap.position.set(x, 1.17, -1);
+    cap.material = entranceMat;
+    cap.parent = root;
   });
 
-  // Đèn lồng đường phố 3D thắp sáng lối vào cổng
-  const gateLantern = spawnModelSync(scene, MODEL_PATHS.town.lantern, {
-    position: new Vector3(-2.2, 0, -0.4),
-    scaling: new Vector3(1.2, 1.2, 1.2),
-    shadows,
-    name: `gate-lantern-3d-${farmConfig.id}`,
-  });
-  gateLantern.parent = root;
-
-  // 3. Biển Gỗ Treo Chữ Nổi (Carved Wooden Signboard)
-  const signWidth = 3.6;
-  const signHeight = 0.85;
-  const signBoard = MeshBuilder.CreateBox('gate-sign-board', {
-    width: signWidth,
-    height: signHeight,
-    depth: 0.08,
+  // One readable sign sits on the left fence wing; the gate opening stays clear.
+  const signBoard = MeshBuilder.CreateBox(`gate-sign-board-${farmConfig.id}`, {
+    width: 3.2, height: 1.2, depth: 0.12,
   }, scene);
-  signBoard.position.set(0, 2.35, 0);
+  signBoard.position.set(-4.35, 1.58, 0);
+  signBoard.material = createToyMaterial(scene, 'mat-farm-sign-frame', '#79583d', { specularLevel: 0.12 });
   signBoard.parent = root;
   signBoard.metadata = { type: 'land-sign', farmId: farmConfig.id };
   shadows?.addShadowCaster(signBoard);
 
-  // Vẽ chữ sắc nét lên biển gỗ bằng DynamicTexture
-  const textTex = new DynamicTexture(`sign-tex-${farmConfig.id}`, { width: 512, height: 160 }, scene, true);
+  const textTex = new DynamicTexture(`sign-tex-${farmConfig.id}`, { width: 1024, height: 384 }, scene, true);
+  textTex.anisotropicFilteringLevel = 16;
   const tctx = textTex.getContext();
-
-  // Nền gỗ vân sáng
-  tctx.fillStyle = farmConfig.isOwner ? '#fef3c7' : '#f5ebe0';
-  tctx.fillRect(0, 0, 512, 160);
-
-  // Viền khung chỉ vàng sang trọng
-  tctx.lineWidth = 8;
-  tctx.strokeStyle = farmConfig.isOwner ? '#d97706' : '#8d6e63';
-  tctx.strokeRect(6, 6, 500, 148);
-
-  // Bảng tên trước lô đất chỉ hiển thị userName.
-  tctx.fillStyle = farmConfig.isOwner ? '#92400e' : '#5d4037';
-  tctx.font = 'bold 42px "Segoe UI", Arial, sans-serif';
-  tctx.textAlign = 'center';
-  tctx.textBaseline = 'middle';
-  tctx.fillStyle = farmConfig.isOwner ? '#b45309' : '#3e2723';
-  tctx.fillText(farmConfig.owner || 'Nông Dân', 256, 80);
-
-  textTex.update();
+  tctx.imageSmoothingEnabled = true;
+  tctx.imageSmoothingQuality = 'high';
+  let lastSignKey = '';
+  function drawSign({ owner = '', isOwner = false, available = false, price = null, lotNumber = farmConfig.lotNumber }) {
+    const key = `${owner}|${isOwner}|${available}|${price}|${lotNumber}`;
+    if (key === lastSignKey) return;
+    lastSignKey = key;
+    tctx.clearRect(0, 0, 1024, 384);
+    tctx.fillStyle = '#fff7e9';
+    tctx.fillRect(0, 0, 1024, 384);
+    tctx.strokeStyle = '#bb8a52';
+    tctx.lineWidth = 15;
+    tctx.strokeRect(12, 12, 1000, 360);
+    tctx.textAlign = 'center';
+    tctx.textBaseline = 'middle';
+    tctx.fillStyle = '#684934';
+    tctx.font = '800 72px "Segoe UI", Arial, sans-serif';
+    tctx.fillText(`LÔ ${lotNumber || '?'}`, 512, 79, 900);
+    tctx.fillStyle = '#2f2b27';
+    tctx.font = '900 94px "Segoe UI", Arial, sans-serif';
+    const headline = available ? (price != null && Number.isFinite(Number(price)) ? `${Number(price).toLocaleString('vi-VN')} XU` : 'ĐANG BÁN') : (owner || 'Đang tải thông tin');
+    tctx.fillText(headline, 512, 185, 910);
+    tctx.fillStyle = available ? '#277a53' : '#755f4c';
+    tctx.font = '800 56px "Segoe UI", Arial, sans-serif';
+    tctx.fillText(available ? 'BẤM ĐỂ XEM & MUA' : isOwner ? 'NÔNG TRẠI CỦA BẠN' : owner ? 'ĐÃ CÓ CHỦ' : 'THÔNG TIN LÔ ĐẤT', 512, 303, 900);
+    textTex.update();
+  }
+  drawSign({ owner: farmConfig.isOwner ? farmConfig.owner : '', isOwner: farmConfig.isOwner });
 
   const signMat = new StandardMaterial(`sign-mat-${farmConfig.id}`, scene);
-  signMat.diffuseColor = Color3.White();
-  signMat.ambientColor = new Color3(0.5, 0.5, 0.5);
-  signMat.diffuseTexture = textTex;
-  signMat.specularColor = new Color3(0.04, 0.04, 0.04);
-  signBoard.material = signMat;
-
-  // 2 Móc xích sắt treo biển vào xà ngang
-  [-0.8, 0.8].forEach((cx, idx) => {
-    const chain = MeshBuilder.CreateCylinder(`sign-chain-${idx}`, {
-      height: 0.28,
-      diameter: 0.035,
-    }, scene);
-    chain.position.set(cx, 2.85, 0);
-    chain.material = brassMat;
-    chain.parent = root;
+  signMat.diffuseColor = Color3.Black();
+  signMat.emissiveTexture = textTex;
+  signMat.specularColor = Color3.Black();
+  signMat.disableLighting = true;
+  [-0.072, 0.072].forEach((z, index) => {
+    const face = MeshBuilder.CreatePlane(`gate-sign-face-${farmConfig.id}-${index}`, { width: 3.10, height: 1.10 }, scene);
+    face.position.set(-4.35, 1.58, z);
+    face.rotation.y = index ? Math.PI : 0;
+    face.material = signMat;
+    face.metadata = { type: 'land-sign', farmId: farmConfig.id };
+    face.parent = root;
+  });
+  [-5.45, -3.25].forEach((x, index) => {
+    const post = MeshBuilder.CreateCylinder(`gate-sign-post-${farmConfig.id}-${index}`, { height: 1.35, diameter: 0.12, tessellation: 10 }, scene);
+    post.position.set(x, 0.68, 0);
+    post.material = darkWood;
+    post.parent = root;
   });
 
   // 4. Thùng Thư Giao Lưu & Quà Tặng (Friendship Mailbox) cắm bên phải cổng
@@ -194,20 +184,8 @@ export function createFarmGateAndSign(scene, farmConfig, shadows = null, onMailb
   return {
     root,
     mailbox: mailboxRoot,
-    updateSign(newOwner, isOwner = false) {
-      tctx.fillStyle = isOwner ? '#fef3c7' : '#f5ebe0';
-      tctx.fillRect(0, 0, 512, 160);
-      tctx.lineWidth = 8;
-      tctx.strokeStyle = isOwner ? '#d97706' : '#8d6e63';
-      tctx.strokeRect(6, 6, 500, 148);
-
-      tctx.fillStyle = isOwner ? '#92400e' : '#5d4037';
-      tctx.font = 'bold 42px "Segoe UI", Arial, sans-serif';
-      tctx.textAlign = 'center';
-      tctx.textBaseline = 'middle';
-      tctx.fillStyle = isOwner ? '#b45309' : '#3e2723';
-      tctx.fillText(newOwner || 'Nông Dân', 256, 80);
-      textTex.update();
+    updateSign(state) {
+      drawSign(state);
     },
     dispose() {
       textTex.dispose();

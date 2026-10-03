@@ -4,6 +4,7 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
 import { ParticleSystem } from '@babylonjs/core/Particles/particleSystem.js';
 
 function makeMat(scene, name, hex, emissiveHex = null) {
@@ -471,18 +472,22 @@ export function createBeachDistrict(scene, shadows) {
     post.parent = barNode;
   });
 
-  // Biển hiệu gỗ: 🍹 TIKI COCONUT BAR 🥥
-  const dtBar = new DynamicTexture('dt-bar-sign', { width: 512, height: 128 }, scene, false);
+  // Biển hiệu gỗ: 🍹 TIKI COCONUT BAR 🥥 (1024x256 High-Res)
+  const dtBar = new DynamicTexture('dt-bar-sign', { width: 1024, height: 256 }, scene, false, Texture.TRILINEAR_SAMPLINGMODE);
+  dtBar.anisotropicFilteringLevel = 16;
   dtBar.hasAlpha = true;
   const ctxB = dtBar.getContext();
-  ctxB.clearRect(0, 0, 512, 128);
+  ctxB.imageSmoothingEnabled = true;
+  ctxB.imageSmoothingQuality = 'high';
+  ctxB.clearRect(0, 0, 1024, 256);
   ctxB.fillStyle = '#451a03';
-  ctxB.roundRect(8, 8, 496, 112, 18);
+  ctxB.beginPath();
+  ctxB.roundRect(16, 16, 992, 224, 36);
   ctxB.fill();
   ctxB.strokeStyle = '#f59e0b';
-  ctxB.lineWidth = 8;
+  ctxB.lineWidth = 16;
   ctxB.stroke();
-  dtBar.drawText('🍹 TIKI COCONUT BAR 🥥', null, 76, 'bold 34px Arial', '#ffffff', null, true, true);
+  dtBar.drawText('🍹 TIKI COCONUT BAR 🥥', null, 152, 'bold 68px Arial', '#ffffff', null, true, true);
 
   const matBarSign = new StandardMaterial('bar-sign-mat', scene);
   matBarSign.diffuseTexture = dtBar;
@@ -625,6 +630,68 @@ export function createBeachDistrict(scene, shadows) {
   lifebuoy.position.set(1.45, 3.2, 0);
   lifebuoy.material = materials.lifeguardRed;
   lifebuoy.parent = towerNode;
+
+  // === 5. KHU NGHỈ DƯỠNG GLAMPING VEN BIỂN (COZY SEASIDE GLAMPING RESORT) ===
+  const glampingNode = new TransformNode('beach-glamping-resort', scene);
+  glampingNode.position.set(-36, 0, 194);
+  glampingNode.parent = root;
+
+  const matCanvas = makeMat(scene, 'glamping-canvas-mat', '#fefce8');
+  const matDeck = materials.sandPlank;
+  const matEmber = makeMat(scene, 'glamping-ember-mat', '#ef4444', '#f97316');
+  const matLog = makeMat(scene, 'glamping-log-mat', '#451a03');
+
+  // 2 Lều Glamping Bell nón chóp cao sang trọng có sàn gỗ ngắm biển
+  [-6, 6].forEach((tx, idx) => {
+    // Sàn gỗ nâng chân chống cát
+    const deck = MeshBuilder.CreateCylinder(`glamping-deck-${idx}`, { diameter: 5.6, height: 0.25, tessellation: 20 }, scene);
+    deck.position.set(tx, 0.12, 0);
+    deck.material = matDeck;
+    deck.parent = glampingNode;
+    deck.receiveShadows = true;
+
+    // Lều vải nón chóp cao ấm cúng
+    const tent = MeshBuilder.CreateCylinder(`glamping-tent-${idx}`, { diameterTop: 0.2, diameterBottom: 5.0, height: 3.4, tessellation: 16 }, scene);
+    tent.position.set(tx, 1.8, 0);
+    tent.material = matCanvas;
+    tent.parent = glampingNode;
+    shadows?.addShadowCaster(tent);
+
+    // Mái che cửa lều chữ V
+    const awning = MeshBuilder.CreateCylinder(`glamping-entry-${idx}`, { diameter: 2.2, height: 1.4, tessellation: 3 }, scene);
+    awning.rotation.z = Math.PI / 2;
+    awning.rotation.y = Math.PI / 2;
+    awning.position.set(tx, 1.1, 2.3);
+    awning.material = matCanvas;
+    awning.parent = glampingNode;
+
+    // Đèn lồng ấm treo trước cửa lều
+    const lantern = MeshBuilder.CreateSphere(`glamping-lantern-${idx}`, { diameter: 0.35, segments: 8 }, scene);
+    lantern.position.set(tx, 1.9, 2.6);
+    lantern.material = makeMat(scene, `glamping-lantern-mat-${idx}`, '#fef08a', '#fbbf24');
+    lantern.parent = glampingNode;
+  });
+
+  // Đống lửa trại bờ cát nướng kẹo dẻo giữa 2 lều
+  const campRing = MeshBuilder.CreateTorus('glamping-fire-ring', { diameter: 1.8, thickness: 0.25, tessellation: 12 }, scene);
+  campRing.position.set(0, 0.12, -4.5);
+  campRing.material = materials.sandcastle;
+  campRing.parent = glampingNode;
+
+  const campEmber = MeshBuilder.CreateSphere('glamping-fire-ember', { diameter: 0.9, segments: 8 }, scene);
+  campEmber.position.set(0, 0.22, -4.5);
+  campEmber.material = matEmber;
+  campEmber.parent = glampingNode;
+
+  // Ghế thân cây trôi dạt (Driftwood Benches) quây quanh lửa
+  [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3].forEach((ang, bIdx) => {
+    const bench = MeshBuilder.CreateCylinder(`glamping-driftwood-${bIdx}`, { diameter: 0.42, height: 1.8 }, scene);
+    bench.rotation.z = Math.PI / 2;
+    bench.rotation.y = ang;
+    bench.position.set(Math.sin(ang) * 1.8, 0.22, -4.5 + Math.cos(ang) * 1.8);
+    bench.material = matLog;
+    bench.parent = glampingNode;
+  });
 
   return root;
 }

@@ -1,38 +1,241 @@
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
+import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
+import {
+  VILLAGE_THEME_GROUPS,
+  WORLD_PALETTE,
+  createCozyMaterial,
+  createWarmHangingLantern,
+} from '../worldDesignSystem.js';
 
-export function createVillageGate(scene, position, villageName = 'LÀNG HOA MAI', shadows = null) {
-  const root = new TransformNode('village-named-gate', scene);
-  root.position.set(position.x, position.y || 0, position.z);
-  const wood = new StandardMaterial('village-gate-wood', scene);
-  wood.diffuseColor = Color3.FromHexString('#8b5e34');
-  wood.ambientColor = new Color3(0.42, 0.3, 0.18);
-  const trim = new StandardMaterial('village-gate-trim', scene);
-  trim.diffuseColor = Color3.FromHexString('#f4c95d');
-  trim.emissiveColor = Color3.FromHexString('#7c5414');
-  [-6.2, 6.2].forEach(x => {
-    const post = MeshBuilder.CreateCylinder('village-gate-post', { height: 5.8, diameter: 0.7, tessellation: 12 }, scene);
-    post.position.set(x, 2.9, 0); post.material = wood; post.parent = root; shadows?.addShadowCaster(post);
-    const cap = MeshBuilder.CreateSphere('village-gate-cap', { diameter: 1.05, segments: 12 }, scene);
-    cap.position.set(x, 6.0, 0); cap.material = trim; cap.parent = root;
-  });
-  const beam = MeshBuilder.CreateBox('village-gate-beam', { width: 14, height: 1.0, depth: 0.7 }, scene);
-  beam.position.set(0, 5.0, 0); beam.material = wood; beam.parent = root; shadows?.addShadowCaster(beam);
-  const texture = new DynamicTexture('village-gate-sign-texture', { width: 1024, height: 190 }, scene, true);
-  const sign = MeshBuilder.CreatePlane('village-gate-name-sign', { width: 8.8, height: 1.65 }, scene);
-  sign.position.set(0, 4.9, -0.42); sign.billboardMode = 7; sign.parent = root;
-  const material = new StandardMaterial('village-gate-name-material', scene);
-  material.diffuseTexture = texture; material.emissiveTexture = texture; material.specularColor = Color3.Black(); material.backFaceCulling = false; sign.material = material;
-  const render = name => {
-    const ctx = texture.getContext(); ctx.clearRect(0, 0, 1024, 190);
-    ctx.fillStyle = '#fff7d6'; ctx.beginPath(); ctx.roundRect(12, 12, 1000, 166, 26); ctx.fill();
-    ctx.strokeStyle = '#d4932f'; ctx.lineWidth = 10; ctx.stroke();
-    ctx.fillStyle = '#5b351c'; ctx.font = '900 60px "Segoe UI", Arial, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(String(name || 'Làng mới').toUpperCase(), 512, 95); texture.update();
+/**
+ * CỔNG LÀNG TRUYỀN THỐNG MÁI NGÓI NUNG CHO 12 LÀNG NÔNG TRẠI
+ * - Kiến trúc cổng tam quan đồng quê: 2 cột gỗ sồi già chân bệ đá, xà ngang kèo gỗ
+ * - Mái ngói dốc chữ A Terracotta gốm đỏ nung trên đỉnh cổng làng
+ * - Biển tên làng bằng gỗ sồi khắc chữ nổi viền màu nhận diện riêng của cụm làng
+ * - Đèn lồng vàng ấm treo 2 bên cột cổng
+ * - Cây trồng và bồn hoa đặc trưng hai bên cổng đón khách
+ */
+export function createVillageGate(scene, position, villageName = 'LÀNG HOA MAI', shadows = null, villageId = null, foliage = null) {
+  // Đảm bảo cổng làng và cây cối lùi sâu vào lối vào làng, không đè lên tim các tuyến Quốc Lộ
+  let gateX = position.x;
+  let gateZ = position.z;
+  let gateRot = 0;
+
+  if (Math.abs(position.z - 86) < 6.0) {
+    // QL 86: làng nằm ở phía Nam -> lùi vào vỉa hè lối vào làng z = 93.5
+    gateZ = 93.5;
+  } else if (Math.abs(position.z - (-234)) < 6.0) {
+    // QL Bắc: lùi ra vỉa hè lối vào làng z = -242.0
+    gateZ = -242.0;
+  } else if (Math.abs(position.z - 406) < 6.0) {
+    // QL Nam: lùi vào lối vào làng z = 414.0
+    gateZ = 414.0;
+  } else if (Math.abs(position.x) < 4.0 && position.z < -350) {
+    // Phú Điền: lùi vào trước khuôn viên làng z = -402.0
+    gateZ = -402.0;
+  }
+
+  const root = new TransformNode(`village-named-gate-${villageId || villageName}`, scene);
+  root.position.set(gateX, position.y || 0, gateZ);
+  root.rotation.y = gateRot;
+
+  const theme = (villageId && VILLAGE_THEME_GROUPS[villageId]) ? VILLAGE_THEME_GROUPS[villageId] : {
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
+    treeType: 'maple',
+    flowerColor: '#fde047',
+    groupLabel: 'Làng Quê',
   };
-  render(villageName);
-  return { root, updateName: render, dispose: () => { texture.dispose(); root.dispose(false, false); } };
+
+  const mats = {
+    woodPillar: createCozyMaterial(scene, `gate-wood-${villageId}`, WORLD_PALETTE.woodOakDark),
+    woodBracket: createCozyMaterial(scene, `gate-bracket-${villageId}`, WORLD_PALETTE.woodOakWarm),
+    stoneBase: createCozyMaterial(scene, `gate-stone-${villageId}`, WORLD_PALETTE.stoneFoundation),
+    roofTile: createCozyMaterial(scene, `gate-roof-${villageId}`, theme.roofColor || WORLD_PALETTE.roofTerracotta),
+    roofRidge: createCozyMaterial(scene, `gate-ridge-${villageId}`, WORLD_PALETTE.roofRidge),
+    trimGold: createCozyMaterial(scene, `gate-trim-${villageId}`, theme.accentColor, theme.accentColor, 0.4),
+  };
+
+  const halfSpan = 6.4; // Thông thủy 12.8m, thoải mái cho đường làng 5.5m và 2 lề đường
+  const postH = 5.2;
+
+  // 1. Hai cột trụ gỗ chân đế đá hai bên cổng
+  [-halfSpan, halfSpan].forEach((px, idx) => {
+    // Chân đế đá cuội đẽo mộc
+    const base = MeshBuilder.CreateCylinder(`gate-stone-base-${idx}`, { diameter: 1.1, height: 0.8, tessellation: 16 }, scene);
+    base.position.set(px, 0.4, 0);
+    base.material = mats.stoneBase;
+    base.parent = root;
+    base.receiveShadows = true;
+    shadows?.addShadowCaster(base);
+
+    // Thân cột gỗ sồi tròn
+    const post = MeshBuilder.CreateCylinder(`gate-timber-post-${idx}`, { diameter: 0.65, height: postH, tessellation: 16 }, scene);
+    post.position.set(px, postH / 2 + 0.4, 0);
+    post.material = mats.woodPillar;
+    post.parent = root;
+    post.receiveShadows = true;
+    shadows?.addShadowCaster(post);
+
+    // Mũ chụp đầu cột có chỉ màu nhấn riêng của cụm làng
+    const cap = MeshBuilder.CreateSphere(`gate-post-cap-${idx}`, { diameter: 0.95, segments: 12 }, scene);
+    cap.position.set(px, postH + 0.5, 0);
+    cap.material = mats.trimGold;
+    cap.parent = root;
+
+    // Kèo gỗ chống xéo chịu lực
+    const brace = MeshBuilder.CreateBox(`gate-brace-${idx}`, { width: 0.22, height: 1.4, depth: 0.22 }, scene);
+    brace.position.set(px + (px > 0 ? -0.55 : 0.55), postH - 0.2, 0);
+    brace.rotation.z = px > 0 ? 0.65 : -0.65;
+    brace.material = mats.woodBracket;
+    brace.parent = root;
+
+    // Đèn lồng vàng ấm treo bên dưới xà đón
+    createWarmHangingLantern(scene, new Vector3(px + (px > 0 ? -0.8 : 0.8), postH - 0.2, 0), root, shadows);
+  });
+
+  // 2. Hệ xà ngang đôi liên kết
+  const beamY = postH + 0.15;
+  const beam = MeshBuilder.CreateBox('village-gate-beam', { width: halfSpan * 2 + 1.8, height: 0.6, depth: 0.7 }, scene);
+  beam.position.set(0, beamY, 0);
+  beam.material = mats.woodPillar;
+  beam.parent = root;
+  shadows?.addShadowCaster(beam);
+
+  // 3. Mái ngói nung Terracotta truyền thống trên đỉnh cổng làng
+  const roofW = halfSpan * 2 + 3.2;
+  const roofD = 2.4;
+  const roofH = 1.4;
+  const roofBaseY = beamY + 0.3;
+
+  const roofL = MeshBuilder.CreateBox('gate-roof-slope-l', { width: roofW / 2 + 0.4, depth: roofD, height: 0.18 }, scene);
+  roofL.position.set(-roofW * 0.25, roofBaseY + roofH * 0.45, 0);
+  roofL.rotation.z = 0.52;
+  roofL.material = mats.roofTile;
+  roofL.parent = root;
+  shadows?.addShadowCaster(roofL);
+
+  const roofR = MeshBuilder.CreateBox('gate-roof-slope-r', { width: roofW / 2 + 0.4, depth: roofD, height: 0.18 }, scene);
+  roofR.position.set(roofW * 0.25, roofBaseY + roofH * 0.45, 0);
+  roofR.rotation.z = -0.52;
+  roofR.material = mats.roofTile;
+  roofR.parent = root;
+  shadows?.addShadowCaster(roofR);
+
+  const ridge = MeshBuilder.CreateBox('gate-roof-ridge', { width: roofW + 0.4, depth: 0.35, height: 0.22 }, scene);
+  ridge.position.set(0, roofBaseY + roofH + 0.05, 0);
+  ridge.material = mats.roofRidge;
+  ridge.parent = root;
+
+  // 4. Bảng tên làng bằng gỗ sồi chạm chữ nổi viền vàng hổ phách
+  // 4. Bảng tên làng bằng gỗ sồi chạm chữ nổi viền vàng hổ phách (2048x440 High-Res Sharp Texture)
+  const texture = new DynamicTexture(`village-gate-sign-${villageId || villageName}`, { width: 2048, height: 440 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  texture.anisotropicFilteringLevel = 16;
+  const signMat = new StandardMaterial(`village-gate-sign-mat-${villageId}`, scene);
+  signMat.diffuseTexture = texture;
+  signMat.emissiveTexture = texture;
+  signMat.specularColor = Color3.Black();
+  signMat.backFaceCulling = false;
+
+  // Khung gỗ sồi đỡ bảng tên
+  const signFrame = MeshBuilder.CreateBox('village-gate-sign-frame', { width: 9.0, height: 2.0, depth: 0.18 }, scene);
+  signFrame.position.set(0, beamY - 0.75, 0);
+  signFrame.material = mats.woodPillar;
+  signFrame.parent = root;
+
+  // Mặt trước hướng ra đại lộ
+  const sign = MeshBuilder.CreatePlane('village-gate-name-sign', { width: 8.8, height: 1.8 }, scene);
+  sign.position.set(0, beamY - 0.75, -0.1);
+  sign.material = signMat;
+  sign.parent = root;
+
+  // Mặt sau hướng về phía trong làng
+  const signBack = MeshBuilder.CreatePlane('village-gate-name-sign-back', { width: 8.8, height: 1.8 }, scene);
+  signBack.position.set(0, beamY - 0.75, 0.1);
+  signBack.rotation.y = Math.PI;
+  signBack.material = signMat;
+  signBack.parent = root;
+
+  const renderName = name => {
+    const ctx = texture.getContext();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.clearRect(0, 0, 2048, 440);
+
+    // Nền gỗ sồi sẫm sang trọng
+    ctx.fillStyle = theme.signBg || '#2c1810';
+    ctx.beginPath();
+    ctx.roundRect(28, 28, 1992, 384, 56);
+    ctx.fill();
+
+    // Viền màu nhận diện cụm làng
+    ctx.strokeStyle = theme.accentColor || '#f59e0b';
+    ctx.lineWidth = 20;
+    ctx.stroke();
+
+    // Viền chỉ phụ
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.roundRect(56, 56, 1936, 328, 36);
+    ctx.stroke();
+
+    // Tên làng chữ nổi màu kem ngà
+    ctx.fillStyle = '#fffdf0';
+    ctx.font = '900 124px "Nunito", "Segoe UI", Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur = 20;
+    ctx.fillText(String(name || 'Làng Nông Trại').toUpperCase(), 1024, 190);
+
+    // Tên cụm làng nhỏ phía dưới
+    ctx.fillStyle = theme.accentColor || '#f59e0b';
+    ctx.font = 'bold 48px "Nunito", "Segoe UI", Arial, sans-serif';
+    ctx.shadowBlur = 10;
+    ctx.fillText(String(theme.groupLabel || '').toUpperCase(), 1024, 320);
+
+    texture.update();
+  };
+  renderName(villageName);
+
+  // 5. Cây trồng & bồn hoa đặc trưng theo cụm làng hai bên cổng đón khách (ngoài vỉa hè, lùi sâu vào khuôn viên làng)
+  if (foliage) {
+    const treeX1 = gateX - halfSpan - 2.8;
+    const treeX2 = gateX + halfSpan + 2.8;
+    const treeZOffset = (gateZ > 0 ? 3.5 : -3.5);
+    const treeZ = gateZ + treeZOffset;
+
+    if (theme.treeType === 'maple') {
+      foliage.createGoldenMaple(treeX1, treeZ, 1.25);
+      foliage.createGoldenMaple(treeX2, treeZ, 1.2);
+    } else if (theme.treeType === 'sakura') {
+      foliage.createSakuraTree(treeX1, treeZ, 1.2);
+      foliage.createSakuraTree(treeX2, treeZ, 1.25);
+    } else if (theme.treeType === 'pine') {
+      foliage.createAlpinePine(treeX1, treeZ, 1.3);
+      foliage.createAlpinePine(treeX2, treeZ, 1.35);
+    } else {
+      foliage.createCloudTree(treeX1, treeZ, 1.25);
+      foliage.createCloudTree(treeX2, treeZ, 1.2);
+    }
+
+    foliage.createFlowerPatch(treeX1, treeZ + (gateZ > 0 ? 1.5 : -1.5), 8, 2.0);
+    foliage.createFlowerPatch(treeX2, treeZ + (gateZ > 0 ? 1.5 : -1.5), 8, 2.0);
+  }
+
+  return {
+    root,
+    updateName: renderName,
+    dispose: () => {
+      texture.dispose();
+      root.dispose(false, false);
+    },
+  };
 }

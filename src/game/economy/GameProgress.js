@@ -1,8 +1,8 @@
 export const CROPS = Object.freeze({
-  carrot: { id: 'carrot', name: 'Cà rốt', icon: '🥕', seedCost: 5, sellPrice: 12, growMs: 60_000, level: 1, color: '#ed8b35' },
-  wheat: { id: 'wheat', name: 'Lúa mì', icon: '🌾', seedCost: 12, sellPrice: 30, growMs: 180_000, level: 2, color: '#d9ad45' },
-  tomato: { id: 'tomato', name: 'Cà chua', icon: '🍅', seedCost: 20, sellPrice: 52, growMs: 300_000, level: 3, color: '#d94c3d' },
-  strawberry: { id: 'strawberry', name: 'Dâu tây', icon: '🍓', seedCost: 45, sellPrice: 120, growMs: 600_000, level: 5, color: '#ca3858' },
+  carrot: { id: 'carrot', name: 'Cà rốt', icon: 'carrot', seedCost: 5, sellPrice: 12, growMs: 60_000, level: 1, color: '#ed8b35' },
+  wheat: { id: 'wheat', name: 'Lúa mì', icon: 'wheat', seedCost: 12, sellPrice: 30, growMs: 180_000, level: 2, color: '#d9ad45' },
+  tomato: { id: 'tomato', name: 'Cà chua', icon: 'tomato', seedCost: 20, sellPrice: 52, growMs: 300_000, level: 3, color: '#d94c3d' },
+  strawberry: { id: 'strawberry', name: 'Dâu tây', icon: 'strawberry', seedCost: 45, sellPrice: 120, growMs: 600_000, level: 5, color: '#ca3858' },
 });
 
 export const ONBOARDING_STEPS = Object.freeze({
@@ -22,9 +22,9 @@ export const ORDERS = Object.freeze([
 ]);
 
 export const RECIPES = Object.freeze([
-  { id: 'flour', name: 'Bột mì', icon: '🥣', inputs: { wheat: 2 }, coins: 18, xp: 12 },
-  { id: 'cheese', name: 'Phô mai', icon: '🧀', inputs: { milk: 2 }, coins: 35, xp: 20 },
-  { id: 'jam', name: 'Mứt dâu', icon: '🍓', inputs: { strawberry: 2 }, coins: 55, xp: 30 },
+  { id: 'flour', name: 'Bột mì', icon: 'flour', inputs: { wheat: 2 }, coins: 18, xp: 12 },
+  { id: 'cheese', name: 'Phô mai', icon: 'cheese', inputs: { milk: 2 }, coins: 35, xp: 20 },
+  { id: 'jam', name: 'Mứt dâu', icon: 'jam', inputs: { strawberry: 2 }, coins: 55, xp: 30 },
 ]);
 
 export const EXPANSIONS = Object.freeze([
@@ -41,6 +41,7 @@ const initial = {
   claimedQuests: [], completedOrders: [], unlockedPlots: 0, barnLevel: 0, toolLevel: 1,
   outfit: 'starter', ownedOutfits: ['starter'], vehicle: 'walk', ownedVehicles: ['walk'],
   homeTier: 0, ownedHomes: [], casinoPlays: 0,
+  fishing: { ownedRods: [], equippedRod: null, bait: { bait_worm: 0, bait_lure: 0 }, equippedBait: null, fish: {}, pending: null },
   onboarding: {
     characterCreated: false,
     step: 0,

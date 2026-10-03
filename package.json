@@ -10,7 +10,10 @@
     "validate:assets": "node scripts/validate-assets.mjs",
     "validate:farm-layout": "node scripts/validate-farm-layout.mjs",
     "test:land": "node scripts/test-land-purchase.mjs",
+    "test:multiplayer": "node scripts/test-multiplayer-concurrency.mjs",
     "test:camera": "node scripts/test-camera-view.mjs",
+    "test:venues-casino": "node scripts/test-venues-casino.mjs",
+    "test:shop-meshes": "node scripts/test-shop-meshes.mjs",
     "build": "npm run validate:assets && npm run validate:farm-layout && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },

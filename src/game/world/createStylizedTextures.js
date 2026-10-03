@@ -1,9 +1,10 @@
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
+import { WORLD_PALETTE } from './worldDesignSystem.js';
 
 /**
  * 1. THẢM CỎ ĐỒNG QUÊ COZY GHIBLI & ZELDA (HOÀN TOÀN KHÔNG CÒN BÀN CỜ / PIXEL LƯỚI VUÔNG)
- * Nền cỏ chuyển sắc êm dịu, khóm cỏ ba lá uốn lượn, ngọn cỏ non và hoa cúc dại li ti
+ * Nền cỏ chuyển sắc màu nước mọng mượt, khóm cỏ ba lá uốn lượn, ngọn cỏ non và hoa cúc dại li ti
  */
 export function createMeadowTexture(scene, size = 1024) {
   const dynamic = new DynamicTexture(
@@ -16,165 +17,107 @@ export function createMeadowTexture(scene, size = 1024) {
   dynamic.anisotropicFilteringLevel = 16;
   const ctx = dynamic.getContext();
 
-  // 1. Nền cỏ chuyển sắc nắng mai êm dịu, ấm áp chuẩn Studio Ghibli
-  // Đổ màu gradient bán kính lan tỏa mịn màng, loại bỏ 100% bàn cờ pixel
-  const baseGrad = ctx.createRadialGradient(size * 0.5, size * 0.5, 40, size * 0.5, size * 0.5, size * 0.72);
-  baseGrad.addColorStop(0, '#92e54d');    // Xanh nõn chuối đón nắng
-  baseGrad.addColorStop(0.5, '#7ecd3c');  // Thân cỏ mượt mà
-  baseGrad.addColorStop(1, '#70bc33');    // Chân cỏ xanh lục dịu mắt
+  // 1. Nền cỏ xanh tươi mát mọng nước ngập tràn ánh nắng (Ghibli Radiant Sunny Meadow)
+  const baseGrad = ctx.createLinearGradient(0, 0, size, size);
+  baseGrad.addColorStop(0.0, '#4ade80');
+  baseGrad.addColorStop(0.35, '#22c55e');
+  baseGrad.addColorStop(0.7, '#16a34a');
+  baseGrad.addColorStop(1.0, '#4ade80');
   ctx.fillStyle = baseGrad;
   ctx.fillRect(0, 0, size, size);
 
-  // 2. Những mảng chuyển tông màu hữu cơ tự nhiên (Organic Soft Grass Patches)
-  const patchCoords = [
-    { x: 0.22, y: 0.28, r: size * 0.26, col: 'rgba(162, 240, 92, 0.45)' },
-    { x: 0.75, y: 0.32, r: size * 0.30, col: 'rgba(132, 218, 68, 0.35)' },
-    { x: 0.35, y: 0.76, r: size * 0.28, col: 'rgba(155, 235, 84, 0.40)' },
-    { x: 0.82, y: 0.82, r: size * 0.24, col: 'rgba(115, 195, 52, 0.32)' },
-    { x: 0.50, y: 0.50, r: size * 0.34, col: 'rgba(145, 228, 76, 0.30)' },
-  ];
-  patchCoords.forEach(p => {
-    const radGrad = ctx.createRadialGradient(p.x * size, p.y * size, 12, p.x * size, p.y * size, p.r);
-    radGrad.addColorStop(0, p.col);
-    radGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = radGrad;
+  // 2. Các vệt loang màu nước tự nhiên (Watercolor organic patches)
+  const patchColors = ['#86efac', '#a7f3d0', '#4ade80', '#bef264'];
+  for (let i = 0; i < 54; i++) {
+    const px = ((i * 137) % size);
+    const py = ((i * 241) % size);
+    const rad = 45 + (i % 5) * 25;
+    const pGrad = ctx.createRadialGradient(px, py, 0, px, py, rad);
+    const c = patchColors[i % patchColors.length];
+    pGrad.addColorStop(0, c + '3a');
+    pGrad.addColorStop(0.7, c + '20');
+    pGrad.addColorStop(1, c + '00');
+    ctx.fillStyle = pGrad;
     ctx.beginPath();
-    ctx.arc(p.x * size, p.y * size, p.r, 0, Math.PI * 2);
+    ctx.arc(px, py, rad, 0, Math.PI * 2);
     ctx.fill();
-  });
+  }
 
-  // 3. Khóm cỏ ba lá (Lucky Clovers) mềm mại, đáng yêu
-  const clovers = [
-    { x: 0.16, y: 0.16, s: 18, rot: 0.2 },
-    { x: 0.34, y: 0.40, s: 16, rot: 1.1 },
-    { x: 0.64, y: 0.20, s: 20, rot: -0.5 },
-    { x: 0.86, y: 0.42, s: 17, rot: 0.8 },
-    { x: 0.14, y: 0.80, s: 19, rot: 2.3 },
-    { x: 0.50, y: 0.66, s: 21, rot: -1.2 },
-    { x: 0.76, y: 0.86, s: 18, rot: 0.4 },
-    { x: 0.92, y: 0.14, s: 15, rot: 1.7 },
-  ];
+  // 3. Khóm cỏ ba lá & hoa cúc li ti điểm xuyết
+  for (let i = 0; i < 140; i++) {
+    const fx = ((i * 73 + 31) % (size - 20)) + 10;
+    const fy = ((i * 109 + 47) % (size - 20)) + 10;
+    const isFlower = i % 3 === 0;
 
-  clovers.forEach(cl => {
-    const cx = cl.x * size;
-    const cy = cl.y * size;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(cl.rot);
-
-    // Bóng đổ dịu dưới cỏ 3 lá
-    ctx.fillStyle = 'rgba(74, 126, 32, 0.32)';
-    for (let a = 0; a < 3; a++) {
-      const angle = (a * Math.PI * 2) / 3;
-      const lx = Math.cos(angle) * (cl.s * 0.8) + 2;
-      const ly = Math.sin(angle) * (cl.s * 0.8) + 2;
+    if (isFlower) {
+      // Hoa cúc vàng/trắng nhỏ xinh
+      ctx.fillStyle = (i % 6 === 0) ? '#fef08a' : (i % 6 === 3 ? '#fed7aa' : '#ffffff');
       ctx.beginPath();
-      ctx.arc(lx, ly, cl.s * 0.65, 0, Math.PI * 2);
+      ctx.arc(fx, fy, 2.4, 0, Math.PI * 2);
       ctx.fill();
-    }
-
-    // 3 cánh cỏ hình tròn bo mềm
-    ctx.fillStyle = '#5ba826';
-    for (let a = 0; a < 3; a++) {
-      const angle = (a * Math.PI * 2) / 3;
-      const lx = Math.cos(angle) * (cl.s * 0.8);
-      const ly = Math.sin(angle) * (cl.s * 0.8);
+      ctx.fillStyle = '#f59e0b';
       ctx.beginPath();
-      ctx.arc(lx, ly, cl.s * 0.65, 0, Math.PI * 2);
+      ctx.arc(fx, fy, 1.1, 0, Math.PI * 2);
       ctx.fill();
+    } else {
+      // Khóm cỏ non
+      ctx.fillStyle = '#bbf7d0';
+      ctx.fillRect(fx, fy, 2, 4);
+      ctx.fillRect(fx + 2, fy - 1, 2, 5);
     }
-    // Gân lá sáng
-    ctx.strokeStyle = '#8ee244';
-    ctx.lineWidth = 2;
-    for (let a = 0; a < 3; a++) {
-      const angle = (a * Math.PI * 2) / 3;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(Math.cos(angle) * (cl.s * 0.6), Math.sin(angle) * (cl.s * 0.6));
-      ctx.stroke();
+  }
+
+  // 4. Vi vân sợi cỏ siêu mịn
+  const imgData = ctx.getImageData(0, 0, size, size);
+  const data = imgData.data;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const idx = (y * size + x) * 4;
+      const nx = (x / size) * Math.PI * 2;
+      const ny = (y / size) * Math.PI * 2;
+      const wave = Math.sin(nx * 4) * Math.cos(ny * 4) + Math.sin(nx * 8 + ny * 8) * 0.4;
+      const noise = wave * 3.5;
+
+      data[idx] = Math.min(255, Math.max(0, data[idx] + noise * 0.7));
+      data[idx + 1] = Math.min(255, Math.max(0, data[idx + 1] + noise));
+      data[idx + 2] = Math.min(255, Math.max(0, data[idx + 2] + noise * 0.5));
     }
-    ctx.restore();
-  });
-
-  // 4. Những bụi ngọn cỏ mầm uốn lượn (Delicate Curved Blade Tufts)
-  const grassTufts = [
-    { x: 0.26, y: 0.30, h: 22, rot: -0.1 },
-    { x: 0.54, y: 0.16, h: 24, rot: 0.15 },
-    { x: 0.70, y: 0.60, h: 20, rot: -0.2 },
-    { x: 0.36, y: 0.86, h: 23, rot: 0.25 },
-    { x: 0.86, y: 0.70, h: 21, rot: -0.1 },
-    { x: 0.08, y: 0.50, h: 25, rot: 0.18 },
-  ];
-  ctx.lineCap = 'round';
-  grassTufts.forEach(t => {
-    const tx = t.x * size;
-    const ty = t.y * size;
-    ctx.save();
-    ctx.translate(tx, ty);
-    ctx.rotate(t.rot);
-
-    // Cánh trái
-    ctx.strokeStyle = '#5ba826';
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.quadraticCurveTo(-6, -t.h * 0.6, -10, -t.h);
-    ctx.stroke();
-
-    // Cánh giữa
-    ctx.strokeStyle = '#6ec532';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.quadraticCurveTo(0, -t.h * 0.7, 2, -t.h * 1.15);
-    ctx.stroke();
-
-    // Cánh phải
-    ctx.strokeStyle = '#529b22';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.quadraticCurveTo(7, -t.h * 0.5, 12, -t.h * 0.85);
-    ctx.stroke();
-
-    ctx.restore();
-  });
-
-  // 5. Hoa cúc họa mi dại bé xíu nở rộ trên đồng cỏ (Petite Field Daisies)
-  const flowers = [
-    { x: 0.24, y: 0.54, petal: '#ffffff', center: '#f59e0b', r: 5 },
-    { x: 0.44, y: 0.24, petal: '#fef08a', center: '#ea580c', r: 4.5 },
-    { x: 0.68, y: 0.40, petal: '#ffffff', center: '#f59e0b', r: 5.5 },
-    { x: 0.82, y: 0.24, petal: '#fbcfe8', center: '#db2777', r: 4 },
-    { x: 0.28, y: 0.70, petal: '#ffffff', center: '#f59e0b', r: 4.8 },
-    { x: 0.62, y: 0.80, petal: '#bae6fd', center: '#0284c7', r: 4.5 },
-    { x: 0.90, y: 0.58, petal: '#ffffff', center: '#f59e0b', r: 5 },
-    { x: 0.12, y: 0.34, petal: '#fed7aa', center: '#ea580c', r: 4.2 },
-  ];
-  flowers.forEach(fl => {
-    const fx = fl.x * size;
-    const fy = fl.y * size;
-
-    // 5 Cánh hoa nhỏ
-    ctx.fillStyle = fl.petal;
-    for (let a = 0; a < 5; a++) {
-      const angle = (a * Math.PI * 2) / 5;
-      const px = fx + Math.cos(angle) * fl.r;
-      const py = fy + Math.sin(angle) * fl.r;
-      ctx.beginPath();
-      ctx.arc(px, py, fl.r * 0.75, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    // Nhụy hoa
-    ctx.fillStyle = fl.center;
-    ctx.beginPath();
-    ctx.arc(fx, fy, fl.r * 0.6, 0, Math.PI * 2);
-    ctx.fill();
-  });
+  }
+  ctx.putImageData(imgData, 0, 0);
 
   dynamic.update();
-  dynamic.uScale = 24;
-  dynamic.vScale = 24;
+  dynamic.uScale = 64;
+  dynamic.vScale = 64;
+  return dynamic;
+}
+
+/**
+ * Vành đai chân trời chuyển sắc sương mù (Horizon Skirt Gradient Texture)
+ * Tâm (trong bán kính thế giới): Cỏ xanh ngọc (#4ade80)
+ * Viền ngoài (chân trời 3400m): Hòa tan êm ái vào sương mù viễn cảnh (#bae6fd)
+ */
+export function createHorizonSkirtTexture(scene, size = 512) {
+  const dynamic = new DynamicTexture(
+    'horizon-skirt-texture',
+    { width: size, height: size },
+    scene,
+    true,
+    Texture.TRILINEAR_SAMPLINGMODE
+  );
+  dynamic.anisotropicFilteringLevel = 16;
+  const ctx = dynamic.getContext();
+
+  const half = size * 0.5;
+  const grad = ctx.createRadialGradient(half, half, half * 0.2, half, half, half);
+  grad.addColorStop(0.00, '#38c172');
+  grad.addColorStop(0.28, '#4ade80');
+  grad.addColorStop(0.55, '#86efac');
+  grad.addColorStop(0.78, '#bae6fd');
+  grad.addColorStop(1.00, '#dbeafe');
+
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+  dynamic.update();
   return dynamic;
 }
 
@@ -194,14 +137,14 @@ export function createHoneyPathTexture(scene, size = 1024) {
   const ctx = dynamic.getContext();
 
   // Nền đất vàng mật ong ấm áp
-  ctx.fillStyle = '#ebc784';
+  ctx.fillStyle = WORLD_PALETTE.roadWarm;
   ctx.fillRect(0, 0, size, size);
 
   // Vệt chuyển sắc đất nện tự nhiên
   const grad = ctx.createLinearGradient(0, 0, size, size);
-  grad.addColorStop(0, 'rgba(247, 218, 163, 0.45)');
-  grad.addColorStop(0.5, 'rgba(226, 185, 114, 0.3)');
-  grad.addColorStop(1, 'rgba(215, 172, 102, 0.4)');
+  grad.addColorStop(0, 'rgba(250, 220, 199, 0.36)');
+  grad.addColorStop(0.5, 'rgba(214, 166, 146, 0.22)');
+  grad.addColorStop(1, 'rgba(188, 134, 116, 0.28)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, size, size);
 
@@ -270,16 +213,17 @@ export function createWaterTexture(scene, size = 512) {
   dynamic.anisotropicFilteringLevel = 16;
   const ctx = dynamic.getContext();
 
-  // Nền nước ngọc lam trong vắt
+  // Nền nước ngọc lam trong vắt óng ánh nắng phong cách anime
   const grad = ctx.createLinearGradient(0, 0, size, size);
-  grad.addColorStop(0, '#38bdf8');
-  grad.addColorStop(0.5, '#0ea5e9');
-  grad.addColorStop(1, '#0284c7');
+  grad.addColorStop(0.0, '#67e8f9'); // Cyan ngọc bích sáng
+  grad.addColorStop(0.4, '#38bdf8'); // Xanh da trời sâu
+  grad.addColorStop(0.8, '#0284c7'); // Lam ngọc
+  grad.addColorStop(1.0, '#0369a1'); // Nước hồ sâu thẳm
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, size, size);
 
   // Vệt bọt sóng uốn lượn phong cách anime
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
   ctx.lineWidth = 6;
   ctx.lineCap = 'round';
   for (let y = 30; y < size; y += 65) {

@@ -1327,4 +1327,364 @@ export function Icon3dModernCity({ size = 32, className = '' }) {
   );
 }
 
+// 57. Ngôi Sao Lấp Lánh 3D Siêu Nét (Sparkle Star - Ultra HD Preset)
+export function Icon3dSparkleStar({ size = 22, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="star_glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="60%" stopColor="#eab308" />
+          <stop offset="100%" stopColor="#ca8a04" />
+        </radialGradient>
+      </defs>
+      <circle cx="16" cy="16" r="14" fill="#ca8a04" opacity="0.25" />
+      <path d="M 16 2 L 19 12 L 30 16 L 19 20 L 16 30 L 13 20 L 2 16 L 13 12 Z" fill="url(#star_glow)" stroke="#78350f" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M 16 8 L 18 14 L 24 16 L 18 18 L 16 24 L 14 18 L 8 16 L 14 14 Z" fill="#ffffff" opacity="0.85" />
+      <circle cx="16" cy="16" r="2" fill="#ffffff" />
+    </svg>
+  );
+}
+
+// 58. Tia Sét Năng Lượng 3D (Lightning Bolt - Balanced HD Preset)
+export function Icon3dLightningBolt({ size = 22, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="bolt_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="50%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#ea580c" />
+        </linearGradient>
+      </defs>
+      <polygon points="18,2 6,18 15,18 13,30 26,14 17,14" fill="url(#bolt_grad)" stroke="#7c2d12" strokeWidth="1.8" strokeLinejoin="round" />
+      <polygon points="17,5 9,17 15,17 14,24 22,15 16,15" fill="#fef9c3" opacity="0.8" />
+    </svg>
+  );
+}
+
+// 59. Viên Pin Tiết Kiệm Năng Lượng 3D (Eco Battery - Eco Preset)
+export function Icon3dBatteryEco({ size = 22, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="bat_grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#4ade80" />
+          <stop offset="60%" stopColor="#22c55e" />
+          <stop offset="100%" stopColor="#15803d" />
+        </linearGradient>
+      </defs>
+      <rect x="5" y="10" width="20" height="13" rx="3.5" fill="url(#bat_grad)" stroke="#14532d" strokeWidth="1.8" />
+      <rect x="25" y="13" width="3" height="7" rx="1.2" fill="#94a3b8" stroke="#334155" strokeWidth="1.2" />
+      <rect x="8" y="13" width="4" height="7" rx="1" fill="#ffffff" opacity="0.9" />
+      <rect x="14" y="13" width="4" height="7" rx="1" fill="#ffffff" opacity="0.9" />
+      <rect x="7" y="11" width="16" height="2" rx="1" fill="#ffffff" opacity="0.5" />
+    </svg>
+  );
+}
+
+// 60. Cần Câu Trúc Mộc Làng Quê 3D (Bamboo Fishing Rod)
+export function Icon3dFishingRodBamboo({ size = 28, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="bamboo_wood" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#84cc16" />
+          <stop offset="50%" stopColor="#eab308" />
+          <stop offset="100%" stopColor="#ca8a04" />
+        </linearGradient>
+      </defs>
+      <path d="M 5 31 C 12 28, 20 22, 28 8" stroke="url(#bamboo_wood)" strokeWidth="3.2" strokeLinecap="round" />
+      <circle cx="12" cy="26" r="2.2" fill="#ef4444" />
+      <circle cx="19" cy="19" r="2" fill="#ef4444" />
+      <circle cx="25" cy="12" r="1.8" fill="#ef4444" />
+      <path d="M 28 8 Q 32 15 29 27" stroke="#38bdf8" strokeWidth="1.2" strokeDasharray="2 1" />
+      <circle cx="29" cy="27" r="3.5" fill="#ef4444" stroke="#7f1d1d" strokeWidth="1" />
+      <path d="M 26 27 A 3 3 0 0 0 32 27" fill="#ffffff" />
+    </svg>
+  );
+}
+
+// 61. Cần Máy Carbon Chuyên Nghiệp 3D (Carbon Pro Fishing Rod)
+export function Icon3dFishingRodPro({ size = 28, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="carbon_rod" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#0f172a" />
+          <stop offset="50%" stopColor="#0284c7" />
+          <stop offset="100%" stopColor="#38bdf8" />
+        </linearGradient>
+      </defs>
+      <path d="M 6 32 C 14 26, 22 18, 30 5" stroke="url(#carbon_rod)" strokeWidth="3.4" strokeLinecap="round" />
+      <rect x="9" y="24" width="7" height="6" rx="2" fill="#facc15" stroke="#854d0e" strokeWidth="1.2" transform="rotate(-35 12 27)" />
+      <circle cx="14" cy="27" r="2" fill="#ca8a04" />
+      <circle cx="22" cy="14" r="1.5" stroke="#f8fafc" strokeWidth="1.2" fill="none" />
+      <circle cx="28" cy="8" r="1.2" stroke="#f8fafc" strokeWidth="1.2" fill="none" />
+      <path d="M 30 5 Q 35 15 32 24 A 3 3 0 0 1 29 27" stroke="#94a3b8" strokeWidth="1.2" fill="none" />
+    </svg>
+  );
+}
+
+// 62. Mồi Câu Trùn Quế 3D (Worm Bait Cup)
+export function Icon3dBaitWorm({ size = 26, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <path d="M 6 15 L 8 28 L 24 28 L 26 15 Z" fill="#b45309" stroke="#451a03" strokeWidth="1.8" />
+      <ellipse cx="16" cy="15" rx="10" ry="3.5" fill="#78350f" stroke="#451a03" strokeWidth="1.5" />
+      <path d="M 12 16 C 10 11, 14 8, 17 12 C 19 15, 23 11, 25 7" stroke="#fb7185" strokeWidth="2.8" strokeLinecap="round" />
+      <circle cx="25" cy="7" r="1.8" fill="#f43f5e" />
+    </svg>
+  );
+}
+
+// 63. Mồi Ruồi Lông Vũ Óng Ánh 3D (Fly Lure Bait)
+export function Icon3dBaitLure({ size = 26, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <ellipse cx="15" cy="16" rx="9" ry="4.5" fill="#38bdf8" stroke="#0369a1" strokeWidth="1.6" />
+      <ellipse cx="14" cy="15" rx="6" ry="2" fill="#ffffff" opacity="0.75" />
+      <circle cx="8" cy="15" r="2" fill="#facc15" stroke="#713f12" strokeWidth="0.8" />
+      <circle cx="8" cy="15" r="1" fill="#0f172a" />
+      <path d="M 23 16 L 30 11 L 28 16 L 30 21 Z" fill="#ec4899" stroke="#9d174d" strokeWidth="1.2" />
+      <path d="M 16 20 C 16 26, 12 26, 12 23" stroke="#64748b" strokeWidth="1.5" fill="none" />
+    </svg>
+  );
+}
+
+// 64. Thùng Ướp Lạnh Ngư Dân 3D (Cooler Box)
+export function Icon3dCoolerBox({ size = 26, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="cooler_blue" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#0284c7" />
+        </linearGradient>
+      </defs>
+      <rect x="5" y="13" width="22" height="15" rx="3.5" fill="url(#cooler_blue)" stroke="#0369a1" strokeWidth="1.8" />
+      <rect x="4" y="9" width="24" height="5.5" rx="2" fill="#ffffff" stroke="#0369a1" strokeWidth="1.8" />
+      <rect x="14" y="12" width="4" height="4" rx="1" fill="#facc15" stroke="#78350f" strokeWidth="1" />
+      <path d="M 8 13 L 8 6 C 8 4, 24 4, 24 6 L 24 13" stroke="#e2e8f0" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
+// 65. Túi Thính Dụ Cá Truyền Thống 3D (Fish Chum Bag)
+export function Icon3dFishChum({ size = 26, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <path d="M 9 14 C 9 8, 23 8, 23 14 C 25 18, 26 26, 24 28 C 21 30, 11 30, 8 28 C 6 26, 7 18, 9 14 Z" fill="#d97706" stroke="#78350f" strokeWidth="1.8" />
+      <ellipse cx="16" cy="13" rx="5" ry="2" fill="#ef4444" stroke="#7f1d1d" strokeWidth="1.2" />
+      <circle cx="13" cy="20" r="1.5" fill="#fef08a" />
+      <circle cx="18" cy="22" r="1.5" fill="#fef08a" />
+      <circle cx="15" cy="25" r="1.5" fill="#fef08a" />
+    </svg>
+  );
+}
+
+// 66. Quả Cà Chua Đỏ Mọng 3D (Juicy Tomato)
+export function Icon3dTomato({ size = 24, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="tomato_skin" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#f87171" />
+          <stop offset="40%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#991b1b" />
+        </radialGradient>
+      </defs>
+      <circle cx="16" cy="18" r="11" fill="url(#tomato_skin)" stroke="#7f1d1d" strokeWidth="1.8" />
+      <ellipse cx="12" cy="14" rx="3.5" ry="2.2" fill="#ffffff" opacity="0.75" transform="rotate(-30 12 14)" />
+      <path d="M 16 9 L 16 4 C 16 3, 19 3, 19 5" stroke="#15803d" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+      <path d="M 16 9 L 12 7 L 14 10 L 10 11 L 14 12 L 13 15 L 16 11 L 19 15 L 18 12 L 22 11 L 18 10 L 20 7 Z" fill="#22c55e" stroke="#14532d" strokeWidth="1" />
+    </svg>
+  );
+}
+
+// 67. Quả Dâu Tây Đỏ Ruby 3D (Ruby Strawberry)
+export function Icon3dStrawberry({ size = 24, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="strawberry_grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#fb7185" />
+          <stop offset="45%" stopColor="#e11d48" />
+          <stop offset="100%" stopColor="#881337" />
+        </linearGradient>
+      </defs>
+      <path d="M 9 12 C 7 17, 10 26, 16 29 C 22 26, 25 17, 23 12 C 20 8, 12 8, 9 12 Z" fill="url(#strawberry_grad)" stroke="#4c0519" strokeWidth="1.8" strokeLinejoin="round" />
+      <circle cx="12" cy="15" r="0.9" fill="#facc15" />
+      <circle cx="16" cy="16" r="0.9" fill="#facc15" />
+      <circle cx="20" cy="15" r="0.9" fill="#facc15" />
+      <circle cx="14" cy="20" r="0.9" fill="#facc15" />
+      <circle cx="18" cy="20" r="0.9" fill="#facc15" />
+      <circle cx="16" cy="24" r="0.9" fill="#facc15" />
+      <path d="M 16 8 L 16 4" stroke="#15803d" strokeWidth="2" strokeLinecap="round" />
+      <path d="M 10 10 L 16 11 L 22 10 L 18 8 L 16 6 L 14 8 Z" fill="#4ade80" stroke="#166534" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
+// 68. Bao Phân Bón Tăng Trưởng Sinh Học 3D (Fertilizer Bag)
+export function Icon3dFertilizerBag({ size = 26, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="fert_bag" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#86efac" />
+          <stop offset="60%" stopColor="#22c55e" />
+          <stop offset="100%" stopColor="#15803d" />
+        </linearGradient>
+      </defs>
+      <path d="M 8 10 L 24 10 L 26 28 L 6 28 Z" fill="url(#fert_bag)" stroke="#14532d" strokeWidth="1.8" />
+      <path d="M 6 10 C 10 8, 22 8, 26 10" stroke="#14532d" strokeWidth="2.2" strokeLinecap="round" />
+      <circle cx="16" cy="19" r="5" fill="#fef08a" stroke="#ca8a04" strokeWidth="1.2" />
+      <path d="M 16 22 C 16 17, 18 16, 19 16 C 18 19, 17 21, 16 22 Z" fill="#15803d" />
+    </svg>
+  );
+}
+
+// 69. Chai Thuốc Trừ Sâu Thảo Mộc 3D (Bio Pesticide Bottle)
+export function Icon3dPesticideBottle({ size = 26, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <rect x="9" y="14" width="14" height="15" rx="3.5" fill="#f8fafc" stroke="#334155" strokeWidth="1.8" />
+      <rect x="11" y="17" width="10" height="7" rx="1.5" fill="#4ade80" stroke="#166534" strokeWidth="1" />
+      <path d="M 14 14 L 14 9 L 18 9 L 18 14 Z" fill="#cbd5e1" stroke="#334155" strokeWidth="1.4" />
+      <path d="M 12 9 L 24 9 L 24 6 L 16 6 L 12 7 Z" fill="#ea580c" stroke="#7c2d12" strokeWidth="1.4" />
+      <path d="M 14 10 L 10 14" stroke="#ea580c" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// 70. Trái Tim Thạch Hồng Tương Tác 3D (Heart Reaction)
+export function Icon3dHeartReaction({ size = 24, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="jelly_heart" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#f472b6" />
+          <stop offset="45%" stopColor="#ec4899" />
+          <stop offset="100%" stopColor="#be185d" />
+        </radialGradient>
+      </defs>
+      <path
+        d="M 16 28 C 16 28, 4 20, 4 12 C 4 7, 8 4, 12 4 C 14 4, 15.5 5, 16 6.5 C 16.5 5, 18 4, 20 4 C 24 4, 28 7, 28 12 C 28 20, 16 28, 16 28 Z"
+        fill="url(#jelly_heart)"
+        stroke="#831843"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <ellipse cx="11" cy="9" rx="2.5" ry="1.4" fill="#ffffff" opacity="0.8" transform="rotate(-30 11 9)" />
+    </svg>
+  );
+}
+
+// 71. Bàn Tay Vẫy Chào Thân Thiện 3D (Wave Hand)
+export function Icon3dWaveHand({ size = 24, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <path
+        d="M 10 26 L 8 16 C 8 14, 11 13, 12 15 L 12 10 C 12 8, 15 8, 15 10 L 15 7 C 15 5, 18 5, 18 7 L 18 9 C 18 7, 21 7, 21 9 L 21 17 C 24 16, 26 18, 25 21 C 24 24, 20 28, 16 28 Z"
+        fill="#fde047"
+        stroke="#854d0e"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M 24 6 C 26 8, 27 11, 26 14" stroke="#ca8a04" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+      <path d="M 27 4 C 30 7, 31 12, 29 16" stroke="#ca8a04" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
+// 72. Ống Pháo Giấy Kim Tuyến 3D (Party Popper)
+export function Icon3dPartyPopper({ size = 26, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <polygon points="4,28 17,23 9,15" fill="#facc15" stroke="#78350f" strokeWidth="1.8" />
+      <polygon points="9,15 17,23 20,18 12,10" fill="#38bdf8" stroke="#0369a1" strokeWidth="1.5" />
+      <circle cx="21" cy="7" r="1.5" fill="#ef4444" />
+      <circle cx="27" cy="11" r="1.5" fill="#22c55e" />
+      <circle cx="25" cy="19" r="1.5" fill="#a855f7" />
+      <path d="M 17 14 C 20 10, 24 12, 27 7" stroke="#ec4899" strokeWidth="1.6" strokeLinecap="round" fill="none" />
+      <path d="M 14 8 C 17 4, 22 6, 23 2" stroke="#f59e0b" strokeWidth="1.6" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
+// 73. Cúp Vàng Vinh Quang 3D (Trophy Cup)
+export function Icon3dTrophyCup({ size = 26, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="gold_cup" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="50%" stopColor="#facc15" />
+          <stop offset="100%" stopColor="#ca8a04" />
+        </linearGradient>
+      </defs>
+      <path d="M 9 6 L 23 6 C 23 15, 19 19, 16 19 C 13 19, 9 15, 9 6 Z" fill="url(#gold_cup)" stroke="#78350f" strokeWidth="1.8" />
+      <path d="M 9 8 C 5 8, 5 14, 9 15" stroke="#ca8a04" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+      <path d="M 23 8 C 27 8, 27 14, 23 15" stroke="#ca8a04" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+      <rect x="14" y="19" width="4" height="4" fill="#ca8a04" />
+      <rect x="10" y="23" width="12" height="5" rx="1.5" fill="#78350f" stroke="#451a03" strokeWidth="1.5" />
+      <polygon points="16,9 17,12 20,12 18,14 19,17 16,15 13,17 14,14 12,12 15,12" fill="#ffffff" />
+    </svg>
+  );
+}
+
+// 74. Biển Cảnh Báo Tam Giác 3D (Warning Alert)
+export function Icon3dWarningAlert({ size = 24, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <polygon points="16,3 29,27 3,27" fill="#facc15" stroke="#78350f" strokeWidth="2" strokeLinejoin="round" />
+      <polygon points="16,7 26,25 6,25" fill="#fef08a" />
+      <line x1="16" y1="11" x2="16" y2="18" stroke="#78350f" strokeWidth="2.8" strokeLinecap="round" />
+      <circle cx="16" cy="22" r="1.5" fill="#78350f" />
+    </svg>
+  );
+}
+
+// 75. Ly Nước Dừa Dã Ngoại 3D (Tiki Coconut Drink)
+export function Icon3dDrinkCoconut({ size = 26, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <path d="M 7 14 C 7 24, 25 24, 25 14 Z" fill="#78350f" stroke="#451a03" strokeWidth="1.8" />
+      <ellipse cx="16" cy="14" rx="9" ry="3.5" fill="#ffffff" stroke="#451a03" strokeWidth="1.4" />
+      <ellipse cx="16" cy="14" rx="7" ry="2.2" fill="#67e8f9" />
+      <path d="M 14 15 L 12 5 L 8 4" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" fill="none" />
+      <polygon points="21,14 26,7 20,4 17,9" fill="#f43f5e" stroke="#881337" strokeWidth="1" />
+    </svg>
+  );
+}
+
+// 76. Nút Dấu Cộng Đồ Chơi 3D (Toy Plus Button - Candy Refill)
+export function Icon3dPlus({ size = 18, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={`icon-3d ${className}`}>
+      <circle cx="12" cy="12" r="10.5" fill="#22c55e" stroke="#14532d" strokeWidth="1.6" />
+      <circle cx="12" cy="11.5" r="9" fill="#4ade80" />
+      <line x1="12" y1="7" x2="12" y2="17" stroke="#ffffff" strokeWidth="2.8" strokeLinecap="round" />
+      <line x1="7" y1="12" x2="17" y2="12" stroke="#ffffff" strokeWidth="2.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// 77. Điện Thoại Thông Minh Kaia 3D (Kaia Smartphone)
+export function Icon3dSmartPhone({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={`icon-3d ${className}`}>
+      <rect x="8" y="3" width="20" height="30" rx="6" fill="#38bdf8" stroke="#0284c7" strokeWidth="2" />
+      <rect x="10.5" y="6" width="15" height="22" rx="3.5" fill="#ffffff" />
+      <circle cx="18" cy="30.5" r="1.5" fill="#ffffff" />
+      <circle cx="14" cy="11" r="2" fill="#ef4444" />
+      <circle cx="22" cy="11" r="2" fill="#eab308" />
+      <circle cx="14" cy="17" r="2" fill="#22c55e" />
+      <circle cx="22" cy="17" r="2" fill="#a855f7" />
+    </svg>
+  );
+}
+
+
 

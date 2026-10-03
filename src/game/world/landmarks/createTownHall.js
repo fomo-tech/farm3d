@@ -30,9 +30,10 @@ function makeMat(scene, name, hex, emissiveHex = null, specular = 0.5, specularP
  * - Bảng hiệu Holographic Neon "KAIA CITY HALL · METROPOLIS CIVIC CENTER"
  * - Hai cánh ban công check-in và bồn hoa cảnh quan đô thị hiện đại hai bên đại sảnh
  */
-export function createTownHall(scene, shadows, position = { x: 0, y: 0, z: -98 }) {
+export function createTownHall(scene, shadows, position = { x: 0, y: 0, z: -98 }, rotationY = 0) {
   const root = new TransformNode('pt-metropolis-city-hall', scene);
   root.position.set(position.x, position.y || 0, position.z);
+  root.rotation.y = position.rotationY ?? rotationY;
 
   const mats = {
     marbleWhite: makeMat(scene, 'th-marble-white', '#f8fafc', null, 0.7, 100),
@@ -277,32 +278,35 @@ export function createTownHall(scene, shadows, position = { x: 0, y: 0, z: -98 }
   beacon.parent = root;
 
   // ========================================================
-  // 4. BẢNG HIỆU HOLOGRAPHIC NEON MARQUEE
+  // 4. BẢNG HIỆU HOLOGRAPHIC NEON MARQUEE (2048x512 High-Res)
   // ========================================================
-  const dt = new DynamicTexture('th-marquee-tex', { width: 1024, height: 256 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  const dt = new DynamicTexture('th-marquee-tex', { width: 2048, height: 512 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  dt.anisotropicFilteringLevel = 16;
   const ctx = dt.getContext();
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   ctx.fillStyle = '#0f172a';
   ctx.beginPath();
-  ctx.roundRect(12, 12, 1000, 232, 28);
+  ctx.roundRect(24, 24, 2000, 464, 56);
   ctx.fill();
 
   ctx.strokeStyle = '#00f2fe';
-  ctx.lineWidth = 8;
+  ctx.lineWidth = 16;
   ctx.stroke();
 
-  ctx.font = '900 68px "Montserrat", Arial, sans-serif';
+  ctx.font = '900 136px "Montserrat", Arial, sans-serif';
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
   ctx.shadowColor = '#00f2fe';
-  ctx.shadowBlur = 24;
-  ctx.fillText('KAIA CITY HALL', 512, 115);
+  ctx.shadowBlur = 48;
+  ctx.fillText('KAIA CITY HALL', 1024, 230);
 
-  ctx.font = 'bold 26px "Montserrat", Arial, sans-serif';
+  ctx.font = 'bold 52px "Montserrat", Arial, sans-serif';
   ctx.fillStyle = '#fbbf24';
   ctx.shadowColor = '#f59e0b';
-  ctx.shadowBlur = 12;
-  ctx.fillText('METROPOLIS SOCIAL CIVIC CENTER', 512, 185);
+  ctx.shadowBlur = 24;
+  ctx.fillText('METROPOLIS SOCIAL CIVIC CENTER', 1024, 370);
 
   dt.update();
 

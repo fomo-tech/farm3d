@@ -4,6 +4,7 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
+import { getTerrainHeight } from './TerrainHeightSystem.js';
 
 function createMat(scene, name, hex, emissiveHex = null) {
   const m = new StandardMaterial(name, scene);
@@ -39,8 +40,9 @@ export function createFarmAnimals(scene, shadows) {
   // ==========================================
   function createChibiCow(x, z, rotationY = 0) {
     const s = 0.45;
+    const gy = getTerrainHeight(x, z);
     const cow = spawnModelSync(scene, MODEL_PATHS.animals.cow, {
-      position: new Vector3(x, 0, z),
+      position: new Vector3(x, gy, z),
       rotation: new Vector3(0, rotationY, 0),
       scaling: new Vector3(s, s, s),
       shadows,
@@ -63,8 +65,9 @@ export function createFarmAnimals(scene, shadows) {
   // ==========================================
   function createChibiSheep(x, z, rotationY = 0) {
     const s = 0.35;
+    const gy = getTerrainHeight(x, z);
     const sheep = spawnModelSync(scene, MODEL_PATHS.animals.alpaca, {
-      position: new Vector3(x, 0, z),
+      position: new Vector3(x, gy, z),
       rotation: new Vector3(0, rotationY, 0),
       scaling: new Vector3(s, s, s),
       shadows,
@@ -75,7 +78,7 @@ export function createFarmAnimals(scene, shadows) {
     let time = Math.random() * 10;
     animators.push(dt => {
       time += dt * 2.0;
-      sheep.position.y = Math.max(0, Math.sin(time) * 0.06);
+      sheep.position.y = gy + Math.max(0, Math.sin(time) * 0.06);
     });
     return sheep;
   }
@@ -85,8 +88,9 @@ export function createFarmAnimals(scene, shadows) {
   // ==========================================
   function createFarmDog(x, z, rotationY = 0) {
     const s = 0.32;
+    const gy = getTerrainHeight(x, z);
     const dog = spawnModelSync(scene, MODEL_PATHS.animals.shiba, {
-      position: new Vector3(x, 0, z),
+      position: new Vector3(x, gy, z),
       rotation: new Vector3(0, rotationY, 0),
       scaling: new Vector3(s, s, s),
       shadows,
@@ -101,8 +105,9 @@ export function createFarmAnimals(scene, shadows) {
   // ==========================================
   function createFarmHorse(x, z, rotationY = 0) {
     const s = 0.018;
+    const gy = getTerrainHeight(x, z);
     const horse = spawnModelSync(scene, MODEL_PATHS.animals.horse, {
-      position: new Vector3(x, 0, z),
+      position: new Vector3(x, gy, z),
       rotation: new Vector3(0, rotationY, 0),
       scaling: new Vector3(s, s, s),
       shadows,
@@ -116,8 +121,9 @@ export function createFarmAnimals(scene, shadows) {
   // ==========================================
   function createFarmFox(x, z, rotationY = 0) {
     const s = 0.022;
+    const gy = getTerrainHeight(x, z);
     const fox = spawnModelSync(scene, MODEL_PATHS.animals.fox, {
-      position: new Vector3(x, 0, z),
+      position: new Vector3(x, gy, z),
       rotation: new Vector3(0, rotationY, 0),
       scaling: new Vector3(s, s, s),
       shadows,
