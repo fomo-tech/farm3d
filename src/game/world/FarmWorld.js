@@ -323,6 +323,7 @@ function remoteRootFor(mesh) {
 export class FarmWorld {
   constructor(canvas, onStatus, callbacks = {}) {
     window.__farmDebug?.mark('Creating WebGL engine');
+    Texture.DEFAULT_ANISOTROPIC_FILTERING_LEVEL = 16;
     this.canvas = canvas;
     this.onStatus = onStatus;
     this.callbacks = callbacks;
@@ -425,6 +426,10 @@ export class FarmWorld {
       }
       if (this.shadows) {
         this.shadows.filteringQuality = preset === 'ultra' ? ShadowGenerator.QUALITY_MEDIUM : ShadowGenerator.QUALITY_LOW;
+        const targetMapSize = preset === 'ultra' && !this.isMobile ? 2048 : (this.isMobile || preset === 'eco' ? 512 : 1024);
+        if (this.shadows.mapSize !== targetMapSize) {
+          this.shadows.mapSize = targetMapSize;
+        }
       }
       this.callbacks.onQualityChange?.(preset);
     };
@@ -650,7 +655,9 @@ export class FarmWorld {
     rimLight.specular = Color3.FromHexString('#fef08a');
 
     // 4. Tầng 4: Shadow Generator mờ 28% mềm mại (PCF Low/Medium, autoCalcDepthBounds = false)
-    const shadowMapResolution = this.isMobile ? 512 : 1024;
+    const shadowMapResolution = this.graphicsQuality === 'ultra' && !this.isMobile
+      ? 2048
+      : (this.isMobile || this.graphicsQuality === 'eco' ? 512 : 1024);
     const shadows = new ShadowGenerator(shadowMapResolution, sun);
     shadows.usePercentageCloserFiltering = true;
     shadows.filteringQuality = this.graphicsQuality === 'ultra' ? ShadowGenerator.QUALITY_MEDIUM : ShadowGenerator.QUALITY_LOW;
@@ -1186,15 +1193,9 @@ export class FarmWorld {
             // Tối ưu triệt để: Sử dụng setEnabled thay vì dispose() / createFarmPlot() liên tục gây lag GC
             if (distance > 280 && farm.id !== this.playerFarmId && estate && estate.isEnabled()) {
               estate.setEnabled(false);
-              const b = this.farmBuildings.get(farm.id);
-              if (b?.home?.root) b.home.root.setEnabled(false);
-              if (b?.barn?.root) b.barn.root.setEnabled(false);
             }
             if (distance <= 280 && estate && !estate.isEnabled()) {
               estate.setEnabled(true);
-              const b = this.farmBuildings.get(farm.id);
-              if (b?.home?.root) b.home.root.setEnabled(true);
-              if (b?.barn?.root) b.barn.root.setEnabled(true);
             }
             if (distance < nearestDetailDistance && estate?.metadata?.lightweight) {
               nearestDetail = farm;
@@ -1727,9 +1728,6 @@ export class FarmWorld {
     if (!farm || !farmChunk || farmId === this.playerFarmId) return;
 
     farmChunk.showHLOD();
-    const buildings = this.farmBuildings.get(farmId);
-    if (buildings?.home?.root) buildings.home.root.setEnabled(false);
-    if (buildings?.barn?.root) buildings.barn.root.setEnabled(false);
   }
 
   evictFarmCache(chunk) {
@@ -1848,7 +1846,7 @@ export class FarmWorld {
     let minDistance = 4.8;
     this.farmGates?.forEach(gate => {
       if (gate.farmId === this.playerFarmId) return;
-      const gatePos = gate.root.position;
+      const gatePos = gate.root.getAbsolutePosition();
       const distance = Math.hypot(pos.x - gatePos.x, pos.z - gatePos.z);
       if (distance < minDistance) {
         minDistance = distance;

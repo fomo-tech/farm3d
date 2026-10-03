@@ -1,7 +1,7 @@
 export const GRAPHICS_PRESETS = {
-  ultra: { maxDpr: 2, mobileDpr: 1.5, pixels: 6500000 },
-  balanced: { maxDpr: 1.25, mobileDpr: 1.2, pixels: 2400000 },
-  eco: { maxDpr: 0.85, mobileDpr: 0.85, pixels: 1400000 },
+  ultra: { maxDpr: 2.0, mobileDpr: 1.75, pixels: 12000000 },
+  balanced: { maxDpr: 1.5, mobileDpr: 1.35, pixels: 5000000 },
+  eco: { maxDpr: 1.0, mobileDpr: 1.0, pixels: 2000000 },
 };
 
 export function readGraphicsQuality() {
@@ -19,9 +19,10 @@ export function calculateRenderDpr({ quality = 'ultra', nativeDpr = 1, width = 1
   const preset = GRAPHICS_PRESETS[quality] || GRAPHICS_PRESETS.balanced;
   const limit = mobile ? preset.mobileDpr : preset.maxDpr;
   const pixelLimit = Math.sqrt(preset.pixels / Math.max(1, width * height));
-  // Ultra is a stable sharpness setting, not an automatic performance preset.
+  // Ultra and Balanced prioritize crisp native 1:1 pixel mapping on High-DPI screens.
+  const targetDpr = Math.min(Math.max(1, nativeDpr), limit, pixelLimit);
   const effectiveScale = quality === 'ultra' ? 1 : scale;
-  return Math.max(0.5, Math.min(Math.max(1, nativeDpr), limit, pixelLimit) * effectiveScale);
+  return Math.max(0.75, targetDpr * effectiveScale);
 }
 
 // Slow hysteresis avoids oscillation and ignores stalls caused by tab suspension/loading.
@@ -38,8 +39,9 @@ export class RenderResolutionController {
     this.elapsed = 0;
     this.frames = 0;
     const previous = this.scale;
-    if (average > 27) this.scale = Math.max(0.75, this.scale - 0.05);
-    else if (average < 18) this.scale = Math.min(1, this.scale + 0.025);
+    // Only downscale if frame rate drops below 30 FPS for 5 sustained seconds
+    if (average > 33) this.scale = Math.max(0.85, this.scale - 0.05);
+    else if (average < 18) this.scale = Math.min(1, this.scale + 0.05);
     return Math.abs(previous - this.scale) > 0.001;
   }
 }

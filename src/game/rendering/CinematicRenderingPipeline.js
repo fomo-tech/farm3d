@@ -14,40 +14,39 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     const isUltra = quality === 'ultra';
     const isEco = quality === 'eco';
 
-    // 1. Khử răng cưa phần cứng siêu sắc nét (2x Hardware MSAA)
-    // Tối ưu hóa GPU: 2x MSAA mang lại viền hình sắc nét mượt mà với 50% mức tiêu thụ VRAM so với 4x
+    // 1. Khử răng cưa phần cứng siêu sắc nét (4x/2x Hardware MSAA)
     pipeline.samples = isEco ? 1 : (isUltra && !options.lightweight ? 4 : 2);
-    pipeline.fxaaEnabled = isEco ? false : false;
+    pipeline.fxaaEnabled = false;
 
-    // Restrained sharpening: gentle micro-contrast without temporal pixel buzzing during movement.
-    pipeline.sharpenEnabled = isUltra;
+    // Contrast Adaptive Sharpening (CAS): Micro-contrast that makes leaves, textures, and edges pop.
+    pipeline.sharpenEnabled = !isEco;
     if (pipeline.sharpen) {
-      pipeline.sharpen.edgeAmount = 0.04;
+      pipeline.sharpen.edgeAmount = isUltra ? 0.18 : 0.10;
       pipeline.sharpen.colorAmount = 1.0;
     }
 
     // Keep bloom disabled for clarity; retain tuned values if it is re-enabled later.
     pipeline.bloomEnabled = false;
     if (pipeline.bloom) {
-      pipeline.bloomThreshold = 0.88; // Chỉ tim đèn và phản xạ kim loại/nước mạnh mới phát sáng
-      pipeline.bloomWeight = 0.08;    // Không làm mờ màng sương cảnh vật
-      pipeline.bloomKernel = 24;      // Quầng sáng gọn gàng, sắc sảo
+      pipeline.bloomThreshold = 0.88;
+      pipeline.bloomWeight = 0.08;
+      pipeline.bloomKernel = 24;
       pipeline.bloomScale = 0.5;
     }
 
-    // Preserve material color instead of compressing bright surfaces toward white.
+    // Preserve material color with vibrant contrast and clean daylight exposure.
     pipeline.imageProcessingEnabled = true;
     pipeline.imageProcessing.toneMappingEnabled = false;
-    pipeline.imageProcessing.contrast = 1.06;
-    pipeline.imageProcessing.exposure = 0.94;
+    pipeline.imageProcessing.contrast = 1.12;
+    pipeline.imageProcessing.exposure = 0.98;
     pipeline.imageProcessing.vignetteEnabled = false;
   } catch (err) {
     console.warn('[CinematicPipeline] Fallback to direct scene processing:', err);
     if (scene.imageProcessingConfiguration) {
       scene.imageProcessingConfiguration.isEnabled = true;
       scene.imageProcessingConfiguration.toneMappingEnabled = false;
-      scene.imageProcessingConfiguration.contrast = 1.06;
-      scene.imageProcessingConfiguration.exposure = 0.94;
+      scene.imageProcessingConfiguration.contrast = 1.12;
+      scene.imageProcessingConfiguration.exposure = 0.98;
     }
   }
 
@@ -62,19 +61,18 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
         pipeline.fxaaEnabled = false;
         pipeline.sharpenEnabled = true;
         if (pipeline.sharpen) {
-          pipeline.sharpen.edgeAmount = 0.04;
+          pipeline.sharpen.edgeAmount = 0.18;
           pipeline.sharpen.colorAmount = 1.0;
         }
         pipeline.bloomEnabled = false;
-        if (pipeline.bloom) {
-          pipeline.bloomThreshold = 0.88;
-          pipeline.bloomWeight = 0.08;
-          pipeline.bloomKernel = 24;
-        }
       } else if (quality === 'balanced') {
         pipeline.samples = 2;
         pipeline.fxaaEnabled = false;
-        pipeline.sharpenEnabled = false;
+        pipeline.sharpenEnabled = true;
+        if (pipeline.sharpen) {
+          pipeline.sharpen.edgeAmount = 0.10;
+          pipeline.sharpen.colorAmount = 1.0;
+        }
         pipeline.bloomEnabled = false;
       } else if (quality === 'eco') {
         pipeline.samples = 1;
