@@ -251,17 +251,25 @@ export class FoliageInstancingEngine {
         if (!shouldDetail) {
           group.proxy?.setEnabled(true);
           for (const mesh of group.meshes) {
-            this.shadows?.removeShadowCaster(mesh);
-            mesh.dispose();
+            mesh.setEnabled(false);
           }
-          group.meshes.length = 0;
           evicted++;
           group.dirty = false;
         } else {
-          group.dirty = true;
+          if (group.meshes.length > 0) {
+            group.proxy?.setEnabled(false);
+            for (const mesh of group.meshes) {
+              mesh.setEnabled(true);
+            }
+            group.dirty = false;
+          } else {
+            group.dirty = true;
+          }
         }
       }
-      if (shouldDetail) this.dirtyChunks.add(`${chunk.x}:${chunk.z}`);
+      if (shouldDetail && [...chunk.groups.values()].some(g => g.dirty)) {
+        this.dirtyChunks.add(`${chunk.x}:${chunk.z}`);
+      }
     }
     let built = 0;
     const pending = [...this.dirtyChunks].sort((a, b) => {

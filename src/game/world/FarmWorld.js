@@ -20,6 +20,8 @@ import '@babylonjs/core/Culling/ray.js';
 import { FARM_CONFIG } from '../config.js';
 import { VENUE_LAYOUT } from '../../../shared/venueLayout.js';
 import { createFarmPlot } from '../farming/createFarmPlot.js';
+import { FrameBudgetScheduler } from '../engine/FrameBudgetScheduler.js';
+import { FarmChunk } from '../farming/FarmChunk.js';
 import { createPlayer } from '../player/createPlayer.js';
 import { createPlayerNameplate } from '../player/createPlayerNameplate.js';
 import { createOpenWorld } from './createOpenWorld.js';
@@ -292,10 +294,12 @@ function createInterior(scene, kind, config, shadows) {
       });
     }
   }
-  scene.meshes.slice(firstMeshIndex).forEach(mesh => {
+  const venueMeshes = scene.meshes.slice(firstMeshIndex);
+  venueMeshes.forEach(mesh => {
     mesh.metadata = { ...(mesh.metadata || {}), interiorVenue: kind };
     mesh.setEnabled(false);
   });
+  return venueMeshes;
 }
 
 function belongsToPlayer(mesh, playerRoot) {
@@ -346,6 +350,10 @@ export class FarmWorld {
     this.remotePlayers = new Map();
     this.farmBuildings = new Map();
     this.farmEstateRoots = new Map();
+    this.farmChunks = new Map();
+    this.venueMeshesMap = new Map();
+    this.currentVenueMeshes = null;
+    this.scheduler = new FrameBudgetScheduler(2.5);
     this.collisionSystem = new WorldCollisionSystem();
     this.cinematicTourActive = false;
     this.toggleCinematicTour = () => {
@@ -476,6 +484,8 @@ export class FarmWorld {
       if (renderFailed) return;
       try {
         if (!this.scene.activeCamera) throw new Error('Cảnh 3D không có camera hoạt động.');
+        window.__farmDebug?.stage('scheduler.update');
+        this.scheduler.update();
         window.__farmDebug?.stage('scene.render');
         this.scene.render();
         if (this.graphicsQuality !== 'ultra' && !document.hidden && this.resolutionController.sample(this.engine.getDeltaTime())) this.resize();
@@ -707,40 +717,52 @@ export class FarmWorld {
 
     this.openWorld = createOpenWorld(scene, shadows);
       this.vietnameseCountryside = createVietnameseCountryside(scene, shadows);
-      Object.entries(VENUES).forEach(([kind, config]) => createInterior(scene, kind, config, shadows));
-      // A seamless neighborhood chunk: farms are physical parcels beside a branch road.
+      Object.entries(VENUES).forEach(([kind, config]) => {
+        this.venueMeshesMap.set(kind, createInterior(scene, kind, config, shadows));
+      });
       // Multi-parcel Neighborhood: Each player owns their assigned lot (Lot 1, 2, 3, or 4)
       const allTiles = [];
       this.farmGates = [];
       this.playerFarmId = this.callbacks.getPlayerFarmId?.() || null;
       WORLD_LAYOUT.farms.forEach((farm, index) => {
         const initial = this.callbacks.initialLocation || WORLD_LAYOUT.spawn;
-        const lightweight = farm.id !== this.playerFarmId && Math.hypot(farm.x - initial.x, farm.z - initial.z) > 120;
         const isOwner = farm.id === this.playerFarmId;
         const ownerName = isOwner ? (this.callbacks.getPlayerName?.() || farm.owner) : farm.owner;
-        const tiles = createFarmPlot(scene, {
-          ...farm,
-          farmId: farm.id,
-          isOwner,
-          owner: ownerName,
-          lotNumber: index + 1,
-          interactive: true,
-          renderTiles: isOwner,
-          lightweight,
-        }, shadows);
-        allTiles.push(...tiles);
-        this.farmEstateRoots.set(farm.id, scene.getNodeByName(`farm-estate-${farm.id}`));
-        if (lightweight) return;
+        const distance = Math.hypot(farm.x - initial.x, farm.z - initial.z);
+        const shouldBeDetailed = isOwner || distance <= 90;
 
-        const gate = createFarmGateAndSign(scene, {
-          id: farm.id,
-          x: farm.x,
-          z: farm.z,
-          lotNumber: index + 1,
-          owner: ownerName,
+        const farmChunk = new FarmChunk(scene, { ...farm, lotNumber: index + 1 }, shadows, {
           isOwner,
-        }, shadows, () => this.callbacks.onMailbox?.(farm));
-        this.farmGates.push({ ...gate, farmId: farm.id, lotNumber: index + 1, defaultOwner: farm.owner });
+          ownerName,
+        });
+        this.farmChunks.set(farm.id, farmChunk);
+        this.farmEstateRoots.set(farm.id, farmChunk.root);
+
+        if (shouldBeDetailed) {
+          if (isOwner) {
+            farmChunk.buildDetailSynchronous((tiles) => {
+              allTiles.push(...tiles);
+            });
+            farmChunk.showDetail();
+          } else {
+            farmChunk.showDetail(this.scheduler, (tiles) => {
+              this.farming?.addTiles(tiles);
+            });
+          }
+
+          const gate = createFarmGateAndSign(scene, {
+            id: farm.id,
+            x: farm.x,
+            z: farm.z,
+            lotNumber: index + 1,
+            owner: ownerName,
+            isOwner,
+          }, shadows, () => this.callbacks.onMailbox?.(farm));
+          this.farmGates.push({ ...gate, farmId: farm.id, lotNumber: index + 1, defaultOwner: farm.owner });
+          farmChunk.setGate(gate);
+        } else {
+          farmChunk.showHLOD();
+        }
       });
 
       this.farming = new FarmingSystem(scene, allTiles, this.onStatus, this.playerFarmId, {
@@ -1520,12 +1542,15 @@ export class FarmWorld {
   }
 
   setVenueView(kind = null) {
-    this.scene.meshes.forEach(mesh => {
-      if (belongsToPlayer(mesh, this.player?.root)) { mesh.setEnabled(true); return; }
-      if (remoteRootFor(mesh)) { mesh.setEnabled(true); return; }
-      const interiorVenue = mesh.metadata?.interiorVenue;
-      mesh.setEnabled(interiorVenue ? interiorVenue === kind : !kind);
-    });
+    if (this.currentVenueMeshes) {
+      this.currentVenueMeshes.forEach(mesh => mesh.setEnabled(false));
+      this.currentVenueMeshes = null;
+    }
+    if (kind && this.venueMeshesMap?.has(kind)) {
+      const venueMeshes = this.venueMeshesMap.get(kind);
+      venueMeshes.forEach(mesh => mesh.setEnabled(true));
+      this.currentVenueMeshes = venueMeshes;
+    }
     this.remotePlayers.forEach(remote => remote.setEnabled(kind ? remote.metadata.venue === kind : !remote.metadata.venue));
     if (kind) {
       this.camera.lowerRadiusLimit = 10;
@@ -1666,44 +1691,36 @@ export class FarmWorld {
 
   ensureDetailedFarm(farmId, isOwner = true, ownerName = null, homeTier = 1, barnLevel = 1) {
     const farm = WORLD_LAYOUT.farms.find(item => item.id === farmId);
-    const oldRoot = this.farmEstateRoots.get(farmId);
     if (!farm) return;
+    const farmChunk = this.farmChunks.get(farmId);
+    if (!farmChunk) return;
     const displayName = ownerName || (isOwner ? this.callbacks.getPlayerName?.() : farm.owner) || farm.owner;
-    if (!oldRoot?.metadata?.detailed) {
-      this.farming?.removeFarmTiles(farmId);
-      oldRoot?.dispose();
-      const tiles = createFarmPlot(this.scene, {
-        ...farm,
-        farmId,
-        isOwner,
-        owner: displayName,
-        lotNumber: farm.lotNumber,
-        interactive: true,
-        renderTiles: true,
-      }, this.shadows);
+    farmChunk.isOwner = isOwner;
+    farmChunk.ownerName = displayName;
+
+    farmChunk.showDetail(this.scheduler, (tiles) => {
       this.farming?.addTiles(tiles);
-      this.farmEstateRoots.set(farmId, this.scene.getNodeByName(`farm-estate-${farmId}`));
-    }
+    });
+
     if (!this.farmGates.some(gate => gate.farmId === farmId)) {
-      const gate = createFarmGateAndSign(this.scene, { ...farm, owner: displayName, isOwner }, this.shadows);
+      const gate = createFarmGateAndSign(this.scene, { ...farm, owner: displayName, isOwner }, this.shadows, () => this.callbacks.onMailbox?.(farm));
       this.farmGates.push({ ...gate, farmId, lotNumber: farm.lotNumber, defaultOwner: farm.owner });
+      farmChunk.setGate(gate);
     }
-    if (isOwner || this.publicFarms?.some(item => item.farmId === farmId)) this.ensureFarmBuildings(farmId, homeTier, barnLevel, displayName);
+    if (isOwner || this.publicFarms?.some(item => item.farmId === farmId)) {
+      this.ensureFarmBuildings(farmId, homeTier, barnLevel, displayName);
+    }
   }
 
   demoteUnoccupiedFarm(farmId) {
     const farm = WORLD_LAYOUT.farms.find(item => item.id === farmId);
-    const root = this.farmEstateRoots.get(farmId);
-    if (!farm || !root?.metadata?.detailed || farmId === this.playerFarmId) return;
-    this.farming?.removeFarmTiles(farmId);
-    root.dispose();
-    const gateIndex = this.farmGates.findIndex(gate => gate.farmId === farmId);
-    if (gateIndex >= 0) this.farmGates.splice(gateIndex, 1)[0].dispose?.();
+    const farmChunk = this.farmChunks.get(farmId);
+    if (!farm || !farmChunk || farmId === this.playerFarmId) return;
+
+    farmChunk.showHLOD();
     const buildings = this.farmBuildings.get(farmId);
-    buildings?.dispose?.();
-    this.farmBuildings.delete(farmId);
-    createFarmPlot(this.scene, { ...farm, farmId, lightweight: true, isOwner: false }, this.shadows);
-    this.farmEstateRoots.set(farmId, this.scene.getNodeByName(`farm-estate-${farmId}`));
+    if (buildings?.home?.root) buildings.home.root.setEnabled(false);
+    if (buildings?.barn?.root) buildings.barn.root.setEnabled(false);
   }
 
   ensurePlayerHome() {
@@ -1748,8 +1765,12 @@ export class FarmWorld {
       homeTier,
       barnLevel,
       ownerName,
-      dispose() { home.dispose?.(); corral.dispose?.(); },
+      dispose() { home?.dispose?.(); corral?.dispose?.(); },
     });
+    const farmChunk = this.farmChunks.get(farmId);
+    if (farmChunk) {
+      farmChunk.setBuildings(home, corral);
+    }
   }
 
   setPlayerHomeTier(tier) {

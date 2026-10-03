@@ -70,15 +70,39 @@ export function installWorldRenderIndex(scene) {
     timer = setTimeout(run, 0);
   };
 
+  const pendingAdded = [];
+  let pendingTimer = null;
+
+  const processPendingAdded = () => {
+    pendingTimer = null;
+    if (cancelled || scene.isDisposed) return;
+    const start = performance.now();
+    while (pendingAdded.length > 0) {
+      const mesh = pendingAdded.shift();
+      if (!mesh || mesh.isDisposed()) continue;
+      if (dynamic(mesh)) {
+        tree.dynamicContent.push(mesh);
+      } else {
+        mesh.computeWorldMatrix(true);
+        tree.addMesh(mesh);
+        indexed++;
+      }
+      if (performance.now() - start >= 1.5) break;
+    }
+    if (pendingAdded.length > 0) {
+      pendingTimer = setTimeout(processPendingAdded, 4);
+    }
+  };
+
   const added = scene.onNewMeshAddedObservable.add(mesh => {
     if (known.has(mesh) || mesh.isDisposed()) return;
     known.add(mesh);
     if (!ready) queue.push(mesh);
-    else if (dynamic(mesh)) tree.dynamicContent.push(mesh);
     else {
-      mesh.computeWorldMatrix(true);
-      tree.addMesh(mesh);
-      indexed++;
+      pendingAdded.push(mesh);
+      if (pendingTimer === null) {
+        pendingTimer = setTimeout(processPendingAdded, 4);
+      }
     }
   });
   schedule();
@@ -89,12 +113,15 @@ export function installWorldRenderIndex(scene) {
       indexedMeshes: indexed,
       dynamicCandidates: ready ? tree.dynamicContent.length : scene.meshes.length - indexed,
       spatialIndexReady: ready,
-      spatialIndexPending: Math.max(0, queue.length - cursor),
+      spatialIndexPending: Math.max(0, queue.length - cursor) + pendingAdded.length,
     }),
     dispose() {
       cancelled = true;
       if (timer !== null) {
         clearTimeout(timer);
+      }
+      if (pendingTimer !== null) {
+        clearTimeout(pendingTimer);
       }
       scene.onNewMeshAddedObservable.remove(added);
       if (scene._selectionOctree === tree) scene._selectionOctree = null;
