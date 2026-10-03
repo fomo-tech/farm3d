@@ -209,7 +209,9 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
         ...(node.getChildMeshes?.(false) || []),
       ]).filter(mesh => mesh.getTotalVertices?.() > 0);
       const distSq = root.position.x * root.position.x + root.position.z * root.position.z;
-      const canCastShadow = shadows && distSq < 48400; // < 220m from origin
+      const isSmallProp = /flower|flw|petal|grass|pebble|crop|carrot|pumpkin|lantern|lamp|bench|bucket|oar|duck/i.test(name) || /flower|bush|pebble/i.test(String(idOrUrl));
+      const canCastShadow = shadows && !isSmallProp && distSq < 14400; // < 120m from origin
+      const shadowMeshes = canCastShadow ? childMeshes.slice(0, 2) : [];
 
       childMeshes.forEach((mesh) => {
         mesh.isPickable = false;
@@ -217,7 +219,7 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
         else mesh.receiveShadows = true;
         mesh.doNotSyncBoundingInfo = true;
         if (typeof mesh.freezeWorldMatrix === 'function') mesh.freezeWorldMatrix();
-        if (canCastShadow) {
+        if (shadowMeshes.includes(mesh)) {
           shadows.addShadowCaster(mesh);
         }
         if (colorTint && mesh.material) {

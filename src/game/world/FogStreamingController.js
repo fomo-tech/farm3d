@@ -31,10 +31,10 @@ export class FogStreamingController {
     const recovering = !pressure && fps < 38;
     const mode = pressure ? 'performance' : (loading ? 'streaming' : (recovering ? 'recovering' : 'clear'));
     const preset = {
-      performance: { start: 75, end: 250, clip: 390 },
-      streaming: { start: 105, end: 340, clip: 500 },
-      recovering: { start: 145, end: 440, clip: 620 },
-      clear: { start: 210, end: 680, clip: 850 },
+      performance: { start: 75, end: 240, clip: 280 },
+      streaming: { start: 105, end: 320, clip: 380 },
+      recovering: { start: 135, end: 380, clip: 430 },
+      clear: { start: 180, end: 640, clip: 680 },
     }[mode];
     this.state = { mode, fps: Math.round(fps), pendingNear, targetFogEnd: preset.end };
     const frameDt = clamp(dt, 0, 0.1);

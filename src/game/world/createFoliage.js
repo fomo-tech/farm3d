@@ -155,7 +155,7 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
         position: new Vector3(x, 0, z),
         rotation: new Vector3(0, Math.random() * Math.PI * 2, 0),
         scaling: new Vector3(s, s, s),
-        shadows,
+        shadows: null,
         name: 'hydrangea-bush',
       });
     },
@@ -191,8 +191,6 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
         leg.parent = root;
       });
 
-      shadows?.addShadowCaster(seat);
-      shadows?.addShadowCaster(back);
       return root;
     },
 
@@ -233,7 +231,7 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
           position: new Vector3(fx, 0, fz),
           rotation: new Vector3(0, Math.random() * Math.PI * 2, 0),
           scaling: new Vector3(1.6, 1.6, 1.6),
-          shadows,
+          shadows: null,
           name: `flw-${i}`,
         });
         flw.parent = root;
@@ -317,7 +315,7 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
       hatCrown.material = materials.hat;
       hatCrown.parent = root;
 
-      [post, shirt, head, hatBrim].forEach(m => shadows?.addShadowCaster(m));
+      shadows?.addShadowCaster(post);
       return root;
     },
 
@@ -381,7 +379,7 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
       bucket.material = materials.wood;
       bucket.parent = root;
 
-      [stoneBase, rim, roof].forEach(m => shadows?.addShadowCaster(m));
+      shadows?.addShadowCaster(stoneBase);
       return root;
     },
   };

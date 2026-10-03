@@ -416,7 +416,7 @@ export class FarmWorld {
         this.cinematic.setQuality(preset);
       }
       if (this.shadows) {
-        this.shadows.filteringQuality = preset === 'ultra' ? ShadowGenerator.QUALITY_HIGH : (preset === 'balanced' ? ShadowGenerator.QUALITY_MEDIUM : ShadowGenerator.QUALITY_LOW);
+        this.shadows.filteringQuality = preset === 'ultra' ? ShadowGenerator.QUALITY_MEDIUM : ShadowGenerator.QUALITY_LOW;
       }
       this.callbacks.onQualityChange?.(preset);
     };
@@ -547,7 +547,10 @@ export class FarmWorld {
       this.resize();
       window.__farmDebug?.stage('build world spatial render index');
       this.renderIndex = installWorldRenderIndex(this.scene);
-      this.getNearbyShadowCount = installNearbyShadows(this.shadows, () => this.player?.root.position);
+      this.getNearbyShadowCount = installNearbyShadows(this.shadows, () => this.player?.root.position, {
+        radius: this.isMobile ? 28 : 36,
+        maxCasters: this.isMobile ? 16 : (this.graphicsQuality === 'ultra' ? 32 : 24),
+      });
       this.callbacks.onBootProgress?.({
         phase: 'ready',
         percentage: 100,
@@ -636,13 +639,14 @@ export class FarmWorld {
     rimLight.diffuse = Color3.FromHexString('#f8fafc'); // Viền sáng ngọc trai bồng bềnh
     rimLight.specular = Color3.FromHexString('#fef08a');
 
-    // 4. Tầng 4: Shadow Generator mờ 28% mềm mại (PCF High Quality)
-    const shadows = new ShadowGenerator(1024, sun);
+    // 4. Tầng 4: Shadow Generator mờ 28% mềm mại (PCF Low/Medium, autoCalcDepthBounds = false)
+    const shadowMapResolution = this.isMobile ? 512 : 1024;
+    const shadows = new ShadowGenerator(shadowMapResolution, sun);
     shadows.usePercentageCloserFiltering = true;
-    shadows.filteringQuality = this.isMobile ? ShadowGenerator.QUALITY_LOW : ShadowGenerator.QUALITY_HIGH;
+    shadows.filteringQuality = this.graphicsQuality === 'ultra' ? ShadowGenerator.QUALITY_MEDIUM : ShadowGenerator.QUALITY_LOW;
     shadows.bias = 0.0015;
     shadows.normalBias = 0.025; // Triệt tiêu răng cưa và sọc rách trên mặt nghiêng
-    shadows.autoCalcDepthBounds = true; // Thu hẹp dải depth shadow map ôm sát tầm nhìn camera
+    shadows.autoCalcDepthBounds = false; // Triệt tiêu hoàn toàn CPU depth bounds reduction stall
     shadows.darkness = 0.28; // Khớp preset ban ngày tươi sáng
     this.shadows = shadows;
     this.rimLight = rimLight;
