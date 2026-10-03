@@ -2314,3 +2314,389 @@ export function Icon3dStamp({ size = 28, className = '' }) {
   );
 }
 
+// 81. Tay Cầm Arcade Hoàng Kim 3D (Play Together Arcade Gamepad)
+export function Icon3dArcadeGamepad({ size = 36, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="gamepad_body" cx="40%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fff9a6" />
+          <stop offset="30%" stopColor="#facc15" />
+          <stop offset="75%" stopColor="#eab308" />
+          <stop offset="100%" stopColor="#ca8a04" />
+        </radialGradient>
+        <radialGradient id="gamepad_dpad" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#64748b" />
+          <stop offset="100%" stopColor="#1e293b" />
+        </radialGradient>
+        <radialGradient id="gamepad_btn_red" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#fca5a5" />
+          <stop offset="60%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#991b1b" />
+        </radialGradient>
+        <radialGradient id="gamepad_btn_blue" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#93c5fd" />
+          <stop offset="60%" stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#1e40af" />
+        </radialGradient>
+        <radialGradient id="gamepad_btn_green" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#86efac" />
+          <stop offset="60%" stopColor="#22c55e" />
+          <stop offset="100%" stopColor="#166534" />
+        </radialGradient>
+      </defs>
+      {/* Đáy đổ bóng 3D sâu */}
+      <rect x="4" y="13" width="40" height="25" rx="12" fill="#78350f" />
+      {/* Thân tay cầm kẹo vàng bơ */}
+      <rect x="4" y="10" width="40" height="25" rx="12" fill="url(#gamepad_body)" stroke="#ffffff" strokeWidth="2.5" />
+      {/* Tay nắm lõm trái/phải */}
+      <path d="M 6 22 C 8 28, 12 32, 16 32 C 18 32, 17 28, 15 24 Z" fill="#b45309" opacity="0.35" />
+      <path d="M 42 22 C 40 28, 36 32, 32 32 C 30 32, 31 28, 33 24 Z" fill="#b45309" opacity="0.35" />
+      {/* Vệt bóng gương trên nóc */}
+      <ellipse cx="24" cy="13" rx="16" ry="2" fill="#ffffff" opacity="0.8" />
+
+      {/* D-Pad (Phím điều hướng 3D bên trái) */}
+      <rect x="13.5" y="17" width="5" height="11" rx="1.5" fill="url(#gamepad_dpad)" stroke="#0f172a" strokeWidth="1" />
+      <rect x="10.5" y="20" width="11" height="5" rx="1.5" fill="url(#gamepad_dpad)" stroke="#0f172a" strokeWidth="1" />
+      <circle cx="16" cy="22.5" r="1.2" fill="#94a3b8" />
+
+      {/* Cụm 3 nút kẹo tròn 3D bên phải */}
+      <circle cx="34" cy="18" r="3" fill="url(#gamepad_btn_red)" stroke="#ffffff" strokeWidth="1" />
+      <circle cx="38" cy="22.5" r="3" fill="url(#gamepad_btn_blue)" stroke="#ffffff" strokeWidth="1" />
+      <circle cx="30" cy="22.5" r="3" fill="url(#gamepad_btn_green)" stroke="#ffffff" strokeWidth="1" />
+      <circle cx="34" cy="27" r="3" fill="#facc15" stroke="#ffffff" strokeWidth="1" />
+
+      {/* Ánh sáng điểm trên nút */}
+      <circle cx="33.2" cy="17.2" r="0.9" fill="#ffffff" opacity="0.9" />
+      <circle cx="37.2" cy="21.7" r="0.9" fill="#ffffff" opacity="0.9" />
+      <circle cx="29.2" cy="21.7" r="0.9" fill="#ffffff" opacity="0.9" />
+
+      {/* Logo Play mini ở tâm */}
+      <polygon points="23,20 27,22.5 23,25" fill="#78350f" />
+    </svg>
+  );
+}
+
+// 82. Loa Phát Thanh Kẹo Đỏ 3D (Play Together Megaphone Gold Speaker)
+export function Icon3dMegaphoneGold({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="mega_cone" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fca5a5" />
+          <stop offset="35%" stopColor="#ef4444" />
+          <stop offset="85%" stopColor="#b91c1c" />
+          <stop offset="100%" stopColor="#7f1d1d" />
+        </radialGradient>
+        <linearGradient id="mega_mouth" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fff9a6" />
+          <stop offset="40%" stopColor="#facc15" />
+          <stop offset="100%" stopColor="#b45309" />
+        </linearGradient>
+      </defs>
+      {/* Bóng đổ */}
+      <ellipse cx="22" cy="38" rx="14" ry="4" fill="rgba(15,23,42,0.25)" />
+      {/* Tay cầm loa gỗ */}
+      <rect x="17" y="24" width="6" height="13" rx="2.5" transform="rotate(-18 17 24)" fill="#d97706" stroke="#451a03" strokeWidth="1.5" />
+      {/* Thân loa nón đỏ cherry */}
+      <path
+        d="M 12 18 L 28 11 C 29 11, 30 12, 30 13 L 30 33 C 30 34, 29 35, 28 35 L 12 28 C 10.5 27, 9.5 25.5, 9.5 23 C 9.5 20.5, 10.5 19, 12 18 Z"
+        fill="url(#mega_cone)"
+        stroke="#ffffff"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+      {/* Vành miệng loa mạ vàng óng */}
+      <ellipse cx="30" cy="23" rx="4" ry="11" fill="url(#mega_mouth)" stroke="#ffffff" strokeWidth="2" />
+      <ellipse cx="30" cy="23" rx="2" ry="7.5" fill="#78350f" />
+      {/* Vệt sáng trên thân loa */}
+      <path d="M 13 20 L 27 14 C 28 14, 28 16, 27 17 L 13 22 Z" fill="#ffffff" opacity="0.6" />
+      {/* Nốt nhạc vàng 3D bay ra */}
+      <path
+        d="M 37 14 C 37 12, 40 10, 43 11 L 43 17 C 42 16.5, 40.5 16.5, 40 17.5 C 39.2 18.5, 40 20, 41.5 20 C 43 20, 44 19, 44 17.5 L 44 13 L 38 15 L 38 19 C 37 18.5, 35.5 18.5, 35 19.5 C 34.2 20.5, 35 22, 36.5 22 C 38 22, 39 21, 39 19.5 Z"
+        fill="#fef08a"
+        stroke="#78350f"
+        strokeWidth="1.2"
+      />
+    </svg>
+  );
+}
+
+// 83. Loa Tắt Tiếng 3D (Play Together Audio Muted Icon)
+export function Icon3dAudioMuted({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="mute_cone" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#cbd5e1" />
+          <stop offset="40%" stopColor="#94a3b8" />
+          <stop offset="100%" stopColor="#475569" />
+        </radialGradient>
+      </defs>
+      {/* Thân loa xám mờ */}
+      <path
+        d="M 12 18 L 26 12 C 27 12, 28 13, 28 14 L 28 32 C 28 33, 27 34, 26 34 L 12 28 C 10.5 27, 9.5 25.5, 9.5 23 C 9.5 20.5, 10.5 19, 12 18 Z"
+        fill="url(#mute_cone)"
+        stroke="#ffffff"
+        strokeWidth="2"
+      />
+      <ellipse cx="28" cy="23" rx="3.5" ry="10" fill="#64748b" stroke="#ffffff" strokeWidth="1.5" />
+      {/* Dấu gạch chéo kẹo đỏ 3D nổi bật */}
+      <line x1="12" y1="12" x2="36" y2="34" stroke="#7f1d1d" strokeWidth="6" strokeLinecap="round" />
+      <line x1="12" y1="12" x2="36" y2="34" stroke="#ef4444" strokeWidth="4.2" strokeLinecap="round" />
+      <line x1="12" y1="12" x2="36" y2="34" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
+    </svg>
+  );
+}
+
+// 84. Viên Pha Lê Đồ Họa Đa Diện 3D (Play Together Crystal Diamond)
+export function Icon3dCrystalDiamond({ size = 32, variant = 'ultra', className = '' }) {
+  const isUltra = variant === 'ultra';
+  const isEco = variant === 'eco';
+
+  const stop1 = isUltra ? '#f5d0fe' : isEco ? '#a7f3d0' : '#fef08a';
+  const stop2 = isUltra ? '#c084fc' : isEco ? '#34d399' : '#facc15';
+  const stop3 = isUltra ? '#9333ea' : isEco ? '#059669' : '#d97706';
+  const edgeCol = isUltra ? '#581c87' : isEco ? '#064e3b' : '#78350f';
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id={`gem_top_${variant}`} cx="40%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="35%" stopColor={stop1} />
+          <stop offset="70%" stopColor={stop2} />
+          <stop offset="100%" stopColor={stop3} />
+        </radialGradient>
+      </defs>
+      {/* Đáy đổ bóng kim cương */}
+      <polygon points="12,18 24,8 36,18 24,40" fill={edgeCol} opacity="0.4" transform="translate(0, 3)" />
+      {/* Đỉnh kim cương vát góc */}
+      <polygon points="14,18 24,10 34,18 24,24" fill={stop1} stroke="#ffffff" strokeWidth="1.8" />
+      {/* Mặt trái */}
+      <polygon points="14,18 24,24 24,38 8,22" fill={stop2} stroke="#ffffff" strokeWidth="1.8" />
+      {/* Mặt phải */}
+      <polygon points="34,18 24,24 24,38 40,22" fill={stop3} stroke="#ffffff" strokeWidth="1.8" />
+      {/* Mặt trung tâm chiếu sáng */}
+      <polygon points="14,18 34,18 24,38" fill={`url(#gem_top_${variant})`} stroke="#ffffff" strokeWidth="2" strokeLinejoin="round" />
+      {/* Ngôi sao lấp lánh phản quang trên đỉnh kim cương */}
+      <circle cx="21" cy="18" r="2.5" fill="#ffffff" />
+      <polygon points="21,13 22,17 26,18 22,19 21,23 20,19 16,18 20,17" fill="#ffffff" />
+    </svg>
+  );
+}
+
+// 85. Vương Miện Hoàng Gia Đính Ngọc 3D (Royal Crown Ribbon v1.0)
+export function Icon3dCrownRibbon({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="crown_gold" cx="40%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="25%" stopColor="#fef08a" />
+          <stop offset="60%" stopColor="#facc15" />
+          <stop offset="100%" stopColor="#ca8a04" />
+        </radialGradient>
+        <radialGradient id="crown_ruby" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#fca5a5" />
+          <stop offset="60%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#991b1b" />
+        </radialGradient>
+      </defs>
+      {/* Đáy bóng đổ */}
+      <ellipse cx="24" cy="38" rx="14" ry="3.5" fill="rgba(15,23,42,0.25)" />
+      {/* Đế vương miện đúc vàng */}
+      <rect x="11" y="30" width="26" height="6.5" rx="3.25" fill="#78350f" />
+      <rect x="11" y="28" width="26" height="6.5" rx="3.25" fill="url(#crown_gold)" stroke="#ffffff" strokeWidth="1.8" />
+      {/* 5 Chóp đỉnh vương miện */}
+      <path
+        d="M 11 29 L 8 18 C 8 16.5, 9.5 15.5, 11 16.5 L 17 24 L 23 11 C 23.5 10, 24.5 10, 25 11 L 31 24 L 37 16.5 C 38.5 15.5, 40 16.5, 40 18 L 37 29 Z"
+        fill="url(#crown_gold)"
+        stroke="#ffffff"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      {/* Ngọc Ruby đỏ đính trên 3 đỉnh chóp chính */}
+      <circle cx="24" cy="11.5" r="3" fill="url(#crown_ruby)" stroke="#ffffff" strokeWidth="1.2" />
+      <circle cx="9.5" cy="17" r="2.2" fill="url(#crown_ruby)" stroke="#ffffff" strokeWidth="1" />
+      <circle cx="38.5" cy="17" r="2.2" fill="url(#crown_ruby)" stroke="#ffffff" strokeWidth="1" />
+      {/* Đá ngọc xanh đính ở đế */}
+      <circle cx="16" cy="31" r="1.5" fill="#38bdf8" />
+      <circle cx="24" cy="31" r="1.8" fill="#ec4899" />
+      <circle cx="32" cy="31" r="1.5" fill="#38bdf8" />
+    </svg>
+  );
+}
+
+// 87. Đảo Thiên Đường Nhiệt Đới 3D (Tropical Island - 3D Open World Badge)
+export function Icon3dTropicalIsland({ size = 28, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="isl_sea" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="60%" stopColor="#0284c7" />
+          <stop offset="100%" stopColor="#0369a1" />
+        </radialGradient>
+        <radialGradient id="isl_sand" cx="45%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="45%" stopColor="#fde047" />
+          <stop offset="85%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
+        </radialGradient>
+        <radialGradient id="isl_grass" cx="45%" cy="35%" r="60%">
+          <stop offset="0%" stopColor="#86efac" />
+          <stop offset="40%" stopColor="#22c55e" />
+          <stop offset="100%" stopColor="#15803d" />
+        </radialGradient>
+        <linearGradient id="isl_trunk" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#d97706" />
+          <stop offset="60%" stopColor="#92400e" />
+          <stop offset="100%" stopColor="#451a03" />
+        </linearGradient>
+        <radialGradient id="isl_leaf" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#bbf7d0" />
+          <stop offset="40%" stopColor="#22c55e" />
+          <stop offset="100%" stopColor="#14532d" />
+        </radialGradient>
+      </defs>
+
+      {/* Vành nước biển ngọc lam bao quanh đảo */}
+      <ellipse cx="32" cy="46" rx="26" ry="11" fill="url(#isl_sea)" opacity="0.85" />
+      <ellipse cx="32" cy="45" rx="25" ry="10" stroke="#bae6fd" strokeWidth="1.5" strokeDasharray="5 3" fill="none" opacity="0.75" />
+
+      {/* Đế đảo đất cát vàng bồng bềnh */}
+      <path
+        d="M 12 44 C 12 40, 20 36, 32 36 C 44 36, 52 40, 52 44 C 52 49, 43 53, 32 53 C 21 53, 12 49, 12 44 Z"
+        fill="url(#isl_sand)"
+        stroke="#78350f"
+        strokeWidth="1.6"
+      />
+
+      {/* Thảm cỏ xanh mướt nổi trên đồi cát */}
+      <path
+        d="M 16 43 C 16 38, 23 34, 32 34 C 41 34, 48 38, 48 43 C 48 45, 41 48, 32 48 C 23 48, 16 45, 16 43 Z"
+        fill="url(#isl_grass)"
+        stroke="#14532d"
+        strokeWidth="1.5"
+      />
+      {/* Vệt sáng bóng trên thảm cỏ */}
+      <ellipse cx="30" cy="38" rx="8" ry="2.5" fill="#ffffff" opacity="0.45" />
+
+      {/* Thân cây dừa uốn cong nhiệt đới */}
+      <path
+        d="M 32 40 C 31 32, 26 24, 27 16 C 29 16, 34 24, 34 40 Z"
+        fill="url(#isl_trunk)"
+        stroke="#451a03"
+        strokeWidth="1.4"
+      />
+      {/* Các ngấn vỏ dừa */}
+      <line x1="28.5" y1="34" x2="33" y2="35" stroke="#fde047" strokeWidth="1" opacity="0.6" />
+      <line x1="27.5" y1="28" x2="31.5" y2="29" stroke="#fde047" strokeWidth="1" opacity="0.6" />
+      <line x1="26.5" y1="22" x2="30" y2="23" stroke="#fde047" strokeWidth="1" opacity="0.6" />
+
+      {/* 3 Quả dừa vàng thơm ngon */}
+      <circle cx="26" cy="17" r="2.2" fill="#78350f" stroke="#fef08a" strokeWidth="0.8" />
+      <circle cx="29" cy="18" r="2.4" fill="#854d0e" stroke="#fef08a" strokeWidth="0.8" />
+      <circle cx="28" cy="15.5" r="2" fill="#713f12" />
+
+      {/* Tán lá dừa xoè tròn bóng bẩy */}
+      <path d="M 28 16 C 20 15, 12 21, 11 27 C 14 24, 20 22, 28 17 Z" fill="url(#isl_leaf)" stroke="#14532d" strokeWidth="1.2" />
+      <path d="M 28 16 C 36 12, 45 15, 47 22 C 43 20, 36 20, 28 17 Z" fill="url(#isl_leaf)" stroke="#14532d" strokeWidth="1.2" />
+      <path d="M 28 16 C 26 8, 33 6, 36 10 C 34 13, 31 15, 28 16 Z" fill="url(#isl_leaf)" stroke="#14532d" strokeWidth="1.2" />
+      <path d="M 28 16 C 23 18, 18 25, 20 30 C 22 26, 25 22, 28 16 Z" fill="url(#isl_leaf)" stroke="#14532d" strokeWidth="1.2" />
+      <path d="M 28 16 C 34 18, 39 25, 37 30 C 35 26, 32 22, 28 16 Z" fill="url(#isl_leaf)" stroke="#14532d" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
+// 88. Nút Play Kẹo Ngọt 3D (Candy 3D Play Button Icon)
+export function Icon3dPlayCandy({ size = 36, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="play_candy_base" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="25%" stopColor="#fef08a" />
+          <stop offset="65%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
+        </radialGradient>
+        <radialGradient id="play_candy_inner" cx="40%" cy="30%" r="65%">
+          <stop offset="0%" stopColor="#ffedd5" />
+          <stop offset="30%" stopColor="#f97316" />
+          <stop offset="85%" stopColor="#ea580c" />
+          <stop offset="100%" stopColor="#9a3412" />
+        </radialGradient>
+        <linearGradient id="play_arrow_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="70%" stopColor="#f8fafc" />
+          <stop offset="100%" stopColor="#cbd5e1" />
+        </linearGradient>
+      </defs>
+
+      {/* Bóng đổ sâu dưới đáy */}
+      <circle cx="24" cy="26" r="20" fill="rgba(120,53,15,0.4)" />
+
+      {/* Đĩa vàng kẹo ngọt bên ngoài viền trắng */}
+      <circle cx="24" cy="24" r="20" fill="url(#play_candy_base)" stroke="#ffffff" strokeWidth="2.5" />
+
+      {/* Vòng đệm cam mọng nước */}
+      <circle cx="24" cy="24" r="15.5" fill="url(#play_candy_inner)" stroke="#fef08a" strokeWidth="1.2" />
+
+      {/* Vệt bóng kính bán nguyệt phía trên */}
+      <path
+        d="M 12 21 C 13 14, 18 10, 24 10 C 30 10, 35 14, 36 21 C 32 17, 26 15, 24 15 C 22 15, 16 17, 12 21 Z"
+        fill="#ffffff"
+        opacity="0.65"
+      />
+
+      {/* Mũi tên Play 3D trắng ngọc trai bo tròn */}
+      <path
+        d="M 20 16.5 C 20 15.2, 21.5 14.4, 22.6 15.1 L 32.2 21.6 C 33.2 22.3, 33.2 23.7, 22.6 24.4 L 22.6 30.9 C 21.5 31.6, 20 30.8, 20 29.5 Z"
+        fill="url(#play_arrow_grad)"
+        stroke="#78350f"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+      {/* Ánh bóng nhẹ trên mũi tên */}
+      <path d="M 21.5 18 L 29 23 L 21.5 24 Z" fill="#ffffff" opacity="0.6" />
+    </svg>
+  );
+}
+
+// 89. Hộp Quà Giáng Sinh Lễ Hội 3D (Play Together Gift Box)
+export function Icon3dGiftBoxRibbon({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="gift_box_red" cx="40%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fca5a5" />
+          <stop offset="35%" stopColor="#ef4444" />
+          <stop offset="85%" stopColor="#b91c1c" />
+          <stop offset="100%" stopColor="#7f1d1d" />
+        </radialGradient>
+        <radialGradient id="gift_gold_ribbon" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="40%" stopColor="#fde047" />
+          <stop offset="100%" stopColor="#ca8a04" />
+        </radialGradient>
+      </defs>
+      {/* Đáy hộp đỏ 3D */}
+      <rect x="10" y="19" width="28" height="21" rx="4" fill="url(#gift_box_red)" stroke="#ffffff" strokeWidth="2" />
+      {/* Nắp hộp đỏ nhô ra */}
+      <rect x="8" y="15" width="32" height="7" rx="3" fill="url(#gift_box_red)" stroke="#ffffff" strokeWidth="2" />
+      {/* Dải ruy băng vàng dọc */}
+      <rect x="21" y="15" width="6" height="25" fill="url(#gift_gold_ribbon)" stroke="#78350f" strokeWidth="1" />
+      {/* Dải ruy băng ngang */}
+      <rect x="10" y="27" width="28" height="5" fill="url(#gift_gold_ribbon)" stroke="#78350f" strokeWidth="1" />
+      {/* Nơ bướm đôi phồng to trên đỉnh */}
+      <path d="M 24 15 C 19 8, 12 10, 16 15 C 19 16, 23 15, 24 15 Z" fill="url(#gift_gold_ribbon)" stroke="#ffffff" strokeWidth="1.5" />
+      <path d="M 24 15 C 29 8, 36 10, 32 15 C 29 16, 25 15, 24 15 Z" fill="url(#gift_gold_ribbon)" stroke="#ffffff" strokeWidth="1.5" />
+      <circle cx="24" cy="15" r="2.5" fill="#fef08a" stroke="#78350f" strokeWidth="1" />
+    </svg>
+  );
+}
+
+
+
+

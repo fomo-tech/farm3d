@@ -4822,13 +4822,15 @@
 .pt-game-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: rgba(255, 255, 255, 0.95);
   color: #0f172a;
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: 999px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
   border: 2.5px solid #ffffff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .pt-badge-dot {
@@ -4848,20 +4850,21 @@
 .pt-badge-title {
   font-family: 'Baloo 2', 'Nunito', cursive, sans-serif;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 900;
   letter-spacing: 1px;
   color: #0f172a;
 }
 
 .pt-badge-ver {
   font-family: 'Baloo 2', 'Nunito', sans-serif;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
-  background: #e0f2fe;
-  color: #0284c7;
-  padding: 2px 7px;
+  background: linear-gradient(135deg, #fef08a, #f59e0b);
+  color: #78350f;
+  padding: 3px 9px;
   border-radius: 999px;
-  border: 1px solid #bae6fd;
+  border: 1px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
 }
 
 .pt-start-top-actions {
@@ -4874,20 +4877,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
   color: #1e293b;
   border: 2.5px solid #ffffff;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2), inset 0 2px 2px rgba(255, 255, 255, 0.85);
   cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
+}
+
+.pt-candy-btn.preset-ultra {
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.45), inset 0 2px 2px rgba(255, 255, 255, 0.9);
+}
+
+.pt-candy-btn.preset-balanced {
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45), inset 0 2px 2px rgba(255, 255, 255, 0.9);
+}
+
+.pt-candy-btn.preset-eco {
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.45), inset 0 2px 2px rgba(255, 255, 255, 0.9);
 }
 
 .pt-candy-btn:hover {
   transform: scale(1.12);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
 }
 
 .pt-candy-btn:active {
@@ -4988,25 +5005,37 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-top: 14px;
-  margin-bottom: 8px;
+  margin-top: 10px;
 }
 
 /* Mascot Speech Bubble */
 .pt-speech-bubble {
   position: relative;
-  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.96);
   color: #1e293b;
   font-family: 'Baloo 2', 'Nunito', sans-serif;
-  font-size: 13.5px;
+  font-size: clamp(14px, 2.5vw, 16px);
   font-weight: 800;
-  padding: 6px 18px;
+  padding: 10px 24px;
   border-radius: 999px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
-  border: 2px solid #fed7aa;
-  margin-bottom: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  border: 2.5px solid #fde047;
   animation: ptBubbleFloat 2.6s infinite ease-in-out;
   white-space: nowrap;
+}
+
+.pt-bubble-gift {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  animation: ptGiftWiggle 1.8s infinite ease-in-out;
+}
+
+@keyframes ptGiftWiggle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-8deg) scale(1.1); }
+  75% { transform: rotate(8deg) scale(1.1); }
 }
 
 @keyframes ptBubbleFloat {
@@ -5314,16 +5343,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 14px 44px;
+  gap: 16px;
+  padding: 16px 52px;
   border-radius: 999px;
   background: linear-gradient(180deg, #fff9a6 0%, #ffcc00 24%, #ff8800 65%, #e65100 100%);
   color: #ffffff;
   border: 4px solid #ffffff;
   cursor: pointer;
   box-shadow:
-    0 8px 0 #8c2200,
-    0 20px 45px rgba(255, 120, 0, 0.75),
+    0 10px 0 #8c2200,
+    0 24px 50px rgba(255, 120, 0, 0.85),
     inset 0 3px 6px rgba(255, 255, 255, 0.95);
   position: relative;
   overflow: hidden;
@@ -5331,9 +5360,24 @@
   animation: ptHeartbeat 1.8s infinite ease-in-out;
 }
 
+.pt-touch-start-btn .btn-gamepad-icon,
 .pt-touch-start-btn .btn-play-icon {
   filter: drop-shadow(0 3px 6px rgba(120, 53, 15, 0.4));
   animation: ptPlayBounce 1.5s infinite ease-in-out;
+}
+
+.pt-touch-text {
+  font-family: 'Baloo 2', 'Nunito', cursive, sans-serif;
+  font-size: clamp(20px, 4vw, 28px);
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow:
+    0 2px 0 #b45309,
+    0 4px 0 #78350f,
+    0 6px 14px rgba(120, 53, 15, 0.7);
+  white-space: nowrap;
 }
 
 @keyframes ptPlayBounce {

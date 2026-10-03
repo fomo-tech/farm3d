@@ -3,12 +3,13 @@ import {
   Icon3dSparkleStar,
   Icon3dChicken,
   Icon3dSun,
-  Icon3dAudioOn,
-  Icon3dAudioOff,
-  Icon3dLightningBolt,
-  Icon3dBatteryEco,
-  Icon3dSprout,
-  Icon3dTouchPlay,
+  Icon3dPlayCandy,
+  Icon3dMegaphoneGold,
+  Icon3dAudioMuted,
+  Icon3dCrystalDiamond,
+  Icon3dCrownRibbon,
+  Icon3dTropicalIsland,
+  Icon3dGiftBoxRibbon,
 } from './icons3d/GameIcons3D.jsx';
 
 const PLAY_TOGETHER_TIPS = [
@@ -87,7 +88,7 @@ export function GameStartScreen({
       className={`pt-start-screen-backdrop${isExiting ? ' pt-exiting' : ''}${isReady ? ' is-ready-state' : ''}`}
       onClick={isReady ? handleStartGame : undefined}
     >
-      {/* Floating Stylized Clouds */}
+      {/* 1. Floating Stylized Clouds (Pastel Sky) */}
       <div className="pt-clouds-container" aria-hidden="true">
         <div className="pt-cloud cloud-1" />
         <div className="pt-cloud cloud-2" />
@@ -95,19 +96,20 @@ export function GameStartScreen({
         <div className="pt-cloud cloud-4" />
       </div>
 
-      {/* Floating Sparkles */}
+      {/* 2. Floating 3D Sparkle Stars */}
       <div className="pt-sparkles-container" aria-hidden="true">
         {[1, 2, 3, 4, 5].map(index => (
           <span key={index} className={`pt-star star-${index}`}>
-            <Icon3dSparkleStar size={24} />
+            <Icon3dSparkleStar size={26} />
           </span>
         ))}
       </div>
 
-      {/* Top Mobile Game Header Bar */}
+      {/* 3. Top Mobile Game Header Bar */}
       <header className="pt-start-top-bar" onClick={e => e.stopPropagation()}>
         <div className="pt-game-badge">
           <span className="pt-badge-dot" />
+          <Icon3dCrownRibbon size={24} />
           <span className="pt-badge-title">VIBE CITY</span>
           <span className="pt-badge-ver">v1.0</span>
         </div>
@@ -118,11 +120,9 @@ export function GameStartScreen({
               type="button"
               className={`pt-candy-btn pt-quality-bubble preset-${graphicsQuality}`}
               onClick={onToggleGraphics}
-              title={`Đồ họa: ${graphicsQuality.toUpperCase()}`}
+              title={`Chất lượng đồ họa: ${graphicsQuality.toUpperCase()}`}
             >
-              {graphicsQuality === 'ultra' && <Icon3dSparkleStar size={20} />}
-              {graphicsQuality === 'balanced' && <Icon3dLightningBolt size={20} />}
-              {graphicsQuality === 'eco' && <Icon3dBatteryEco size={20} />}
+              <Icon3dCrystalDiamond size={24} variant={graphicsQuality} />
             </button>
           )}
 
@@ -133,25 +133,25 @@ export function GameStartScreen({
               onClick={onToggleMute}
               title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
             >
-              {isMuted ? <Icon3dAudioOff size={22} /> : <Icon3dAudioOn size={22} />}
+              {isMuted ? <Icon3dAudioMuted size={24} /> : <Icon3dMegaphoneGold size={24} />}
             </button>
           )}
         </div>
       </header>
 
-      {/* Center 3D Bubble Logo & Mascot */}
+      {/* 4. Center 3D Bubble Logo & Mascot Area */}
       <div className="pt-start-center-content">
         {/* Play Together Signature 3D Bubble Logo */}
         <div className="pt-game-logo-3d">
           <div className="pt-logo-stars" aria-hidden="true">
-            <Icon3dSparkleStar size={26} className="logo-sparkle-left" />
-            <Icon3dSparkleStar size={20} className="logo-sparkle-right" />
+            <Icon3dSparkleStar size={28} className="logo-sparkle-left" />
+            <Icon3dSparkleStar size={22} className="logo-sparkle-right" />
           </div>
           <div className="pt-logo-title-wrap">
             <h1 className="pt-logo-main-text">VIBE CITY</h1>
           </div>
           <div className="pt-logo-sub-badge">
-            <Icon3dSprout size={16} />
+            <Icon3dTropicalIsland size={22} />
             <span>3D OPEN WORLD</span>
           </div>
         </div>
@@ -159,11 +159,12 @@ export function GameStartScreen({
         {/* Mascot Chibi Area */}
         <div className="pt-mascot-podium" aria-hidden="true">
           <div className="pt-speech-bubble">
+            <Icon3dGiftBoxRibbon size={20} className="pt-bubble-gift" />
             <span>{isReady ? 'Thị trấn đã mở! Chạm để vào chơi nào! ✨' : 'Chào mừng bạn đến với Vibe City! 🎈'}</span>
             <div className="pt-bubble-arrow" />
           </div>
           <div className={`pt-mascot-chibi-3d${isReady ? ' is-celebrating' : ''}`}>
-            <Icon3dChicken size={isReady ? 96 : 82} />
+            <Icon3dChicken size={isReady ? 96 : 84} />
           </div>
           <div className="pt-podium-shadow" />
         </div>
@@ -184,14 +185,14 @@ export function GameStartScreen({
         )}
       </div>
 
-      {/* Soft stylized bottom horizon clouds */}
+      {/* 5. Soft stylized bottom horizon clouds */}
       <div className="pt-horizon-clouds" aria-hidden="true">
         <div className="pt-hcloud hcloud-left" />
         <div className="pt-hcloud hcloud-center" />
         <div className="pt-hcloud hcloud-right" />
       </div>
 
-      {/* Bottom Area: Candy Jelly Loading Bar OR Touch To Start Button */}
+      {/* 6. Bottom Area: Candy Jelly Loading Bar OR Arcade Touch To Start Button */}
       <div className="pt-start-bottom-dock">
         {bootPhase !== 'error' && !isReady && (
           <div className="pt-loading-dock">
@@ -210,7 +211,7 @@ export function GameStartScreen({
                 <div className="pt-candy-stripes" />
                 <div className="pt-candy-sheen" />
                 <div className="pt-runner-icon" aria-hidden="true">
-                  <Icon3dChicken size={26} />
+                  <Icon3dChicken size={28} />
                 </div>
               </div>
             </div>
@@ -223,7 +224,7 @@ export function GameStartScreen({
           </div>
         )}
 
-        {/* Touch To Start Button (Play Together Iconic Arcady CTA) */}
+        {/* Touch To Start Button (Play Together Iconic Arcade Gold CTA) */}
         {bootPhase !== 'error' && isReady && (
           <div className="pt-ready-action-stage">
             <button
@@ -237,7 +238,7 @@ export function GameStartScreen({
             >
               <div className="pt-touch-glow-fx" />
               <div className="pt-touch-shine-sweep" />
-              <Icon3dTouchPlay size={34} className="btn-play-icon" />
+              <Icon3dPlayCandy size={36} className="btn-play-icon" />
               <span className="pt-touch-text">Chạm để bắt đầu</span>
               <Icon3dSparkleStar size={24} className="btn-sparkle right" />
             </button>
@@ -247,7 +248,7 @@ export function GameStartScreen({
 
         {/* Footer */}
         <footer className="pt-start-footer">
-          <span>© 2026 Vibe City</span>
+          <span>© 2026 Vibe City · Play Together 3D Style</span>
         </footer>
       </div>
     </div>
