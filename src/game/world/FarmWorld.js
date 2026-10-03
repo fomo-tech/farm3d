@@ -425,7 +425,7 @@ export class FarmWorld {
         this.cinematic.setQuality(preset);
       }
       if (this.shadows) {
-        this.shadows.filteringQuality = preset === 'ultra' ? ShadowGenerator.QUALITY_MEDIUM : ShadowGenerator.QUALITY_LOW;
+        this.shadows.filteringQuality = preset === 'ultra' ? ShadowGenerator.QUALITY_HIGH : ShadowGenerator.QUALITY_MEDIUM;
         const targetMapSize = preset === 'ultra' && !this.isMobile ? 2048 : (this.isMobile || preset === 'eco' ? 512 : 1024);
         if (this.shadows.mapSize !== targetMapSize) {
           this.shadows.mapSize = targetMapSize;
@@ -485,6 +485,7 @@ export class FarmWorld {
     setTimeout(() => this.resize(), 60);
     setTimeout(() => this.resize(), 300);
     let renderFailed = false;
+    this.engine.renderEvenInBackground = false;
     this.engine.runRenderLoop(() => {
       if (renderFailed) return;
       try {
@@ -635,36 +636,42 @@ export class FarmWorld {
     }
     this.camera = camera;
 
-    // === HỆ THỐNG CHIẾU SÁNG 4 TẦNG CHUẨN PLAY TOGETHER (HIGH-KEY RADIANCY) ===
+    // === HỆ THỐNG CHIẾU SÁNG 4 TẦNG CHUẨN HIGH-KEY COZY FARMY ===
     // 1. Tầng 1: Skylight vòm trời thiên thanh nâng sáng toàn cảnh + Ground Bounce xanh mint hắt lên gầm
     const ambient = new HemisphericLight('ambient', new Vector3(0, 1, 0), scene);
-    ambient.intensity = 0.58;
-    ambient.diffuse = Color3.FromHexString('#f8fafc');
-    ambient.groundColor = Color3.FromHexString('#dcfce7');
+    ambient.intensity = 1.25;
+    ambient.diffuse = Color3.FromHexString('#e6f4ff');
+    ambient.groundColor = Color3.FromHexString('#86c354');
+    this.ambient = ambient;
 
     // 2. Tầng 2: Key Sunlight vàng kem mật ong ấm áp rạng rỡ (Góc xiên 55 độ)
     const sun = new DirectionalLight('sun', new Vector3(-0.45, -0.85, -0.32), scene);
     sun.position = new Vector3(35, 55, 25);
-    sun.intensity = 0.72;
-    sun.diffuse = Color3.FromHexString('#fffbeb');
+    sun.intensity = 1.95;
+    sun.diffuse = Color3.FromHexString('#fff0db');
+    // Frustum bóng đổ cố định 56m bám theo người chơi: 36.5 texels/m với 2048px map (chuẩn sắc nét Cozy Farmy)
+    sun.shadowFrustumSize = 56;
+    sun.shadowMinZ = 1;
+    sun.shadowMaxZ = 130;
+    this.sun = sun;
 
     // 3. Tầng 3: Rim Backlight phụ trợ tạo viền sáng khối Chibi đồ chơi Vinyl
     const rimLight = new DirectionalLight('rim-light', new Vector3(0.45, -0.65, 0.45), scene);
-    rimLight.intensity = 0.08;
+    rimLight.intensity = 0.16;
     rimLight.diffuse = Color3.FromHexString('#f8fafc'); // Viền sáng ngọc trai bồng bềnh
     rimLight.specular = Color3.FromHexString('#fef08a');
 
-    // 4. Tầng 4: Shadow Generator mờ 28% mềm mại (PCF Low/Medium, autoCalcDepthBounds = false)
+    // 4. Tầng 4: Shadow Generator mờ 30% mềm mại (PCF High/Medium)
     const shadowMapResolution = this.graphicsQuality === 'ultra' && !this.isMobile
       ? 2048
       : (this.isMobile || this.graphicsQuality === 'eco' ? 512 : 1024);
     const shadows = new ShadowGenerator(shadowMapResolution, sun);
     shadows.usePercentageCloserFiltering = true;
-    shadows.filteringQuality = this.graphicsQuality === 'ultra' ? ShadowGenerator.QUALITY_MEDIUM : ShadowGenerator.QUALITY_LOW;
-    shadows.bias = 0.0015;
-    shadows.normalBias = 0.025; // Triệt tiêu răng cưa và sọc rách trên mặt nghiêng
-    shadows.autoCalcDepthBounds = false; // Triệt tiêu hoàn toàn CPU depth bounds reduction stall
-    shadows.darkness = 0.28; // Khớp preset ban ngày tươi sáng
+    shadows.filteringQuality = this.graphicsQuality === 'ultra' ? ShadowGenerator.QUALITY_HIGH : ShadowGenerator.QUALITY_MEDIUM;
+    shadows.bias = 0.0005;
+    shadows.normalBias = 0.02; // Triệt tiêu răng cưa và sọc rách trên mặt nghiêng
+    shadows.autoCalcDepthBounds = false; // Frustum đã cố định theo shadowFrustumSize
+    shadows.darkness = 0.30; // Khớp preset ban ngày tươi sáng
     this.shadows = shadows;
     this.rimLight = rimLight;
 
@@ -692,8 +699,9 @@ export class FarmWorld {
     groundMat.specularPower = 16;
     const meadowTex = createMeadowTexture(scene);
     meadowTex.anisotropicFilteringLevel = 16;
-    meadowTex.uScale = 72;
-    meadowTex.vScale = 72;
+    const worldRepeat = Math.round(FARM_CONFIG.worldSize / 12); // ~350 lần lặp (12m/lần lặp chuẩn Cozy Farmy)
+    meadowTex.uScale = worldRepeat;
+    meadowTex.vScale = worldRepeat;
     meadowTex.wrapU = Texture.WRAP_ADDRESSMODE;
     meadowTex.wrapV = Texture.WRAP_ADDRESSMODE;
     groundMat.diffuseTexture = meadowTex;
@@ -1175,6 +1183,16 @@ export class FarmWorld {
         cameraTarget.position.copyFrom(_TMP_DESIRED_TARGET);
       } else {
         Vector3.LerpToRef(cameraTarget.position, _TMP_DESIRED_TARGET, followAmount, cameraTarget.position);
+      }
+
+      // Khóa vị trí nguồn sáng Directional Sun bám sát theo vị trí mục tiêu (chuẩn Cozy Farmy 56m)
+      if (this.sun) {
+        const dir = this.sun.direction;
+        this.sun.position.set(
+          targetPos.x - dir.x * 60,
+          targetPos.y - dir.y * 60,
+          targetPos.z - dir.z * 60
+        );
       }
 
       if (this.cinematic && player.mesh) {

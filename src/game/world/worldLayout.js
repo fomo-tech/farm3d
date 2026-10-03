@@ -78,7 +78,7 @@ export const RENDER_CONFIG = Object.freeze({
   cameraMaxRadius: 48,
   cameraMinBeta: 0.5,
   cameraMaxBeta: 1.35,
-  cameraFov: 0.88,
+  cameraFov: 0.785,
   cameraLookAhead: 5,
   cameraTargetHeight: 1.2,
   cameraFarClip: 3500,

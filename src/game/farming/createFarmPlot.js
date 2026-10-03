@@ -35,7 +35,13 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
   let grassMat = scene.getMaterialByName('mat-estate-meadow-grass');
   if (!grassMat) {
     grassMat = new StandardMaterial('mat-estate-meadow-grass', scene);
-    grassMat.diffuseTexture = createMeadowTexture(scene, 1024);
+    const tex = createMeadowTexture(scene, 1024);
+    tex.anisotropicFilteringLevel = 16;
+    const estateW = FARM_CONFIG.estateWidth || 28;
+    const estateD = FARM_CONFIG.estateDepth || 28;
+    tex.uScale = Number((estateW / 12).toFixed(2));
+    tex.vScale = Number((estateD / 12).toFixed(2));
+    grassMat.diffuseTexture = tex;
     grassMat.ambientColor = new Color3(0.55, 0.55, 0.55);
     grassMat.specularColor = new Color3(0.04, 0.04, 0.04);
   }

@@ -1,8 +1,10 @@
 import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline.js';
+import { ImageProcessingConfiguration } from '@babylonjs/core/Materials/imageProcessingConfiguration.js';
 
 /**
- * Crisp world rendering: MSAA and restrained sharpening without color-washing tone mapping.
- * FXAA and bloom stay disabled so distant thin geometry does not smear together.
+ * Crisp world rendering: 4x MSAA, Khronos PBR Neutral Tone Mapping (Cozy Farmy standard),
+ * and Contrast Adaptive Sharpening (CAS).
+ * Highlights roll off softly without burning out, preserving lush grass and pastel toy colors.
  */
 export function createCinematicRenderingPipeline(scene, camera, options = {}) {
   let pipeline = null;
@@ -21,7 +23,7 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     // Contrast Adaptive Sharpening (CAS): Micro-contrast that makes leaves, textures, and edges pop.
     pipeline.sharpenEnabled = !isEco;
     if (pipeline.sharpen) {
-      pipeline.sharpen.edgeAmount = isUltra ? 0.18 : 0.10;
+      pipeline.sharpen.edgeAmount = isUltra ? 0.22 : 0.12;
       pipeline.sharpen.colorAmount = 1.0;
     }
 
@@ -34,19 +36,21 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
       pipeline.bloomScale = 0.5;
     }
 
-    // Preserve material color with vibrant contrast and clean daylight exposure.
+    // 2. Khronos PBR Neutral Tone Mapping (chuẩn Cozy Farmy): Giữ độ no màu rực rỡ, không bị cháy trắng
     pipeline.imageProcessingEnabled = true;
-    pipeline.imageProcessing.toneMappingEnabled = false;
-    pipeline.imageProcessing.contrast = 1.12;
-    pipeline.imageProcessing.exposure = 0.98;
+    pipeline.imageProcessing.toneMappingEnabled = true;
+    pipeline.imageProcessing.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_KHR_PBR_NEUTRAL;
+    pipeline.imageProcessing.contrast = 1.16;
+    pipeline.imageProcessing.exposure = 1.05;
     pipeline.imageProcessing.vignetteEnabled = false;
   } catch (err) {
     console.warn('[CinematicPipeline] Fallback to direct scene processing:', err);
     if (scene.imageProcessingConfiguration) {
       scene.imageProcessingConfiguration.isEnabled = true;
-      scene.imageProcessingConfiguration.toneMappingEnabled = false;
-      scene.imageProcessingConfiguration.contrast = 1.12;
-      scene.imageProcessingConfiguration.exposure = 0.98;
+      scene.imageProcessingConfiguration.toneMappingEnabled = true;
+      scene.imageProcessingConfiguration.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_KHR_PBR_NEUTRAL;
+      scene.imageProcessingConfiguration.contrast = 1.16;
+      scene.imageProcessingConfiguration.exposure = 1.05;
     }
   }
 
@@ -61,7 +65,7 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
         pipeline.fxaaEnabled = false;
         pipeline.sharpenEnabled = true;
         if (pipeline.sharpen) {
-          pipeline.sharpen.edgeAmount = 0.18;
+          pipeline.sharpen.edgeAmount = 0.22;
           pipeline.sharpen.colorAmount = 1.0;
         }
         pipeline.bloomEnabled = false;
@@ -70,7 +74,7 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
         pipeline.fxaaEnabled = false;
         pipeline.sharpenEnabled = true;
         if (pipeline.sharpen) {
-          pipeline.sharpen.edgeAmount = 0.10;
+          pipeline.sharpen.edgeAmount = 0.12;
           pipeline.sharpen.colorAmount = 1.0;
         }
         pipeline.bloomEnabled = false;
@@ -84,18 +88,20 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     setCinematicPreset: (preset = 'day') => {
       const config = pipeline?.imageProcessing || scene.imageProcessingConfiguration;
       if (!config) return;
+      config.toneMappingEnabled = true;
+      config.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_KHR_PBR_NEUTRAL;
       if (preset === 'day') {
-        config.contrast = 1.06;
-        config.exposure = 0.94;
+        config.contrast = 1.16;
+        config.exposure = 1.05;
       } else if (preset === 'dawn') {
-        config.contrast = 1.05;
-        config.exposure = 0.92;
+        config.contrast = 1.12;
+        config.exposure = 1.02;
       } else if (preset === 'dusk') {
-        config.contrast = 1.06;
-        config.exposure = 0.92;
+        config.contrast = 1.14;
+        config.exposure = 1.02;
       } else if (preset === 'night') {
-        config.contrast = 1.05;
-        config.exposure = 0.88;
+        config.contrast = 1.12;
+        config.exposure = 0.95;
       }
     }
   };

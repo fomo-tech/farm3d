@@ -86,8 +86,10 @@ export function createMeadowTexture(scene, size = 1024) {
   ctx.putImageData(imgData, 0, 0);
 
   dynamic.update();
-  dynamic.uScale = 64;
-  dynamic.vScale = 64;
+  dynamic.wrapU = Texture.WRAP_ADDRESSMODE;
+  dynamic.wrapV = Texture.WRAP_ADDRESSMODE;
+  dynamic.uScale = 1;
+  dynamic.vScale = 1;
   return dynamic;
 }
 
