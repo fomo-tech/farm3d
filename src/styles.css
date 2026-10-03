@@ -4810,7 +4810,7 @@
   100% { transform: scale(1.25) rotate(20deg); opacity: 1; filter: drop-shadow(0 0 14px #fef08a); }
 }
 
-/* Top Mobile Game Header Bar */
+/* Top Mobile Game HUD Bar (Professional Game Architecture) */
 .pt-start-top-bar {
   display: flex;
   justify-content: space-between;
@@ -4819,26 +4819,26 @@
   z-index: 5;
 }
 
-.pt-game-badge {
+.pt-hud-server-badge {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.95);
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.94);
   color: #0f172a;
-  padding: 6px 16px;
+  padding: 6px 14px;
   border-radius: 999px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
-  border: 2.5px solid #ffffff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 
-.pt-badge-dot {
-  width: 9px;
-  height: 9px;
+.pt-hud-ping-dot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #22c55e;
-  box-shadow: 0 0 10px #22c55e;
+  box-shadow: 0 0 8px #22c55e;
   animation: ptPingBlink 1.2s infinite alternate;
 }
 
@@ -4847,24 +4847,29 @@
   to { opacity: 1; transform: scale(1.15); }
 }
 
-.pt-badge-title {
+.pt-hud-server-title {
   font-family: 'Baloo 2', 'Nunito', cursive, sans-serif;
-  font-size: 14px;
-  font-weight: 900;
-  letter-spacing: 1px;
-  color: #0f172a;
+  font-weight: 800;
+  font-size: 13.5px;
+  color: #1e293b;
 }
 
-.pt-badge-ver {
-  font-family: 'Baloo 2', 'Nunito', sans-serif;
-  font-size: 10.5px;
+.pt-hud-ping-val {
+  font-size: 11px;
   font-weight: 800;
-  background: linear-gradient(135deg, #fef08a, #f59e0b);
-  color: #78350f;
-  padding: 3px 9px;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 2px 7px;
   border-radius: 999px;
-  border: 1px solid #ffffff;
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+}
+
+.pt-hud-uid-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  border-left: 1.5px solid #cbd5e1;
+  padding-left: 8px;
 }
 
 .pt-start-top-actions {
@@ -4877,13 +4882,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.95);
   color: #1e293b;
   border: 2.5px solid #ffffff;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2), inset 0 2px 2px rgba(255, 255, 255, 0.85);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18), inset 0 2px 2px rgba(255, 255, 255, 0.85);
   cursor: pointer;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -4911,6 +4916,47 @@
   transform: scale(0.92);
 }
 
+/* Subtle Rotating Sunburst Rays Layer in Sky */
+.pt-sunburst-layer {
+  position: absolute;
+  top: -25vh;
+  left: 50%;
+  width: 140vw;
+  height: 140vw;
+  transform: translateX(-50%);
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, 0.08) 0deg 15deg,
+    transparent 15deg 30deg
+  );
+  pointer-events: none;
+  border-radius: 50%;
+  animation: ptSunburstRotate 90s linear infinite;
+  z-index: 0;
+}
+
+@keyframes ptSunburstRotate {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to { transform: translateX(-50%) rotate(360deg); }
+}
+
+/* Distant Hot Air Balloon in Sky */
+.pt-distant-balloon {
+  position: absolute;
+  top: 13%;
+  right: 18%;
+  z-index: 2;
+  pointer-events: none;
+  animation: ptBalloonFloat 16s ease-in-out infinite alternate;
+  filter: drop-shadow(0 6px 14px rgba(14, 165, 233, 0.25));
+}
+
+@keyframes ptBalloonFloat {
+  0% { transform: translateY(0) translateX(0) scale(0.95); }
+  50% { transform: translateY(-14px) translateX(-18px) scale(1); }
+  100% { transform: translateY(4px) translateX(20px) scale(0.93); }
+}
+
 /* Center 3D Bubble Logo & Mascot Area */
 .pt-start-center-content {
   display: flex;
@@ -4921,129 +4967,103 @@
   width: 100%;
   max-width: 580px;
   margin: auto auto;
-  gap: 12px;
+  gap: 8px;
   z-index: 4;
 }
 
-.pt-game-logo-3d {
+/* 3D Master Vector Game Brand Mark */
+.pt-game-brand-mark {
   position: relative;
+  width: 100%;
+  max-width: 460px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-.pt-logo-stars {
-  position: absolute;
-  inset: -14px -24px auto -24px;
-  display: flex;
-  justify-content: space-between;
-  pointer-events: none;
+.pt-brand-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  animation: ptBrandBreathe 3.5s infinite ease-in-out;
+  will-change: transform;
 }
 
-.logo-sparkle-left {
-  animation: ptLogoSparkle 2s infinite alternate ease-in-out;
+@keyframes ptBrandBreathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.02); }
 }
 
-.logo-sparkle-right {
-  animation: ptLogoSparkle 2s infinite alternate-reverse ease-in-out 0.8s;
-}
-
-@keyframes ptLogoSparkle {
-  from { transform: scale(0.85) rotate(-10deg); opacity: 0.7; }
-  to { transform: scale(1.2) rotate(15deg); opacity: 1; filter: drop-shadow(0 0 12px #fef08a); }
-}
-
-.pt-logo-title-wrap {
-  position: relative;
-}
-
-.pt-logo-main-text {
-  font-family: 'Baloo 2', cursive, sans-serif;
-  font-size: clamp(48px, 9vw, 76px);
+.pt-svg-text-base,
+.pt-svg-text-front {
+  font-family: 'Baloo 2', 'Nunito', cursive, system-ui, sans-serif;
   font-weight: 900;
-  line-height: 1;
-  margin: 0;
-  letter-spacing: 2px;
-  color: #ffffff;
-  text-transform: uppercase;
-  text-align: center;
-  text-shadow:
-    0 2px 0 #38bdf8,
-    0 4px 0 #0284c7,
-    0 7px 0 #0369a1,
-    0 10px 0 #075985,
-    0 16px 30px rgba(7, 89, 133, 0.55);
-  animation: ptLogoFloat 3s infinite ease-in-out;
+  font-size: 64px;
+  letter-spacing: 3px;
 }
 
-@keyframes ptLogoFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-
-.pt-logo-sub-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  background: linear-gradient(180deg, #fef08a 0%, #f59e0b 100%);
-  color: #78350f;
-  padding: 4px 14px;
-  border-radius: 999px;
+.pt-ribbon-text {
   font-family: 'Baloo 2', 'Nunito', sans-serif;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  border: 2px solid #ffffff;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45);
+  font-weight: 900;
+  font-size: 13.5px;
+  letter-spacing: 1.5px;
 }
 
-.pt-mascot-podium {
+.pt-brand-sparkle-star {
+  position: absolute;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.pt-brand-sparkle-star.left {
+  top: -8px;
+  left: 12px;
+  animation: ptStarTwinkle 1.8s infinite alternate ease-in-out;
+}
+
+.pt-brand-sparkle-star.right {
+  top: 16px;
+  right: 14px;
+  animation: ptStarTwinkle 2.2s infinite alternate-reverse ease-in-out 0.6s;
+}
+
+/* Grounded Mascot Diorama on 3D Floating Cloud Pedestal */
+.pt-mascot-diorama {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-top: 10px;
+  margin-top: 2px;
 }
 
-/* Mascot Speech Bubble */
-.pt-speech-bubble {
+.pt-diorama-speech-bubble {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.96);
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.97);
   color: #1e293b;
   font-family: 'Baloo 2', 'Nunito', sans-serif;
-  font-size: clamp(14px, 2.5vw, 16px);
+  font-size: clamp(13px, 2.2vw, 15px);
   font-weight: 800;
-  padding: 10px 24px;
+  padding: 8px 22px;
   border-radius: 999px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.22);
   border: 2.5px solid #fde047;
+  margin-bottom: 4px;
   animation: ptBubbleFloat 2.6s infinite ease-in-out;
   white-space: nowrap;
+  z-index: 5;
 }
 
-.pt-bubble-gift {
+.bubble-gift-icon {
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
   animation: ptGiftWiggle 1.8s infinite ease-in-out;
 }
 
-@keyframes ptGiftWiggle {
-  0%, 100% { transform: rotate(0deg) scale(1); }
-  25% { transform: rotate(-8deg) scale(1.1); }
-  75% { transform: rotate(8deg) scale(1.1); }
-}
-
-@keyframes ptBubbleFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-
-.pt-bubble-arrow {
+.bubble-anchor {
   position: absolute;
   bottom: -7px;
   left: 50%;
@@ -5055,42 +5075,77 @@
   border-top: 7px solid #ffffff;
 }
 
-.pt-mascot-chibi-3d {
+.pt-diorama-mascot-wrap {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.28));
-  animation: ptMascotBounce 0.75s infinite alternate cubic-bezier(0.28, 0.84, 0.42, 1);
-  will-change: transform;
+  z-index: 4;
+  margin-bottom: -14px;
+  animation: ptMascotIdleHop 2s infinite ease-in-out;
 }
 
-.pt-mascot-chibi-3d.is-celebrating {
-  animation: ptMascotCelebrate 0.45s infinite alternate cubic-bezier(0.3, 1.4, 0.5, 1);
+.pt-diorama-mascot-wrap.is-ready-celebrating {
+  animation: ptMascotVictoryDance 0.5s infinite alternate cubic-bezier(0.28, 1.4, 0.42, 1);
 }
 
-@keyframes ptMascotBounce {
-  0% { transform: translateY(0) scale(1.12, 0.88); }
-  35% { transform: translateY(-8px) scale(0.96, 1.04); }
-  100% { transform: translateY(-22px) scale(0.92, 1.08); }
+@keyframes ptMascotIdleHop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
-@keyframes ptMascotCelebrate {
-  0% { transform: translateY(0) scale(1.15, 0.85) rotate(-6deg); }
-  100% { transform: translateY(-24px) scale(0.95, 1.06) rotate(6deg); }
+@keyframes ptMascotVictoryDance {
+  0% { transform: translateY(0) rotate(-5deg) scale(1.08, 0.94); }
+  100% { transform: translateY(-18px) rotate(5deg) scale(0.96, 1.06); }
 }
 
-.pt-podium-shadow {
-  width: 60px;
-  height: 14px;
+.pt-mascot-sparkle-burst {
+  position: absolute;
+  inset: -12px;
+  pointer-events: none;
+}
+
+.burst-sparkle.s1 {
+  position: absolute;
+  top: -8px;
+  left: -4px;
+  animation: ptStarTwinkle 1s infinite alternate;
+}
+
+.burst-sparkle.s2 {
+  position: absolute;
+  top: -6px;
+  right: -4px;
+  animation: ptStarTwinkle 1s infinite alternate-reverse 0.4s;
+}
+
+.pt-cloud-pedestal-wrap {
+  position: relative;
+  width: 176px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+.pt-pedestal-svg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 8px 18px rgba(12, 74, 110, 0.22));
+}
+
+.pt-pedestal-ambient-shadow {
+  width: 120px;
+  height: 12px;
   border-radius: 50%;
-  background: rgba(15, 23, 42, 0.2);
-  margin-top: 6px;
-  animation: ptPodiumShadowScale 0.75s infinite alternate cubic-bezier(0.28, 0.84, 0.42, 1);
+  background: rgba(12, 74, 110, 0.22);
+  margin-top: 2px;
+  animation: ptShadowPulse 2s infinite ease-in-out;
 }
 
-@keyframes ptPodiumShadowScale {
-  0% { transform: scale(1.15); opacity: 0.45; }
-  100% { transform: scale(0.65); opacity: 0.15; }
+@keyframes ptShadowPulse {
+  0%, 100% { transform: scale(1); opacity: 0.25; }
+  50% { transform: scale(0.85); opacity: 0.12; }
 }
 
 .pt-error-card {
@@ -5129,62 +5184,31 @@
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
 }
 
-/* Stylized bottom horizon clouds */
-.pt-horizon-clouds {
+/* Soft Rolling Horizon Landscape */
+.pt-horizon-silhouette {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 180px;
+  height: 140px;
+  background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.15) 100%);
   pointer-events: none;
-  overflow: hidden;
   z-index: 1;
 }
 
-.pt-hcloud {
-  position: absolute;
-  background: rgba(255, 255, 255, 0.22);
-  border-radius: 50% 50% 0 0;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-.pt-hcloud.hcloud-left {
-  left: -80px;
-  bottom: -40px;
-  width: 500px;
-  height: 220px;
-}
-
-.pt-hcloud.hcloud-center {
-  left: 30%;
-  bottom: -60px;
-  width: 600px;
-  height: 200px;
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.pt-hcloud.hcloud-right {
-  right: -100px;
-  bottom: -50px;
-  width: 540px;
-  height: 230px;
-}
-
-/* Bottom Area: Docked Loading or Action */
+/* Bottom Area: Docked Loading or Action Console */
 .pt-start-bottom-dock {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  max-width: 540px;
+  max-width: 520px;
   margin: 0 auto;
   z-index: 5;
 }
 
-/* Frameless Candy Jelly Loading Dock */
-.pt-loading-dock {
+.pt-loading-console {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -5192,12 +5216,169 @@
   width: 100%;
 }
 
-.pt-loading-status-bar {
+/* Touch To Start Authentic Arcade Banner & Button */
+.pt-touch-prompt-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #ffffff;
+  font-family: 'Baloo 2', 'Nunito', cursive, sans-serif;
+  font-size: clamp(14px, 2.6vw, 17px);
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 8px rgba(7, 89, 133, 0.8), 0 0 16px rgba(255, 255, 255, 0.6);
+  animation: ptPromptPulse 1.6s infinite ease-in-out;
+  margin-bottom: 2px;
+}
+
+.prompt-chevron {
+  font-size: 20px;
+  color: #fef08a;
+}
+
+@keyframes ptPromptPulse {
+  0%, 100% { opacity: 0.75; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.03); text-shadow: 0 2px 10px rgba(7, 89, 133, 0.9), 0 0 22px #fef08a; }
+}
+
+.pt-server-account-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.35);
+  color: #ffffff;
+  padding: 5px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.pt-bar-dot {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Events / Notice Dialog Modal */
+.pt-notice-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 16px;
+  animation: ptFadeIn 0.2s ease-out;
+}
+
+.pt-notice-modal-card {
+  background: #ffffff;
+  color: #0f172a;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 24px;
+  border: 4px solid #fef08a;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+  padding: 24px;
+  animation: ptModalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes ptModalPop {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.pt-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.pt-modal-title {
+  font-family: 'Baloo 2', 'Nunito', cursive, sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  color: #78350f;
+}
+
+.pt-modal-close {
+  background: #f1f5f9;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 15px;
+  font-weight: 800;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pt-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.pt-notice-item {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.pt-notice-tag {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  margin-right: 6px;
+}
+
+.pt-notice-tag.hot {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.pt-notice-tag.gift {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.pt-notice-item b {
+  font-size: 13.5px;
+  color: #1e293b;
+}
+
+.pt-notice-item p {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 4px 0 0;
+  line-height: 1.45;
+}
+
+.pt-modal-confirm-btn {
   width: 100%;
-  padding: 0 8px;
+  padding: 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f59e0b, #d97706);
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  font-family: 'Baloo 2', 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4);
 }
 
 .pt-status-msg {

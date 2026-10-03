@@ -2697,6 +2697,124 @@ export function Icon3dGiftBoxRibbon({ size = 32, className = '' }) {
   );
 }
 
+// 90. Chuông Thông Báo Hoàng Kim 3D (Golden Notification Bell)
+export function Icon3dNotificationBell({ size = 28, hasBadge = true, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="bell_gold" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="25%" stopColor="#fef08a" />
+          <stop offset="70%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
+        </radialGradient>
+        <radialGradient id="bell_rim" cx="40%" cy="30%" r="65%">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="60%" stopColor="#d97706" />
+          <stop offset="100%" stopColor="#78350f" />
+        </radialGradient>
+        <radialGradient id="bell_ruby" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#fca5a5" />
+          <stop offset="50%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#991b1b" />
+        </radialGradient>
+      </defs>
+
+      {/* Quả lắc chuông tròn bên dưới */}
+      <circle cx="24" cy="38" r="5" fill="#ca8a04" stroke="#78350f" strokeWidth="1.2" />
+
+      {/* Thân chuông vàng hình quả chuông 3D */}
+      <path
+        d="M 24 10 C 18 10, 14 16, 13 25 C 13 29, 11 32, 9 35 C 12 36, 36 36, 39 35 C 37 32, 35 29, 35 25 C 34 16, 30 10, 24 10 Z"
+        fill="url(#bell_gold)"
+        stroke="#ffffff"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+
+      {/* Vành môi chuông nở rộng */}
+      <ellipse cx="24" cy="35" rx="15" ry="3.5" fill="url(#bell_rim)" stroke="#ffffff" strokeWidth="1.6" />
+
+      {/* Vòng móc tròn trên đỉnh */}
+      <circle cx="24" cy="9" r="3.5" stroke="url(#bell_rim)" strokeWidth="2" fill="none" />
+
+      {/* Vệt sáng bóng kính dọc chuông */}
+      <path
+        d="M 17 18 C 17 22, 16 28, 14 32 C 15 28, 16 22, 17 18 Z"
+        fill="#ffffff"
+        opacity="0.75"
+      />
+
+      {/* Chấm đỏ thông báo chưa đọc (Unread badge) */}
+      {hasBadge && (
+        <g>
+          <circle cx="36" cy="11" r="5.5" fill="url(#bell_ruby)" stroke="#ffffff" strokeWidth="2" />
+          <circle cx="34.5" cy="9.5" r="1.5" fill="#ffffff" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// 91. Khinh Khí Cầu Pastel 3D (Pastel Hot Air Balloon)
+export function Icon3dHotAirBalloon({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="balloon_stripe_1" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fed7aa" />
+          <stop offset="60%" stopColor="#f97316" />
+          <stop offset="100%" stopColor="#c2410c" />
+        </radialGradient>
+        <radialGradient id="balloon_stripe_2" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#bae6fd" />
+          <stop offset="60%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#0284c7" />
+        </radialGradient>
+        <radialGradient id="balloon_stripe_3" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="60%" stopColor="#facc15" />
+          <stop offset="100%" stopColor="#ca8a04" />
+        </radialGradient>
+        <linearGradient id="basket_wood" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#d97706" />
+          <stop offset="100%" stopColor="#78350f" />
+        </linearGradient>
+      </defs>
+
+      {/* Quả bóng khổng lồ sọc màu */}
+      <path
+        d="M 24 5 C 19 5, 17 14, 18 25 C 19 29, 21 32, 24 33 C 27 32, 29 29, 30 25 C 31 14, 29 5, 24 5 Z"
+        fill="url(#balloon_stripe_1)"
+      />
+      <path
+        d="M 24 5 C 15 5, 9 12, 10 21 C 11 27, 16 30, 20 32.5 C 18 28, 17 20, 24 5 Z"
+        fill="url(#balloon_stripe_2)"
+      />
+      <path
+        d="M 24 5 C 33 5, 39 12, 38 21 C 37 27, 32 30, 28 32.5 C 30 28, 31 20, 24 5 Z"
+        fill="url(#balloon_stripe_3)"
+      />
+
+      {/* Đường viền tổng thể bóng */}
+      <path
+        d="M 24 5 C 14 5, 9 13, 10 21 C 11 27, 18 31, 20 33 L 28 33 C 30 31, 37 27, 38 21 C 39 13, 34 5, 24 5 Z"
+        stroke="#ffffff"
+        strokeWidth="1.6"
+        fill="none"
+      />
+
+      {/* Dây thừng treo */}
+      <line x1="21" y1="33" x2="22" y2="39" stroke="#78350f" strokeWidth="1" />
+      <line x1="27" y1="33" x2="26" y2="39" stroke="#78350f" strokeWidth="1" />
+
+      {/* Giỏ mây đan bên dưới */}
+      <rect x="21" y="38" width="6" height="5" rx="1.5" fill="url(#basket_wood)" stroke="#ffffff" strokeWidth="0.8" />
+    </svg>
+  );
+}
+
+
 
 
 
