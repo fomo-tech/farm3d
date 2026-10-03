@@ -343,14 +343,9 @@ export function CharacterCreationModal({ defaultName = '', onSubmit }) {
               </div>
             </div>
 
-            {/* Quick 3-Step Guide from Elder Oliver */}
+            {/* Quick Tip from Elder Oliver */}
             <div className="pt-ticket-elder-note">
-              <b>3 BƯỚC BẮT ĐẦU TỪ QUẢN GIA OLIVER:</b>
-              <ol>
-                <li>Bước xuống xe buýt tại Quảng Trường Trung Tâm.</li>
-                <li>Nói chuyện với Quản Gia Oliver tại đài phun nước để nhận chìa khóa.</li>
-                <li>Chọn mua lô đất ưng ý để dựng căn nhà và nông trại đầu tiên!</li>
-              </ol>
+              <span>💡 Gặp Quản Gia Oliver tại đài phun nước để nhận đất & khởi nghiệp!</span>
             </div>
 
             {/* Actions */}

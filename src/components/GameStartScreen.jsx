@@ -11,22 +11,21 @@ import {
 } from './icons3d/GameIcons3D.jsx';
 
 const PLAY_TOGETHER_TIPS = [
-  'Mẹo: Bắt xe buýt liên làng miễn phí để ngắm nhìn toàn cảnh thị trấn xinh đẹp!',
-  'Mẹo: Thử vận may câu cá ở Bến Cảng để săn các loài cá hiếm khổng lồ!',
-  'Mẹo: Thu hoạch cây trồng đúng giờ để nông sản luôn đạt độ tươi ngon xuất sắc!',
-  'Mẹo: Ghé Cửa Hàng Thời Trang để phối cho mình bộ cánh ấn tượng nhất!',
-  'Mẹo: Tụ tập bạn bè tại Quảng Trường Trung Tâm để mở tiệc khiêu vũ sôi động!',
-  'Mẹo: Bấm phím Cách để nhảy chân sáo và giữ Shift để chạy nhanh khắp thị trấn!',
-  'Mẹo: Gặp Quản Gia Oliver tại đài phun nước để nhận hướng dẫn và hạt giống!',
-  'Mẹo: Dạo bước quanh Hồ Pha Lê và Đầm Sen để thư giãn bên bờ sông thơ mộng!',
+  'Bắt xe buýt miễn phí dạo quanh thị trấn!',
+  'Câu cá ven hồ săn các loài cá hiếm!',
+  'Thu hoạch đúng giờ để rau củ tươi ngon!',
+  'Ghé Cửa Hàng Thời Trang để đổi phong cách!',
+  'Nhấn phím Cách để nhảy chân sáo vui vẻ!',
+  'Gặp Quản Gia Oliver để nhận hạt giống!',
+  'Giao đơn xe tải nhận x3 Tiền Vàng & XP!',
 ];
 
 function getLoadingStatus(percentage) {
-  if (percentage < 25) return 'Đang kết nối thế giới Vibe City...';
-  if (percentage < 50) return 'Đang chuẩn bị trang phục & nông trại...';
-  if (percentage < 75) return 'Đang đón các chuyến xe buýt dạo phố...';
-  if (percentage < 95) return 'Đang mở cửa các gian hàng Plaza...';
-  return 'Thế giới 3D đã sẵn sàng chào đón bạn!';
+  if (percentage < 25) return 'Đang kết nối Vibe City...';
+  if (percentage < 50) return 'Đang chuẩn bị thế giới 3D...';
+  if (percentage < 75) return 'Đang mở cửa các gian hàng...';
+  if (percentage < 95) return 'Sắp hoàn tất...';
+  return 'Thế giới 3D đã sẵn sàng!';
 }
 
 export function GameStartScreen({

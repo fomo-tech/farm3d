@@ -823,7 +823,7 @@ export default function App() {
   } : null;
 
   return (
-    <main className={`game-shell hud-v2${venueMode ? ' in-venue' : ''}`}>
+    <main className={`game-shell pt-game-shell${venueMode ? ' in-venue' : ''}`}>
       <canvas ref={canvasRef} className="game-canvas" aria-label="Thế giới nông trại 3D" />
       {/* Play Together Title & Start Screen */}
       {!gameStarted && (
