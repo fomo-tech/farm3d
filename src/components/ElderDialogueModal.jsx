@@ -1,3 +1,4 @@
+import React from 'react';
 import { ONBOARDING_STEPS } from '../game/economy/GameProgress.js';
 import {
   Icon3dManager,
@@ -12,8 +13,8 @@ import {
   Icon3dOrdersBox,
   Icon3dModernCity,
   Icon3dBike,
-  Icon3dStar,
   Icon3dGuideBook,
+  Icon3dSparkleStar,
 } from './icons3d/GameIcons3D.jsx';
 
 export function ElderDialogueModal({
@@ -24,253 +25,273 @@ export function ElderDialogueModal({
   onOpenOrders,
   onClaimBicycle,
   onOpenGuide,
-  villageName = 'Thung Lũng Green Valley',
+  villageName = 'Vibe City',
 }) {
   return (
-    <div className="onboarding-backdrop" onClick={onClose}>
-      <section className="elder-dialogue-card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
-        {/* Header with Farm Manager Portrait */}
-        <header className="elder-dialogue-header">
-          <div className="elder-portrait-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon3dManager size={48} />
+    <div className="pt-dialogue-overlay" onClick={onClose}>
+      <section
+        className="pt-dialogue-bar-card"
+        onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Hội thoại Quản Gia Oliver"
+      >
+        {/* Left Side: Huge Oliver 3D Chibi Peeking Portrait */}
+        <div className="pt-dialogue-npc-wrap">
+          <div className="pt-dialogue-npc-halo" />
+          <div className="pt-dialogue-npc-portrait">
+            <Icon3dManager size={92} />
           </div>
-          <div className="elder-title-wrap">
-            <span className="elder-tag">QUẢN GIA TRANG TRẠI</span>
-            <h3>Oliver · Quản Gia {villageName}</h3>
+          <div className="pt-dialogue-npc-badge">
+            <Icon3dSparkleStar size={13} />
+            <span>QUẢN GIA</span>
           </div>
-          <button type="button" className="close-btn" onClick={onClose} aria-label="Đóng">
-            ×
-          </button>
-        </header>
+        </div>
 
-        {/* Dynamic Step Content */}
-        <div className="elder-dialogue-content">
-          {step === ONBOARDING_STEPS.MEET_ELDER && (
-            <div className="dialogue-step step-welcome">
-              <div className="speech-bubble">
-                <p>
-                  “Chào mừng bạn đã đến với <strong>{villageName}</strong>! Tôi là Oliver, quản gia điều hành trang trại tại thung lũng xinh đẹp này.
-                  Vùng đất trù phú này là nơi lý tưởng để xây dựng một điền trang thịnh vượng và kết nối cùng bạn bè khắp nơi!”
-                </p>
-                <p>
-                  “Để bạn bắt đầu hành trình làm chủ nông trang, tôi xin gửi tặng món quà tân thủ: <strong>3 hạt giống cà rốt tươi ngon</strong> và <strong>50 xu khởi nghiệp</strong>. Hãy nhận lấy rồi ra ô ruộng kế bên xới đất và gieo hạt đầu tiên nhé!”
-                </p>
-              </div>
-
-              <div className="starter-gift-box">
-                <div className="gift-item seeds">
-                  <span className="gift-icon" style={{ display: 'inline-flex' }}><Icon3dSeeds size={28} /></span>
-                  <div>
-                    <b>3x Hạt Cà Rốt Miễn Phí</b>
-                    <small>Gieo trồng không tốn xu</small>
-                  </div>
-                </div>
-                <div className="gift-item coins">
-                  <span className="gift-icon" style={{ display: 'inline-flex' }}><Icon3dGoldCoin size={28} /></span>
-                  <div>
-                    <b>+50 Xu Khởi Nghiệp</b>
-                    <small>Tiền mặt ban đầu</small>
-                  </div>
-                </div>
-              </div>
-
-              <button type="button" className="elder-action-btn primary" onClick={onClaimSeeds} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <Icon3dSeeds size={22} />
-                <span>Nhận Quà Tân Thủ & Bắt Đầu Gieo Trồng →</span>
-              </button>
+        {/* Right Side: Dialogue Body */}
+        <div className="pt-dialogue-main">
+          {/* Header Bar */}
+          <div className="pt-dialogue-header">
+            <div className="pt-dialogue-speaker">
+              <h3>Oliver · Quản Gia {villageName}</h3>
+              <span className="pt-dialogue-tag">Cẩm nang cư dân mới</span>
             </div>
-          )}
+            <button
+              type="button"
+              className="pt-dialogue-close-btn"
+              onClick={onClose}
+              aria-label="Đóng hội thoại"
+            >
+              ✕
+            </button>
+          </div>
 
-          {step === ONBOARDING_STEPS.FIRST_PLANT && (
-            <div className="dialogue-step step-plant-guide">
-              <div className="speech-bubble">
-                <p>
-                  “Bạn đã có hạt giống trong tay! Giờ hãy bước tới ô ruộng cạnh nhà và thực hiện <strong>4 bước canh tác cơ bản</strong>:”
+          {/* Dynamic Content Per Step */}
+          <div className="pt-dialogue-speech-box">
+            {step === ONBOARDING_STEPS.MEET_ELDER && (
+              <div className="pt-step-content">
+                <p className="pt-dialogue-text">
+                  “Chào mừng bạn đã đặt chân đến <strong>{villageName}</strong>! Tôi là Oliver, người quản gia sẽ đồng hành cùng bạn xây dựng nông trang thịnh vượng!”
                 </p>
-              </div>
+                <p className="pt-dialogue-text">
+                  “Hãy nhận lấy món quà tân thủ: <strong>3 hạt giống cà rốt may mắn</strong> cùng <strong>50 xu khởi nghiệp</strong>. Mau ra ô đất cạnh nhà xới đất và gieo mầm nhé!”
+                </p>
 
-              <div className="farming-quick-steps">
-                <div className="guide-step-row">
-                  <span className="step-num">1</span>
-                  <span className="step-tool-icon" style={{ display: 'inline-flex' }}><Icon3dHoe size={24} /></span>
-                  <div>
-                    <b>Xới Đất (Phím 2)</b>
-                    <small>Dùng cuốc xới tơi xốp ô đất trồng</small>
+                {/* Glow Starter Gift Cards */}
+                <div className="pt-dialogue-gifts-row">
+                  <div className="pt-gift-pill seeds">
+                    <span className="pt-gift-icon"><Icon3dSeeds size={32} /></span>
+                    <div className="pt-gift-text">
+                      <b>3x Hạt Cà Rốt Miễn Phí</b>
+                      <small>Cây trồng khởi đầu</small>
+                    </div>
+                  </div>
+                  <div className="pt-gift-pill coins">
+                    <span className="pt-gift-icon"><Icon3dGoldCoin size={32} /></span>
+                    <div className="pt-gift-text">
+                      <b>+50 Xu Khởi Nghiệp</b>
+                      <small>Tiền mặt ban đầu</small>
+                    </div>
                   </div>
                 </div>
-                <div className="guide-step-row">
-                  <span className="step-num">2</span>
-                  <span className="step-tool-icon" style={{ display: 'inline-flex' }}><Icon3dCarrot size={24} /></span>
-                  <div>
-                    <b>Gieo Hạt Cà Rốt (Phím 3)</b>
-                    <small>Hạt đầu tiên hoàn toàn miễn phí!</small>
+
+                <div className="pt-dialogue-actions">
+                  <button
+                    type="button"
+                    className="pt-dialogue-action-btn primary"
+                    onClick={onClaimSeeds}
+                  >
+                    <Icon3dSeeds size={22} />
+                    <span>Nhận Quà & Bắt Đầu Gieo Trồng →</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === ONBOARDING_STEPS.FIRST_PLANT && (
+              <div className="pt-step-content">
+                <p className="pt-dialogue-text">
+                  “Hạt giống đã sẵn sàng trong túi đồ! Bạn hãy bước tới ô ruộng và thực hiện <strong>4 bước canh tác cơ bản</strong>:”
+                </p>
+
+                {/* 4-Step Farming Flow */}
+                <div className="pt-farming-steps-row">
+                  <div className="pt-farm-step-chip">
+                    <span className="pt-chip-num">1</span>
+                    <Icon3dHoe size={24} />
+                    <div>
+                      <b>Xới Đất</b>
+                      <small>Phím 2</small>
+                    </div>
+                  </div>
+                  <div className="pt-farm-step-chip">
+                    <span className="pt-chip-num">2</span>
+                    <Icon3dCarrot size={24} />
+                    <div>
+                      <b>Gieo Hạt</b>
+                      <small>Phím 3</small>
+                    </div>
+                  </div>
+                  <div className="pt-farm-step-chip">
+                    <span className="pt-chip-num">3</span>
+                    <Icon3dWateringCan size={24} />
+                    <div>
+                      <b>Tưới Nước</b>
+                      <small>Phím 4</small>
+                    </div>
+                  </div>
+                  <div className="pt-farm-step-chip highlight">
+                    <span className="pt-chip-num">4</span>
+                    <Icon3dBasket size={24} />
+                    <div>
+                      <b>Thu Hoạch</b>
+                      <small>Chỉ 8 giây!</small>
+                    </div>
                   </div>
                 </div>
-                <div className="guide-step-row">
-                  <span className="step-num">3</span>
-                  <span className="step-tool-icon" style={{ display: 'inline-flex' }}><Icon3dWateringCan size={24} /></span>
-                  <div>
-                    <b>Tưới Nước Đầy Đủ (Phím 4)</b>
-                    <small>Tưới nước giúp cây lớn nhanh gấp đôi</small>
+
+                <div className="pt-dialogue-actions">
+                  <button
+                    type="button"
+                    className="pt-dialogue-action-btn primary"
+                    onClick={onGoToPlot}
+                  >
+                    <Icon3dHoe size={22} />
+                    <span>Đi Tới Ô Ruộng Canh Tác Ngay →</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === ONBOARDING_STEPS.EXPLAIN_SYSTEMS && (
+              <div className="pt-step-content">
+                <p className="pt-dialogue-text">
+                  “Tuyệt vời! Bạn thu hoạch củ cà rốt đầu tiên rất cừ khôi! Hãy ghi nhớ <strong>4 cơ chế vàng</strong> sau đây:”
+                </p>
+
+                {/* 4 Systems Cards */}
+                <div className="pt-systems-chips-grid">
+                  <div className="pt-system-chip barn">
+                    <span className="pt-sys-icon"><Icon3dBackpack size={24} /></span>
+                    <div>
+                      <b>Tránh Kho Đầy</b>
+                      <p>Sức chứa 20 món. Đầy kho sẽ không thể thu hoạch thêm, hãy bán bớt hoặc giao đơn!</p>
+                    </div>
+                  </div>
+                  <div className="pt-system-chip shop">
+                    <span className="pt-sys-icon"><Icon3dShopCart size={24} /></span>
+                    <div>
+                      <b>Cửa Hàng Hạt Giống</b>
+                      <p>Lên cấp để mở khóa thêm Lúa Mì, Cà Chua, Dâu Tây đem lại nhiều tiền hơn!</p>
+                    </div>
+                  </div>
+                  <div className="pt-system-chip orders">
+                    <span className="pt-sys-icon"><Icon3dOrdersBox size={24} /></span>
+                    <div>
+                      <b>Xe Tải Đơn Hàng</b>
+                      <p>Giao đơn xe tải đem lại nhiều Xu và XP gấp 3 lần so với bán lẻ vào kho!</p>
+                    </div>
+                  </div>
+                  <div className="pt-system-chip bus">
+                    <span className="pt-sys-icon"><Icon3dModernCity size={24} /></span>
+                    <div>
+                      <b>Tuyến Xe Buýt Miễn Phí</b>
+                      <p>Đưa bạn du ngoạn giữa Nông Trại, Phố Xá, Hồ Pha Lê và Bến Cảng tức thì!</p>
+                    </div>
                   </div>
                 </div>
-                <div className="guide-step-row">
-                  <span className="step-num">4</span>
-                  <span className="step-tool-icon" style={{ display: 'inline-flex' }}><Icon3dBasket size={24} /></span>
-                  <div>
-                    <b>Chờ Chín & Thu Hoạch (Phím 5 hoặc E)</b>
-                    <small>Đất dinh dưỡng đặc biệt giúp cây đầu tiên lớn chỉ trong 8 giây!</small>
+
+                <div className="pt-dialogue-actions">
+                  <button
+                    type="button"
+                    className="pt-dialogue-action-btn primary"
+                    onClick={onOpenOrders}
+                  >
+                    <Icon3dOrdersBox size={22} />
+                    <span>Mở Bảng Đơn Hàng & Giao Đơn Đầu Tiên →</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === ONBOARDING_STEPS.DELIVER_ORDER && (
+              <div className="pt-step-content">
+                <p className="pt-dialogue-text">
+                  “Tôi vừa đăng đơn hàng <strong>‘Nhà Hàng Green Valley’</strong> lên Bảng đơn hàng cho bạn rồi đấy!”
+                </p>
+                <p className="pt-dialogue-text">
+                  “Họ đang cần 1 củ cà rốt tươi ngon của bạn. Bấm nút dưới đây để giao đơn và nhận thù lao nhé!”
+                </p>
+
+                <div className="pt-dialogue-actions">
+                  <button
+                    type="button"
+                    className="pt-dialogue-action-btn primary"
+                    onClick={onOpenOrders}
+                  >
+                    <Icon3dOrdersBox size={22} />
+                    <span>Mở Bảng Đơn Hàng Ngay →</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === ONBOARDING_STEPS.CLAIM_REWARD && (
+              <div className="pt-step-content">
+                <p className="pt-dialogue-text">
+                  “Xuất sắc! Bạn đã giao thành công đơn hàng và tốt nghiệp khóa hướng dẫn tân thủ!”
+                </p>
+                <p className="pt-dialogue-text">
+                  “Như đã hứa, phần thưởng lớn nhất dành cho bạn: <strong>Chiếc Xe Đạp Thể Thao Play Together</strong> (tốc độ 10m/s) cùng <strong>200 Xu</strong>!”
+                </p>
+
+                {/* Bike Reward Pill */}
+                <div className="pt-reward-showcase-pill">
+                  <span className="pt-showcase-icon"><Icon3dBike size={36} /></span>
+                  <div className="pt-showcase-text">
+                    <b>Xe Đạp Thể Thao Play Together (Đã Trang Bị)</b>
+                    <small>Tăng tốc độ di chuyển gấp 1.5 lần + 200 Xu + 80 XP</small>
                   </div>
                 </div>
+
+                <div className="pt-dialogue-actions">
+                  <button
+                    type="button"
+                    className="pt-dialogue-action-btn grand"
+                    onClick={onClaimBicycle}
+                  >
+                    <Icon3dBike size={24} />
+                    <span>Nhận Xe Đạp & Tự Do Khám Phá Vibe City →</span>
+                  </button>
+                </div>
               </div>
+            )}
 
-              <button type="button" className="elder-action-btn primary" onClick={onGoToPlot} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <Icon3dHoe size={22} />
-                <span>Đi Tới Ô Ruộng Canh Tác Ngay →</span>
-              </button>
-            </div>
-          )}
-
-          {step === ONBOARDING_STEPS.EXPLAIN_SYSTEMS && (
-            <div className="dialogue-step step-systems-explained">
-              <div className="speech-bubble">
-                <p>
-                  “Tuyệt vời lắm! Bạn đã thu hoạch củ cà rốt đầu tiên rất thuần thục!
-                  Trước khi giao thương, tôi muốn bạn nắm vững <strong>4 cơ chế quan trọng nhất</strong> trong thung lũng:”
+            {step >= ONBOARDING_STEPS.COMPLETED && (
+              <div className="pt-step-content">
+                <p className="pt-dialogue-text">
+                  “Rất vui được gặp lại bạn! Nông trại của bạn đang phát triển rất tốt. Hãy tiếp tục gieo trồng, nuôi thú và giao đơn hàng cùng bạn bè nhé!”
                 </p>
-              </div>
-
-              <div className="systems-grid">
-                <div className="system-card highlight-barn">
-                  <span className="sys-icon" style={{ display: 'inline-flex' }}><Icon3dBackpack size={26} /></span>
-                  <b>Kho Nông Sản & Tránh Kho Đầy</b>
-                  <p>
-                    Kho ban đầu chứa tối đa <strong>20 món</strong>. Khi kho đầy, bạn <em>sẽ không thể thu hoạch thêm</em>!
-                    Hãy giao đơn hàng, bán bớt nông sản hoặc dùng xu nâng cấp sức chứa kho tại mục Nâng Cấp.
-                  </p>
-                </div>
-
-                <div className="system-card highlight-shop">
-                  <span className="sys-icon" style={{ display: 'inline-flex' }}><Icon3dShopCart size={26} /></span>
-                  <b>Cửa Hàng Vật Tư (Shop)</b>
-                  <p>
-                    Nơi mua hạt giống cao cấp hơn như <strong>Lúa mì, Cà chua, Dâu tây</strong> khi bạn tăng cấp. Cây cấp càng cao thì thu nhập bán ra càng lớn!
-                  </p>
-                </div>
-
-                <div className="system-card highlight-orders">
-                  <span className="sys-icon" style={{ display: 'inline-flex' }}><Icon3dOrdersBox size={26} /></span>
-                  <b>Bảng Đơn Hàng & Xe Tải Giao Hàng</b>
-                  <p>
-                    Thị trấn rất ưa chuộng nông sản tươi! Giao đơn hàng xe tải sẽ đem lại <strong>nhiều Xu và XP hơn gấp 3 lần</strong> so với bán lẻ vào kho!
-                  </p>
-                </div>
-
-                <div className="system-card highlight-bus">
-                  <span className="sys-icon" style={{ display: 'inline-flex' }}><Icon3dModernCity size={26} /></span>
-                  <b>Tuyến Xe Buýt Nhanh Tuyến 01</b>
-                  <p>
-                    Xe buýt chạy liên tục đưa bạn du hành giữa <strong>Nông Trại, Trung Tâm Thành Phố, Hồ Pha Lê</strong> và <strong>Bến Cảng</strong> hoàn toàn miễn phí.
-                  </p>
+                <div className="pt-dialogue-actions">
+                  <button
+                    type="button"
+                    className="pt-dialogue-action-btn secondary"
+                    onClick={onOpenGuide}
+                  >
+                    <Icon3dGuideBook size={20} />
+                    <span>Mở Sổ Tay Nông Trại</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="pt-dialogue-action-btn primary"
+                    onClick={onClose}
+                  >
+                    <span>Tiếp Tục Chơi</span>
+                  </button>
                 </div>
               </div>
-
-              <button type="button" className="elder-action-btn primary" onClick={onOpenOrders} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <Icon3dOrdersBox size={22} />
-                <span>Mở Bảng Đơn Hàng & Giao Đơn Đầu Tiên →</span>
-              </button>
-            </div>
-          )}
-
-          {step === ONBOARDING_STEPS.DELIVER_ORDER && (
-            <div className="dialogue-step step-waiting-order">
-              <div className="speech-bubble">
-                <p>
-                  “Tôi vừa đăng đơn hàng <strong>‘Nhà Hàng Green Valley’</strong> lên Bảng đơn hàng rồi đấy.
-                  Họ đang cần 1 củ cà rốt tươi ngon của bạn!”
-                </p>
-                <p>
-                  “Bạn hãy mở Bảng Đơn Hàng (biểu tượng Hộp Đơn ở menu bên phải) và bấm <strong>‘Giao đơn’</strong> để hoàn thành nhé!”
-                </p>
-              </div>
-
-              <button type="button" className="elder-action-btn primary" onClick={onOpenOrders} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <Icon3dOrdersBox size={22} />
-                <span>Mở Bảng Đơn Hàng Ngay →</span>
-              </button>
-            </div>
-          )}
-
-          {step === ONBOARDING_STEPS.CLAIM_REWARD && (
-            <div className="dialogue-step step-graduation">
-              <div className="speech-bubble">
-                <p>
-                  “Chúc mừng bạn! Bạn đã giao thành công đơn hàng đầu tiên và nắm trọn vẹn quy trình vận hành nông trang mạng xã hội hiện đại!”
-                </p>
-                <p>
-                  “Như đã hứa, tôi xin trao tặng bạn phần thưởng tốt nghiệp lớn nhất: <strong>Chiếc Xe Đạp Thể Thao</strong> giúp tăng tốc độ di chuyển lên 10m/s, cùng <strong>200 Xu khởi nghiệp</strong>! Kể từ giờ, bạn hoàn toàn tự do khám phá và phát triển nông trại cùng bạn bè!”
-                </p>
-              </div>
-
-              <div className="reward-summary-box">
-                <div className="reward-pill bike">
-                  <span className="pill-icon" style={{ display: 'inline-flex' }}><Icon3dBike size={26} /></span>
-                  <div className="pill-text">
-                    <b>Xe Đạp Thể Thao</b>
-                    <small>Tốc độ di chuyển 10 (Gấp 1.5x đi bộ)</small>
-                  </div>
-                </div>
-                <div className="reward-pill coins">
-                  <span className="pill-icon" style={{ display: 'inline-flex' }}><Icon3dGoldCoin size={26} /></span>
-                  <div className="pill-text">
-                    <b>+200 Xu Thưởng</b>
-                    <small>Vốn mở rộng nông trại</small>
-                  </div>
-                </div>
-                <div className="reward-pill xp">
-                  <span className="pill-icon" style={{ display: 'inline-flex' }}><Icon3dStar size={26} /></span>
-                  <div className="pill-text">
-                    <b>+80 Điểm Kinh Nghiệm (XP)</b>
-                    <small>Nâng cao cấp độ nông dân</small>
-                  </div>
-                </div>
-              </div>
-
-              <button type="button" className="elder-action-btn grand-reward" onClick={onClaimBicycle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                <Icon3dBike size={24} />
-                <span>Nhận Xe Đạp & Tự Do Khám Phá Thung Lũng</span>
-              </button>
-            </div>
-          )}
-
-          {step >= ONBOARDING_STEPS.COMPLETED && (
-            <div className="dialogue-step step-done">
-              <div className="speech-bubble">
-                <p>
-                  “Xin chào! Rất vui được gặp lại bạn. Hãy tiếp tục gieo trồng, chăm sóc vật nuôi và giao các đơn hàng xe tải lớn nhé. Nông trại của bạn chắc chắn sẽ là niềm tự hào của cả Thung Lũng Green Valley!”
-                </p>
-              </div>
-
-              <div className="elder-tips-card">
-                <b>Lời khuyên từ Quản Gia:</b>
-                <ul>
-                  <li>Nhớ kiểm tra kho thường xuyên để tránh đầy kho nông sản.</li>
-                  <li>Bắt xe buýt tới Thành phố để ghé thăm Cửa hàng vật tư và Sòng bài may mắn.</li>
-                  <li>Lên cấp cao hơn để mở khóa Lúa mì, Cà chua và Dâu tây thơm ngọt!</li>
-                </ul>
-              </div>
-
-              <div className="elder-actions-row">
-                <button type="button" className="elder-action-btn secondary" onClick={onOpenGuide} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <Icon3dGuideBook size={20} />
-                  <span>Xem Lại Cẩm Nang Nông Trại</span>
-                </button>
-                <button type="button" className="elder-action-btn primary" onClick={onClose} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <span>Cảm ơn Quản Gia! Tôi đi làm vườn đây</span>
-                </button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </section>
     </div>

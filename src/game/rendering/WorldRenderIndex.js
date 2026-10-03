@@ -1,4 +1,8 @@
 import '@babylonjs/core/Culling/Octrees/octreeSceneComponent.js';
+import { Octree } from '@babylonjs/core/Culling/Octrees/octree.js';
+import { OctreeSceneComponent } from '@babylonjs/core/Culling/Octrees/octreeSceneComponent.js';
+import { SceneComponentConstants } from '@babylonjs/core/sceneComponent.js';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 
 export function installWorldRenderIndex(scene) {
   const dynamic = mesh => {
@@ -8,20 +12,93 @@ export function installWorldRenderIndex(scene) {
     }
     return false;
   };
-  // Spatial selection replaces the default full-scene scan. Movers remain
-  // candidates regardless of their original indexed bounds.
-  const tree = scene.createOrUpdateSelectionOctree(64, 4);
-  const known = new WeakSet(scene.meshes);
-  for (const mesh of scene.meshes) if (dynamic(mesh)) tree.dynamicContent.push(mesh);
+
+  // Build a detached octree in small slices. The previous all-at-once call
+  // blocked the main thread for more than a second on a 14k-mesh world.
+  const tree = new Octree(Octree.CreationFuncForMeshes, 64, 2);
+  tree.update(new Vector3(-4096, -512, -4096), new Vector3(4096, 512, 4096), []);
+  const queue = [...scene.meshes];
+  const known = new WeakSet(queue);
+  const dynamicMeshes = [];
+  let cursor = 0;
+  let indexed = 0;
+  let ready = false;
+  let cancelled = false;
+  let timer = null;
+  let resolveReady;
+  const readyPromise = new Promise(resolve => { resolveReady = resolve; });
+
+  const add = mesh => {
+    if (!mesh || mesh.isDisposed()) return;
+    mesh.computeWorldMatrix(true);
+    if (dynamic(mesh)) dynamicMeshes.push(mesh);
+    else {
+      tree.addMesh(mesh);
+      indexed++;
+    }
+  };
+
+  const finalize = () => {
+    if (cancelled || scene.isDisposed) return;
+    let component = scene._getComponent?.(SceneComponentConstants.NAME_OCTREE);
+    if (!component) {
+      component = new OctreeSceneComponent(scene);
+      scene._addComponent(component);
+    }
+    tree.dynamicContent = dynamicMeshes;
+    scene._selectionOctree = tree;
+    ready = true;
+    resolveReady();
+  };
+
+  const schedule = () => {
+    if (cancelled) return;
+    const run = () => {
+      timer = null;
+      const started = performance.now();
+      let handled = 0;
+      while (cursor < queue.length && handled < 512) {
+        add(queue[cursor++]);
+        handled++;
+        if (performance.now() - started >= 4) break;
+      }
+      if (cursor < queue.length) schedule();
+      else finalize();
+    };
+    // Timers make steady progress even when requestIdleCallback is starved by
+    // continuous rendering. Every slice still yields after four milliseconds.
+    timer = setTimeout(run, 0);
+  };
+
   const added = scene.onNewMeshAddedObservable.add(mesh => {
     if (known.has(mesh) || mesh.isDisposed()) return;
     known.add(mesh);
-    mesh.computeWorldMatrix(true);
-    if (dynamic(mesh)) tree.dynamicContent.push(mesh);
-    else tree.addMesh(mesh);
+    if (!ready) queue.push(mesh);
+    else if (dynamic(mesh)) tree.dynamicContent.push(mesh);
+    else {
+      mesh.computeWorldMatrix(true);
+      tree.addMesh(mesh);
+      indexed++;
+    }
   });
+  schedule();
+
   return {
-    getStats: () => ({ indexedMeshes: scene.meshes.length - tree.dynamicContent.length, dynamicCandidates: tree.dynamicContent.length }),
-    dispose() { scene.onNewMeshAddedObservable.remove(added); },
+    ready: readyPromise,
+    getStats: () => ({
+      indexedMeshes: indexed,
+      dynamicCandidates: ready ? tree.dynamicContent.length : scene.meshes.length - indexed,
+      spatialIndexReady: ready,
+      spatialIndexPending: Math.max(0, queue.length - cursor),
+    }),
+    dispose() {
+      cancelled = true;
+      if (timer !== null) {
+        clearTimeout(timer);
+      }
+      scene.onNewMeshAddedObservable.remove(added);
+      if (scene._selectionOctree === tree) scene._selectionOctree = null;
+      resolveReady();
+    },
   };
 }

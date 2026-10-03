@@ -13,8 +13,8 @@ import { Vector3, Matrix, Quaternion } from '@babylonjs/core/Maths/math.vector.j
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import '@babylonjs/core/Meshes/thinInstanceMesh.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
-import { loadModelContainer } from '../rendering/ModelAssetManager.js';
 import { MODEL_PATHS } from '../rendering/AssetRegistry.js';
 import { CHUNK_SIZE, chunkAt } from './WorldPartition.js';
 import { ROAD_SAFETY_CONFIG, isRoadResourceBlocked, recordBlockedRoadResource } from './RoadSafetyZone.js';
@@ -54,46 +54,15 @@ export class FoliageInstancingEngine {
   }
 
   async _preloadPrototypes() {
-    const promises = Object.entries(this.treeTypes).map(async ([typeKey, url]) => {
+    const promises = Object.keys(this.treeTypes).map(async (typeKey) => {
       this.pendingQueue.set(typeKey, []);
       try {
-        const container = await loadModelContainer(this.scene, url);
-        if (!container || this.scene.isDisposed) return;
-        
-        container.addAllToScene();
-        const baseMeshes = [];
-
-        container.meshes.forEach((mesh) => {
-          if (mesh.getTotalVertices() > 0) {
-            mesh.isVisible = false;
-            mesh.isPickable = false;
-            mesh.setEnabled(true);
-            baseMeshes.push(mesh);
-          }
-        });
-
-        // Harmonize prototype materials for radiant 3D anime style
-        if (typeKey === 'sakura') {
-          baseMeshes.forEach((mesh) => {
-            if (mesh.material && /leaf|foliage|canopy/i.test(mesh.material.name)) {
-              const pinkMat = mesh.material.clone(`sakura-pink-${mesh.name}`);
-              const pink = Color3.FromHexString('#f472b6');
-              if (pinkMat.albedoColor) pinkMat.albedoColor = pink;
-              if (pinkMat.diffuseColor) pinkMat.diffuseColor = pink;
-              mesh.material = pinkMat;
-            }
-          });
-        } else if (typeKey === 'oak') {
-          baseMeshes.forEach((mesh) => {
-            if (mesh.material && /leaf|foliage|canopy/i.test(mesh.material.name)) {
-              const greenMat = mesh.material.clone(`oak-green-${mesh.name}`);
-              const green = Color3.FromHexString('#22c55e');
-              if (greenMat.albedoColor) greenMat.albedoColor = green;
-              if (greenMat.diffuseColor) greenMat.diffuseColor = green;
-              mesh.material = greenMat;
-            }
-          });
-        }
+        if (this.scene.isDisposed) return;
+        // A tree GLB contains hundreds of submeshes. Cloning each submesh per
+        // nearby chunk caused 20k+ scene meshes and second-long main-thread
+        // stalls. A few compact prototype meshes preserve layered trunks and
+        // crowns while thin instances draw every placement on the GPU.
+        const baseMeshes = this._createStylizedPrototype(typeKey);
 
         this.prototypes.set(typeKey, baseMeshes);
         this.loadedPrototypes.add(typeKey);
@@ -110,6 +79,81 @@ export class FoliageInstancingEngine {
       }
     });
     await Promise.all(promises);
+  }
+
+  _createStylizedPrototype(typeKey) {
+    const color = {
+      oak: '#31b66e', pine: '#277c70', maple: '#f59e52',
+      sakura: '#f3a9cf', palm: '#3fc98a', bush: '#40a16b',
+    }[typeKey] || '#31b66e';
+    const makeMaterial = (suffix, hex, ambient = 0.45) => {
+      const mat = new StandardMaterial(`foliage-prototype-${typeKey}-${suffix}-mat`, this.scene);
+      mat.diffuseColor = Color3.FromHexString(hex);
+      mat.ambientColor = mat.diffuseColor.scale(ambient);
+      mat.specularColor = new Color3(0.025, 0.025, 0.025);
+      mat.specularPower = 12;
+      return mat;
+    };
+    const canopyMat = makeMaterial('canopy', color);
+    const highlightMat = makeMaterial('highlight', {
+      oak: '#55cf7e', pine: '#3f9a78', maple: '#ffc066',
+      sakura: '#ffd0e5', palm: '#5dde8c', bush: '#66c77d',
+    }[typeKey] || color, 0.5);
+    const shadowMat = makeMaterial('shadow', {
+      oak: '#238e59', pine: '#1c675b', maple: '#d86f3d',
+      sakura: '#d87faf', palm: '#229e67', bush: '#287e51',
+    }[typeKey] || color, 0.4);
+    const result = [];
+    const finish = (mesh, mat, position, rotation = null) => {
+      mesh.material = mat;
+      mesh.position.copyFromFloats(position[0], position[1], position[2]);
+      if (rotation) mesh.rotation.copyFromFloats(rotation[0], rotation[1], rotation[2]);
+      mesh.bakeCurrentTransformIntoVertices();
+      result.push(mesh);
+    };
+    if (typeKey !== 'bush') {
+      const trunkMat = makeMaterial('trunk', typeKey === 'palm' ? '#b98257' : '#7c5239', 0.42);
+      const trunk = MeshBuilder.CreateCylinder(`foliage-prototype-${typeKey}-trunk`, {
+        height: typeKey === 'palm' ? 4.6 : (typeKey === 'pine' ? 3.5 : 2.9),
+        diameterTop: typeKey === 'palm' ? 0.24 : 0.34,
+        diameterBottom: typeKey === 'palm' ? 0.42 : 0.58,
+        tessellation: 7,
+      }, this.scene);
+      finish(trunk, trunkMat, [0, typeKey === 'palm' ? 2.3 : (typeKey === 'pine' ? 1.75 : 1.45), 0],
+        typeKey === 'palm' ? [0.02, 0, -0.08] : null);
+    }
+
+    if (typeKey === 'pine') {
+      [[2.4, 2.8, shadowMat], [2.15, 3.65, canopyMat], [1.55, 4.4, highlightMat]].forEach(([diameter, y, mat], i) => {
+        const layer = MeshBuilder.CreateCylinder(`foliage-prototype-pine-layer-${i}`, {
+          height: 1.8, diameterTop: 0.05, diameterBottom: diameter, tessellation: 8,
+        }, this.scene);
+        finish(layer, mat, [0, y, 0]);
+      });
+    } else if (typeKey === 'palm') {
+      [[3.8, 0.46, 0, canopyMat], [3.25, 0.42, Math.PI / 2, shadowMat], [2.55, 0.5, Math.PI / 4, highlightMat]].forEach(([diameter, height, yaw, mat], i) => {
+        const crown = MeshBuilder.CreateSphere(`foliage-prototype-palm-crown-${i}`, {
+          diameterX: diameter, diameterY: height, diameterZ: diameter * 0.34, segments: 7,
+        }, this.scene);
+        finish(crown, mat, [0, 4.62 + i * 0.08, 0], [0, yaw, i === 2 ? 0.08 : -0.04]);
+      });
+    } else {
+      const bushY = typeKey === 'bush' ? 0.65 : 2.85;
+      const size = typeKey === 'bush' ? 1.25 : 2.25;
+      const clusters = [[-0.55, 0, 0, shadowMat, 1], [0.5, 0.12, 0.08, canopyMat, 1.05], [0, 0.5, -0.18, highlightMat, 0.9]];
+      clusters.forEach(([x, y, z, mat, scale], i) => {
+        const crown = MeshBuilder.CreateSphere(`foliage-prototype-${typeKey}-crown-${i}`, {
+          diameterX: size * scale, diameterY: size * 0.72 * scale, diameterZ: size * 0.9 * scale, segments: 7,
+        }, this.scene);
+        finish(crown, mat, [x * (typeKey === 'bush' ? 0.55 : 1), bushY + y * (typeKey === 'bush' ? 0.55 : 1), z]);
+      });
+    }
+    for (const mesh of result) {
+      mesh.isVisible = false;
+      mesh.isPickable = false;
+      mesh.parent = this.rootNode;
+    }
+    return result;
   }
 
   _queueChunkInstance(typeKey, req) {

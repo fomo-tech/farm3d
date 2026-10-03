@@ -27,5 +27,24 @@ assert.equal(streamer.entries.get('near').state, 'unloaded');
 assert.equal(streamer.entries.get('far').state, 'ready');
 assert.ok(events.includes('unload near'));
 assert.ok(events.includes('lod near'));
+
+// A slow model load must not replace the visible proxy after the player leaves.
+let finishSlowLoad;
+const slow = new WorldChunkStreamer({ detailRadius: 0, keepRadius: 1 });
+const slowEvents = [];
+slow.register('slow', 0, 0, {
+  load: () => new Promise(resolve => { finishSlowLoad = resolve; }),
+  unload: () => slowEvents.push('unload'),
+  showLod: () => slowEvents.push('proxy'),
+  hideLod: () => slowEvents.push('detail'),
+});
+slow.update({ x: 0, z: 0 }, undefined, 1000);
+await flush();
+slow.update({ x: 500, z: 500 }, undefined, 1200);
+finishSlowLoad(true);
+await flush();
+assert.equal(slow.entries.get('slow').state, 'unloaded');
+assert.equal(slowEvents.at(-1), 'proxy');
+slow.dispose();
 streamer.dispose();
 console.log('PASS: chunk detail, far LOD, eviction and return traversal');

@@ -1,6 +1,7 @@
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
-import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
+import { Vector3, Matrix, Quaternion } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import '@babylonjs/core/Meshes/thinInstanceMesh.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { FARM_CONFIG } from '../config.js';
@@ -74,7 +75,7 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
   }, scene);
   basePlate.position.set(0, 0.05, 0);
   basePlate.material = grassMat;
-  basePlate.receiveShadows = true;
+  basePlate.receiveShadows = !origin.lightweight;
   basePlate.parent = root;
 
   if (origin.lightweight) {
@@ -82,39 +83,23 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     const halfW = estateWidth / 2;
     const halfD = estateDepth / 2;
 
-    // 4 Cột mốc địa chính bằng đá granite thấp ở 4 góc phân định rõ ranh giới lô đất
-    [[-halfW, -halfD], [halfW, -halfD], [-halfW, halfD], [halfW, halfD]].forEach(([cx, cz], i) => {
-      const peg = MeshBuilder.CreateCylinder(`plot-peg-${i}`, { height: 0.45, diameter: 0.28, tessellation: 8 }, scene);
-      peg.position.set(cx, 0.225, cz);
-      peg.material = borderMat;
-      peg.parent = root;
-    });
-
-    // Gờ gỗ sồi thấp viền quanh 4 cạnh khu đất (không bọc kín hàng rào cao để tầm nhìn thoáng đãng)
-    const curbFL = MeshBuilder.CreateBox('lw-curb-fl', { width: halfW - 2.4, height: 0.14, depth: 0.16 }, scene);
-    curbFL.position.set(-halfW / 2 - 1.2, 0.08, -halfD);
-    curbFL.material = borderMat;
-    curbFL.parent = root;
-
-    const curbFR = MeshBuilder.CreateBox('lw-curb-fr', { width: halfW - 2.4, height: 0.14, depth: 0.16 }, scene);
-    curbFR.position.set(halfW / 2 + 1.2, 0.08, -halfD);
-    curbFR.material = borderMat;
-    curbFR.parent = root;
-
-    const curbB = MeshBuilder.CreateBox('lw-curb-b', { width: estateWidth, height: 0.14, depth: 0.16 }, scene);
-    curbB.position.set(0, 0.08, halfD);
-    curbB.material = borderMat;
-    curbB.parent = root;
-
-    const curbL = MeshBuilder.CreateBox('lw-curb-l', { width: 0.16, height: 0.14, depth: estateDepth }, scene);
-    curbL.position.set(-halfW, 0.08, 0);
-    curbL.material = borderMat;
-    curbL.parent = root;
-
-    const curbR = MeshBuilder.CreateBox('lw-curb-r', { width: 0.16, height: 0.14, depth: estateDepth }, scene);
-    curbR.position.set(halfW, 0.08, 0);
-    curbR.material = borderMat;
-    curbR.parent = root;
+    // Five curbs share one source mesh and one draw call in the distant LOD.
+    const curb = MeshBuilder.CreateBox('lw-curbs-lod', { size: 1 }, scene);
+    curb.material = borderMat;
+    curb.parent = root;
+    const curbParts = [
+      [halfW - 2.4, 0.14, 0.16, -halfW / 2 - 1.2, 0.08, -halfD],
+      [halfW - 2.4, 0.14, 0.16, halfW / 2 + 1.2, 0.08, -halfD],
+      [estateWidth, 0.14, 0.16, 0, 0.08, halfD],
+      [0.16, 0.14, estateDepth, -halfW, 0.08, 0],
+      [0.16, 0.14, estateDepth, halfW, 0.08, 0],
+    ];
+    const curbMatrices = new Float32Array(curbParts.length * 16);
+    curbParts.forEach(([w, h, d, x, y, z], i) => curbMatrices.set(
+      Matrix.Compose(new Vector3(w, h, d), Quaternion.Identity(), new Vector3(x, y, z)).m, i * 16,
+    ));
+    curb.thinInstanceSetBuffer('matrix', curbMatrices, 16, true);
+    curb.thinInstanceRefreshBoundingInfo(true);
 
     // Lối vào cổng lát đá phiến tự nhiên nối từ lề đường
     const apron = MeshBuilder.CreateBox('lw-apron', { width: 4.4, height: 0.08, depth: 3.2 }, scene);
@@ -402,6 +387,8 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
   const halfD = estateDepth / 2;
   const fenceHeight = 0.92;
   const railRadius = 0.075;
+  const picketMatrices = [];
+  const capMatrices = [];
 
   function createRoundRail(name, length, pos, isZ = false) {
     const rail = MeshBuilder.CreateCylinder(name, {
@@ -427,24 +414,8 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
       const px = startPos.x + (endPos.x - startPos.x) * frac;
       const pz = startPos.z + (endPos.z - startPos.z) * frac;
 
-      const picketPost = MeshBuilder.CreateCylinder(`picket-post-${i}`, {
-        height: fenceHeight,
-        diameter: 0.14,
-        tessellation: 10,
-      }, scene);
-      picketPost.position.set(px, fenceHeight / 2 + 0.08, pz);
-      picketPost.material = fenceMat;
-      picketPost.parent = root;
-
-      const cap = MeshBuilder.CreateSphere(`picket-cap-${i}`, {
-        diameter: 0.18,
-        segments: 8,
-      }, scene);
-      cap.position.set(px, fenceHeight + 0.08, pz);
-      cap.material = fenceMat;
-      cap.parent = root;
-
-      if (shadows && i % 2 === 0) shadows.addShadowCaster(picketPost);
+      picketMatrices.push(Matrix.Translation(px, fenceHeight / 2 + 0.08, pz));
+      capMatrices.push(Matrix.Translation(px, fenceHeight + 0.08, pz));
     }
   }
 
@@ -474,6 +445,26 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     createRoundRail('fence-front-r-bot', frontWing, new Vector3(halfW - frontWing / 2, fenceHeight * 0.35 + 0.08, -halfD));
     createPickets(new Vector3(halfW - frontWing + 0.2, 0, -halfD), new Vector3(halfW - 0.4, 0, -halfD), 3);
   }
+
+  // One mesh per shape instead of more than one hundred Babylon meshes per lot.
+  const picketPost = MeshBuilder.CreateCylinder('picket-post-batch', {
+    height: fenceHeight, diameter: 0.14, tessellation: 10,
+  }, scene);
+  picketPost.material = fenceMat;
+  picketPost.parent = root;
+  const picketData = new Float32Array(picketMatrices.length * 16);
+  picketMatrices.forEach((matrix, index) => picketData.set(matrix.m, index * 16));
+  picketPost.thinInstanceSetBuffer('matrix', picketData, 16, true);
+  picketPost.thinInstanceRefreshBoundingInfo(true);
+
+  const cap = MeshBuilder.CreateSphere('picket-cap-batch', { diameter: 0.18, segments: 8 }, scene);
+  cap.material = fenceMat;
+  cap.parent = root;
+  const capData = new Float32Array(capMatrices.length * 16);
+  capMatrices.forEach((matrix, index) => capData.set(matrix.m, index * 16));
+  cap.thinInstanceSetBuffer('matrix', capData, 16, true);
+  cap.thinInstanceRefreshBoundingInfo(true);
+  if (shadows) shadows.addShadowCaster(picketPost);
 
   // 8. Bốn Cột Trụ Góc Hình Trụ Tròn Có Quả Cầu Đỉnh Và Đèn Lồng Ấm Áp
   [

@@ -555,7 +555,7 @@ export default function App() {
     if (!debugEnabled) return undefined;
     const refresh = () => setDebug(worldRef.current?.getDebugState() || null);
     refresh();
-    const timer = window.setInterval(refresh, 300);
+    const timer = window.setInterval(refresh, 1000);
     return () => window.clearInterval(timer);
   }, [debugEnabled, boot.phase]);
 
@@ -834,6 +834,7 @@ export default function App() {
           onStart={() => {
             if (boot.phase !== 'ready' || bootProgress.percentage < 100) return;
             setGameStarted(true);
+            worldRef.current?.playStartCinematic?.();
             farmAudio.playFanfare();
           }}
           isMuted={isMuted}
@@ -1334,10 +1335,16 @@ export default function App() {
 
       {guideOpen && (
         <FarmGuideModal
+          progress={progress}
           onClose={() => setGuideOpen(false)}
           onResetTutorial={handleResetTutorial}
         />
       )}
+
+      {celebrationOpen && (
+        <GraduationModal onClose={() => setCelebrationOpen(false)} />
+      )}
+
 
       {/* Floating 3D Action Bubble for Plots */}
       <FloatingPlotBubble

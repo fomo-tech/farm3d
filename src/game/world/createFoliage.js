@@ -43,7 +43,7 @@ function harmonizeGreenTree({ childMeshes }) {
   });
 }
 
-export function createFoliageFactory(scene, shadows) {
+export function createFoliageFactory(scene, shadows, instancing = null) {
   const materials = {
     trunk: mat(scene, 'tree-trunk-mat', '#78350f'),
     leafTop: mat(scene, 'tree-leaf-top', '#86efac'),
@@ -77,6 +77,7 @@ export function createFoliageFactory(scene, shadows) {
     },
 
     createCloudTree(x, z, scale = 1.0, withShadows = true) {
+      if (instancing) return instancing.spawnOak(x, z, scale * 1.1, withShadows);
       const treeModel = Math.random() > 0.5 ? MODEL_PATHS.trees.oak : MODEL_PATHS.trees.detailed;
       const s = scale * 4.2;
       return spawnModelSync(scene, treeModel, {
@@ -90,6 +91,7 @@ export function createFoliageFactory(scene, shadows) {
     },
 
     createSakuraTree(x, z, scale = 1.0, withShadows = true) {
+      if (instancing) return instancing.spawnSakura(x, z, scale * 1.05, withShadows);
       const s = scale * 3.8;
       return spawnModelSync(scene, MODEL_PATHS.trees.oak, {
         position: new Vector3(x, 0, z),
@@ -105,6 +107,7 @@ export function createFoliageFactory(scene, shadows) {
      * 1. Cây thông núi cao nguyên (Alpine Pine) - Vùng Hồ Pha Lê
      */
     createAlpinePine(x, z, scale = 1.0, withShadows = true) {
+      if (instancing) return instancing.spawnPine(x, z, scale * 1.1, withShadows);
       const pineModel = Math.random() > 0.5 ? MODEL_PATHS.trees.pine : MODEL_PATHS.trees.pineRound;
       const s = scale * 4.6;
       return spawnModelSync(scene, pineModel, {
@@ -117,6 +120,7 @@ export function createFoliageFactory(scene, shadows) {
     },
 
     createTropicalPalm(x, z, scale = 1.0, tiltAngle = 0.22, withShadows = true) {
+      if (instancing) return instancing.spawnPalm(x, z, scale * 1.05, withShadows);
       const palmModel = Math.random() > 0.5 ? MODEL_PATHS.trees.palmBend : MODEL_PATHS.trees.palm;
       const s = scale * 4.0;
       return spawnModelSync(scene, palmModel, {
@@ -129,6 +133,7 @@ export function createFoliageFactory(scene, shadows) {
     },
 
     createGoldenMaple(x, z, scale = 1.0, withShadows = true) {
+      if (instancing) return instancing.spawnMaple(x, z, scale * 1.05, withShadows);
       const mapleModel = Math.random() > 0.5 ? MODEL_PATHS.trees.fall : MODEL_PATHS.trees.oakFall;
       const s = scale * 4.0;
       return spawnModelSync(scene, mapleModel, {
@@ -144,6 +149,7 @@ export function createFoliageFactory(scene, shadows) {
       if (typeof colorHex === 'number') {
         [colorHex, scale] = [scale, colorHex];
       }
+      if (instancing) return instancing.spawnBush(x, z, scale);
       const s = (scale || 1.0) * 2.5;
       return spawnModelSync(scene, MODEL_PATHS.foliage.bushDetailed, {
         position: new Vector3(x, 0, z),

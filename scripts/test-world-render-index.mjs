@@ -11,6 +11,7 @@ const player = new TransformNode('local-player', scene);
 const body = MeshBuilder.CreateBox('body', {}, scene);
 body.parent = player;
 const index = installWorldRenderIndex(scene);
+await index.ready;
 assert.ok(scene.selectionOctree.dynamicContent.includes(body));
 const later = MeshBuilder.CreateBox('new-farm', {}, scene);
 await new Promise(resolve => setTimeout(resolve, 20));

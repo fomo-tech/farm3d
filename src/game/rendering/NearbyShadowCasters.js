@@ -1,14 +1,15 @@
-export function selectNearbyShadowCasters(meshes, position, radius = 90) {
+export function selectNearbyShadowCasters(meshes, position, radius = 90, maxCasters = 128) {
   const result = [];
   for (const mesh of meshes || []) {
     if (mesh.isDisposed() || !mesh.isEnabled() || !mesh.isVisible) continue;
     const bounds = mesh.getBoundingInfo().boundingSphere;
     const center = bounds.centerWorld;
     const reach = radius + bounds.radiusWorld;
-    if ((center.x - position.x) ** 2 + (center.z - position.z) ** 2 <= reach ** 2
-      && Math.abs(center.y - position.y) <= reach) result.push(mesh);
+    const distanceSq = (center.x - position.x) ** 2 + (center.z - position.z) ** 2;
+    if (distanceSq <= reach ** 2 && Math.abs(center.y - position.y) <= reach) result.push({ mesh, distanceSq });
   }
-  return result;
+  if (result.length > maxCasters) result.sort((a, b) => a.distanceSq - b.distanceSq).length = maxCasters;
+  return result.map(item => item.mesh);
 }
 
 export function installNearbyShadows(shadows, getPosition) {

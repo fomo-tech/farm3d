@@ -594,16 +594,118 @@ export function Icon3dBell({ size = 20, className = '' }) {
   );
 }
 
-// 23. Gà con 3D múp míp (Chicken / Livestock)
+// 23. Gà con 3D múp míp Chibi (Chicken Mascot / Livestock)
 export function Icon3dChicken({ size = 24, className = '' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={`icon-3d ${className}`}>
-      <circle cx="18" cy="19" r="12" fill="#facc15" stroke="#854d0e" strokeWidth="1.5" />
-      <path d="M 16 7 C 16 5, 20 5, 20 7 C 22 5, 25 7, 24 9 L 16 9 Z" fill="#ef4444" />
-      <circle cx="23" cy="16" r="2.4" fill="#0f172a" />
-      <circle cx="23.6" cy="15.4" r="0.8" fill="#ffffff" />
-      <polygon points="26,17 31,19 26,21" fill="#f97316" stroke="#9a3412" strokeWidth="1" />
-      <ellipse cx="14" cy="20" rx="5" ry="3.5" transform="rotate(-15 14 20)" fill="#eab308" stroke="#854d0e" strokeWidth="1" />
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="chk_body" cx="38%" cy="32%" r="65%">
+          <stop offset="0%" stopColor="#fffbeb" />
+          <stop offset="25%" stopColor="#fef08a" />
+          <stop offset="65%" stopColor="#facc15" />
+          <stop offset="100%" stopColor="#d97706" />
+        </radialGradient>
+        <linearGradient id="chk_wing" x1="20%" y1="10%" x2="80%" y2="90%">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="40%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
+        </linearGradient>
+        <linearGradient id="chk_beak" x1="30%" y1="0%" x2="70%" y2="100%">
+          <stop offset="0%" stopColor="#fed7aa" />
+          <stop offset="40%" stopColor="#fb923c" />
+          <stop offset="100%" stopColor="#c2410c" />
+        </linearGradient>
+        <radialGradient id="chk_comb" cx="40%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fca5a5" />
+          <stop offset="40%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#991b1b" />
+        </radialGradient>
+        <linearGradient id="chk_feet" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#fb923c" />
+          <stop offset="100%" stopColor="#9a3412" />
+        </linearGradient>
+        <radialGradient id="chk_blush" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#f472b6" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#f472b6" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      {/* Hai chân tròn múp míp bên dưới */}
+      <ellipse cx="24" cy="54" rx="5" ry="3.5" fill="url(#chk_feet)" stroke="#7c2d12" strokeWidth="1.6" />
+      <ellipse cx="40" cy="54" rx="5" ry="3.5" fill="url(#chk_feet)" stroke="#7c2d12" strokeWidth="1.6" />
+
+      {/* Mào gà đỏ thạch dẻo 3 múi trên đỉnh đầu */}
+      <path
+        d="M 27 16 C 24 10, 29 6, 32 10 C 34 5, 41 7, 39 12 C 43 9, 46 13, 42 17 Z"
+        fill="url(#chk_comb)"
+        stroke="#7f1d1d"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      {/* Ánh sáng bóng trên mào gà */}
+      <ellipse cx="32" cy="9" rx="1.5" ry="2.2" fill="#ffffff" opacity="0.75" />
+
+      {/* Thân gà tròn xoe mũm mĩm hình quả lê */}
+      <path
+        d="M 32 14 C 18 14, 11 26, 12 39 C 13 50, 20 54, 32 54 C 44 54, 51 50, 52 39 C 53 26, 46 14, 32 14 Z"
+        fill="url(#chk_body)"
+        stroke="#78350f"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+      />
+
+      {/* Vệt sáng bóng tròn trên trán (Specular Gloss) */}
+      <path
+        d="M 23 20 C 27 17, 36 17, 39 20 C 37 18, 25 18, 23 20 Z"
+        fill="#ffffff"
+        opacity="0.8"
+      />
+      <ellipse cx="25" cy="22" rx="3.5" ry="2" transform="rotate(-15 25 22)" fill="#ffffff" opacity="0.65" />
+
+      {/* Má hồng phấn Kawaii 2 bên */}
+      <ellipse cx="20" cy="38" rx="4.5" ry="3" fill="url(#chk_blush)" />
+      <ellipse cx="44" cy="38" rx="4.5" ry="3" fill="url(#chk_blush)" />
+
+      {/* Mắt to tròn long lanh Play Together */}
+      <g>
+        <ellipse cx="24" cy="31" rx="3.5" ry="4.5" fill="#1e1b4b" />
+        <ellipse cx="23" cy="29.5" rx="1.4" ry="1.8" fill="#ffffff" />
+        <circle cx="25.5" cy="33.5" r="0.8" fill="#ffffff" />
+      </g>
+      <g>
+        <ellipse cx="40" cy="31" rx="3.5" ry="4.5" fill="#1e1b4b" />
+        <ellipse cx="39" cy="29.5" rx="1.4" ry="1.8" fill="#ffffff" />
+        <circle cx="41.5" cy="33.5" r="0.8" fill="#ffffff" />
+      </g>
+
+      {/* Mỏ cam 3D chúm chím bóng bẩy */}
+      <path
+        d="M 27 34 Q 32 32 37 34 Q 32 42 27 34 Z"
+        fill="url(#chk_beak)"
+        stroke="#7c2d12"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <ellipse cx="32" cy="34" rx="2" ry="0.8" fill="#ffffff" opacity="0.65" />
+
+      {/* Đôi cánh tròn nhỏ xinh xắn 2 bên sườn */}
+      <path
+        d="M 12 36 C 8 38, 9 47, 16 46 C 18 43, 16 37, 12 36 Z"
+        fill="url(#chk_wing)"
+        stroke="#78350f"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <ellipse cx="13" cy="40" rx="1" ry="2.5" transform="rotate(-20 13 40)" fill="#ffffff" opacity="0.6" />
+
+      <path
+        d="M 52 36 C 56 38, 55 47, 48 46 C 46 43, 48 37, 52 36 Z"
+        fill="url(#chk_wing)"
+        stroke="#78350f"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <ellipse cx="51" cy="40" rx="1" ry="2.5" transform="rotate(20 51 40)" fill="#ffffff" opacity="0.6" />
     </svg>
   );
 }
@@ -899,24 +1001,110 @@ export function Icon3dDismount({ size = 28, className = '' }) {
   );
 }
 
-// 34. Loa Bật mộc gỗ 3D (Audio On)
+// 34. Loa Bật Kẹo Ngọt 3D (Audio On)
 export function Icon3dAudioOn({ size = 26, className = '' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={`icon-3d ${className}`}>
-      <path d="M 6 13 L 11 13 L 18 7 L 18 29 L 11 23 L 6 23 Z" fill="#f59e0b" stroke="#78350f" strokeWidth="1.8" strokeLinejoin="round" />
-      <path d="M 23 12 C 26 15, 26 21, 23 24" stroke="#0284c7" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M 28 8 C 33 13, 33 23, 28 28" stroke="#38bdf8" strokeWidth="2.5" strokeLinecap="round" />
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="aud_body" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="40%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
+        </linearGradient>
+        <radialGradient id="aud_cone" cx="40%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#fed7aa" />
+          <stop offset="50%" stopColor="#fb923c" />
+          <stop offset="100%" stopColor="#c2410c" />
+        </radialGradient>
+        <linearGradient id="aud_wave1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#0284c7" />
+        </linearGradient>
+        <linearGradient id="aud_wave2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#67e8f9" />
+          <stop offset="100%" stopColor="#0369a1" />
+        </linearGradient>
+      </defs>
+
+      {/* Củ loa phía sau */}
+      <rect x="8" y="24" width="10" height="16" rx="4" fill="url(#aud_body)" stroke="#78350f" strokeWidth="2" />
+      <rect x="10" y="26" width="3" height="12" rx="1.5" fill="#ffffff" opacity="0.6" />
+
+      {/* Phễu loa 3D loe rộng */}
+      <path
+        d="M 18 24 L 32 14 C 34 12, 36 14, 36 17 L 36 47 C 36 50, 34 52, 32 50 L 18 40 Z"
+        fill="url(#aud_cone)"
+        stroke="#7c2d12"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+      {/* Vành loa trước và ánh sáng phản chiếu */}
+      <ellipse cx="36" cy="32" rx="2.5" ry="16.5" fill="#ea580c" stroke="#7c2d12" strokeWidth="1.8" />
+      <ellipse cx="36" cy="24" rx="1.2" ry="6" fill="#ffffff" opacity="0.75" />
+
+      {/* Sóng âm thanh 3D Cyan sắc nét (Soundwaves) */}
+      <path
+        d="M 43 23 C 47 28, 47 36, 43 41"
+        stroke="url(#aud_wave1)"
+        strokeWidth="3.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 50 16 C 58 24, 58 40, 50 48"
+        stroke="url(#aud_wave2)"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+
+      {/* Nốt nhạc / ngôi sao âm vang lấp lánh */}
+      <polygon points="56,12 57.5,15 60,16 57.5,17 56,20 54.5,17 52,16 54.5,15" fill="#fef08a" />
     </svg>
   );
 }
 
-// 35. Loa Tắt gạch chéo 3D (Audio Off)
+// 35. Loa Tắt Gạch Chéo Kẹo 3D (Audio Off)
 export function Icon3dAudioOff({ size = 26, className = '' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={`icon-3d ${className}`}>
-      <path d="M 6 13 L 11 13 L 18 7 L 18 29 L 11 23 L 6 23 Z" fill="#94a3b8" stroke="#334155" strokeWidth="1.8" strokeLinejoin="round" />
-      <line x1="22" y1="13" x2="30" y2="23" stroke="#ef4444" strokeWidth="2.8" strokeLinecap="round" />
-      <line x1="30" y1="13" x2="22" y2="23" stroke="#ef4444" strokeWidth="2.8" strokeLinecap="round" />
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="aoff_body" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#cbd5e1" />
+          <stop offset="50%" stopColor="#94a3b8" />
+          <stop offset="100%" stopColor="#475569" />
+        </linearGradient>
+        <radialGradient id="aoff_cone" cx="40%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#e2e8f0" />
+          <stop offset="60%" stopColor="#94a3b8" />
+          <stop offset="100%" stopColor="#334155" />
+        </radialGradient>
+        <linearGradient id="aoff_bar" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#f87171" />
+          <stop offset="45%" stopColor="#ef4444" />
+          <stop offset="100%" stopColor="#991b1b" />
+        </linearGradient>
+      </defs>
+
+      {/* Củ loa phía sau muted */}
+      <rect x="8" y="24" width="10" height="16" rx="4" fill="url(#aoff_body)" stroke="#1e293b" strokeWidth="2" opacity="0.8" />
+
+      {/* Phễu loa muted */}
+      <path
+        d="M 18 24 L 32 14 C 34 12, 36 14, 36 17 L 36 47 C 36 50, 34 52, 32 50 L 18 40 Z"
+        fill="url(#aoff_cone)"
+        stroke="#1e293b"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+        opacity="0.8"
+      />
+      <ellipse cx="36" cy="32" rx="2.5" ry="16.5" fill="#64748b" stroke="#1e293b" strokeWidth="1.8" />
+
+      {/* Dấu X cấm âm thanh dạng thanh kẹo 3D nổi bật */}
+      <g stroke="#450a0a" strokeWidth="2">
+        <line x1="42" y1="20" x2="58" y2="44" stroke="url(#aoff_bar)" strokeWidth="5.5" strokeLinecap="round" />
+        <line x1="58" y1="20" x2="42" y2="44" stroke="url(#aoff_bar)" strokeWidth="5.5" strokeLinecap="round" />
+      </g>
+      {/* Vệt bóng trắng trên thanh X */}
+      <line x1="43" y1="21" x2="57" y2="43" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" opacity="0.75" />
     </svg>
   );
 }
@@ -1052,15 +1240,66 @@ export function Icon3dDawn({ size = 22, className = '' }) {
   );
 }
 
+// 41. Ông Mặt Trời 3D Kawaii Tươi Vui (Sun / Weather / Tips)
 export function Icon3dSun({ size = 22, className = '' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
-      <circle cx="16" cy="16" r="7" fill="#facc15" stroke="#d97706" strokeWidth="1.8" />
-      <ellipse cx="14" cy="13" rx="2" ry="1.2" fill="#ffffff" opacity="0.8" />
-      <line x1="16" y1="4" x2="16" y2="7" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" />
-      <line x1="16" y1="25" x2="16" y2="28" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" />
-      <line x1="4" y1="16" x2="7" y2="16" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" />
-      <line x1="25" y1="16" x2="28" y2="16" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" />
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="sun_core" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stopColor="#fffbeb" />
+          <stop offset="30%" stopColor="#fef08a" />
+          <stop offset="70%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#d97706" />
+        </radialGradient>
+        <linearGradient id="sun_ray_pri" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#fef08a" />
+          <stop offset="60%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#ea580c" />
+        </linearGradient>
+        <linearGradient id="sun_ray_sec" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#fed7aa" />
+          <stop offset="100%" stopColor="#f97316" />
+        </linearGradient>
+        <radialGradient id="sun_blush" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fb7185" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#fb7185" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      {/* 8 tia nắng kẹo dẻo 3D bo tròn xung quanh (Rays) */}
+      <g stroke="#9a3412" strokeWidth="1.6" strokeLinejoin="round">
+        <rect x="29" y="3" width="6" height="10" rx="3" fill="url(#sun_ray_pri)" />
+        <rect x="29" y="51" width="6" height="10" rx="3" fill="url(#sun_ray_pri)" />
+        <rect x="3" y="29" width="10" height="6" rx="3" fill="url(#sun_ray_pri)" />
+        <rect x="51" y="29" width="10" height="6" rx="3" fill="url(#sun_ray_pri)" />
+        <rect x="46" y="11" width="5.5" height="9" rx="2.75" transform="rotate(45 48.75 15.5)" fill="url(#sun_ray_sec)" />
+        <rect x="12" y="45" width="5.5" height="9" rx="2.75" transform="rotate(45 14.75 49.5)" fill="url(#sun_ray_sec)" />
+        <rect x="12" y="11" width="5.5" height="9" rx="2.75" transform="rotate(-45 14.75 15.5)" fill="url(#sun_ray_sec)" />
+        <rect x="46" y="45" width="5.5" height="9" rx="2.75" transform="rotate(-45 48.75 49.5)" fill="url(#sun_ray_sec)" />
+      </g>
+
+      {/* Quả cầu mặt trời trung tâm căng tròn */}
+      <circle cx="32" cy="32" r="18" fill="url(#sun_core)" stroke="#78350f" strokeWidth="2.2" />
+
+      {/* Vệt bóng kính tròn phía trên (Top highlight) */}
+      <path
+        d="M 22 20 C 26 16, 38 16, 42 20 C 39 18, 25 18, 22 20 Z"
+        fill="#ffffff"
+        opacity="0.8"
+      />
+      <ellipse cx="25" cy="22" rx="3" ry="1.6" transform="rotate(-20 25 22)" fill="#ffffff" opacity="0.7" />
+
+      {/* Đôi má hồng phấn đáng yêu */}
+      <ellipse cx="23" cy="36" rx="3.5" ry="2.2" fill="url(#sun_blush)" />
+      <ellipse cx="41" cy="36" rx="3.5" ry="2.2" fill="url(#sun_blush)" />
+
+      {/* Đôi mắt cười tít hạt tiêu dễ thương */}
+      <path d="M 23 29 Q 26 26 29 29" stroke="#78350f" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+      <path d="M 35 29 Q 38 26 41 29" stroke="#78350f" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+
+      {/* Nụ cười tươi rạng rỡ có lưỡi hồng */}
+      <path d="M 28 35 Q 32 40 36 35 Z" fill="#991b1b" stroke="#78350f" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M 30 37 Q 32 39 34 37" fill="#f43f5e" />
     </svg>
   );
 }
@@ -1224,14 +1463,72 @@ export function Icon3dStar({ size = 22, className = '' }) {
   );
 }
 
-// 52. Mầm Cây Nông Trại 3D (Sprout)
+// 52. Mầm Cây Nông Trại 3D Mọng Nước (Sprout - Open World Badge)
 export function Icon3dSprout({ size = 24, className = '' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
-      <path d="M 16 28 C 16 20, 16 15, 16 12" stroke="#65a30d" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M 16 16 C 11 11, 6 14, 8 20 C 12 21, 15 18, 16 16 Z" fill="#84cc16" stroke="#365314" strokeWidth="1.4" />
-      <path d="M 16 13 C 21 8, 26 11, 24 17 C 20 18, 17 15, 16 13 Z" fill="#a3e635" stroke="#365314" strokeWidth="1.4" />
-      <ellipse cx="16" cy="27" rx="6" ry="2.5" fill="#78350f" />
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="spr_soil" cx="50%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#a16207" />
+          <stop offset="50%" stopColor="#78350f" />
+          <stop offset="100%" stopColor="#451a03" />
+        </radialGradient>
+        <linearGradient id="spr_stem" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stopColor="#15803d" />
+          <stop offset="100%" stopColor="#65a30d" />
+        </linearGradient>
+        <radialGradient id="spr_leaf_l" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#bef264" />
+          <stop offset="50%" stopColor="#4ade80" />
+          <stop offset="100%" stopColor="#15803d" />
+        </radialGradient>
+        <radialGradient id="spr_leaf_r" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#d9f99d" />
+          <stop offset="50%" stopColor="#22c55e" />
+          <stop offset="100%" stopColor="#166534" />
+        </radialGradient>
+      </defs>
+
+      {/* Gò đất màu mỡ 3D bên dưới */}
+      <ellipse cx="32" cy="53" rx="19" ry="7" fill="url(#spr_soil)" stroke="#291204" strokeWidth="2.2" />
+      <ellipse cx="26" cy="51" rx="4" ry="1.8" fill="#ca8a04" opacity="0.6" />
+      <ellipse cx="38" cy="53" rx="3.5" ry="1.5" fill="#ca8a04" opacity="0.6" />
+
+      {/* Thân cây non uốn lượn tràn đầy nhựa sống */}
+      <path
+        d="M 32 52 C 32 40, 31 32, 32 25"
+        stroke="url(#spr_stem)"
+        strokeWidth="4.5"
+        strokeLinecap="round"
+      />
+
+      {/* Lá non bên trái (Tròn mọng nước) */}
+      <path
+        d="M 32 30 C 19 22, 12 30, 16 41 C 24 43, 30 36, 32 30 Z"
+        fill="url(#spr_leaf_l)"
+        stroke="#14532d"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      {/* Vệt gân lá và bóng sáng lá trái */}
+      <path d="M 19 38 Q 25 36 30 32" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" opacity="0.6" />
+      <ellipse cx="20" cy="31" rx="3" ry="1.6" transform="rotate(-30 20 31)" fill="#ffffff" opacity="0.75" />
+
+      {/* Lá non bên phải (Vươn cao đón nắng) */}
+      <path
+        d="M 32 26 C 35 15, 48 16, 50 27 C 48 37, 37 35, 32 26 Z"
+        fill="url(#spr_leaf_r)"
+        stroke="#14532d"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      {/* Vệt gân lá và bóng sáng lá phải */}
+      <path d="M 34 27 Q 40 28 46 25" stroke="#ffffff" strokeWidth="1.6" strokeLinecap="round" opacity="0.6" />
+      <ellipse cx="44" cy="22" rx="3" ry="1.6" transform="rotate(30 44 22)" fill="#ffffff" opacity="0.75" />
+
+      {/* Giọt sương pha lê lấp lánh trên chóp lá */}
+      <circle cx="48" cy="18" r="2.2" fill="#ffffff" />
+      <circle cx="49" cy="17" r="0.9" fill="#38bdf8" />
     </svg>
   );
 }
@@ -1330,55 +1627,192 @@ export function Icon3dModernCity({ size = 32, className = '' }) {
 // 57. Ngôi Sao Lấp Lánh 3D Siêu Nét (Sparkle Star - Ultra HD Preset)
 export function Icon3dSparkleStar({ size = 22, className = '' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" className={`icon-3d ${className}`}>
       <defs>
-        <radialGradient id="star_glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#fef08a" />
-          <stop offset="60%" stopColor="#eab308" />
-          <stop offset="100%" stopColor="#ca8a04" />
+        <radialGradient id="spk_halo" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fef08a" stopOpacity="0.85" />
+          <stop offset="50%" stopColor="#facc15" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#ca8a04" stopOpacity="0" />
         </radialGradient>
+        <linearGradient id="spk_facet_lt" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="45%" stopColor="#fef08a" />
+          <stop offset="100%" stopColor="#f59e0b" />
+        </linearGradient>
+        <linearGradient id="spk_facet_rb" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#f59e0b" />
+          <stop offset="60%" stopColor="#d97706" />
+          <stop offset="100%" stopColor="#78350f" />
+        </linearGradient>
+        <linearGradient id="spk_sub_gem" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#fbbf24" />
+        </linearGradient>
       </defs>
-      <circle cx="16" cy="16" r="14" fill="#ca8a04" opacity="0.25" />
-      <path d="M 16 2 L 19 12 L 30 16 L 19 20 L 16 30 L 13 20 L 2 16 L 13 12 Z" fill="url(#star_glow)" stroke="#78350f" strokeWidth="1.6" strokeLinejoin="round" />
-      <path d="M 16 8 L 18 14 L 24 16 L 18 18 L 16 24 L 14 18 L 8 16 L 14 14 Z" fill="#ffffff" opacity="0.85" />
-      <circle cx="16" cy="16" r="2" fill="#ffffff" />
+
+      {/* Vầng hào quang sáng rực đằng sau */}
+      <circle cx="32" cy="32" r="28" fill="url(#spk_halo)" />
+
+      {/* 4 cánh chéo phụ nhỏ (Diagonal sub-points) */}
+      <path
+        d="M 32 32 L 20 20 L 32 26 L 44 20 L 38 32 L 44 44 L 32 38 L 20 44 Z"
+        fill="url(#spk_sub_gem)"
+        stroke="#b45309"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+
+      {/* Cánh chính 4 hướng: Phân tách diện 3D sáng tối (Faceted 3D Star) */}
+      <path
+        d="M 32 4 L 32 32 L 6 32 L 24 24 Z"
+        fill="url(#spk_facet_lt)"
+      />
+      <path
+        d="M 32 32 L 32 60 L 24 40 L 6 32 Z"
+        fill="url(#spk_facet_lt)"
+        opacity="0.85"
+      />
+      <path
+        d="M 32 4 L 40 24 L 58 32 L 32 32 Z"
+        fill="url(#spk_facet_rb)"
+      />
+      <path
+        d="M 32 32 L 58 32 L 40 40 L 32 60 Z"
+        fill="url(#spk_facet_rb)"
+      />
+
+      {/* Đường viền khung 3D sắc nét toàn thân sao */}
+      <path
+        d="M 32 4 L 39 25 L 60 32 L 39 39 L 32 60 L 25 39 L 4 32 L 25 25 Z"
+        stroke="#78350f"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+        fill="none"
+      />
+
+      {/* Sống lưng chữ thập trắng phản quang rực rỡ */}
+      <path d="M 32 8 L 32 56" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.9" />
+      <path d="M 8 32 L 56 32" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.9" />
+
+      {/* Viên kim cương tâm sao sáng chói (Center Diamond Gleam) */}
+      <polygon points="32,24 37,32 32,40 27,32" fill="#ffffff" />
+      <circle cx="32" cy="32" r="2.8" fill="#ffffff" />
+
+      {/* Ngôi sao lấp lánh phụ bay xung quanh */}
+      <polygon points="48,12 50,16 54,18 50,20 48,24 46,20 42,18 46,16" fill="#ffffff" opacity="0.95" />
+      <polygon points="14,46 15,48 18,49 15,50 14,53 13,50 10,49 13,48" fill="#ffffff" opacity="0.85" />
     </svg>
   );
 }
 
-// 58. Tia Sét Năng Lượng 3D (Lightning Bolt - Balanced HD Preset)
+// 58. Tia Sét Năng Lượng 3D Đa Diện (Lightning Bolt - Balanced HD Preset)
 export function Icon3dLightningBolt({ size = 22, className = '' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" className={`icon-3d ${className}`}>
       <defs>
-        <linearGradient id="bolt_grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fef08a" />
-          <stop offset="50%" stopColor="#f59e0b" />
+        <linearGradient id="bolt_face_top" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="30%" stopColor="#fef08a" />
+          <stop offset="70%" stopColor="#f59e0b" />
           <stop offset="100%" stopColor="#ea580c" />
         </linearGradient>
+        <linearGradient id="bolt_face_side" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#d97706" />
+          <stop offset="100%" stopColor="#7c2d12" />
+        </linearGradient>
+        <radialGradient id="bolt_glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fde047" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+        </radialGradient>
       </defs>
-      <polygon points="18,2 6,18 15,18 13,30 26,14 17,14" fill="url(#bolt_grad)" stroke="#7c2d12" strokeWidth="1.8" strokeLinejoin="round" />
-      <polygon points="17,5 9,17 15,17 14,24 22,15 16,15" fill="#fef9c3" opacity="0.8" />
+
+      {/* Vầng hào quang điện thế vàng */}
+      <ellipse cx="32" cy="32" rx="26" ry="26" fill="url(#bolt_glow)" />
+
+      {/* Mặt đùn 3D bên dưới / cạnh bên (Extruded 3D depth) */}
+      <polygon
+        points="37,6 15,34 30,34 25,58 49,28 34,28"
+        fill="url(#bolt_face_side)"
+        stroke="#431407"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+        transform="translate(2, 3)"
+      />
+
+      {/* Mặt trước tia sét chính (Top Face) */}
+      <polygon
+        points="37,6 15,34 30,34 25,58 49,28 34,28"
+        fill="url(#bolt_face_top)"
+        stroke="#7c2d12"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+
+      {/* Mặt phản quang trắng dọc thân sét */}
+      <polygon points="36,10 19,32 29,32 27,48 44,29 33,29" fill="#ffffff" opacity="0.65" />
+      <line x1="36" y1="10" x2="21" y2="31" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" />
+
+      {/* Đốm sao điện tử lóe sáng */}
+      <polygon points="46,14 47.5,17 50,18 47.5,19 46,22 44.5,19 42,18 44.5,17" fill="#ffffff" />
+      <polygon points="17,46 18,48 20,49 18,50 17,52 16,50 14,49 16,48" fill="#ffffff" />
     </svg>
   );
 }
 
-// 59. Viên Pin Tiết Kiệm Năng Lượng 3D (Eco Battery - Eco Preset)
+// 59. Viên Pin Sinh Thái Tiết Kiệm Năng Lượng 3D (Eco Battery - Eco Preset)
 export function Icon3dBatteryEco({ size = 22, className = '' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" className={`icon-3d ${className}`}>
       <defs>
-        <linearGradient id="bat_grad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id="bat_body" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#4ade80" />
-          <stop offset="60%" stopColor="#22c55e" />
+          <stop offset="45%" stopColor="#22c55e" />
           <stop offset="100%" stopColor="#15803d" />
         </linearGradient>
+        <linearGradient id="bat_cap" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#f1f5f9" />
+          <stop offset="60%" stopColor="#94a3b8" />
+          <stop offset="100%" stopColor="#475569" />
+        </linearGradient>
+        <linearGradient id="bat_leaf" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#15803d" />
+          <stop offset="50%" stopColor="#22c55e" />
+          <stop offset="100%" stopColor="#a7f3d0" />
+        </linearGradient>
       </defs>
-      <rect x="5" y="10" width="20" height="13" rx="3.5" fill="url(#bat_grad)" stroke="#14532d" strokeWidth="1.8" />
-      <rect x="25" y="13" width="3" height="7" rx="1.2" fill="#94a3b8" stroke="#334155" strokeWidth="1.2" />
-      <rect x="8" y="13" width="4" height="7" rx="1" fill="#ffffff" opacity="0.9" />
-      <rect x="14" y="13" width="4" height="7" rx="1" fill="#ffffff" opacity="0.9" />
-      <rect x="7" y="11" width="16" height="2" rx="1" fill="#ffffff" opacity="0.5" />
+
+      {/* Cực dương pin mạ chrome bạc */}
+      <rect x="49" y="26" width="6" height="12" rx="3" fill="url(#bat_cap)" stroke="#1e293b" strokeWidth="1.8" />
+
+      {/* Thân pin bo góc ngọc lục bảo (Emerald Battery Body) */}
+      <rect x="7" y="16" width="44" height="32" rx="8" fill="url(#bat_body)" stroke="#064e3b" strokeWidth="2.4" />
+
+      {/* Vệt gương kính phản chiếu mặt trên pin */}
+      <rect x="11" y="19" width="36" height="4" rx="2" fill="#ffffff" opacity="0.6" />
+
+      {/* 3 vạch năng lượng xanh neon đầy ắp (Full Charge Neon Bars) */}
+      <rect x="13" y="26" width="7" height="16" rx="3.5" fill="#f0fdf4" stroke="#166534" strokeWidth="1.2" />
+      <rect x="23" y="26" width="7" height="16" rx="3.5" fill="#f0fdf4" stroke="#166534" strokeWidth="1.2" />
+      <rect x="33" y="26" width="7" height="16" rx="3.5" fill="#f0fdf4" stroke="#166534" strokeWidth="1.2" />
+
+      {/* Mầm lá cây Eco non vươn lên từ pin */}
+      <path
+        d="M 23 18 C 17 9, 25 5, 29 8 C 33 11, 28 17, 23 18 Z"
+        fill="url(#bat_leaf)"
+        stroke="#064e3b"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M 27 17 C 33 10, 42 12, 40 17 C 37 21, 31 18, 27 17 Z"
+        fill="url(#bat_leaf)"
+        stroke="#064e3b"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+
+      {/* Giọt sương sớm lấp lánh trên lá */}
+      <circle cx="28" cy="10" r="1.4" fill="#ffffff" />
     </svg>
   );
 }
@@ -1598,17 +2032,68 @@ export function Icon3dWaveHand({ size = 24, className = '' }) {
   );
 }
 
-// 72. Ống Pháo Giấy Kim Tuyến 3D (Party Popper)
+// 72. Ống Pháo Giấy Kim Tuyến Lễ Hội 3D (Party Popper)
 export function Icon3dPartyPopper({ size = 26, className = '' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
-      <polygon points="4,28 17,23 9,15" fill="#facc15" stroke="#78350f" strokeWidth="1.8" />
-      <polygon points="9,15 17,23 20,18 12,10" fill="#38bdf8" stroke="#0369a1" strokeWidth="1.5" />
-      <circle cx="21" cy="7" r="1.5" fill="#ef4444" />
-      <circle cx="27" cy="11" r="1.5" fill="#22c55e" />
-      <circle cx="25" cy="19" r="1.5" fill="#a855f7" />
-      <path d="M 17 14 C 20 10, 24 12, 27 7" stroke="#ec4899" strokeWidth="1.6" strokeLinecap="round" fill="none" />
-      <path d="M 14 8 C 17 4, 22 6, 23 2" stroke="#f59e0b" strokeWidth="1.6" strokeLinecap="round" fill="none" />
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="pop_cone1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fde047" />
+          <stop offset="60%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
+        </linearGradient>
+        <linearGradient id="pop_cone2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#f43f5e" />
+          <stop offset="60%" stopColor="#e11d48" />
+          <stop offset="100%" stopColor="#881337" />
+        </linearGradient>
+        <radialGradient id="pop_rim" cx="40%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#0369a1" />
+        </radialGradient>
+      </defs>
+
+      {/* Nón loa pháo giấy 3D có sọc vàng đỏ rực rỡ */}
+      <g stroke="#451a03" strokeWidth="2" strokeLinejoin="round">
+        <polygon points="10,54 26,45 19,30" fill="url(#pop_cone1)" />
+        <polygon points="19,30 26,45 36,33 27,20" fill="url(#pop_cone2)" />
+      </g>
+      {/* Vành miệng loa nón mở hướng lên trên */}
+      <ellipse cx="32" cy="26" rx="9" ry="5.5" transform="rotate(-35 32 26)" fill="url(#pop_rim)" stroke="#0c4a6e" strokeWidth="2" />
+      <ellipse cx="32" cy="26" rx="6.5" ry="3.5" transform="rotate(-35 32 26)" fill="#0f172a" />
+
+      {/* Vệt ánh kim trên thân pháo */}
+      <line x1="16" y1="46" x2="22" y2="34" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
+
+      {/* Dải ruy băng lượn sóng bay ra (Serpentine Streamers) */}
+      <path
+        d="M 33 22 Q 38 12 46 16 T 54 8"
+        stroke="#f43f5e"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M 36 26 Q 44 24 48 31 T 58 28"
+        stroke="#38bdf8"
+        strokeWidth="3"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M 28 19 Q 32 8 36 6 T 43 2"
+        stroke="#facc15"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+        fill="none"
+      />
+
+      {/* Pháo hoa chấm tròn & ngôi sao giấy lấp lánh (Confetti) */}
+      <circle cx="43" cy="11" r="2.8" fill="#a855f7" stroke="#581c87" strokeWidth="1" />
+      <circle cx="56" cy="18" r="2.5" fill="#22c55e" stroke="#14532d" strokeWidth="1" />
+      <circle cx="48" cy="24" r="2.2" fill="#fb923c" stroke="#7c2d12" strokeWidth="1" />
+      <polygon points="41,4 42.5,7 45,7.5 42.5,8 41,11 39.5,8 37,7.5 39.5,7" fill="#ffffff" />
+      <polygon points="58,9 59,11 61,11.5 59,12 58,14 57,12 55,11.5 57,11" fill="#fde047" />
     </svg>
   );
 }
@@ -1684,7 +2169,57 @@ export function Icon3dSmartPhone({ size = 32, className = '' }) {
       <circle cx="22" cy="17" r="2" fill="#a855f7" />
     </svg>
   );
+}// 78. Bước Chân Dẫn Đường 3D (Footsteps / Navigation)
+export function Icon3dFootsteps({ size = 24, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="pt_footstep_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#fef08a" />
+        </linearGradient>
+      </defs>
+      {/* Bước chân trái */}
+      <ellipse cx="11" cy="18" rx="4.5" ry="7" fill="url(#pt_footstep_grad)" stroke="#15803d" strokeWidth="1.8" transform="rotate(-12 11 18)" />
+      <circle cx="8" cy="9" r="1.5" fill="#ffffff" stroke="#15803d" strokeWidth="1.2" />
+      <circle cx="11.5" cy="8.5" r="1.6" fill="#ffffff" stroke="#15803d" strokeWidth="1.2" />
+      <circle cx="14.8" cy="9.5" r="1.4" fill="#ffffff" stroke="#15803d" strokeWidth="1.2" />
+
+      {/* Bước chân phải */}
+      <ellipse cx="22" cy="13" rx="4.5" ry="7" fill="url(#pt_footstep_grad)" stroke="#15803d" strokeWidth="1.8" transform="rotate(12 22 13)" />
+      <circle cx="19" cy="4" r="1.5" fill="#ffffff" stroke="#15803d" strokeWidth="1.2" />
+      <circle cx="22.5" cy="3.5" r="1.6" fill="#ffffff" stroke="#15803d" strokeWidth="1.2" />
+      <circle cx="25.8" cy="4.5" r="1.4" fill="#ffffff" stroke="#15803d" strokeWidth="1.2" />
+    </svg>
+  );
 }
 
-
+// 79. Con Dấu Mộc Son Tân Thủ 3D (Beginner Stamp Seal)
+export function Icon3dStamp({ size = 28, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="stamp_handle" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fed7aa" />
+          <stop offset="40%" stopColor="#f97316" />
+          <stop offset="100%" stopColor="#9a3412" />
+        </linearGradient>
+        <radialGradient id="stamp_base" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fca5a5" />
+          <stop offset="100%" stopColor="#dc2626" />
+        </radialGradient>
+      </defs>
+      {/* Tay cầm gỗ tròn */}
+      <circle cx="18" cy="9" r="6" fill="url(#stamp_handle)" stroke="#7c2d12" strokeWidth="1.6" />
+      <ellipse cx="16.5" cy="7.5" rx="2" ry="1.2" fill="#ffffff" opacity="0.6" />
+      {/* Cổ tay cầm */}
+      <path d="M 15 15 L 13 22 L 23 22 L 21 15 Z" fill="url(#stamp_handle)" stroke="#7c2d12" strokeWidth="1.5" />
+      {/* Khối đế đồng/gỗ */}
+      <rect x="7" y="22" width="22" height="5" rx="2" fill="#facc15" stroke="#854d0e" strokeWidth="1.5" />
+      {/* Mặt mộc cao su đỏ */}
+      <rect x="8" y="27" width="20" height="4.5" rx="1.5" fill="url(#stamp_base)" stroke="#991b1b" strokeWidth="1.4" />
+      <line x1="11" y1="29.2" x2="25" y2="29.2" stroke="#ffffff" strokeWidth="1.2" strokeLinecap="round" opacity="0.8" />
+    </svg>
+  );
+}
 

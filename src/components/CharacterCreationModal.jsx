@@ -14,13 +14,13 @@ export function CharacterCreationModal({ defaultName = 'Nông Dân Mới', villa
   const [name, setName] = useState(defaultName || 'Nông Dân Mới');
   const [selectedAvatar, setSelectedAvatar] = useState(AVATAR_ICONS[0].id);
   const [selectedOutfit, setSelectedOutfit] = useState(STARTER_OUTFITS[0].id);
-  const [farmName, setFarmName] = useState('Nông Trại Bình Minh');
+  const [farmName, setFarmName] = useState('Vibe Farm');
   const [villageId, setVillageId] = useState(defaultVillageId);
 
   const handleStart = e => {
     e.preventDefault();
     const finalName = name.trim() || 'Nông Dân Mới';
-    const finalFarm = farmName.trim() || 'Nông Trại Bình Minh';
+    const finalFarm = farmName.trim() || 'Vibe Farm';
     const outfit = STARTER_OUTFITS.find(o => o.id === selectedOutfit) || STARTER_OUTFITS[0];
     if (!villageId) return;
     const village = villages.find(item => item.id === villageId);
@@ -43,7 +43,7 @@ export function CharacterCreationModal({ defaultName = 'Nông Dân Mới', villa
         <div className="creator-header">
           <span className="creator-badge"><Icon3dNonLa size={18} /> CHÀO MỪNG NÔNG DÂN MỚI</span>
           <h2>Khởi Tạo Nhân Vật & Nông Trại</h2>
-          <p>Thiết lập danh tính của bạn trước khi bước vào Thung Lũng Bình Minh</p>
+          <p>Thiết lập danh tính của bạn trước khi bước vào Vibe City</p>
         </div>
 
         <form onSubmit={handleStart} className="creator-body">
@@ -60,7 +60,7 @@ export function CharacterCreationModal({ defaultName = 'Nông Dân Mới', villa
               <div className="preview-hat-glow" />
             </div>
             <strong className="preview-name">{name.trim() || 'Nông Dân Mới'}</strong>
-            <span className="preview-farm"><Icon3dHouseCabin size={19} /> {farmName.trim() || 'Nông Trại Bình Minh'}</span>
+            <span className="preview-farm"><Icon3dHouseCabin size={19} /> {farmName.trim() || 'Vibe Farm'}</span>
             <small className="preview-village"><Icon3dMap size={18} /> {villages.find(item => item.id === villageId)?.name || 'Chưa chọn làng'}</small>
             <small className="preview-outfit-tag" style={{ background: `${currentOutfitObj.color}33`, color: '#2b4728' }}>
               Trang phục: {currentOutfitObj.name}

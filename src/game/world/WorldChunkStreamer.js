@@ -11,6 +11,7 @@ export class WorldChunkStreamer {
     this.entries = new Map();
     this.loading = null;
     this.lastUpdate = 0;
+    this.center = null;
   }
 
   register(id, x, z, handlers) {
@@ -29,6 +30,7 @@ export class WorldChunkStreamer {
     if (now - this.lastUpdate < 100) return;
     this.lastUpdate = now;
     const center = chunkAt(position.x, position.z);
+    this.center = center;
     const queued = [];
     let detailed = 0;
     let unloaded = 0;
@@ -50,7 +52,8 @@ export class WorldChunkStreamer {
       }
     }
     if (detailed > this.maxDetailed) {
-      const victims = [...this.entries.values()].filter(entry => entry.state === 'ready')
+      const victims = [...this.entries.values()].filter(entry => entry.state === 'ready'
+        && Math.max(Math.abs(entry.cell.x - center.x), Math.abs(entry.cell.z - center.z)) > this.detailRadius)
         .sort((a, b) => a.lastUsed - b.lastUsed);
       for (const entry of victims.slice(0, detailed - this.maxDetailed)) {
         entry.unload?.();
@@ -67,11 +70,32 @@ export class WorldChunkStreamer {
     Promise.resolve().then(() => entry.load?.()).then(success => {
       if (entry.generation !== generation || !this.entries.has(entry.id)) return;
       if (success !== false) {
-        entry.hideLod?.();
-        entry.state = 'ready';
+        const current = this.center;
+        const distance = current ? Math.max(Math.abs(entry.cell.x - current.x), Math.abs(entry.cell.z - current.z)) : 0;
+        if (distance > this.keepRadius) {
+          entry.unload?.();
+          entry.showLod?.();
+          entry.state = 'unloaded';
+        } else {
+          entry.hideLod?.();
+          entry.state = 'ready';
+        }
       } else entry.state = 'unloaded';
     }, () => { if (entry.generation === generation) entry.state = 'unloaded'; })
       .finally(() => { if (this.loading === entry) this.loading = null; });
+  }
+
+  getStats() {
+    let ready = 0;
+    let pendingNear = 0;
+    for (const entry of this.entries.values()) {
+      if (entry.state === 'ready') ready++;
+      if (this.center) {
+        const distance = Math.max(Math.abs(entry.cell.x - this.center.x), Math.abs(entry.cell.z - this.center.z));
+        if (distance <= this.detailRadius && entry.state !== 'ready') pendingNear++;
+      }
+    }
+    return { entries: this.entries.size, ready, pendingNear, loading: !!this.loading };
   }
 
   dispose() {

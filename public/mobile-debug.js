@@ -18,12 +18,21 @@
   let lastLongTaskWarningAt = 0;
   let blockedSince = 0;
   let stageStartedAt = null;
-  const stageTimings = [];
+  // Reuse a fixed ring buffer. The old push/shift implementation allocated
+  // several objects per rendered frame and eventually caused multi-second GC.
+  const stageTimings = Array.from({ length: 96 }, () => ({ stage: '', start: 0, end: 0, duration: 0 }));
+  let stageTimingCursor = 0;
+  let stageTimingCount = 0;
   function finishStage() {
     if (stageStartedAt === null) return;
     const end = performance.now();
-    stageTimings.push({ stage: runtimeStage, start: stageStartedAt, end, duration: end - stageStartedAt });
-    if (stageTimings.length > 180) stageTimings.shift();
+    const slot = stageTimings[stageTimingCursor];
+    slot.stage = runtimeStage;
+    slot.start = stageStartedAt;
+    slot.end = end;
+    slot.duration = end - stageStartedAt;
+    stageTimingCursor = (stageTimingCursor + 1) % stageTimings.length;
+    stageTimingCount = Math.min(stageTimingCount + 1, stageTimings.length);
     stageStartedAt = null;
   }
   const escapeHtml = value => String(value).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
@@ -114,7 +123,7 @@
       const now = Date.now();
       if (worldRunning && document.visibilityState === 'visible' && now - lastFrameAt > 2000 && now - lastPerformanceWarningAt > 15000) {
         lastPerformanceWarningAt = now;
-        const recentStages = stageTimings.filter(item => item.end > performance.now() - (now - lastFrameAt)).sort((a, b) => b.duration - a.duration).slice(0, 4);
+        const recentStages = stageTimings.slice(0, stageTimingCount).filter(item => item.end > performance.now() - (now - lastFrameAt)).sort((a, b) => b.duration - a.duration).slice(0, 4);
         const costs = recentStages.map(item => `${item.stage}: ${Math.round(item.duration)}ms`).join('; ');
         report('FRAME GAP', `Khung hình bị gián đoạn ${now - lastFrameAt}ms. Công đoạn đo được: ${costs || 'không có tác vụ render trong khoảng ngắt; cần xem LONG MAIN THREAD TASK'}. FPS ${runtimeSnapshot.fps ?? '?'}, mesh ${runtimeSnapshot.meshes ?? '?'}, độ phân giải ${runtimeSnapshot.renderWidth ?? '?'}x${runtimeSnapshot.renderHeight ?? '?'}. Chưa kết luận nguồn gây ngắt ngoài render.`);
       }
@@ -160,7 +169,7 @@
         // A FRAME GAP must not suppress the CPU attribution for that same freeze.
         if (worldRunning && document.visibilityState === 'visible' && longest > 1000 && Date.now() - lastLongTaskWarningAt > 15000) {
           lastLongTaskWarningAt = Date.now();
-          const matches = stageTimings.filter(item => item.start < task.startTime + task.duration && item.end > task.startTime);
+          const matches = stageTimings.slice(0, stageTimingCount).filter(item => item.start < task.startTime + task.duration && item.end > task.startTime);
           const slowest = matches.sort((a, b) => b.duration - a.duration).slice(0, 4);
           const detail = slowest.length ? slowest.map(item => `${item.stage}: ${Math.round(item.duration)}ms`).join('; ') : 'Tác vụ ngoài render được đo; chưa xác định nguồn (tải asset, xử lý mạng hoặc GC).';
           report('LONG MAIN THREAD TASK', `JavaScript chiếm ${Math.round(longest)}ms. Các công đoạn đo được trong cùng tác vụ: ${detail}. Đây là thời gian CPU, không phải lỗi mất kết nối.`);

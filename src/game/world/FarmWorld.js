@@ -56,6 +56,8 @@ import { getTerrainHeight, MEADOW_KNOLLS } from './TerrainHeightSystem.js';
 import { createInterVillagePlains } from './createInterVillagePlains.js';
 import { createRoadsideMeadows } from './createRoadsideMeadows.js';
 import { FoliageInstancingEngine } from './FoliageInstancingEngine.js';
+import { getWorldChunkStreamer } from './WorldChunkStreamer.js';
+import { FogStreamingController } from './FogStreamingController.js';
 import { createGrandWindingRiver, RIVER_CONTROL_POINTS } from './nature/GrandWindingRiver.js';
 
 // Reusable static vector pool to eliminate GC allocations in 60 FPS render loop
@@ -353,6 +355,7 @@ export class FarmWorld {
     this.currentVenue = VENUES[callbacks.initialLocation?.venue] ? callbacks.initialLocation.venue : null;
     this.lastVenueTransition = 0;
     this.scene = this.createScene();
+    if (new URLSearchParams(window.location.search).has('debug')) window.__farmDebugScene = this.scene;
     window.__farmDebug?.mark('Babylon scene created');
     if (this.currentVenue) {
       this.setVenueView(this.currentVenue);
@@ -436,6 +439,25 @@ export class FarmWorld {
       return false;
     };
 
+    this.playStartCinematic = () => {
+      this.isGameStarted = true;
+      if (!this.camera || !this.scene) return;
+      const initialRadius = RENDER_CONFIG.cameraRadius || 22;
+      const startRadius = initialRadius + 8;
+      this.camera.radius = startRadius;
+      const startTime = performance.now();
+      const duration = 850;
+      const animObserver = this.scene.onBeforeRenderObservable.add(() => {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        this.camera.radius = startRadius + (initialRadius - startRadius) * ease;
+        if (progress >= 1) {
+          this.scene.onBeforeRenderObservable.remove(animObserver);
+        }
+      });
+    };
+
     this.resize = () => {
       if (this.engine && this.canvas) {
         const dpr = this.getQualityDpr();
@@ -509,13 +531,16 @@ export class FarmWorld {
       report('landscape', 45, 'Đã vẽ nhân vật · đang bổ sung cảnh quan…', 1);
       await new Promise(resolve => setTimeout(resolve, 0));
       createScenicLandscapes(this.scene, this.foliage, this.shadows, this.foliageInstancing);
+      window.__farmDebug?.mark(`Scenic landscapes: ${this.scene.meshes.length} meshes`);
       report('villages', 66, 'Đang hoàn thiện đường phố và làng mạc…', 2);
       await new Promise(resolve => setTimeout(resolve, 0));
       createVillageAmenitiesAndGreenbelts(this.scene, this.foliage, this.shadows, this.foliageInstancing);
+      window.__farmDebug?.mark(`Village amenities: ${this.scene.meshes.length} meshes`);
       report('distance', 84, 'Đang hoàn thiện cảnh xa…', 3);
       await new Promise(resolve => setTimeout(resolve, 0));
       createInterVillagePlains(this.scene, this.foliage, this.shadows);
       this.roadsideMeadows = createRoadsideMeadows(this.scene, this.foliageInstancing);
+      window.__farmDebug?.mark(`Distance scenery: ${this.scene.meshes.length} meshes`);
       report('first-frame', 95, 'Sắp vào game · model chi tiết sẽ hiện dần…', 4);
       await new Promise(resolve => requestAnimationFrame(resolve));
       if (this.scene.isDisposed) return;
@@ -543,14 +568,18 @@ export class FarmWorld {
 
   createScene() {
     const scene = new Scene(this.engine);
+    // Several setup helpers (player home/corral) run before createScene()
+    // returns. Publish the scene immediately so those helpers never receive
+    // undefined through this.scene during a synchronized owned-farm boot.
+    this.scene = scene;
     // Tăng tốc độ khởi tạo: Khóa cờ kiểm tra material dirty khi tạo hàng ngàn mesh ban đầu
     scene.clearColor = new Color4(0.85, 0.93, 0.99, 1);
     scene.ambientColor = new Color3(0.24, 0.26, 0.28);
     // Keep nearby villages crystal clear; use distance fog to blend gently into far horizon
     scene.fogEnabled = true;
     scene.fogMode = Scene.FOGMODE_LINEAR;
-    scene.fogStart = 350;
-    scene.fogEnd = 1750;
+    scene.fogStart = 120;
+    scene.fogEnd = 420;
     scene.fogColor = Color3.FromHexString('#dbeafe');
     scene.skipPointerMovePicking = true;
 
@@ -626,6 +655,11 @@ export class FarmWorld {
     });
 
     this.atmosphere = createAtmosphere(scene, ambient, sun, shadows, this.cinematic);
+    this.chunkStreamer = getWorldChunkStreamer(scene);
+    this.fogStreaming = new FogStreamingController(scene, camera, {
+      getStreamingStats: () => this.chunkStreamer?.getStats?.(),
+      getFps: () => this.engine.getFps(),
+    });
 
     const ground = MeshBuilder.CreateGround('world-ground', {
       width: FARM_CONFIG.worldSize,
@@ -745,9 +779,9 @@ export class FarmWorld {
       this.animalPen = createAnimalPen(scene, WORLD_LAYOUT.animalPen, shadows);
       this.busRoute = createBusRoute(scene, shadows);
       this.villageElder = createVillageElderNPC(scene, shadows, WORLD_LAYOUT.villageElder, () => this.callbacks.onNpcInteract?.('village_elder'));
-      const foliage = createFoliageFactory(scene, shadows);
-      this.foliage = foliage;
       this.foliageInstancing = new FoliageInstancingEngine(scene, shadows);
+      const foliage = createFoliageFactory(scene, shadows, this.foliageInstancing);
+      this.foliage = foliage;
       this.villageGates = WORLD_LAYOUT.villages.map(village => ({
         villageId: village.id,
         ...createVillageGate(scene, village.gate, village.name, shadows, village.id, foliage),
@@ -1069,6 +1103,7 @@ export class FarmWorld {
       player.update(dt);
       window.__farmDebug?.stage('atmosphere / water / bus');
       this.atmosphere?.update(dt);
+      this.fogStreaming?.update(dt);
       this.grandRiver?.update(dt);
 
       const isRiding = this.busRoute?.isPlayerRiding();
@@ -1123,9 +1158,8 @@ export class FarmWorld {
         if (performance.now() - (this.lastVillageDetailAt || 0) > 1000) {
           this.lastVillageDetailAt = performance.now();
           let nearestDetail = null;
-          let nearestDetailDistance = 140;
-          let staleDetail = null;
-          let staleDetailDistance = 260;
+          let nearestDetailDistance = 55;
+          const detailedNeighbours = [];
           window.__farmDebug?.stage('farm visibility');
           WORLD_LAYOUT.farms.forEach(farm => {
             const distance = Math.hypot(farm.x - player.root.position.x, farm.z - player.root.position.z);
@@ -1147,19 +1181,25 @@ export class FarmWorld {
               nearestDetail = farm;
               nearestDetailDistance = distance;
             }
-            if (distance > staleDetailDistance && estate?.metadata?.detailed
-              && farm.id !== this.playerFarmId
-              && !this.publicFarms?.some(item => item.farmId === farm.id)) {
-              staleDetail = farm;
-              staleDetailDistance = distance;
+            if (estate?.metadata?.detailed && farm.id !== this.playerFarmId) {
+              detailedNeighbours.push({ farm, distance });
             }
           });
-          // Never promote every lot in a 240m radius in one render callback.
-          if (nearestDetail) {
+          // Detailed farms contain many interactive meshes and model instances.
+          // Keep only the two closest neighbours resident. Public visibility is
+          // data permission, not a reason to retain its 3D instance forever.
+          detailedNeighbours.sort((a, b) => a.distance - b.distance);
+          const eviction = detailedNeighbours.length > 2
+            ? detailedNeighbours[detailedNeighbours.length - 1]
+            : detailedNeighbours.find(item => item.distance > 90);
+          if (eviction) {
+            window.__farmDebug?.stage(`farm unload: ${eviction.farm.id}`);
+            this.demoteUnoccupiedFarm(eviction.farm.id);
+          } else if (nearestDetail && detailedNeighbours.length < 2) {
             window.__farmDebug?.stage(`farm detail: ${nearestDetail.id}`);
             const profile = this.publicFarms?.find(item => item.farmId === nearestDetail.id);
             this.ensureDetailedFarm(nearestDetail.id, nearestDetail.id === this.playerFarmId, profile?.userName || nearestDetail.owner);
-          } else if (staleDetail) this.demoteUnoccupiedFarm(staleDetail.id);
+          }
         }
         window.__farmDebug?.stage('world partition');
         const regionUpdate = this.proceduralWorld?.update(player.root.position);
@@ -1210,6 +1250,7 @@ export class FarmWorld {
     this.localNameplate?.dispose();
     this.remotePlayers?.forEach(remote => remote.metadata?.nameplate?.dispose());
     this.atmosphere?.dispose();
+    this.fogStreaming?.dispose();
     this.stylizedGrass?.dispose();
     this.farmAnimals?.dispose();
     this.vietnameseCountryside?.dispose();
@@ -1542,6 +1583,10 @@ export class FarmWorld {
       meshes: this.scene.meshes.length,
       activeMeshes: this.scene.getActiveMeshes().length,
       nearbyShadowCasters: this.getNearbyShadowCount?.() ?? null,
+      fogStreaming: this.fogStreaming?.getState?.() ?? null,
+      // Full mesh-name grouping is intentionally excluded from the hot path.
+      // It allocated thousands of temporary regex strings while chunks streamed.
+      topMeshGroups: [],
       ...this.renderIndex?.getStats(),
       worldId: WORLD_LAYOUT.id,
       farmLayoutVersion: FARM_LOT_SPEC.version,
@@ -1650,6 +1695,9 @@ export class FarmWorld {
     root.dispose();
     const gateIndex = this.farmGates.findIndex(gate => gate.farmId === farmId);
     if (gateIndex >= 0) this.farmGates.splice(gateIndex, 1)[0].dispose?.();
+    const buildings = this.farmBuildings.get(farmId);
+    buildings?.dispose?.();
+    this.farmBuildings.delete(farmId);
     createFarmPlot(this.scene, { ...farm, farmId, lightweight: true, isOwner: false }, this.shadows);
     this.farmEstateRoots.set(farmId, this.scene.getNodeByName(`farm-estate-${farmId}`));
   }

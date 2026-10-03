@@ -7,4 +7,6 @@ const mesh = (x, z, enabled = true, radius = 1) => ({
 const near = mesh(5, 0), far = mesh(500, 0), disabled = mesh(0, 0, false), large = mesh(100, 0, true, 15);
 assert.deepEqual(selectNearbyShadowCasters([near, far, disabled, large], { x: 0, y: 0, z: 0 }), [near, large]);
 assert.deepEqual(selectNearbyShadowCasters([near, far], { x: 500, y: 0, z: 0 }), [far]);
+const crowded = Array.from({ length: 200 }, (_, index) => mesh(index / 10, 0));
+assert.equal(selectNearbyShadowCasters(crowded, { x: 0, y: 0, z: 0 }).length, 128);
 console.log('PASS: nearby shadow casters, disabled objects, large bounds and moved player');

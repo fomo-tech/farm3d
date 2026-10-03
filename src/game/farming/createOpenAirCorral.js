@@ -13,6 +13,9 @@ import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayToget
  * - Chú bò sữa chibi đốm đáng yêu đeo chuông vàng lục lạc gật gù nhai cỏ
  */
 export function createOpenAirCorral(scene, shadows, position = { x: 0, y: 0, z: 0 }, options = {}) {
+  if (!scene?.onBeforeRenderObservable) {
+    throw new TypeError('createOpenAirCorral cần Babylon Scene hợp lệ.');
+  }
   const {
     farmId = 'lot',
     ownerName = 'Nông dân',
