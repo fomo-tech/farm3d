@@ -11,6 +11,22 @@
   let lastFrameAt = 0;
   let lastFrameWarningAt = 0;
   let worldRunning = false;
+  let runtimeStage = 'not started';
+  let runtimeSnapshot = {};
+  let lastTickAt = Date.now();
+  let lastPerformanceWarningAt = 0;
+  let lastLongTaskWarningAt = 0;
+  let blockedSince = 0;
+  let stageStartedAt = null;
+  const stageTimings = [];
+  function finishStage() {
+    if (stageStartedAt === null) return;
+    const end = performance.now();
+    stageTimings.push({ stage: runtimeStage, start: stageStartedAt, end, duration: end - stageStartedAt });
+    if (stageTimings.length > 180) stageTimings.shift();
+    stageStartedAt = null;
+  }
+  const escapeHtml = value => String(value).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
 
   function textOf(value) {
     if (value instanceof Error) return value.stack || value.message || String(value);
@@ -22,6 +38,8 @@
     return [
       `URL: ${location.href}`,
       `Stage: ${currentStage}`,
+      `Runtime stage: ${runtimeStage}`,
+      `Last runtime snapshot: ${textOf(runtimeSnapshot)}`,
       `Time: ${new Date().toISOString()}`,
       `Viewport: ${innerWidth}x${innerHeight} @ DPR ${devicePixelRatio || 1}`,
       `Online: ${navigator.onLine}`,
@@ -59,14 +77,13 @@
       try { await navigator.clipboard.writeText(report); this.textContent = 'Đã sao chép'; }
       catch { this.textContent = 'Không thể sao chép'; }
     };
-    if (forced) panel.classList.add('visible');
     if (!forced && !isLan) badge.style.display = 'none';
     render();
   }
 
   function render() {
     if (!body) return;
-    body.innerHTML = `<div class="info">${systemReport()}</div>` + entries.map(item =>
+    body.innerHTML = `<div class="info">${escapeHtml(systemReport())}</div>` + entries.map(item =>
       `<div class="error"><b>${item.time} · ${item.type}</b>\n${item.message.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c])}</div>`
     ).join('');
   }
@@ -75,28 +92,83 @@
     const message = [textOf(value), detail ? textOf(detail) : ''].filter(Boolean).join('\n');
     entries.push({ type, message, time: new Date().toLocaleTimeString('vi-VN') });
     if (entries.length > 30) entries.shift();
+    try { localStorage.setItem('farm.lastDiagnostic', JSON.stringify({ stage: runtimeStage, snapshot: runtimeSnapshot, entries, time: Date.now() })); } catch { /* Storage may be disabled. */ }
     ensureUi();
-    panel?.classList.add('visible');
+    const blocking = ['JAVASCRIPT ERROR', 'UNHANDLED PROMISE', 'WORLD RENDER', 'WEBGL', 'FATAL GAME ERROR', 'WORLD INITIALIZATION', 'BOOT TIMEOUT'];
+    if (blocking.includes(type)) panel?.classList.add('visible');
+    else if (badge) {
+      badge.style.display = '';
+      badge.textContent = 'DEBUG · ' + entries.length;
+    }
     render();
   }
 
   window.__farmDebug = {
     mark(stage) { currentStage = stage; ensureUi(); render(); },
     report(error, source) { report(source || 'APP ERROR', error); },
-    frame() { worldRunning = true; lastFrameAt = Date.now(); },
+    stage(stage) { finishStage(); runtimeStage = stage; stageStartedAt = performance.now(); },
+    endStage() { finishStage(); runtimeStage = 'outside measured render work'; },
+    snapshot(value) { runtimeSnapshot = value; },
+    frame() {
+      finishStage();
+      const now = Date.now();
+      if (worldRunning && document.visibilityState === 'visible' && now - lastFrameAt > 2000 && now - lastPerformanceWarningAt > 15000) {
+        lastPerformanceWarningAt = now;
+        const recentStages = stageTimings.filter(item => item.end > performance.now() - (now - lastFrameAt)).sort((a, b) => b.duration - a.duration).slice(0, 4);
+        const costs = recentStages.map(item => `${item.stage}: ${Math.round(item.duration)}ms`).join('; ');
+        report('FRAME GAP', `Khung hình bị gián đoạn ${now - lastFrameAt}ms. Công đoạn đo được: ${costs || 'không có tác vụ render trong khoảng ngắt; cần xem LONG MAIN THREAD TASK'}. FPS ${runtimeSnapshot.fps ?? '?'}, mesh ${runtimeSnapshot.meshes ?? '?'}, độ phân giải ${runtimeSnapshot.renderWidth ?? '?'}x${runtimeSnapshot.renderHeight ?? '?'}. Chưa kết luận nguồn gây ngắt ngoài render.`);
+      }
+      worldRunning = true;
+      lastFrameAt = now;
+    },
     stopFrames() { worldRunning = false; },
-    ready() { currentStage = 'World ready'; ensureUi(); if (!forced && entries.length === 0) panel?.classList.remove('visible'); render(); },
-    getReport() { return { stage: currentStage, entries: entries.slice(), system: systemReport() }; },
+    ready() { currentStage = 'World ready'; ensureUi(); if (entries.length === 0) panel?.classList.remove('visible'); render(); },
+    getReport() { return { stage: currentStage, runtimeStage, snapshot: runtimeSnapshot, entries: entries.slice(), system: systemReport() }; },
   };
 
   setInterval(function () {
-    if (!worldRunning || document.visibilityState !== 'visible') return;
     const now = Date.now();
+    const tickGap = now - lastTickAt;
+    lastTickAt = now;
+    if (!worldRunning || document.visibilityState !== 'visible') return;
+    if (tickGap > 5000 && now - lastPerformanceWarningAt > 15000) {
+      lastPerformanceWarningAt = now;
+      report('MAIN THREAD STALL', `Luồng giao diện bị chặn khoảng ${tickGap - 2000}ms. Công đoạn cuối: ${runtimeStage}. Báo cáo được hiển thị khi trình duyệt phản hồi trở lại.`);
+    }
+    const movement = runtimeSnapshot.movement;
+    if (movement?.input && movement.speed < 0.01 && !movement.ridingBus) {
+      blockedSince ||= now;
+      if (now - blockedSince > 4000 && now - lastFrameWarningAt > 20000) {
+        lastFrameWarningAt = now;
+        report('MOVEMENT BLOCKED', movement.collided
+          ? `Nhân vật đang bị collider chặn tại ${runtimeSnapshot.x}, ${runtimeSnapshot.z}; cảnh vẫn dựng khung hình. Kiểm tra tường/rào tại vị trí này.`
+          : `Có input di chuyển nhưng vị trí không đổi tại ${runtimeSnapshot.x}, ${runtimeSnapshot.z}. FPS: ${runtimeSnapshot.fps}.`);
+      }
+    } else blockedSince = 0;
     if (now - lastFrameAt >= 8000 && now - lastFrameWarningAt >= 20000) {
       lastFrameWarningAt = now;
       report('RENDER STALL', `Không có khung hình mới trong ${Math.round((now - lastFrameAt) / 1000)} giây. Giai đoạn: ${currentStage}. Nếu trang bị khóa hoàn toàn, cảnh báo chỉ hiện khi luồng giao diện hoạt động trở lại.`);
     }
   }, 2000);
+
+  // Long-task entries survive a main-thread pause and identify the last instrumented stage.
+  if (typeof PerformanceObserver !== 'undefined') {
+    try {
+      const observer = new PerformanceObserver(list => {
+        const task = list.getEntries().reduce((result, entry) => !result || entry.duration > result.duration ? entry : result, null);
+        const longest = task?.duration || 0;
+        // A FRAME GAP must not suppress the CPU attribution for that same freeze.
+        if (worldRunning && document.visibilityState === 'visible' && longest > 1000 && Date.now() - lastLongTaskWarningAt > 15000) {
+          lastLongTaskWarningAt = Date.now();
+          const matches = stageTimings.filter(item => item.start < task.startTime + task.duration && item.end > task.startTime);
+          const slowest = matches.sort((a, b) => b.duration - a.duration).slice(0, 4);
+          const detail = slowest.length ? slowest.map(item => `${item.stage}: ${Math.round(item.duration)}ms`).join('; ') : 'Tác vụ ngoài render được đo; chưa xác định nguồn (tải asset, xử lý mạng hoặc GC).';
+          report('LONG MAIN THREAD TASK', `JavaScript chiếm ${Math.round(longest)}ms. Các công đoạn đo được trong cùng tác vụ: ${detail}. Đây là thời gian CPU, không phải lỗi mất kết nối.`);
+        }
+      });
+      observer.observe({ type: 'longtask', buffered: true });
+    } catch { /* Not supported in every browser. */ }
+  }
 
   window.addEventListener('error', function (event) {
     if (event.target && event.target !== window) {
@@ -109,7 +181,7 @@
   window.addEventListener('unhandledrejection', function (event) { report('UNHANDLED PROMISE', event.reason); });
   window.addEventListener('offline', function () { report('NETWORK', 'Thiết bị đã mất kết nối mạng'); });
   document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible') lastFrameAt = Date.now();
+    if (document.visibilityState === 'visible') { lastFrameAt = Date.now(); lastTickAt = Date.now(); blockedSince = 0; }
   });
   document.addEventListener('DOMContentLoaded', ensureUi);
 

@@ -164,10 +164,7 @@ export function createVietnameseCountryside(scene, shadows) {
   materials.grassPasture.zOffset = -1;
 
   // 1. HÀNG RÀO GỖ TRẮNG NÔNG TRANG NGOẠI Ô (WHITE PICKET FENCES)
-  // Phân chia ranh giới trang trại và đường đi bộ (chừa trọn vẹn lòng đại lộ trung tâm x = -10 .. 10)
-  createWhitePicketFence(scene, shadows, 36, { x: -28, y: 0, z: 88 }, 0, root);
-  createWhitePicketFence(scene, shadows, 36, { x: 28, y: 0, z: 88 }, 0, root);
-  // (Đã xóa bỏ hoàn toàn 2 hàng rào 140m tại x = ±66 từng cắt ngang qua 5 ngã tư giao lộ)
+  // Đã giải phóng hoàn toàn hành lang Quốc Lộ 86 (z = 86) để các tuyến xe buýt và phương tiện thông suốt 100%
 
   // 2. KHU ĐỒNG CỎ CHĂN THẢ BÒ SỮA SẠCH ĐẸP (DAIRY COW PASTURE)
   // Bố trí tại khuôn viên đồng quê (x: 88, z: 112) - Hoàn toàn nằm ngoài hành lang an toàn của mọi trục đường

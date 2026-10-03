@@ -16,7 +16,7 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
 
     // 1. Khử răng cưa phần cứng siêu sắc nét (2x Hardware MSAA)
     // Tối ưu hóa GPU: 2x MSAA mang lại viền hình sắc nét mượt mà với 50% mức tiêu thụ VRAM so với 4x
-    pipeline.samples = isEco ? 1 : 2;
+    pipeline.samples = isEco ? 1 : (isUltra && !options.lightweight ? 4 : 2);
     pipeline.fxaaEnabled = isEco ? false : false;
 
     // Restrained sharpening: gentle micro-contrast without temporal pixel buzzing during movement.
@@ -58,7 +58,7 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     setQuality: (quality = 'ultra') => {
       if (!pipeline) return;
       if (quality === 'ultra') {
-        pipeline.samples = 2;
+        pipeline.samples = options.lightweight ? 2 : 4;
         pipeline.fxaaEnabled = false;
         pipeline.sharpenEnabled = true;
         if (pipeline.sharpen) {

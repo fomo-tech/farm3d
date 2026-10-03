@@ -5,6 +5,9 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight.js';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight.js';
 import { Engine } from '@babylonjs/core/Engines/engine.js';
+import { installWorldRenderIndex } from '../rendering/WorldRenderIndex.js';
+import { installNearbyShadows } from '../rendering/NearbyShadowCasters.js';
+import { GRAPHICS_PRESETS, readGraphicsQuality, saveGraphicsQuality, calculateRenderDpr, RenderResolutionController } from '../rendering/GraphicsSettings.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { Scene } from '@babylonjs/core/scene.js';
@@ -318,7 +321,8 @@ export class FarmWorld {
     this.onStatus = onStatus;
     this.callbacks = callbacks;
     this.isMobile = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
-    this.graphicsQuality = 'ultra'; // 'ultra' | 'balanced' | 'eco'
+    this.graphicsQuality = readGraphicsQuality();
+    this.resolutionController = new RenderResolutionController();
     this.engine = new Engine(canvas, true, {
       preserveDrawingBuffer: false,
       stencil: true,
@@ -327,15 +331,11 @@ export class FarmWorld {
     });
 
     this.getQualityDpr = () => {
-      const nativeDpr = window.devicePixelRatio || 1;
-      if (this.graphicsQuality === 'ultra') {
-        // Cân bằng tối ưu: Giữ 1.0x cho màn hình chuẩn, tối đa 1.15x cho High-DPI để triệt tiêu sụt khung hình
-        if (this.isMobile) return 1.0;
-        return Math.min(Math.max(nativeDpr, 1.0), 1.15);
-      } else if (this.graphicsQuality === 'balanced') {
-        return 1.0;
-      }
-      return 0.85;
+      return calculateRenderDpr({ quality: this.graphicsQuality,
+        nativeDpr: window.devicePixelRatio || 1,
+        width: this.canvas.clientWidth || window.innerWidth,
+        height: this.canvas.clientHeight || window.innerHeight,
+        mobile: this.isMobile, scale: this.resolutionController.scale });
     };
 
     // Bật độ phân giải sắc nét Native Retina 1:1 trên màn hình High-DPI
@@ -343,6 +343,7 @@ export class FarmWorld {
     this.engine.setHardwareScalingLevel(1 / dpr);
     this.remotePlayers = new Map();
     this.farmBuildings = new Map();
+    this.farmEstateRoots = new Map();
     this.collisionSystem = new WorldCollisionSystem();
     this.cinematicTourActive = false;
     this.toggleCinematicTour = () => {
@@ -401,7 +402,10 @@ export class FarmWorld {
       }
     };
     this.setGraphicsQuality = (preset = 'ultra') => {
+      if (!GRAPHICS_PRESETS[preset]) return;
       this.graphicsQuality = preset;
+      saveGraphicsQuality(preset);
+      this.resolutionController = new RenderResolutionController();
       const dpr = this.getQualityDpr();
       this.engine.setHardwareScalingLevel(1 / dpr);
       this.engine.resize();
@@ -449,7 +453,14 @@ export class FarmWorld {
     this.engine.runRenderLoop(() => {
       if (renderFailed) return;
       try {
+        if (!this.scene.activeCamera) throw new Error('Cảnh 3D không có camera hoạt động.');
+        window.__farmDebug?.stage('scene.render');
         this.scene.render();
+        if (this.graphicsQuality !== 'ultra' && !document.hidden && this.resolutionController.sample(this.engine.getDeltaTime())) this.resize();
+        if (performance.now() - (this.lastDiagnosticsAt || 0) > 1000) {
+          this.lastDiagnosticsAt = performance.now();
+          window.__farmDebug?.snapshot({ ...this.getDebugState(), movement: this.player?.getDiagnostics?.() });
+        }
         window.__farmDebug?.frame();
       } catch (error) {
         renderFailed = true;
@@ -509,7 +520,9 @@ export class FarmWorld {
       await new Promise(resolve => requestAnimationFrame(resolve));
       if (this.scene.isDisposed) return;
       this.resize();
-
+      window.__farmDebug?.stage('build world spatial render index');
+      this.renderIndex = installWorldRenderIndex(this.scene);
+      this.getNearbyShadowCount = installNearbyShadows(this.shadows, () => this.player?.root.position);
       this.callbacks.onBootProgress?.({
         phase: 'ready',
         percentage: 100,
@@ -595,7 +608,7 @@ export class FarmWorld {
     rimLight.specular = Color3.FromHexString('#fef08a');
 
     // 4. Tầng 4: Shadow Generator mờ 28% mềm mại (PCF High Quality)
-    const shadows = new ShadowGenerator(this.isMobile ? 1024 : 2048, sun);
+    const shadows = new ShadowGenerator(1024, sun);
     shadows.usePercentageCloserFiltering = true;
     shadows.filteringQuality = this.isMobile ? ShadowGenerator.QUALITY_LOW : ShadowGenerator.QUALITY_HIGH;
     shadows.bias = 0.0015;
@@ -609,7 +622,7 @@ export class FarmWorld {
     // === GIAI ĐOẠN A: PIPELINE ĐỒ HỌA ĐIỆN ẢNH AAA (ULTRA-CRISP) ===
     this.cinematic = createCinematicRenderingPipeline(scene, camera, {
       quality: this.graphicsQuality,
-      lightweight: false,
+      lightweight: this.isMobile,
     });
 
     this.atmosphere = createAtmosphere(scene, ambient, sun, shadows, this.cinematic);
@@ -664,7 +677,7 @@ export class FarmWorld {
       this.playerFarmId = this.callbacks.getPlayerFarmId?.() || null;
       WORLD_LAYOUT.farms.forEach((farm, index) => {
         const initial = this.callbacks.initialLocation || WORLD_LAYOUT.spawn;
-        const lightweight = farm.id !== this.playerFarmId && Math.hypot(farm.x - initial.x, farm.z - initial.z) > 240;
+        const lightweight = farm.id !== this.playerFarmId && Math.hypot(farm.x - initial.x, farm.z - initial.z) > 120;
         const isOwner = farm.id === this.playerFarmId;
         const ownerName = isOwner ? (this.callbacks.getPlayerName?.() || farm.owner) : farm.owner;
         const tiles = createFarmPlot(scene, {
@@ -678,6 +691,7 @@ export class FarmWorld {
           lightweight,
         }, shadows);
         allTiles.push(...tiles);
+        this.farmEstateRoots.set(farm.id, scene.getNodeByName(`farm-estate-${farm.id}`));
         if (lightweight) return;
 
         const gate = createFarmGateAndSign(scene, {
@@ -944,7 +958,7 @@ export class FarmWorld {
       getOutfitId: () => this.callbacks.getOutfitId?.() || 'starter',
       getOutfitColor: () => this.callbacks.getOutfitColor?.() || '#f8fafc',
       isRidingBus: () => this.busRoute?.isPlayerRiding() || false,
-      getTerrainHeight: (x, z) => (this.currentVenue ? 0 : getTerrainHeight(x, z)),
+      getTerrainHeight: (x, z) => (this.currentVenue ? VENUES[this.currentVenue].interior.y : getTerrainHeight(x, z)),
       resolveMovement: (cx, cz, dx, dz) => this.collisionSystem.resolveMovement(cx, cz, dx, dz, this.currentVenue),
       getCameraBasis: () => {
         const forward = camera.getForwardRay().direction.clone();
@@ -1050,8 +1064,10 @@ export class FarmWorld {
 
     let busStatusElapsed = 0;
     scene.onBeforeRenderObservable.add(() => {
-      const dt = this.engine.getDeltaTime() / 1000;
+      const dt = Math.min(0.1, Math.max(0, this.engine.getDeltaTime() / 1000));
+      window.__farmDebug?.stage('player.update / collision');
       player.update(dt);
+      window.__farmDebug?.stage('atmosphere / water / bus');
       this.atmosphere?.update(dt);
       this.grandRiver?.update(dt);
 
@@ -1106,9 +1122,14 @@ export class FarmWorld {
       if (!this.currentVenue) {
         if (performance.now() - (this.lastVillageDetailAt || 0) > 1000) {
           this.lastVillageDetailAt = performance.now();
+          let nearestDetail = null;
+          let nearestDetailDistance = 140;
+          let staleDetail = null;
+          let staleDetailDistance = 260;
+          window.__farmDebug?.stage('farm visibility');
           WORLD_LAYOUT.farms.forEach(farm => {
             const distance = Math.hypot(farm.x - player.root.position.x, farm.z - player.root.position.z);
-            const estate = this.scene.getNodeByName(`farm-estate-${farm.id}`);
+            const estate = this.farmEstateRoots.get(farm.id);
             // Tối ưu triệt để: Sử dụng setEnabled thay vì dispose() / createFarmPlot() liên tục gây lag GC
             if (distance > 280 && farm.id !== this.playerFarmId && estate && estate.isEnabled()) {
               estate.setEnabled(false);
@@ -1122,15 +1143,29 @@ export class FarmWorld {
               if (b?.home?.root) b.home.root.setEnabled(true);
               if (b?.barn?.root) b.barn.root.setEnabled(true);
             }
-            if (distance < 240 && estate?.metadata?.lightweight) {
-              const profile = this.publicFarms?.find(item => item.farmId === farm.id);
-              this.ensureDetailedFarm(farm.id, farm.id === this.playerFarmId, profile?.userName || farm.owner);
+            if (distance < nearestDetailDistance && estate?.metadata?.lightweight) {
+              nearestDetail = farm;
+              nearestDetailDistance = distance;
+            }
+            if (distance > staleDetailDistance && estate?.metadata?.detailed
+              && farm.id !== this.playerFarmId
+              && !this.publicFarms?.some(item => item.farmId === farm.id)) {
+              staleDetail = farm;
+              staleDetailDistance = distance;
             }
           });
+          // Never promote every lot in a 240m radius in one render callback.
+          if (nearestDetail) {
+            window.__farmDebug?.stage(`farm detail: ${nearestDetail.id}`);
+            const profile = this.publicFarms?.find(item => item.farmId === nearestDetail.id);
+            this.ensureDetailedFarm(nearestDetail.id, nearestDetail.id === this.playerFarmId, profile?.userName || nearestDetail.owner);
+          } else if (staleDetail) this.demoteUnoccupiedFarm(staleDetail.id);
         }
+        window.__farmDebug?.stage('world partition');
         const regionUpdate = this.proceduralWorld?.update(player.root.position);
         if (regionUpdate) this.callbacks.onRegionChange?.(regionUpdate);
       }
+      window.__farmDebug?.stage('farming / NPC / world animation');
       this.animalPen?.update(performance.now());
       this.farming?.update();
       this.villageElder?.update(performance.now());
@@ -1139,6 +1174,7 @@ export class FarmWorld {
       this.updateFarmZoneProximity();
       this.openWorld?.update(performance.now(), dt);
       const renderAt = performance.now() + (this.remoteClockOffset || 0) - 180;
+      window.__farmDebug?.stage('remote player interpolation');
       this.remotePlayers.forEach(remote => {
         const snapshots = remote.metadata.snapshots || [];
         let sample = remote.metadata.target;
@@ -1152,13 +1188,13 @@ export class FarmWorld {
         remote.position.y += (sample.y - remote.position.y) * follow;
         remote.position.z += dz * follow;
         const targetRotation = sample.rotation ?? remote.metadata.targetRotation;
-        let rotationDelta = targetRotation - remote.rotation.y;
-        while (rotationDelta > Math.PI) rotationDelta -= Math.PI * 2;
-        while (rotationDelta < -Math.PI) rotationDelta += Math.PI * 2;
+        const angle = targetRotation - remote.rotation.y;
+        const rotationDelta = Math.atan2(Math.sin(angle), Math.cos(angle));
         remote.rotation.y += rotationDelta * follow;
 
         remote.metadata.human?.animate(dt, isMoving, 4.0);
       });
+      window.__farmDebug?.stage('Babylon draw / shadows / postprocess');
     });
 
     scene.blockMaterialDirtyMechanism = false;
@@ -1170,6 +1206,7 @@ export class FarmWorld {
     window.removeEventListener('resize', this.resize);
     window.removeEventListener('keydown', this.keydown);
     this.player?.dispose();
+    this.renderIndex?.dispose();
     this.localNameplate?.dispose();
     this.remotePlayers?.forEach(remote => remote.metadata?.nameplate?.dispose());
     this.atmosphere?.dispose();
@@ -1276,8 +1313,12 @@ export class FarmWorld {
       }
     }
     players.forEach((player, index) => {
+      if (![player.x, player.z, player.rotation ?? 0].every(Number.isFinite)) {
+        window.__farmDebug?.report(`Bỏ qua tọa độ/góc xoay không hợp lệ của ${player.playerId}`, 'INVALID REMOTE POSITION');
+        return;
+      }
       let remote = this.remotePlayers.get(player.playerId);
-      const effectiveY = Number.isFinite(player.y) && player.y !== 0 ? player.y : (player.venue ? 0 : getTerrainHeight(player.x, player.z));
+      const effectiveY = Number.isFinite(player.y) && player.y !== 0 ? player.y : (VENUES[player.venue]?.interior.y ?? getTerrainHeight(player.x, player.z));
       if (!remote) {
         remote = createRemoteAvatar(this.scene, player.playerId, player.name, REMOTE_COLORS[index % REMOTE_COLORS.length], this.shadows);
         remote.position.set(player.x, effectiveY, player.z);
@@ -1321,7 +1362,11 @@ export class FarmWorld {
     const dz = authoritative.z - this.player.root.position.z;
     const error = Math.hypot(dx, dz);
     if (error <= 0.35) return;
-    const targetY = (Number.isFinite(authoritative.y) && authoritative.y !== 0) ? authoritative.y : (this.currentVenue ? 0 : getTerrainHeight(authoritative.x, authoritative.z));
+    const targetY = (Number.isFinite(authoritative.y) && authoritative.y !== 0) ? authoritative.y : (VENUES[this.currentVenue]?.interior.y ?? getTerrainHeight(authoritative.x, authoritative.z));
+    if (performance.now() - (this.lastCorrectionReportAt || 0) > 15000) {
+      this.lastCorrectionReportAt = performance.now();
+      window.__farmDebug?.report(`Server từ chối/correct bước di chuyển, lệch ${error.toFixed(2)}m; lý do: ${authoritative.reason || 'server không cung cấp'}. Vị trí: ${authoritative.x}, ${authoritative.z}.`, 'SERVER MOVEMENT CORRECTION');
+    }
     if (error > 4) {
       this.player.root.position.set(authoritative.x, targetY, authoritative.z);
     } else {
@@ -1487,10 +1532,17 @@ export class FarmWorld {
     const chunk = chunkAt(position.x, position.z);
     return {
       fps: Math.round(this.engine.getFps()),
+      graphicsQuality: this.graphicsQuality,
+      renderWidth: this.engine.getRenderWidth(),
+      renderHeight: this.engine.getRenderHeight(),
+      resolutionScale: this.resolutionController.scale.toFixed(2),
       x: position.x.toFixed(1),
       z: position.z.toFixed(1),
       chunk: `${chunk.x}:${chunk.z}`,
       meshes: this.scene.meshes.length,
+      activeMeshes: this.scene.getActiveMeshes().length,
+      nearbyShadowCasters: this.getNearbyShadowCount?.() ?? null,
+      ...this.renderIndex?.getStats(),
       worldId: WORLD_LAYOUT.id,
       farmLayoutVersion: FARM_LOT_SPEC.version,
       farmLayoutSynced: this.serverFarmLayout ? this.serverFarmLayout.version === FARM_LOT_SPEC.version : null,
@@ -1515,13 +1567,12 @@ export class FarmWorld {
 
   applyPublicFarmScope(farms, crops) {
     this.publicFarms = farms;
-    farms.forEach(farm => this.ensureDetailedFarm(
-      farm.farmId,
-      farm.farmId === this.playerFarmId,
-      farm.userName || farm.name,
-      farm.homeTier || 1,
-      farm.barnLevel || 1,
-    ));
+    // Network scope is data visibility, not permission to synchronously construct
+    // every estate in a single WebSocket callback. Nearby non-owned estates are
+    // promoted one per second by the render scheduler.
+    const ownedFarm = farms.find(farm => farm.farmId === this.playerFarmId);
+    if (ownedFarm) this.ensureDetailedFarm(ownedFarm.farmId, true,
+      ownedFarm.userName || ownedFarm.name, ownedFarm.homeTier || 1, ownedFarm.barnLevel || 1);
     this.updateFarmSigns(this.remotePlayerState || []);
     this.applyRemoteFarmSync(crops);
   }
@@ -1566,10 +1617,11 @@ export class FarmWorld {
 
   ensureDetailedFarm(farmId, isOwner = true, ownerName = null, homeTier = 1, barnLevel = 1) {
     const farm = WORLD_LAYOUT.farms.find(item => item.id === farmId);
-    const oldRoot = this.scene.getNodeByName(`farm-estate-${farmId}`);
+    const oldRoot = this.farmEstateRoots.get(farmId);
     if (!farm) return;
     const displayName = ownerName || (isOwner ? this.callbacks.getPlayerName?.() : farm.owner) || farm.owner;
     if (!oldRoot?.metadata?.detailed) {
+      this.farming?.removeFarmTiles(farmId);
       oldRoot?.dispose();
       const tiles = createFarmPlot(this.scene, {
         ...farm,
@@ -1581,12 +1633,25 @@ export class FarmWorld {
         renderTiles: true,
       }, this.shadows);
       this.farming?.addTiles(tiles);
+      this.farmEstateRoots.set(farmId, this.scene.getNodeByName(`farm-estate-${farmId}`));
     }
     if (!this.farmGates.some(gate => gate.farmId === farmId)) {
       const gate = createFarmGateAndSign(this.scene, { ...farm, owner: displayName, isOwner }, this.shadows);
       this.farmGates.push({ ...gate, farmId, lotNumber: farm.lotNumber, defaultOwner: farm.owner });
     }
     if (isOwner || this.publicFarms?.some(item => item.farmId === farmId)) this.ensureFarmBuildings(farmId, homeTier, barnLevel, displayName);
+  }
+
+  demoteUnoccupiedFarm(farmId) {
+    const farm = WORLD_LAYOUT.farms.find(item => item.id === farmId);
+    const root = this.farmEstateRoots.get(farmId);
+    if (!farm || !root?.metadata?.detailed || farmId === this.playerFarmId) return;
+    this.farming?.removeFarmTiles(farmId);
+    root.dispose();
+    const gateIndex = this.farmGates.findIndex(gate => gate.farmId === farmId);
+    if (gateIndex >= 0) this.farmGates.splice(gateIndex, 1)[0].dispose?.();
+    createFarmPlot(this.scene, { ...farm, farmId, lightweight: true, isOwner: false }, this.shadows);
+    this.farmEstateRoots.set(farmId, this.scene.getNodeByName(`farm-estate-${farmId}`));
   }
 
   ensurePlayerHome() {

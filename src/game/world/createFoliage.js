@@ -19,6 +19,7 @@ import {
   createCandyFlowerBush,
   createCandyPebbleRock,
 } from './createPlayTogetherProps.js';
+import { ROAD_SAFETY_CONFIG, isRoadResourceBlocked, recordBlockedRoadResource } from './RoadSafetyZone.js';
 
 function harmonizeGreenTree({ childMeshes }) {
   const updated = new Set();
@@ -154,6 +155,14 @@ export function createFoliageFactory(scene, shadows) {
     },
 
     createRusticBench(x, z, rotationY = 0) {
+      if (ROAD_SAFETY_CONFIG.blockRoadResources && isRoadResourceBlocked(x, z, 0.8)) {
+        recordBlockedRoadResource('rustic-bench', x, z);
+        const dummy = new TransformNode('blocked-rustic-bench', scene);
+        dummy.position.set(x, 0, z);
+        dummy.setEnabled(false);
+        return dummy;
+      }
+
       const root = new TransformNode('rustic-bench', scene);
       root.position.set(x, 0, z);
       root.rotation.y = rotationY;
@@ -191,6 +200,14 @@ export function createFoliageFactory(scene, shadows) {
     },
 
     createFlowerPatch(x, z, count = 9, radius = 2.4) {
+      if (ROAD_SAFETY_CONFIG.blockRoadResources && isRoadResourceBlocked(x, z, 0.8)) {
+        recordBlockedRoadResource('flower-patch', x, z);
+        const dummy = new TransformNode('blocked-flower-patch', scene);
+        dummy.position.set(x, 0, z);
+        dummy.setEnabled(false);
+        return dummy;
+      }
+
       const root = new TransformNode('flower-patch', scene);
       root.position.set(x, 0, z);
 
@@ -219,6 +236,14 @@ export function createFoliageFactory(scene, shadows) {
     },
 
     createScarecrow(x, z) {
+      if (ROAD_SAFETY_CONFIG.blockRoadResources && isRoadResourceBlocked(x, z, 0.8)) {
+        recordBlockedRoadResource('scarecrow', x, z);
+        const dummy = new TransformNode('blocked-scarecrow', scene);
+        dummy.position.set(x, 0, z);
+        dummy.setEnabled(false);
+        return dummy;
+      }
+
       const root = new TransformNode('farm-scarecrow', scene);
       root.position.set(x, 0, z);
 
@@ -291,6 +316,14 @@ export function createFoliageFactory(scene, shadows) {
     },
 
     createStoneWell(x, z) {
+      if (ROAD_SAFETY_CONFIG.blockRoadResources && isRoadResourceBlocked(x, z, 0.8)) {
+        recordBlockedRoadResource('stone-well', x, z);
+        const dummy = new TransformNode('blocked-stone-well', scene);
+        dummy.position.set(x, 0, z);
+        dummy.setEnabled(false);
+        return dummy;
+      }
+
       const root = new TransformNode('farm-well', scene);
       root.position.set(x, 0, z);
 

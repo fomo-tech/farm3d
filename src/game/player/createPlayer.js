@@ -35,6 +35,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
   let autoTarget = null;
   let onArrive = null;
   let autoTargetStuckFrames = 0;
+  const diagnostics = { input: false, collided: false, speed: 0, ridingBus: false };
   const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight']);
   const isEditing = target => target instanceof Element && Boolean(target.closest('input, textarea, select, [contenteditable="true"]'));
   const down = event => {
@@ -63,9 +64,11 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
   return {
     root,
     human,
+    getDiagnostics() { return { ...diagnostics }; },
     update(delta) {
       const frameDelta = Math.min(Math.max(Number(delta) || 0, 0), 0.1);
       if (controls.isRidingBus?.()) {
+        diagnostics.ridingBus = true;
         autoTarget = null;
         onArrive = null;
         airborne = false;
@@ -79,6 +82,10 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       const horizontal = (Number(keys.has('KeyD') || keys.has('ArrowRight')) - Number(keys.has('KeyA') || keys.has('ArrowLeft'))) + virtualInput.x;
       const vertical = (Number(keys.has('KeyW') || keys.has('ArrowUp')) - Number(keys.has('KeyS') || keys.has('ArrowDown'))) + virtualInput.y;
       const hasManualInput = horizontal !== 0 || vertical !== 0;
+      diagnostics.input = hasManualInput;
+      diagnostics.ridingBus = false;
+      diagnostics.collided = false;
+      diagnostics.speed = 0;
       let direction = Vector3.Zero();
       let isMoving = false;
       const baseSpeed = controls.getSpeed?.() || FARM_CONFIG.playerSpeed;
@@ -126,6 +133,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
 
         if (controls.resolveMovement) {
           const resolved = controls.resolveMovement(prevX, prevZ, dx, dz);
+          diagnostics.collided = Boolean(resolved.collided);
           root.position.x = resolved.x;
           root.position.z = resolved.z;
 
@@ -151,6 +159,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
         if (moved > 0.0001) root.rotation.y = Math.atan2(direction.x, direction.z);
       }
       const visiblyMoving = actualSpeed > 0.05;
+      diagnostics.speed = actualSpeed;
 
       // Natural 3D terrain height adaptation (smoothly climb knolls without sinking)
       const targetGroundY = controls.getTerrainHeight ? controls.getTerrainHeight(root.position.x, root.position.z) : 0;

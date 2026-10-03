@@ -133,9 +133,22 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     signBoard.material = stonePathMat;
     signBoard.parent = root;
 
+    // Distant farm HLOD: keep the recognizable field and small farmhouse in
+    // sight until the original detailed plot is ready. It is never a blank lot.
+    const field = MeshBuilder.CreateBox('lw-field-lod', { width: 7.2, height: 0.08, depth: 4.8 }, scene);
+    field.position.set(0, 0.13, -1.5);
+    field.material = borderMat;
+    field.parent = root;
+    const cabin = MeshBuilder.CreateBox('lw-farmhouse-lod', { width: 3.1, height: 2.1, depth: 2.7 }, scene);
+    cabin.position.set(-5.2, 1.1, 3.8);
+    cabin.material = stonePathMat;
+    cabin.parent = root;
+
     // 100% diện tích bên trong là thảm cỏ phẳng sạch sẽ, không cắm cây hay luống cày giả lấn đất của người chơi
     return [];
   }
+
+  root.metadata = { detailed: true, lightweight: false };
 
   // 3. Tuyến đường đá phiến tự nhiên (Natural Cobblestone Flagstone Paths)
   // Lối đi chính từ cổng vào đến trước ruộng

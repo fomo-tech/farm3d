@@ -628,15 +628,15 @@ export function createOpenWorld(scene, shadows) {
   // Di dời sang khuôn viên công quyền phía Tây x: -38 để giải phóng 100% trục đường Bắc x: 0
   const townHall = createTownHall(scene, shadows, { x: -38, y: 0, z: -98 });
 
-  // 7. Chợ Phiên Nông Sản Phố Chợ Phía Tây (Bố trí nối tiếp quán cà phê tại x: -62, z: 2)
-  const farmersMarket = createFarmersMarket(scene, shadows, foliage, { x: -62, z: 2 });
+  // 7. Chợ Phiên Nông Sản Phố Chợ Phía Tây (Bố trí tại quảng trường thương mại x: -62, z: 24 ngoài lòng Đại lộ Tây)
+  const farmersMarket = createFarmersMarket(scene, shadows, foliage, { x: -62, z: 24 });
 
   // 7. Town Citizens (Cư dân 3D dạo phố, thưởng thức cà phê và mua sắm nông sản)
   const townCitizens = [
     citizen(scene, -5, 6, '#e7894f', shadows),    // Dạo quanh đài phun nước
     citizen(scene, 5, 8, '#738ed4', shadows),     // Ngắm nhìn quảng trường
     citizen(scene, -36, 4, '#be6d9b', shadows),   // Thưởng thức cà phê sân vườn Airstream
-    citizen(scene, -64, 4, '#71a866', shadows),   // Mua sắm rau củ tại sạp chợ phiên
+    citizen(scene, -64, 26, '#71a866', shadows),  // Mua sắm rau củ tại sạp chợ phiên
     citizen(scene, -12, 326, '#ed7185', shadows), // Đi dạo bãi biển
     citizen(scene, 138, 4, '#db835e', shadows),   // Câu cá bến hồ Pha Lê
   ];
@@ -649,9 +649,9 @@ export function createOpenWorld(scene, shadows) {
   island.material = materials.meadow;
 
   const lakeDistrict = createLakeDistrict(scene, shadows);
-  // Tuyến đường dạo đá phiến ven hồ nối từ Đại lộ Đông sang Bến câu cá, Lều dã ngoại và Cầu vòm
-  createSteppingStoneTrail(scene, { x: 132, z: 2 }, { x: 138, z: 18 }, materials, 8);
-  createSteppingStoneTrail(scene, { x: 136, z: 2 }, { x: 152, z: -16 }, materials, 9);
+  // Tuyến đường dạo đá phiến ven hồ nối từ vỉa hè Đại lộ Đông sang Bến câu cá, Lều dã ngoại và Cầu vòm
+  createSteppingStoneTrail(scene, { x: 132, z: 5.5 }, { x: 138, z: 18 }, materials, 7);
+  createSteppingStoneTrail(scene, { x: 136, z: -5.5 }, { x: 152, z: -16 }, materials, 8);
   [[133, -34, 2.4], [151, -42, 3.2], [190, -35, 2.8], [206, 20, 3.6], [192, 42, 2.6]].forEach(([x, z, s]) =>
     hill(scene, x, z, s, materials.meadow, shadows)
   );

@@ -380,6 +380,12 @@ export class WorldCollisionSystem {
    * @returns {{ x: number, z: number, collided: boolean }} Resolved safe position
    */
   resolveMovement(curX, curZ, dx, dz, venue = null) {
+    if (![curX, curZ, dx, dz].every(Number.isFinite)) {
+      throw new Error(`Collision: tọa độ không hợp lệ (${curX}, ${curZ}, ${dx}, ${dz})`);
+    }
+    if (Math.hypot(dx, dz) > 8) {
+      throw new Error('Collision: bước di chuyển vượt 8m/khung hình; chặn vòng lặp quá tải.');
+    }
     if (dx === 0 && dz === 0) {
       return { x: curX, z: curZ, collided: false };
     }

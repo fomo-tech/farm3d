@@ -6,11 +6,29 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { MODEL_PATHS, resolveModelAsset } from './AssetRegistry.js';
+import { getWorldChunkStreamer } from '../world/WorldChunkStreamer.js';
+import { ROAD_SAFETY_CONFIG, isRoadResourceBlocked, recordBlockedRoadResource } from '../world/RoadSafetyZone.js';
 
 export { MODEL_PATHS } from './AssetRegistry.js';
 
 const cachesByScene = new WeakMap();
 let spawnCounter = 0;
+const spawnQueues = new WeakMap();
+
+function yieldModelSpawn(scene) {
+  let queue = spawnQueues.get(scene);
+  if (!queue) { queue = []; spawnQueues.set(scene, queue); }
+  return new Promise(resolve => {
+    queue.push(resolve);
+    if (queue.length !== 1) return;
+    const next = () => {
+      queue[0]?.();
+      queue.shift();
+      if (queue.length) setTimeout(next, 16);
+    };
+    setTimeout(next, 16);
+  });
+}
 
 function getSceneCache(scene) {
   let cache = cachesByScene.get(scene);
@@ -68,6 +86,21 @@ function createFallback(scene, root, name) {
   return mesh;
 }
 
+function createDistantProxy(scene, root, name, assetUrl) {
+  const rock = /rock|cliff|boulder/i.test(assetUrl);
+  const proxy = rock
+    ? MeshBuilder.CreateSphere(`${name}-distant-lod`, { diameter: 1.2, segments: 6 }, scene)
+    : MeshBuilder.CreateBox(`${name}-distant-lod`, { width: 1.2, height: 1.4, depth: 1.2 }, scene);
+  proxy.position.y = rock ? 0.45 : 0.7;
+  proxy.parent = root;
+  proxy.isPickable = false;
+  const material = new StandardMaterial(`${name}-distant-lod-mat`, scene);
+  material.diffuseColor = Color3.FromHexString(rock ? '#8b9b96' : '#b99d77');
+  material.specularColor = Color3.Black();
+  proxy.material = material;
+  return proxy;
+}
+
 export function getModelAssetState(scene, idOrUrl) {
   const asset = resolveModelAsset(idOrUrl);
   if (!asset) return { status: 'invalid', error: 'Asset không hợp lệ' };
@@ -122,8 +155,26 @@ export async function loadModelContainer(scene, idOrUrl, options = {}) {
 export function spawnModelSync(scene, idOrUrl, options = {}) {
   const {
     position = Vector3.Zero(), rotation = Vector3.Zero(), scaling = new Vector3(1, 1, 1), shadows = null,
-    name = 'model-instance', parent = null, onLoaded = null, onError = null, colorTint = null, showFallback = true,
+    name = 'model-instance', parent = null, onLoaded = null, onError = null, colorTint = null, showFallback = true, streamable = false,
+    allowOnRoad = false,
   } = options;
+
+  // Road Corridor Safety Guard: Block resource/model from spawning on road corridors
+  if (!allowOnRoad && ROAD_SAFETY_CONFIG?.blockRoadResources) {
+    const worldX = position.x + (parent?.position?.x || 0);
+    const worldZ = position.z + (parent?.position?.z || 0);
+    if (isRoadResourceBlocked(worldX, worldZ, 0.6)) {
+      recordBlockedRoadResource(name || String(idOrUrl), worldX, worldZ);
+      const blockedNode = new TransformNode(`blocked-road-resource-${name}`, scene);
+      blockedNode.position.copyFrom(position);
+      blockedNode.setEnabled(false);
+      blockedNode.isPickable = false;
+      blockedNode.parent = parent;
+      blockedNode.metadata = { blockedOnRoad: true, asset: idOrUrl, assetStatus: 'blocked' };
+      return blockedNode;
+    }
+  }
+
   const instanceId = ++spawnCounter;
   const root = new TransformNode(`${name}_${instanceId}`, scene);
   root.position.copyFrom(position);
@@ -131,21 +182,28 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
   root.scaling.copyFrom(scaling);
   root.parent = parent;
   root.metadata = { ...(root.metadata || {}), asset: idOrUrl, assetStatus: 'loading' };
+  let activeInstance = null;
+  let loadEpoch = 0;
 
-  loadModelContainer(scene, idOrUrl).then((container) => {
-    if (root.isDisposed()) return;
+  const materialize = () => {
+    const epoch = loadEpoch;
+    return loadModelContainer(scene, idOrUrl).then(async (container) => {
+    await yieldModelSpawn(scene);
+    if (root.isDisposed() || scene.isDisposed || epoch !== loadEpoch) return false;
     if (!container) {
       root.metadata.assetStatus = 'failed';
       const fallback = showFallback ? createFallback(scene, root, `${name}_${instanceId}`) : null;
       onError?.({ root, fallback, state: getModelAssetState(scene, idOrUrl) });
-      return;
+      return false;
     }
     let instance;
     try {
+      window.__farmDebug?.stage(`instantiate asset: ${idOrUrl}`);
       instance = container.instantiateModelsToScene(
-        (sourceName) => `${sourceName}_inst_${instanceId}`, false, { doNotInstantiate: true }
+        (sourceName) => `${sourceName}_inst_${instanceId}`, false, { doNotInstantiate: Boolean(colorTint) }
       );
       instance.rootNodes.forEach((node) => { node.parent = root; });
+      activeInstance = instance;
       const childMeshes = instance.rootNodes.flatMap(node => [
         ...(node.getTotalVertices?.() > 0 ? [node] : []),
         ...(node.getChildMeshes?.(false) || []),
@@ -155,7 +213,8 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
 
       childMeshes.forEach((mesh) => {
         mesh.isPickable = false;
-        mesh.receiveShadows = true;
+        if (mesh.sourceMesh) mesh.sourceMesh.receiveShadows = true;
+        else mesh.receiveShadows = true;
         mesh.doNotSyncBoundingInfo = true;
         if (typeof mesh.freezeWorldMatrix === 'function') mesh.freezeWorldMatrix();
         if (canCastShadow) {
@@ -170,14 +229,38 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
       root.freezeWorldMatrix();
       root.metadata.assetStatus = 'ready';
       onLoaded?.({ root, instance, childMeshes });
+      return true;
     } catch (error) {
       instance?.rootNodes?.forEach(node => node.dispose?.(false, true));
       root.metadata.assetStatus = 'failed';
       const fallback = showFallback ? createFallback(scene, root, `${name}_${instanceId}`) : null;
       console.warn(`[ModelAssetManager] Không thể tạo instance ${idOrUrl}:`, error);
       onError?.({ root, fallback, state: { status: 'failed', error: String(error) } });
+      return false;
+    } finally {
+      window.__farmDebug?.endStage();
     }
   });
+  };
+  const shouldStream = streamable || /(?:rock|cliff)[^/]*\.glb$/i.test(String(resolveModelAsset(idOrUrl)?.url || ''));
+  if (shouldStream) {
+    root.computeWorldMatrix(true);
+    const absolute = root.getAbsolutePosition();
+    const proxy = createDistantProxy(scene, root, `${name}_${instanceId}`, String(idOrUrl));
+    root.metadata.assetStatus = 'lod';
+    const unregister = getWorldChunkStreamer(scene).register(root.name, absolute.x, absolute.z, {
+      load: materialize,
+      unload: () => {
+        loadEpoch++;
+        activeInstance?.rootNodes?.forEach(node => node.dispose?.());
+        activeInstance = null;
+        root.metadata.assetStatus = 'lod';
+      },
+      showLod: () => proxy.setEnabled(true),
+      hideLod: () => proxy.setEnabled(false),
+    });
+    root.onDisposeObservable.addOnce(unregister);
+  } else materialize();
   return root;
 }
 

@@ -9,11 +9,15 @@
  * - Static world matrix freezing (`freezeWorldMatrix()`) for instantaneous rendering.
  */
 
-import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
+import { Vector3, Matrix, Quaternion } from '@babylonjs/core/Maths/math.vector.js';
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { loadModelContainer } from '../rendering/ModelAssetManager.js';
 import { MODEL_PATHS } from '../rendering/AssetRegistry.js';
+import { CHUNK_SIZE, chunkAt } from './WorldPartition.js';
+import { ROAD_SAFETY_CONFIG, isRoadResourceBlocked, recordBlockedRoadResource } from './RoadSafetyZone.js';
 
 let instanceCounter = 0;
 
@@ -27,6 +31,10 @@ export class FoliageInstancingEngine {
     this.prototypes = new Map(); // key -> Array<Mesh>
     this.pendingQueue = new Map(); // key -> Array<InstanceRequest>
     this.loadedPrototypes = new Set();
+    this.chunks = new Map();
+    this.dirtyChunks = new Set();
+    this.lastChunkUpdate = 0;
+    this.scene.onBeforeRenderObservable.add(() => this.updateChunks());
     
     this.treeTypes = {
       oak: MODEL_PATHS.trees.detailed,
@@ -91,9 +99,11 @@ export class FoliageInstancingEngine {
         this.loadedPrototypes.add(typeKey);
 
         const queue = this.pendingQueue.get(typeKey) || [];
-        queue.forEach((req) => {
-          this._spawnInstancedMeshes(typeKey, baseMeshes, req);
-        });
+        for (let i = 0; i < queue.length; i++) {
+          if (this.scene.isDisposed) break;
+          this._queueChunkInstance(typeKey, queue[i]);
+          if (i % 16 === 15) await new Promise(resolve => setTimeout(resolve, 16));
+        }
         this.pendingQueue.set(typeKey, []);
       } catch (err) {
         console.warn(`[FoliageInstancingEngine] Lỗi preload prototype ${typeKey}:`, err);
@@ -102,31 +112,128 @@ export class FoliageInstancingEngine {
     await Promise.all(promises);
   }
 
-  _spawnInstancedMeshes(typeKey, baseMeshes, req) {
-    const { x, y = 0, z, scale, rotY, withShadow, colorTint } = req;
-    const parentNode = new TransformNode(`inst_group_${typeKey}_${++instanceCounter}`, this.scene);
-    parentNode.position.set(x, y, z);
-    parentNode.rotation.y = rotY;
-    parentNode.scaling.set(scale, scale, scale);
-    parentNode.parent = this.rootNode;
+  _queueChunkInstance(typeKey, req) {
+    const cell = chunkAt(req.x, req.z);
+    const key = `${cell.x}:${cell.z}`;
+    let chunk = this.chunks.get(key);
+    if (!chunk) {
+      chunk = { x: cell.x, z: cell.z, groups: new Map(), detailed: false };
+      this.chunks.set(key, chunk);
+    }
+    let group = chunk.groups.get(typeKey);
+    if (!group) {
+      group = { requests: [], meshes: [], proxy: null, dirty: true };
+      chunk.groups.set(typeKey, group);
+    }
+    group.requests.push(req);
+    group.dirty = true;
+    this.dirtyChunks.add(key);
+  }
 
-    baseMeshes.forEach((baseMesh) => {
-      const inst = baseMesh.createInstance(`${baseMesh.name}_gpu_inst_${instanceCounter}`);
-      inst.parent = parentNode;
-      inst.position.copyFrom(baseMesh.position);
-      inst.rotation.copyFrom(baseMesh.rotation);
-      inst.scaling.copyFrom(baseMesh.scaling);
-      inst.isPickable = false;
-      inst.alwaysSelectAsActiveMesh = false; // Enable hardware frustum culling
-      inst.doNotSyncBoundingInfo = true;
-      inst.freezeWorldMatrix(); // Zero CPU matrix update cost!
-
-      if (withShadow && this.shadows && (Math.abs(x) < 70 && Math.abs(z) < 70)) {
-        this.shadows.addShadowCaster(inst);
+  _buildGroup(chunk, typeKey, group) {
+    const bases = this.prototypes.get(typeKey);
+    if (!bases?.length) return;
+    const matrices = group.requests.map(req => Matrix.Compose(
+      new Vector3(req.scale, req.scale, req.scale),
+      Quaternion.FromEulerAngles(0, req.rotY, 0),
+      new Vector3(req.x, req.y, req.z),
+    ));
+    if (!group.proxy) {
+      const proxy = typeKey === 'pine'
+        ? MeshBuilder.CreateCylinder(`foliage-lod-${chunk.x}-${chunk.z}-${typeKey}`, { height: 2.2, diameterTop: 0.08, diameterBottom: 1.55, tessellation: 6 }, this.scene)
+        : MeshBuilder.CreateSphere(`foliage-lod-${chunk.x}-${chunk.z}-${typeKey}`, { diameter: 1.65, segments: 6 }, this.scene);
+      proxy.position.y = typeKey === 'bush' ? 0.35 : 1.55;
+      proxy.bakeCurrentTransformIntoVertices();
+      const material = new StandardMaterial(`${proxy.name}-mat`, this.scene);
+      const colors = { oak: '#31b66e', pine: '#277c70', maple: '#f59e52', sakura: '#f3a9cf', palm: '#3fc98a', bush: '#40a16b' };
+      material.diffuseColor = Color3.FromHexString(colors[typeKey] || '#31b66e');
+      material.specularColor = Color3.Black();
+      proxy.material = material;
+      proxy.isPickable = false;
+      group.proxy = proxy;
+    }
+    const proxyData = new Float32Array(matrices.length * 16);
+    matrices.forEach((placement, i) => proxyData.set(placement.m, i * 16));
+    group.proxy.thinInstanceSetBuffer('matrix', proxyData, 16, true);
+    group.proxy.thinInstanceRefreshBoundingInfo(true);
+    if (!chunk.detailed) {
+      group.proxy.setEnabled(true);
+      for (const mesh of group.meshes) mesh.setEnabled(false);
+      group.dirty = false;
+      return;
+    }
+    bases.forEach((base, index) => {
+      let mesh = group.meshes[index];
+      if (!mesh) {
+        mesh = base.clone(`foliage-chunk-${chunk.x}-${chunk.z}-${typeKey}-${index}`, null, true);
+        mesh.position.set(0, 0, 0);
+        mesh.rotation.set(0, 0, 0);
+        mesh.rotationQuaternion = null;
+        mesh.scaling.set(1, 1, 1);
+        mesh.isVisible = true;
+        mesh.isPickable = false;
+        group.meshes[index] = mesh;
       }
+      base.computeWorldMatrix(true);
+      const baseMatrix = base.getWorldMatrix();
+      const data = new Float32Array(matrices.length * 16);
+      matrices.forEach((placement, i) => data.set(baseMatrix.multiply(placement).m, i * 16));
+      mesh.thinInstanceSetBuffer('matrix', data, 16, true);
+      mesh.thinInstanceRefreshBoundingInfo(true);
+      mesh.setEnabled(chunk.detailed);
+      if (this.shadows && group.requests.some(req => req.withShadow)) this.shadows.addShadowCaster(mesh);
     });
+    group.proxy.setEnabled(false);
+    group.dirty = false;
+  }
 
-    parentNode.freezeWorldMatrix();
+  updateChunks() {
+    const now = performance.now();
+    if (now - this.lastChunkUpdate < 100) return;
+    this.lastChunkUpdate = now;
+    const target = this.scene.activeCamera?.target;
+    if (!target) return;
+    const center = chunkAt(target.x, target.z);
+    // A whole cell changes LOD together. Keep detailed meshes one extra cell
+    // while leaving a region to avoid flicker at the boundary.
+    let evicted = 0;
+    for (const chunk of this.chunks.values()) {
+      const distance = Math.max(Math.abs(chunk.x - center.x), Math.abs(chunk.z - center.z));
+      const shouldDetail = distance <= (chunk.detailed ? 2 : 1);
+      if (shouldDetail === chunk.detailed) continue;
+      if (!shouldDetail && evicted >= 1) continue;
+      chunk.detailed = shouldDetail;
+      for (const group of chunk.groups.values()) {
+        if (!shouldDetail) {
+          group.proxy?.setEnabled(true);
+          for (const mesh of group.meshes) {
+            this.shadows?.removeShadowCaster(mesh);
+            mesh.dispose();
+          }
+          group.meshes.length = 0;
+          evicted++;
+          group.dirty = false;
+        } else {
+          group.dirty = true;
+        }
+      }
+      if (shouldDetail) this.dirtyChunks.add(`${chunk.x}:${chunk.z}`);
+    }
+    let built = 0;
+    const pending = [...this.dirtyChunks].sort((a, b) => {
+      const ca = this.chunks.get(a), cb = this.chunks.get(b);
+      const da = Math.max(Math.abs(ca.x - center.x), Math.abs(ca.z - center.z));
+      const db = Math.max(Math.abs(cb.x - center.x), Math.abs(cb.z - center.z));
+      return da - db;
+    });
+    for (const key of pending) {
+      const chunk = this.chunks.get(key);
+      if (!chunk) continue;
+      const next = [...chunk.groups].find(([, group]) => group.dirty);
+      if (next) this._buildGroup(chunk, next[0], next[1]);
+      if (![...chunk.groups.values()].some(group => group.dirty)) this.dirtyChunks.delete(key);
+      if (++built >= 3 || performance.now() - now > 4) break;
+    }
   }
 
   /**
@@ -134,6 +241,11 @@ export class FoliageInstancingEngine {
    * Runs in O(1) time and batches with zero draw call overhead.
    */
   spawnTree(type, x, z, options = {}) {
+    if (ROAD_SAFETY_CONFIG.blockRoadResources && isRoadResourceBlocked(x, z, 1.2)) {
+      recordBlockedRoadResource(`foliage-${type}`, x, z);
+      return;
+    }
+
     const {
       y = 0,
       scale = 1.0,
@@ -146,8 +258,7 @@ export class FoliageInstancingEngine {
     const req = { x, y, z, scale, rotY, withShadow, colorTint };
 
     if (this.loadedPrototypes.has(typeKey)) {
-      const baseMeshes = this.prototypes.get(typeKey);
-      this._spawnInstancedMeshes(typeKey, baseMeshes, req);
+      this._queueChunkInstance(typeKey, req);
     } else {
       const queue = this.pendingQueue.get(typeKey);
       if (queue) queue.push(req);

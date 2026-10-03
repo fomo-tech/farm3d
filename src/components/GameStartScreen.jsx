@@ -20,7 +20,7 @@ const TIPS = [
   'Gặp Quản Gia Oliver tại đài phun nước trung tâm để nhận hướng dẫn và hạt giống!',
   'Hãy ghé thăm Đầm Sen để ngắm hoa sen nở và thư giãn bên bờ sông!',
   'Bấm phím Cách để Nhảy và giữ phím Shift để Chạy nhanh khắp thung lũng!',
-  'Đồ họa Ultra Retina HD mang lại khung cảnh sắc nét tuyệt đối trên mọi màn hình!',
+  'Chọn Siêu nét để tăng chi tiết, hoặc Cân bằng nếu thiết bị cần khung hình ổn định hơn.',
 ];
 
 export function GameStartScreen({
@@ -98,10 +98,7 @@ export function GameStartScreen({
 
       {/* Floating Sparkles */}
       <div className="pt-sparkles-container" aria-hidden="true">
-        <span className="pt-star star-1">✨</span>
-        <span className="pt-star star-2">⭐</span>
-        <span className="pt-star star-3">🌟</span>
-        <span className="pt-star star-4">✨</span>
+        {[1, 2, 3, 4].map(index => <span key={index} className={`pt-star star-${index}`}><Icon3dSparkleStar size={24} /></span>)}
       </div>
 
       {/* Top Controls Bar */}
@@ -109,8 +106,8 @@ export function GameStartScreen({
         <div className="pt-server-pill">
           <span className="pt-server-dot" />
           <Icon3dVillageGate size={16} />
-          <b>Máy Chủ Kaia Châu Á</b>
-          <small>Kênh #01 · Trực Tuyến 12ms</small>
+          <b>Thế giới Bình Minh</b>
+          <small>{bootPhase === 'ready' ? 'Cảnh 3D sẵn sàng' : 'Đang chuẩn bị thế giới'}</small>
         </div>
 
         <div className="pt-start-top-actions">
@@ -144,12 +141,12 @@ export function GameStartScreen({
       <div className="pt-start-center-content">
         <div className="pt-brand-badge">
           <Icon3dSprout size={28} />
-          <span>PHONG CÁCH PLAY TOGETHER · KAIA WORLD</span>
+          <span>THẾ GIỚI BÌNH MINH</span>
           <Icon3dSparkleStar size={22} />
         </div>
 
         <h1 className="pt-game-title-3d">
-          <span className="pt-title-main">NÔNG TRẠI KAIA</span>
+          <span className="pt-title-main">NÔNG TRẠI BÌNH MINH</span>
           <span className="pt-title-sub">THUNG LŨNG 3D</span>
         </h1>
 
@@ -218,7 +215,7 @@ export function GameStartScreen({
 
             {/* Did you know tip */}
             <div className="pt-tip-capsule">
-              <div className="pt-tip-icon">💡</div>
+              <div className="pt-tip-icon"><Icon3dSun size={24} /></div>
               <p className="pt-tip-text">{TIPS[tipIndex]}</p>
             </div>
           </div>
@@ -251,7 +248,7 @@ export function GameStartScreen({
 
       {/* Footer Info */}
       <footer className="pt-start-footer">
-        <span>© 2026 Kaia Farm 3D · Động cơ thế giới mở thời gian thực</span>
+        <span>© 2026 Nông Trại Bình Minh</span>
       </footer>
     </div>
   );

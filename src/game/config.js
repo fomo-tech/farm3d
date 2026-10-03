@@ -14,4 +14,6 @@ export const FARM_CONFIG = Object.freeze({
   estateDepth: FARM_LOT_SPEC.estateDepth,
   playerSpeed: 7,
   worldSize: 4200,
+  // Cờ chặn không hiển thị tài nguyên/vật thể trên lòng đường giao thông
+  blockRoadResources: true,
 });

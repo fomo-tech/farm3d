@@ -1116,8 +1116,8 @@ function createScenicPergolas(scene, parent, foliage, shadows) {
   const matWisteria = makeMat(scene, 'pergola-wisteria', '#c084fc', '#a855f7', 0.2);
 
   const pergolaSpots = [
-    { x: 0, z: 68, rot: 0 },         // Lối vào Đại Công Viên Trung Tâm
-    { x: 126, z: 2, rot: Math.PI / 2 }, // Lối dạo Hồ Pha Lê
+    { x: -14, z: 68, rot: 0 },         // Lối vào Đại Công Viên Trung Tâm (đặt tại đường dạo bộ phía Tây)
+    { x: 126, z: 14, rot: 0 },         // Lối dạo Hồ Pha Lê (ngoài hành lang đường z = 0)
     { x: -292, z: 76, rot: 0 },      // Cổng Làng Hoa Mai
     { x: 292, z: 76, rot: 0 },       // Cổng Làng Ven Sông
   ];

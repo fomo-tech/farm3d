@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import { NullEngine } from '@babylonjs/core/Engines/nullEngine.js';
+import { Scene } from '@babylonjs/core/scene.js';
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
+import { FoliageInstancingEngine } from '../src/game/world/FoliageInstancingEngine.js';
+
+const engine = new NullEngine();
+const scene = new Scene(engine);
+scene.activeCamera = { target: new Vector3(0, 0, 0) };
+const base = MeshBuilder.CreateBox('oak-source', { size: 1 }, scene);
+base.isVisible = false;
+const foliage = Object.create(FoliageInstancingEngine.prototype);
+foliage.scene = scene;
+foliage.shadows = null;
+foliage.prototypes = new Map([['oak', [base]]]);
+foliage.chunks = new Map();
+foliage.dirtyChunks = new Set();
+foliage.lastChunkUpdate = 0;
+for (let i = 0; i < 100; i++) foliage._queueChunkInstance('oak', {
+  x: 1 + i % 10, y: 0, z: 1 + Math.floor(i / 10), scale: 1, rotY: 0, withShadow: false,
+});
+foliage.updateChunks();
+assert.equal(foliage.chunks.size, 1);
+assert.equal(foliage.chunks.get('0:0').groups.get('oak').requests.length, 100);
+assert.ok(scene.meshes.length < 5, '100 trees should use a prototype, one chunk mesh and LOD');
+assert.equal(foliage.chunks.get('0:0').groups.get('oak').meshes[0].thinInstanceCount, 100);
+scene.activeCamera.target.set(600, 0, 600);
+foliage.lastChunkUpdate = -1000;
+foliage.updateChunks();
+const group = foliage.chunks.get('0:0').groups.get('oak');
+assert.equal(group.proxy.isEnabled(), true);
+assert.equal(group.meshes.length, 0, 'far detailed meshes are evicted from memory');
+scene.activeCamera.target.set(0, 0, 0);
+foliage.lastChunkUpdate = -1000;
+foliage.updateChunks();
+assert.equal(group.meshes[0].thinInstanceCount, 100, 'returning restores the same tree assets');
+scene.activeCamera = null;
+scene.dispose();
+engine.dispose();
+console.log('PASS: foliage chunk batching, 100 exact instances, distant LOD');

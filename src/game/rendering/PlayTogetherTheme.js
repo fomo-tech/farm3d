@@ -3,6 +3,7 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js'
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
 import { Animation } from '@babylonjs/core/Animations/animation.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
+import { WORLD_PALETTE } from '../world/worldDesignSystem.js';
 
 /**
  * BẢNG MÀU QUY CHUẨN THIẾT KẾ PLAY TOGETHER (Design System Palette)
@@ -10,8 +11,8 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
  */
 export const PLAY_TOGETHER_PALETTE = {
   pastels: {
-    skyBlue: '#70d6ff',
-    mintGreen: '#65c990',
+    skyBlue: WORLD_PALETTE.skyDay,
+    mintGreen: WORLD_PALETTE.foliageOakGreen,
     butterYellow: '#ffea79',
     coralOrange: '#ff9770',
     strawberryPink: '#ff70a6',
@@ -26,9 +27,9 @@ export const PLAY_TOGETHER_PALETTE = {
     chocolateSoil: '#5c3826',
     richMound: '#6b3e26',
     wetSoil: '#3d2314',
-    freshSprout: '#86efac',
-    leafGreen: '#4ade80',
-    leafDark: '#22c55e',
+    freshSprout: WORLD_PALETTE.grassLight,
+    leafGreen: WORLD_PALETTE.foliageOakGreen,
+    leafDark: WORLD_PALETTE.grassShade,
     carrotOrange: '#ff781f',
     carrotHighlight: '#ffaa44',
     radishPink: '#f43f5e',
@@ -36,7 +37,7 @@ export const PLAY_TOGETHER_PALETTE = {
     sweetMelon: '#34d399',
     honeyWood: '#d97706',
     caramelWood: '#92400e',
-    fenceWhite: '#f8fafc',
+    fenceWhite: WORLD_PALETTE.woodFenceWhite,
     ceramicCream: '#fef3c7',
   },
   fx: {
@@ -48,7 +49,7 @@ export const PLAY_TOGETHER_PALETTE = {
   },
 };
 
-const materialCache = new Map();
+const materialCache = new WeakMap();
 
 /**
  * Tạo vật liệu Đồ Chơi (Toy Vinyl / Plastic) đặc trưng phong cách Play Together
@@ -62,17 +63,20 @@ export function createToyMaterial(scene, name, hexColor, options = {}) {
     return null;
   }
   // Không dùng chung material giữa các Babylon Scene/Engine khác nhau.
-  const sceneId = scene.uid || scene.id || 'default_scene';
-  const cacheKey = `${sceneId}_${name}_${hexColor}_${options.specularPower || 64}_${options.emissiveHex || 'none'}_${options.alpha ?? 1}`;
-  if (materialCache.has(cacheKey) && !materialCache.get(cacheKey).isDisposed?.()) {
-    return materialCache.get(cacheKey);
+  let cache = materialCache.get(scene);
+  if (!cache) {
+    cache = new Map();
+    materialCache.set(scene, cache);
+    scene.onDisposeObservable.addOnce(() => cache.clear());
   }
-
-  // Kiểm tra vật liệu đã có trong scene chưa
-  let mat = scene.getMaterialByName(name);
-  if (!mat) {
-    mat = new StandardMaterial(name, scene);
-  }
+  const cacheKey = JSON.stringify([name, hexColor, options.ambientScale ?? 0.42,
+    options.specularLevel ?? 0.18, options.specularPower ?? 64,
+    options.emissiveHex ?? null, options.emissiveScale ?? 0,
+    options.alpha ?? 1, options.backFaceCulling ?? true]);
+  if (cache.has(cacheKey)) return cache.get(cacheKey);
+  // Never mutate another mesh's material merely because its display name matches.
+  const mat = new StandardMaterial(name, scene);
+  mat.onDisposeObservable.addOnce(() => cache.delete(cacheKey));
 
   const baseCol = Color3.FromHexString(hexColor);
   mat.diffuseColor = baseCol;
@@ -82,7 +86,7 @@ export function createToyMaterial(scene, name, hexColor, options = {}) {
   mat.ambientColor = baseCol.scale(ambientScale);
 
   // Điểm sáng phản chiếu Specular bóng dẻo đồ chơi (Toy Sheen)
-  const specLevel = options.specularLevel ?? 0.35;
+  const specLevel = options.specularLevel ?? 0.18;
   mat.specularColor = new Color3(specLevel, specLevel, specLevel);
   mat.specularPower = options.specularPower ?? 64;
 
@@ -102,7 +106,7 @@ export function createToyMaterial(scene, name, hexColor, options = {}) {
     mat.backFaceCulling = options.backFaceCulling;
   }
 
-  materialCache.set(cacheKey, mat);
+  cache.set(cacheKey, mat);
   return mat;
 }
 

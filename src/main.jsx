@@ -2,6 +2,7 @@ import { Component } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import './styles.css';
+import './game-ui.css';
 
 window.__farmDebug?.mark('React entry executing');
 

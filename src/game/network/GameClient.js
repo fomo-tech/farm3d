@@ -121,15 +121,19 @@ export class GameClient {
         } else if (message.type === 'casino_state') {
           this.onCasinoState(message);
         }
-      } catch { /* Ignore malformed server messages. */ }
+      } catch (error) {
+        console.error('[GameClient] Failed to process server message', error);
+        window.__farmDebug?.report(error, 'NETWORK MESSAGE HANDLER');
+      }
     });
-    this.socket.addEventListener('close', () => {
+    this.socket.addEventListener('close', event => {
       if (socket !== this.socket) return;
       this.stopHeartbeat();
       this.socket = null;
       this.joined = false;
       this.onState([]);
       if (!this.closed) {
+        window.__farmDebug?.report(`Mất kết nối server: mã ${event.code}, lý do ${event.reason || 'server không cung cấp'}. Đang kết nối lại.`, 'NETWORK DISCONNECTED');
         this.retryAttempt += 1;
         const delay = Math.min(30_000, 1000 * (2 ** Math.min(this.retryAttempt - 1, 5))) + Math.floor(Math.random() * 350);
         this.onStatus({ connected: false, phase: navigator.onLine ? 'reconnecting' : 'offline', attempt: this.retryAttempt, retryInMs: delay, queued: this.pending.size });
@@ -171,12 +175,6 @@ export class GameClient {
 
   startHeartbeat() {
     this.stopHeartbeat();
-    if (this.listening) {
-      window.removeEventListener('offline', this.handleOffline);
-      window.removeEventListener('online', this.handleOnline);
-      document.removeEventListener('visibilitychange', this.handleVisibility);
-      this.listening = false;
-    }
     this.heartbeat = window.setInterval(() => {
       if (Date.now() - this.lastPongAt > 25_000) {
         this.socket?.close(4000, 'Heartbeat timeout');
@@ -193,6 +191,12 @@ export class GameClient {
 
   disconnect() {
     this.closed = true;
+    if (this.listening) {
+      window.removeEventListener('offline', this.handleOffline);
+      window.removeEventListener('online', this.handleOnline);
+      document.removeEventListener('visibilitychange', this.handleVisibility);
+      this.listening = false;
+    }
     window.clearTimeout(this.retry);
     this.stopHeartbeat();
     this.socket?.close();

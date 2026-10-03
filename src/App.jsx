@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FISHING_GEAR, LAKE_FISH, FISHING_WATER_NAMES, fishingWaterAt } from '../shared/fishing.js';
 import { FarmWorld } from './game/world/FarmWorld.js';
+import { readGraphicsQuality } from './game/rendering/GraphicsSettings.js';
 import { loadWorldSession, saveWorldSession } from './game/network/WorldSession.js';
 import { GameClient } from './game/network/GameClient.js';
 import { DEFAULT_VILLAGES, keepAvailableVillages } from './game/data/villages.js';
@@ -204,7 +205,7 @@ export default function App() {
   const [roadsideOpen, setRoadsideOpen] = useState(false);
   const [phoneOpen, setPhoneOpen] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
-  const [graphicsQuality, setGraphicsQuality] = useState('ultra');
+  const [graphicsQuality, setGraphicsQuality] = useState(readGraphicsQuality);
   const [cameraViewMode, setCameraViewMode] = useState('explore');
   const [targetDistance, setTargetDistance] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -947,7 +948,7 @@ export default function App() {
       )}
 
       {/* Action Controls & Virtual Joystick */}
-      {!venueMode && !showCharacterCreation && (
+      {!showCharacterCreation && (
         <>
           <div className="virtual-joystick pt-joystick" role="group" aria-label="Điều khiển di chuyển" onPointerDown={startJoystick} onPointerMove={event => event.currentTarget.hasPointerCapture(event.pointerId) && updateJoystick(event)} onPointerUp={stopJoystick} onPointerCancel={stopJoystick}>
             <span ref={joystickKnobRef} className="pt-joystick-knob">●</span>
