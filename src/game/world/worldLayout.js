@@ -48,10 +48,10 @@ export const WORLD_LAYOUT = Object.freeze({
   villageGate: { x: 0, y: 0, z: 64 },
   animalPen: { x: 88, z: 112 },
   destinationSigns: [
-    { id: 'city', label: 'Quảng trường trung tâm', x: 6.8, z: 54, color: '#d9a441' },
+    { id: 'city', label: 'Quảng trường trung tâm', x: 7.2, z: 47, color: '#d9a441' },
     { id: 'village', label: 'Phố chợ phía Tây', x: -58, z: 8.5, color: '#e28743' },
     { id: 'lake', label: 'Hồ Pha Lê & Bến câu cá', x: 62, z: 8.5, color: '#4b91c8' },
-    { id: 'farms', label: 'Đại lộ Nông trại 12 Làng', x: -6.8, z: 74, color: '#65a84b' },
+    { id: 'farms', label: 'Đại lộ Nông trại 12 Làng', x: -7.5, z: 84, color: '#65a84b' },
     { id: 'beach', label: 'Bãi biển Bình Minh', x: 6.8, z: 286, color: '#e6c875' },
     { id: 'gate-hoa-mai', label: 'Cổng Làng Hoa Mai', x: -294, z: 79.5, color: '#e87994' },
     { id: 'gate-ven-song', label: 'Cổng Làng Ven Sông', x: 294, z: 79.5, color: '#5f91c8' },

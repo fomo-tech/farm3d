@@ -92,7 +92,7 @@ export function createSteamboatPort(scene, shadows, position = { x: -35, y: 0, z
   // 2. CHIẾC TÀU HƠI NƯỚC HAI TẦNG (CARGO STEAMBOAT)
   // ==========================================
   const boatRoot = new TransformNode('cargo-steamboat-vessel', scene);
-  boatRoot.position.set(12.5, 0.2, 2.0);
+  boatRoot.position.set(12.5, -0.55, 2.0); // Thân tàu chìm tự nhiên vào nước biển
   boatRoot.parent = root;
 
   // Thân tàu tầng 1 (Lower Hull)
@@ -192,7 +192,7 @@ export function createSteamboatPort(scene, shadows, position = { x: -35, y: 0, z
   smokeTex.update();
 
   smoke.particleTexture = smokeTex;
-  smoke.emitter = new Vector3(position.x + 12.5, 8.4, position.z + 3.2);
+  smoke.emitter = new Vector3(position.x + 12.5, 7.85, position.z + 3.2);
   smoke.minEmitBox = new Vector3(-0.6, 0, -0.6);
   smoke.maxEmitBox = new Vector3(0.6, 0.2, 0.6);
   smoke.color1 = new Color4(0.95, 0.95, 0.95, 0.65);
@@ -216,11 +216,12 @@ export function createSteamboatPort(scene, shadows, position = { x: -35, y: 0, z
     const dt = scene.getEngine().getDeltaTime() / 1000;
     const time = Date.now() * 0.0015;
 
-    // Tàu hơi nước bập bềnh nhẹ trên sóng
-    boatRoot.position.y = 0.2 + Math.sin(time) * 0.08;
-    boatRoot.rotation.z = Math.sin(time * 0.8) * 0.018;
+    // Tàu hơi nước bập bềnh nhẹ nhàng trên sóng biển thực tế
+    boatRoot.position.y = -0.55 + Math.sin(time) * 0.038;
+    boatRoot.rotation.z = Math.sin(time * 0.8) * 0.012;
+    boatRoot.rotation.x = Math.cos(time * 0.6) * 0.008;
 
-    // Bánh guồng nước quay êm đềm
+    // Bánh guồng nước quay êm đềm khuấy động mặt nước
     paddleRoot.rotation.x += dt * 0.8;
   });
 

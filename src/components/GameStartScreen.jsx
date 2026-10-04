@@ -1,34 +1,107 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Icon3dSparkleStar,
-  Icon3dChicken,
-  Icon3dSun,
-  Icon3dPlayCandy,
-  Icon3dMegaphoneGold,
-  Icon3dAudioMuted,
   Icon3dCrystalDiamond,
-  Icon3dNotificationBell,
   Icon3dHotAirBalloon,
+  Icon3dNoticeBoard,
+  Icon3dFishingRodGold,
+  Icon3dCityBus,
+  Icon3dGoldenCarrot,
+  Icon3dKittyBeret,
+  Icon3dHeartBubble,
+  Icon3dDeliveryTruck,
+  Icon3dMilestoneGem,
 } from './icons3d/GameIcons3D.jsx';
-import { GameTitleLogo3D } from './GameTitleLogo3D.jsx';
-import { MascotDiorama3D } from './MascotDiorama3D.jsx';
 
-const PLAY_TOGETHER_TIPS = [
-  'Bắt xe buýt miễn phí tại trạm trung tâm dạo quanh thị trấn!',
-  'Câu cá ven hồ săn các loài cá hiếm theo từng khung giờ!',
-  'Thu hoạch đúng giờ để rau củ luôn đạt chất lượng 3 sao!',
-  'Ghé Cửa Hàng Thời Trang để thử các bộ đồ thú cưng đáng yêu!',
-  'Nhấn phím Cách (Space) để nhảy chân sáo vui vẻ cùng bạn bè!',
-  'Gặp Quản Gia Oliver tại nông trại để nhận hạt giống miễn phí!',
-  'Giao đơn hàng xe tải để nhận x3 Tiền Vàng và Điểm Kinh Nghiệm!',
+// Cutecore Thematic Tips with Dedicated 3D Icons
+const CUTECORE_GAME_TIPS = [
+  {
+    tag: 'XE BUÝT',
+    color: '#f59e0b',
+    icon: Icon3dCityBus,
+    text: 'Bắt xe buýt miễn phí tại trạm trung tâm dạo quanh thị trấn!',
+  },
+  {
+    tag: 'CÂU CÁ',
+    color: '#0284c7',
+    icon: Icon3dFishingRodGold,
+    text: 'Câu cá ven hồ săn các loài cá hiếm theo từng khung giờ bí ẩn!',
+  },
+  {
+    tag: 'NÔNG TRẠI',
+    color: '#16a34a',
+    icon: Icon3dGoldenCarrot,
+    text: 'Thu hoạch đúng giờ để rau củ luôn đạt phẩm chất 3 sao hoàng kim!',
+  },
+  {
+    tag: 'THỜI TRANG',
+    color: '#db2777',
+    icon: Icon3dKittyBeret,
+    text: 'Ghé Cửa Hàng Thời Trang để thử các bộ đồ thú cưng tai mèo đáng yêu!',
+  },
+  {
+    tag: 'BẠN BÈ',
+    color: '#e11d48',
+    icon: Icon3dHeartBubble,
+    text: 'Nhấn phím Cách (Space) để nhảy chân sáo vui vẻ cùng bạn bè!',
+  },
+  {
+    tag: 'GIAO HÀNG',
+    color: '#059669',
+    icon: Icon3dDeliveryTruck,
+    text: 'Giao đơn hàng xe tải để nhận x3 Tiền Vàng và Điểm Kinh Nghiệm!',
+  },
 ];
 
 function getLoadingStatus(percentage) {
-  if (percentage < 25) return 'Đang kết nối Vibe City Server...';
-  if (percentage < 50) return 'Đang nạp dữ liệu thế giới 3D...';
-  if (percentage < 75) return 'Đang dựng cảnh quan thị trấn...';
-  if (percentage < 95) return 'Đang kiểm tra tài nguyên...';
-  return 'Thế giới 3D đã sẵn sàng!';
+  if (percentage < 30) return 'Đang kết nối Vibe City Server...';
+  if (percentage < 65) return 'Đang tải cảnh quan thế giới 3D...';
+  if (percentage < 90) return 'Đang nạp dữ liệu nhân vật & nông trại...';
+  if (percentage < 99) return 'Đang hoàn tất chuẩn bị thế giới...';
+  return 'Thế giới Vibe City đã sẵn sàng!';
+}
+
+function StartImageIcon({ asset, className = '', alt = '' }) {
+  return (
+    <img
+      className={`pt-start-img-icon ${className}`.trim()}
+      src={`/assets/hud/${asset}.webp`}
+      alt={alt}
+      loading="eager"
+      decoding="async"
+      draggable="false"
+    />
+  );
+}
+
+function Cute3DStar({ className = '', style = {} }) {
+  return (
+    <div className={`pt-logo-star ${className}`} style={style} aria-hidden="true">
+      <svg viewBox="0 0 120 120" width="100%" height="100%">
+        <defs>
+          <linearGradient id="starBodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fff58a" />
+            <stop offset="42%" stopColor="#ffca28" />
+            <stop offset="85%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#d97706" />
+          </linearGradient>
+          <filter id="starDepthShadow" x="-25%" y="-25%" width="150%" height="150%">
+            <feDropShadow dx="0" dy="5" stdDeviation="4" floodColor="#92400e" floodOpacity="0.45" />
+          </filter>
+        </defs>
+        <path
+          d="M60 12 L73 45 L108 48 L81 72 L89 106 L60 88 L31 106 L39 72 L12 48 L47 45 Z"
+          fill="url(#starBodyGrad)"
+          stroke="#ffffff"
+          strokeWidth="4"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          filter="url(#starDepthShadow)"
+        />
+        <ellipse cx="54" cy="42" rx="9" ry="4.5" fill="rgba(255,255,255,0.75)" transform="rotate(-20 54 42)" />
+        <circle cx="36" cy="52" r="3.5" fill="rgba(255,255,255,0.6)" />
+      </svg>
+    </div>
+  );
 }
 
 export function GameStartScreen({
@@ -37,25 +110,11 @@ export function GameStartScreen({
   bootProgress = { phase: 'loading', percentage: 0, message: 'Đang khởi động…', current: 0, total: 40 },
   onBeginExit,
   onStart,
-  isMuted = false,
-  onToggleMute,
-  graphicsQuality = 'ultra',
-  onToggleGraphics,
 }) {
-  const [tipIndex, setTipIndex] = useState(0);
   const [displayProgress, setDisplayProgress] = useState(0);
   const displayProgressRef = useRef(0);
   const [isExiting, setIsExiting] = useState(false);
-  const [showNoticeModal, setShowNoticeModal] = useState(false);
   const targetProgress = bootPhase === 'ready' ? 100 : Math.max(5, Math.min(100, bootProgress?.percentage || 0));
-
-  // Rotate tips every 3.8s
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTipIndex(prev => (prev + 1) % PLAY_TOGETHER_TIPS.length);
-    }, 3800);
-    return () => clearInterval(timer);
-  }, []);
 
   // Smooth responsive progress interpolation
   useEffect(() => {
@@ -89,89 +148,23 @@ export function GameStartScreen({
 
   return (
     <div
-      className={`pt-start-screen-backdrop${isExiting ? ' pt-exiting' : ''}${isReady ? ' is-ready-state' : ''}`}
+      className={`pt-start-screen-backdrop cutecore-theme${isExiting ? ' pt-exiting' : ''}${isReady ? ' is-ready-state' : ''}`}
       onClick={isReady ? handleStartGame : undefined}
     >
-      {/* 1. Subtle Radial God-Rays / Sunburst in the Sky */}
-      <div className="pt-sunburst-layer" aria-hidden="true" />
-
-      {/* 2. Layered Floating Clouds (Parallax Sky) */}
-      <div className="pt-clouds-container" aria-hidden="true">
-        <div className="pt-cloud cloud-1" />
-        <div className="pt-cloud cloud-2" />
-        <div className="pt-cloud cloud-3" />
-        <div className="pt-cloud cloud-4" />
-      </div>
-
-      {/* 3. Tiny Hot-Air Balloon Drifting in Distant Sky */}
-      <div className="pt-distant-balloon" aria-hidden="true">
-        <Icon3dHotAirBalloon size={42} />
-      </div>
-
-      {/* 4. Ambient Sparkle Stars */}
-      <div className="pt-sparkles-container" aria-hidden="true">
-        {[1, 2, 3, 4, 5, 6].map(index => (
-          <span key={index} className={`pt-star star-${index}`}>
-            <Icon3dSparkleStar size={24} />
-          </span>
-        ))}
-      </div>
-
-      {/* 5. Top Mobile Game HUD Bar (Professional Game Architecture) */}
-      <header className="pt-start-top-bar" onClick={e => e.stopPropagation()}>
-        {/* Left: Server Status & UID */}
-        <div className="pt-hud-server-badge">
-          <span className="pt-hud-ping-dot" />
-          <span className="pt-hud-server-title">Bình Minh 01</span>
-          <span className="pt-hud-ping-val">24ms</span>
-          <span className="pt-hud-uid-tag">UID: 20261003</span>
-        </div>
-
-        {/* Right: Game Utility Squircles (Announcements, Quality, Audio) */}
-        <div className="pt-start-top-actions">
-          {/* Notice Button */}
-          <button
-            type="button"
-            className="pt-candy-btn pt-notice-btn"
-            onClick={() => setShowNoticeModal(prev => !prev)}
-            title="Bảng tin sự kiện"
-          >
-            <Icon3dNotificationBell size={24} hasBadge={true} />
-          </button>
-
-          {/* Graphics Quality */}
-          {onToggleGraphics && (
-            <button
-              type="button"
-              className={`pt-candy-btn pt-quality-bubble preset-${graphicsQuality}`}
-              onClick={onToggleGraphics}
-              title={`Đồ họa: ${graphicsQuality.toUpperCase()}`}
-            >
-              <Icon3dCrystalDiamond size={24} variant={graphicsQuality} />
-            </button>
-          )}
-
-          {/* Sound Toggle */}
-          {onToggleMute && (
-            <button
-              type="button"
-              className="pt-candy-btn pt-audio-btn"
-              onClick={onToggleMute}
-              title={isMuted ? 'Bật âm thanh' : 'Tắt âm thanh'}
-            >
-              {isMuted ? <Icon3dAudioMuted size={24} /> : <Icon3dMegaphoneGold size={24} />}
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* 6. Center Stage: Master 3D Game Brand Mark + Grounded Mascot Diorama */}
+      {/* Center Unified Presentation Block: Matches Reference 1:1 */}
       <main className="pt-start-center-content">
-        {/* Master 3D Vector Game Title Mark */}
-        <GameTitleLogo3D />
-
-        {/* Grounded Mascot on Floating Cloud Pedestal */}
-        <MascotDiorama3D isReady={isReady} statusMsg={statusMsg} />
+        {/* Brand Logo Lockup with 3D Mascot & Flanking Golden Stars */}
+        <div className="pt-generated-logo-lockup">
+          <Cute3DStar className="pt-star-left" />
+          <img
+            className="pt-generated-brand-logo"
+            src="/assets/loading/vibe-city-logo.webp"
+            alt="Vibe City — 3D Open World"
+            fetchpriority="high"
+            decoding="async"
+          />
+          <Cute3DStar className="pt-star-right" />
+        </div>
 
         {/* Error State if WebGL / Asset Loading Failed */}
         {bootPhase === 'error' && (
@@ -187,128 +180,86 @@ export function GameStartScreen({
             </button>
           </div>
         )}
-      </main>
 
-      {/* 7. Soft Horizon Silhouette Landscape */}
-      <div className="pt-horizon-silhouette" aria-hidden="true" />
-
-      {/* 8. Bottom Game Console: Loading Track OR Touch To Start Banner */}
-      <div className="pt-start-bottom-dock">
-        {/* State A: Loading Game Console */}
+        {/* State A: Loading Game Console (Matching Reference Image) */}
         {bootPhase !== 'error' && !isReady && (
           <div className="pt-loading-console">
-            {/* Console Readout */}
-            <div className="pt-loading-status-bar">
-              <span className="pt-status-msg">{statusMsg}</span>
-              <span className="pt-status-pct">{Math.round(displayProgress)}%</span>
-            </div>
-
-            {/* Heavy Candy/Glass Progress Bar with Running Mascot */}
-            <div className="pt-jelly-track">
-              <div
-                className="pt-jelly-fill"
-                style={{ width: `${Math.min(100, Math.max(5, displayProgress))}%` }}
-              >
-                <div className="pt-candy-stripes" />
-                <div className="pt-candy-sheen" />
-                <div className="pt-runner-icon" aria-hidden="true">
-                  <Icon3dChicken size={28} />
+            {/* Progress bar capsule with right percentage badge */}
+            <div className="pt-jelly-track-wrapper">
+              <div className="pt-jelly-track">
+                {/* Golden candy fluid fill with animated stripes & sheen */}
+                <div
+                  className="pt-jelly-fill"
+                  style={{ width: `${Math.min(100, Math.max(4, displayProgress))}%` }}
+                >
+                  <div className="pt-candy-stripes" />
+                  <div className="pt-candy-sheen" />
                 </div>
               </div>
+              <div className="pt-progress-pct-bubble">{Math.round(displayProgress)}%</div>
             </div>
 
-            {/* In-Game Tip Ticker Pill */}
-            <div className="pt-tip-pill">
-              <span className="pt-tip-icon-wrap"><Icon3dSun size={18} /></span>
-              <p className="pt-tip-content">{PLAY_TOGETHER_TIPS[tipIndex]}</p>
+            {/* Console Readout */}
+            <div className="pt-loading-status-bar" aria-live="polite">
+              <span className="pt-status-msg">{statusMsg}</span>
             </div>
           </div>
         )}
 
-        {/* State B: Ready State - Touch To Start Arcade Call To Action */}
+        {/* State B: Ready State - Login Actions (Matching Reference Image 1:1) */}
         {bootPhase !== 'error' && isReady && (
           <div className="pt-ready-action-stage">
-            {/* Animated Pulsing Touch Prompt */}
-            <div className="pt-touch-prompt-banner">
-              <span className="prompt-chevron">«</span>
-              <span className="prompt-text">CHẠM VÀO MÀN HÌNH ĐỂ BẮT ĐẦU</span>
-              <span className="prompt-chevron">»</span>
+            {/* Primary Golden Play Button: CHƠI NGAY with Radiant Cartoon Whiskers */}
+            <div className="pt-play-now-wrap">
+              <div className="pt-burst-rays-left" aria-hidden="true">
+                <span className="ray ray-top" />
+                <span className="ray ray-bottom" />
+              </div>
+
+              <button
+                type="button"
+                className="pt-play-now-btn"
+                onClick={e => {
+                  e.stopPropagation();
+                  handleStartGame();
+                }}
+                aria-label="Chơi ngay"
+              >
+                <span className="pt-play-now-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor">
+                    <path d="M8 5.14v13.72a1.2 1.2 0 0 0 1.83 1.02l11.14-6.86a1.2 1.2 0 0 0 0-2.04L9.83 4.12A1.2 1.2 0 0 0 8 5.14z" />
+                  </svg>
+                </span>
+                <span className="pt-play-now-text">CHƠI NGAY</span>
+              </button>
+
+              <div className="pt-burst-rays-right" aria-hidden="true">
+                <span className="ray ray-top" />
+                <span className="ray ray-bottom" />
+              </div>
             </div>
 
-            {/* Golden Candy Button CTA */}
+            {/* Secondary Google Login Button: Đăng nhập Google */}
             <button
               type="button"
-              className="pt-touch-start-btn"
+              className="pt-google-login-btn"
               onClick={e => {
                 e.stopPropagation();
                 handleStartGame();
               }}
-              aria-label="Vào thị trấn"
+              aria-label="Đăng nhập Google"
             >
-              <div className="pt-touch-glow-fx" />
-              <div className="pt-touch-shine-sweep" />
-              <Icon3dPlayCandy size={38} className="btn-play-icon" />
-              <span className="pt-touch-text">VÀO THỊ TRẤN</span>
-              <Icon3dSparkleStar size={24} className="btn-sparkle right" />
+              <svg className="pt-google-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.665-5.17 3.665-9.12z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.28v3.13C3.26 21.3 7.31 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.58H1.28C.46 8.2 0 10.04 0 12s.46 3.8 1.28 5.42l4-3.13z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.28 6.58l4 3.13c.95-2.83 3.6-4.96 6.72-4.96z"/>
+              </svg>
+              <span className="pt-google-login-text">Đăng nhập Google</span>
             </button>
-
-            {/* Account & Server Quick Pill */}
-            <div className="pt-server-account-bar">
-              <span className="pt-account-tag">👤 Khách_8832</span>
-              <span className="pt-bar-dot">•</span>
-              <span className="pt-server-tag">🟢 Máy chủ: Bình Minh 01 (Khuyên dùng)</span>
-            </div>
           </div>
         )}
-
-        {/* Game Footer & Legal Notice */}
-        <footer className="pt-start-footer">
-          <span>Phiên bản 1.0.4 · © 2026 Vibe City Studio · [12+] Phù hợp cho mọi lứa tuổi</span>
-        </footer>
-      </div>
-
-      {/* Events / Notice Dialog Modal (When clicking notification bell) */}
-      {showNoticeModal && (
-        <div
-          className="pt-notice-modal-backdrop"
-          onClick={() => setShowNoticeModal(false)}
-        >
-          <div
-            className="pt-notice-modal-card"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="pt-modal-header">
-              <span className="pt-modal-title">📢 BẢNG TIN THỊ TRẤN</span>
-              <button
-                type="button"
-                className="pt-modal-close"
-                onClick={() => setShowNoticeModal(false)}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="pt-modal-body">
-              <div className="pt-notice-item">
-                <span className="pt-notice-tag hot">MỚI</span>
-                <b>Khai mở Thị Trấn Bình Minh 3D</b>
-                <p>Khám phá nông trại mở rộng, bờ hồ câu cá thư giãn và tuyến xe buýt miễn phí dạo quanh thị trấn!</p>
-              </div>
-              <div className="pt-notice-item">
-                <span className="pt-notice-tag gift">QUÀ TẶNG</span>
-                <b>Quà Chào Mừng Tân Thủ</b>
-                <p>Nhận ngay 1.000 Tiền Vàng và Hạt Giống Thần Kỳ khi đăng nhập vào thị trấn hôm nay.</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="pt-modal-confirm-btn"
-              onClick={() => setShowNoticeModal(false)}
-            >
-              Đồng ý
-            </button>
-          </div>
-        </div>
-      )}
+      </main>
     </div>
   );
 }

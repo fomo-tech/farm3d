@@ -9,11 +9,14 @@ import { ParticleSystem } from '@babylonjs/core/Particles/particleSystem.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData.js';
 import { VENUE_LAYOUT } from '../../../../shared/venueLayout.js';
+import { SHOP_CONFIG } from '../../../../shared/shopConfig.js';
 import {
   WORLD_PALETTE,
   createCozyMaterial,
   createRusticSignboard,
   createWarmHangingLantern,
+  createLampHaloOnly,
+  createGroundLightPoolOnly,
 } from '../worldDesignSystem.js';
 
 function makeMat(scene, name, hex, emissiveHex = null, specular = 0.5, specularPower = 90) {
@@ -30,6 +33,8 @@ function makeMat(scene, name, hex, emissiveHex = null, specular = 0.5, specularP
  * Tạo Mái Ngói Terracotta dốc chữ A đôi phong cách Ghibli chuẩn chất lượng
  */
 export function addTerracottaGableRoof(scene, parent, width, depth, height, mats, shadows) {
+  const style = SHOP_CONFIG[parent.metadata?.shopStyle];
+  if (style) mats = { ...mats, roofTile: makeMat(scene, `${parent.metadata.shopStyle}-roof-pastel`, style.roof, null, .09, 40) };
   const roofRoot = new TransformNode('building-terracotta-roof', scene);
   roofRoot.position.set(0, height, 0);
   roofRoot.parent = parent;
@@ -91,6 +96,9 @@ export function addTerracottaGableRoof(scene, parent, width, depth, height, mats
 }
 
 export function addShopFacade(scene, parent, kind, glazeHex, accentHex, mats) {
+  const style = SHOP_CONFIG[kind];
+  glazeHex = style?.glass || glazeHex;
+  accentHex = style?.accent || accentHex;
   // The wall is solid, so this is opaque enamelled glass rather than an alpha
   // box intersecting the wall face. Keep every layer at a distinct depth.
   const glass = makeMat(scene, `${kind}-storefront-enamel`, glazeHex, null, 0.18, 56);
@@ -100,11 +108,39 @@ export function addShopFacade(scene, parent, kind, glazeHex, accentHex, mats) {
   panel.position.set(0, 4.2, 6.14); // wall ends at z=6; panel begins at z=6.09
   panel.material = glass;
   panel.parent = parent;
+  panel.isPickable = false;
+  // Separate inset display windows, creamy frames and striped canvas canopy.
+  // All layers have different depths; no alpha glass or coplanar overlays.
+  for (const side of [-1, 1]) {
+    const frame = MeshBuilder.CreateBox(`${kind}-display-frame-${side}`, { width: 4.35, height: 4.45, depth: .16 }, scene);
+    frame.position.set(side * 4.2, 3.55, 6.28); frame.parent = parent; frame.material = doorMat;
+    const window = MeshBuilder.CreateBox(`${kind}-display-glass-${side}`, { width: 3.93, height: 4.02, depth: .08 }, scene);
+    window.position.set(side * 4.2, 3.55, 6.42); window.parent = parent; window.material = glass;
+    const sill = MeshBuilder.CreateBox(`${kind}-display-sill-${side}`, { width: 4.6, height: .2, depth: .5 }, scene);
+    sill.position.set(side * 4.2, 1.26, 6.48); sill.parent = parent; sill.material = accent;
+  }
+  const canopy = new TransformNode(`${kind}-striped-canopy`, scene);
+  canopy.position.set(0, 6.45, 6.72); canopy.rotation.x = -.13; canopy.parent = parent;
+  const canopyWidth = style?.facade.awningWidth || 13.6;
+  for (let index = 0; index < 8; index++) {
+    const stripe = MeshBuilder.CreateBox(`${kind}-canopy-stripe-${index}`, { width: canopyWidth / 8 - .015, height: .14, depth: style?.facade.awningDepth || 1.65 }, scene);
+    stripe.position.x = -canopyWidth / 2 + canopyWidth / 8 * (index + .5);
+    stripe.parent = canopy; stripe.material = index % 2 ? doorMat : accent;
+    const hem = MeshBuilder.CreateSphere(`${kind}-canopy-hem-${index}`, { diameterX: canopyWidth / 8 - .025, diameterY: .32, diameterZ: .19, segments: 8 }, scene);
+    hem.position.set(stripe.position.x, -.08, .83); hem.parent = canopy; hem.material = stripe.material;
+  }
+  if (style) {
+    const wall = makeMat(scene, `${kind}-shop-plaster`, style.wall, null, .08, 36);
+    for (const mesh of parent.getChildMeshes()) if (mesh.name === `${kind}-body` || mesh.name === 'mart-body' || mesh.name === 'vehicle-body') mesh.material = wall;
+    // Roof material replacement is deferred until roof construction below.
+    parent.metadata = { ...(parent.metadata || {}), shopStyle: kind };
+  }
 
   const door = MeshBuilder.CreateBox(`${kind}-storefront-door`, { width: 3.6, height: 4.5, depth: 0.10 }, scene);
   door.position.set(0, 3.04, 6.26);
   door.material = doorMat;
   door.parent = parent;
+  door.metadata = SHOP_CONFIG[kind] ? { venue: kind } : null;
 
   [-6.65, -1.85, 1.85, 6.65].forEach((x, index) => {
     const mullion = MeshBuilder.CreateBox(`${kind}-storefront-mullion-${index}`, { width: 0.19, height: 6.52, depth: 0.12 }, scene);
@@ -123,14 +159,28 @@ export function addShopFacade(scene, parent, kind, glazeHex, accentHex, mats) {
   handle.material = mats.roofRidge;
   handle.parent = parent;
 
-  const canopy = MeshBuilder.CreateBox(`${kind}-storefront-canopy`, { width: 5.0, height: 0.18, depth: 1.2 }, scene);
-  canopy.position.set(0, 7.58, 6.62);
-  canopy.material = accent;
-  canopy.parent = parent;
   const threshold = MeshBuilder.CreateBox(`${kind}-storefront-threshold`, { width: 3.8, height: 0.08, depth: 1.1 }, scene);
   threshold.position.set(0, 0.55, 6.9); // bottom .51, above the shop plinth top .50
   threshold.material = accent;
   threshold.parent = parent;
+
+  // Bậc tam cấp đón khách lát đá vững chắc (kết nối mặt sàn quảng trường y=0 lên sàn cửa hàng y=0.5)
+  const step1 = MeshBuilder.CreateBox(`${kind}-entrance-step-1`, { width: 4.8, height: 0.25, depth: 1.4 }, scene);
+  step1.position.set(0, 0.125, 7.1);
+  step1.material = mats.stonePlinth;
+  step1.parent = parent;
+  step1.receiveShadows = true;
+
+  const step2 = MeshBuilder.CreateBox(`${kind}-entrance-step-2`, { width: 4.4, height: 0.25, depth: 1.2 }, scene);
+  step2.position.set(0, 0.375, 6.45);
+  step2.material = mats.stonePlinth;
+  step2.parent = parent;
+  step2.receiveShadows = true;
+
+  const entranceMat = MeshBuilder.CreateBox(`${kind}-entrance-mat`, { width: 3.2, height: 0.04, depth: 1.1 }, scene);
+  entranceMat.position.set(0, 0.52, 6.2);
+  entranceMat.material = mats.timberWarm;
+  entranceMat.parent = parent;
 }
 
 /**
@@ -140,6 +190,13 @@ export function addShopFacade(scene, parent, kind, glazeHex, accentHex, mats) {
  * - Các công trình thương mại khoác lên kiến trúc mái ngói Terracotta, tường vôi kem bơ và bảng hiệu gỗ sồi ấm áp
  */
 export function createPlayTogetherPlaza(scene, shadows, foliage) {
+  const steps = createPlayTogetherPlazaSteps(scene, shadows, foliage);
+  let result;
+  do { result = steps.next(); } while (!result.done);
+  return result.value;
+}
+
+export function* createPlayTogetherPlazaSteps(scene, shadows, foliage) {
   const plazaRoot = new TransformNode('playtogether-central-plaza-root', scene);
 
   // Bộ vật liệu chuẩn Art Bible
@@ -220,6 +277,7 @@ export function createPlayTogetherPlaza(scene, shadows, foliage) {
   // ========================================================
   // 2. CÔNG TRÌNH BIỂU TƯỢNG TRUNG TÂM: ĐÀI PHUN NƯỚC KAIA 3 TẦNG
   // ========================================================
+  yield 'boot: plaza fountain';
   const fountainRoot = new TransformNode('pt-grand-central-fountain', scene);
   fountainRoot.position.set(0, 0, 0);
   fountainRoot.parent = plazaRoot;
@@ -323,6 +381,7 @@ export function createPlayTogetherPlaza(scene, shadows, foliage) {
   spray.direction1 = new Vector3(-2.2, 5.5, -2.2);
   spray.direction2 = new Vector3(2.2, 6.2, 2.2);
   spray.start();
+  yield 'boot: plaza gardens';
 
   // ========================================================
   // 3. LÁT CẮT MẪU: ĐIỂM XUẤT PHÁT (0, 18) ➔ ĐÀI PHUN NƯỚC (0, 0)
@@ -396,6 +455,7 @@ export function createPlayTogetherPlaza(scene, shadows, foliage) {
   // 4. MEGA VENUE 1: 👗 TIỆM THỜI TRANG & SALON (FASHION MALL)
   // Tọa lạc tại Đông Nam (x: 29, z: -25), venue: 'fashion'
   // ========================================================
+  yield 'boot: fashion exterior';
   const fashionRoot = new TransformNode('venue-fashion-boutique-modern', scene);
   fashionRoot.metadata = { venue: 'fashion' };
   fashionRoot.position.set(VENUE_LAYOUT.fashion.exterior.x, 0, VENUE_LAYOUT.fashion.exterior.z);
@@ -419,25 +479,30 @@ export function createPlayTogetherPlaza(scene, shadows, foliage) {
   // Mái ngói đỏ cam Terracotta dốc chữ A trên nóc
   addTerracottaGableRoof(scene, fashionRoot, 16.0, 12.0, 8.85, matsCozy, shadows);
 
-  // Hiên gỗ đón khách & sàn đi bộ
-  const catwalk = MeshBuilder.CreateBox('fashion-catwalk', { width: 4.8, height: 0.22, depth: 7.5 }, scene);
-  catwalk.position.set(0, 0.62, 7.8);
-  catwalk.material = matsCozy.timberWarm;
-  catwalk.parent = fashionRoot;
-
-  // 2 Ma-nơ-canh thời trang hai bên
+  // 2 Bục trưng bày thời trang mẫu trước sảnh
   [-4.2, 4.2].forEach((px, idx) => {
-    const ped = MeshBuilder.CreateCylinder(`fashion-pedestal-${idx}`, { diameter: 2.4, height: 0.6, tessellation: 24 }, scene);
-    ped.position.set(px, 0.55, 6.8);
-    ped.material = matsCozy.timber;
+    const ped = MeshBuilder.CreateCylinder(`fashion-pedestal-${idx}`, { diameter: 2.0, height: 0.5, tessellation: 24 }, scene);
+    ped.position.set(px, 0.25, 6.8);
+    ped.material = matsCozy.stonePlinth;
     ped.parent = fashionRoot;
+    ped.receiveShadows = true;
 
-    const mannequin = MeshBuilder.CreateSphere(`fashion-model-${idx}`, { diameterX: 0.8, diameterY: 1.6, diameterZ: 0.8, segments: 10 }, scene);
-    mannequin.position.set(px, 1.7, 6.8);
-    mannequin.material = matsCozy.wallCream;
-    mannequin.parent = fashionRoot;
+    const pedTop = MeshBuilder.CreateCylinder(`fashion-pedestal-top-${idx}`, { diameter: 2.1, height: 0.06, tessellation: 24 }, scene);
+    pedTop.position.set(px, 0.51, 6.8);
+    pedTop.material = matsCozy.timberWarm;
+    pedTop.parent = fashionRoot;
 
-    createWarmHangingLantern(scene, new Vector3(px, 4.2, 6.8), fashionRoot, shadows);
+    const manBody = MeshBuilder.CreateCylinder(`fashion-model-body-${idx}`, { diameterTop: 0.45, diameterBottom: 0.65, height: 0.95, tessellation: 16 }, scene);
+    manBody.position.set(px, 1.05, 6.8);
+    manBody.material = idx === 0 ? matsCozy.wallPlaster : matsCozy.timberWarm;
+    manBody.parent = fashionRoot;
+
+    const manHead = MeshBuilder.CreateSphere(`fashion-model-head-${idx}`, { diameter: 0.46, segments: 12 }, scene);
+    manHead.position.set(px, 1.65, 6.8);
+    manHead.material = matsCozy.wallCream;
+    manHead.parent = fashionRoot;
+
+    createWarmHangingLantern(scene, new Vector3(px, 3.8, 6.8), fashionRoot, shadows);
   });
 
   createRusticSignboard(scene, 'TIỆM THỜI TRANG', 'Mộc Lan Boutique & Salon', '#f59e0b', fashionRoot, 8.2, 2.2)
@@ -447,6 +512,7 @@ export function createPlayTogetherPlaza(scene, shadows, foliage) {
   // 5. MEGA VENUE 2: 🎰 HỘI QUÁN TRÒ CHƠI & CASINO (ARCADE LOUNGE)
   // Tọa lạc tại Tây Nam (x: -29, z: -25), venue: 'casino'
   // ========================================================
+  yield 'boot: arcade exterior';
   const casinoRoot = new TransformNode('venue-casino-modern', scene);
   casinoRoot.metadata = { venue: 'casino' };
   casinoRoot.position.set(VENUE_LAYOUT.casino.exterior.x, 0, VENUE_LAYOUT.casino.exterior.z);
@@ -502,6 +568,7 @@ export function createPlayTogetherPlaza(scene, shadows, foliage) {
   // 6. MEGA VENUE 3: 🛒 NÔNG TRANG VẬT TƯ & SIÊU THỊ NÔNG NGHIỆP (AGRI-MART)
   // Tọa lạc tại Đông Bắc (x: 29, z: 25), venue: 'supplies'
   // ========================================================
+  yield 'boot: supplies exterior';
   const martRoot = new TransformNode('venue-agri-mall-modern', scene);
   martRoot.metadata = { venue: 'supplies' };
   martRoot.position.set(VENUE_LAYOUT.supplies.exterior.x, 0, VENUE_LAYOUT.supplies.exterior.z);
@@ -545,6 +612,7 @@ export function createPlayTogetherPlaza(scene, shadows, foliage) {
   // 7. MEGA VENUE 4: 🏎️ TRẠM XE CỘ & XE ĐẠP (MOTOR SHOWROOM)
   // Tọa lạc tại Tây Bắc (x: -29, z: 25), venue: 'vehicles'
   // ========================================================
+  yield 'boot: vehicles exterior';
   const vehicleRoot = new TransformNode('venue-vehicle-dealer-modern', scene);
   vehicleRoot.metadata = { venue: 'vehicles' };
   vehicleRoot.position.set(VENUE_LAYOUT.vehicles.exterior.x, 0, VENUE_LAYOUT.vehicles.exterior.z);
@@ -568,20 +636,20 @@ export function createPlayTogetherPlaza(scene, shadows, foliage) {
   // Mái ngói đỏ cam Terracotta dốc chữ A trên nóc
   addTerracottaGableRoof(scene, vehicleRoot, 16.0, 12.0, 8.85, matsCozy, shadows);
 
-  // Bệ xoay trưng bày xe thể thao Chibi
-  const turntable = MeshBuilder.CreateCylinder('motor-turntable', { diameter: 4.8, height: 0.25, tessellation: 32 }, scene);
-  turntable.position.set(0, 0.64, 7.5);
+  // Bệ xoay trưng bày xe thể thao Chibi đặt tại khu trưng bày bên phải (không chắn cửa vào)
+  const turntable = MeshBuilder.CreateCylinder('motor-turntable', { diameter: 4.4, height: 0.25, tessellation: 32 }, scene);
+  turntable.position.set(4.8, 0.64, 7.2);
   turntable.material = matsCozy.timberWarm;
   turntable.parent = vehicleRoot;
 
   const carBody = MeshBuilder.CreateBox('motor-show-car', { width: 2.2, height: 0.85, depth: 3.4 }, scene);
-  carBody.position.set(0, 1.2, 7.5);
+  carBody.position.set(4.8, 1.2, 7.2);
   carBody.material = makeMat(scene, 'motor-car-red', '#ef4444', '#dc2626', 0.8, 120);
   carBody.parent = vehicleRoot;
   shadows?.addShadowCaster(carBody);
 
   const carCockpit = MeshBuilder.CreateSphere('motor-car-cockpit', { diameterX: 1.8, diameterY: 1.2, diameterZ: 1.8, segments: 10 }, scene);
-  carCockpit.position.set(0, 1.7, 7.3);
+  carCockpit.position.set(4.8, 1.7, 7.0);
   carCockpit.material = makeMat(scene, 'motor-cockpit-opaque', '#bce8eb', null, 0.22, 56);
   carCockpit.parent = vehicleRoot;
 
@@ -592,6 +660,7 @@ export function createPlayTogetherPlaza(scene, shadows, foliage) {
   // 8. MEGA VENUE 5: 🎣 BẾN CÂU CÁ HỒ PHA LÊ & ĐỒ CÂU (FISHING TACKLE WHARF)
   // Tọa lạc tại bến nước bờ hồ Pha Lê phía Đông (x: 135, z: 6)
   // ========================================================
+  yield 'boot: fishing exterior';
   const fishingRoot = new TransformNode('venue-fishing-tackle-wharf', scene);
   fishingRoot.metadata = { venue: 'fishing' };
   fishingRoot.position.set(VENUE_LAYOUT.fishing.exterior.x, 0, VENUE_LAYOUT.fishing.exterior.z);
@@ -616,11 +685,86 @@ export function createPlayTogetherPlaza(scene, shadows, foliage) {
   // Mái ngói đỏ cam Terracotta dốc chữ A trên nóc
   addTerracottaGableRoof(scene, fishingRoot, 16.0, 12.0, 8.85, matsCozy, shadows);
 
-  // Bể cá thủy sinh trước sảnh bến thuyền
+  // === TƯỢNG CÁ VUA 3D KHỔNG LỒ BIỂU TƯỢNG TRÊN NÓC MÁI (GIANT LEAPING CARP MASCOT) ===
+  // Phong cách linh vật thương hiệu đặc trưng của Play Together
+  const mascotNode = new TransformNode('fishing-mascot-carp', scene);
+  mascotNode.position.set(0, 12.6, 0);
+  mascotNode.parent = fishingRoot;
+
+  const matFishGold = makeMat(scene, 'mascot-fish-gold', '#f59e0b', '#d97706', 0.9, 120);
+  const matFishAzure = makeMat(scene, 'mascot-fish-azure', '#38bdf8', '#0284c7', 0.8, 90);
+  const matFishWhite = makeMat(scene, 'mascot-fish-white', '#ffffff', '#f8fafc', 0.5, 60);
+
+  // Thân cá uốn lượn bay lượn trên đỉnh mái
+  const fishBody = MeshBuilder.CreateSphere('mascot-carp-body', { diameterX: 1.1, diameterY: 1.5, diameterZ: 3.6, segments: 10 }, scene);
+  fishBody.rotation.x = -0.25;
+  fishBody.material = matFishGold;
+  fishBody.parent = mascotNode;
+  shadows?.addShadowCaster(fishBody);
+
+  // Bụng cá trắng sáng
+  const fishBelly = MeshBuilder.CreateSphere('mascot-carp-belly', { diameterX: 0.95, diameterY: 1.1, diameterZ: 2.8, segments: 8 }, scene);
+  fishBelly.position.set(0, -0.28, 0.1);
+  fishBelly.material = matFishWhite;
+  fishBelly.parent = mascotNode;
+
+  // Vây đuôi cá xòe rộng
+  const fishTail = MeshBuilder.CreateCylinder('mascot-carp-tail', { diameterTop: 0.1, diameterBottom: 1.8, height: 1.2, tessellation: 3 }, scene);
+  fishTail.rotation.x = Math.PI / 2;
+  fishTail.rotation.z = Math.PI / 2;
+  fishTail.position.set(0, 0.45, -1.9);
+  fishTail.material = matFishAzure;
+  fishTail.parent = mascotNode;
+
+  // Vây lưng cá
+  const fishDorsal = MeshBuilder.CreateCylinder('mascot-carp-dorsal', { diameterTop: 0.08, diameterBottom: 1.4, height: 0.7, tessellation: 3 }, scene);
+  fishDorsal.position.set(0, 0.95, 0.3);
+  fishDorsal.material = matFishAzure;
+  fishDorsal.parent = mascotNode;
+
+  // 2 Mắt cá tròn to Chibi Play Together
+  [-0.45, 0.45].forEach((ex, eIdx) => {
+    const eyeWhite = MeshBuilder.CreateSphere(`mascot-eye-w-${eIdx}`, { diameter: 0.42, segments: 6 }, scene);
+    eyeWhite.position.set(ex, 0.22, 1.45);
+    eyeWhite.material = matFishWhite;
+    eyeWhite.parent = mascotNode;
+
+    const eyePupil = MeshBuilder.CreateSphere(`mascot-eye-p-${eIdx}`, { diameter: 0.22, segments: 6 }, scene);
+    eyePupil.position.set(ex * 1.1, 0.22, 1.6);
+    eyePupil.material = matsCozy.roofRidge;
+    eyePupil.parent = mascotNode;
+  });
+
+  // Bể cá thủy sinh trước sảnh bến thuyền (Aquarium Showcase)
   const aquariumTank = MeshBuilder.CreateBox('fishing-live-aquarium', { width: 4.5, height: 1.8, depth: 1.4 }, scene);
   aquariumTank.position.set(4.2, 1.2, 7.2);
   aquariumTank.material = matsCozy.glassClear;
   aquariumTank.parent = fishingRoot;
+
+  // Nước trong bể cá phản quang ngọc lam
+  const aquariumWater = MeshBuilder.CreateBox('fishing-aquarium-water', { width: 4.3, height: 1.6, depth: 1.2 }, scene);
+  aquariumWater.position.set(4.2, 1.1, 7.2);
+  aquariumWater.material = makeMat(scene, 'aquarium-water-mat', '#38bdf8', '#0284c7', 0.9, 100);
+  aquariumWater.parent = fishingRoot;
+
+  // Bảng kỷ lục câu cá mùa giải (Fishing Tournament Trophy Stand)
+  const recordBoard = MeshBuilder.CreateBox('fishing-record-board', { width: 2.2, height: 1.6, depth: 0.15 }, scene);
+  recordBoard.position.set(7.2, 1.8, 6.8);
+  recordBoard.material = matsCozy.timberWarm;
+  recordBoard.parent = fishingRoot;
+
+  const trophyCup = MeshBuilder.CreateCylinder('fishing-gold-trophy', { diameterTop: 0.5, diameterBottom: 0.2, height: 0.6, tessellation: 8 }, scene);
+  trophyCup.position.set(7.2, 2.8, 6.8);
+  trophyCup.material = matFishGold;
+  trophyCup.parent = fishingRoot;
+
+  // 2 Thùng mồi sống gỗ sồi ven cửa vào (Live Bait Tubs)
+  [-1.6, -0.6].forEach((bx, bIdx) => {
+    const baitTub = MeshBuilder.CreateCylinder(`fishing-bait-tub-${bIdx}`, { diameter: 0.65, height: 0.7, tessellation: 10 }, scene);
+    baitTub.position.set(bx, 0.6, 7.2);
+    baitTub.material = matsCozy.timber;
+    baitTub.parent = fishingRoot;
+  });
 
   // Giá cắm cần câu máy ven bến
   [-4.2, -2.4].forEach((rx, ridx) => {
@@ -640,6 +784,97 @@ export function createPlayTogetherPlaza(scene, shadows, foliage) {
 
   createRusticSignboard(scene, 'BẾN CÂU CÁ HỒ PHA LÊ', 'Fishing Tackle & Boat Wharf', '#0ea5e9', fishingRoot, 8.2, 2.2)
     .position.set(0, 11.2, 0);
+
+  // === LAKESIDE VERANDA & WATERFRONT BOATHOUSE FACADE (Mặt Sau Hướng Hồ Pha Lê) ===
+  // Biến bức tường phía hồ thành ban công ngắm cảnh tuyệt đẹp chuẩn Play Together
+  const lakeVerandaDeck = MeshBuilder.CreateBox('fishing-lakeside-deck', { width: 15.0, height: 0.35, depth: 4.2 }, scene);
+  lakeVerandaDeck.position.set(0, 0.25, -8.1);
+  lakeVerandaDeck.material = matsCozy.timberWarm;
+  lakeVerandaDeck.parent = fishingRoot;
+  lakeVerandaDeck.receiveShadows = true;
+
+  // Lan can gỗ ven hồ với các cọc thừng & phao cứu sinh
+  [-7.0, -3.5, 0, 3.5, 7.0].forEach((px, pidx) => {
+    const post = MeshBuilder.CreateCylinder(`fishing-veranda-post-${pidx}`, { height: 1.1, diameter: 0.16 }, scene);
+    post.position.set(px, 0.9, -10.1);
+    post.material = matsCozy.timber;
+    post.parent = fishingRoot;
+  });
+
+  const railBar = MeshBuilder.CreateBox('fishing-veranda-railbar', { width: 14.8, height: 0.1, depth: 0.14 }, scene);
+  railBar.position.set(0, 1.45, -10.1);
+  railBar.material = matsCozy.timber;
+  railBar.parent = fishingRoot;
+
+  // Bậc thang gỗ kết nối từ sàn Veranda xuống mặt bờ cát ven hồ (Connecting Stair Ramp)
+  const stairRamp = MeshBuilder.CreateBox('fishing-veranda-stair-ramp', { width: 3.2, height: 0.25, depth: 2.2 }, scene);
+  stairRamp.position.set(5.2, 0.12, -10.9);
+  stairRamp.rotation.x = 0.18;
+  stairRamp.material = matsCozy.timberWarm;
+  stairRamp.parent = fishingRoot;
+
+  // 2 Cửa sổ kính lớn nhìn ra hồ có đèn vàng ấm & bồn hoa dạ yến thảo
+  const matWindowWarm = makeMat(scene, 'fishing-lake-win-glow', '#fef08a', '#f59e0b', 0.8, 64);
+  const matLakeFlowerPetal = makeMat(scene, 'fishing-petal-pink', '#f472b6', null, 0.2, 32);
+
+  [-4.2, 4.2].forEach((wx, widx) => {
+    // Khung & Kính cửa sổ ấm
+    const win = MeshBuilder.CreateBox(`fishing-lake-window-${widx}`, { width: 3.4, height: 2.4, depth: 0.12 }, scene);
+    win.position.set(wx, 3.8, -6.06);
+    win.material = matWindowWarm;
+    win.parent = fishingRoot;
+
+    // Bồn hoa gỗ rủ dưới bậu cửa sổ
+    const planter = MeshBuilder.CreateBox(`fishing-lake-planter-${widx}`, { width: 3.2, height: 0.4, depth: 0.45 }, scene);
+    planter.position.set(wx, 2.4, -6.22);
+    planter.material = matsCozy.timber;
+    planter.parent = fishingRoot;
+
+    // Các cụm hoa nở trong bồn
+    for (let f = 0; f < 5; f++) {
+      const fl = MeshBuilder.CreateSphere(`fishing-planter-fl-${widx}-${f}`, { diameter: 0.32, segments: 6 }, scene);
+      fl.position.set(wx - 1.2 + f * 0.6, 2.65, -6.22);
+      fl.material = matLakeFlowerPetal;
+      fl.parent = fishingRoot;
+    }
+  });
+
+  // Mái hiên phụ sọc xanh dương & trắng che ban công ven hồ (Lake Awning)
+  const matAwningLakeBlue = makeMat(scene, 'fishing-lake-awning-blue', '#0284c7', null, 0.2, 32);
+  const matAwningLakeWhite = makeMat(scene, 'fishing-lake-awning-white', '#ffffff', null, 0.2, 32);
+  for (let s = 0; s < 8; s++) {
+    const awningSeg = MeshBuilder.CreateBox(`fishing-lake-awning-${s}`, { width: 14.6 / 8, height: 0.08, depth: 2.2 }, scene);
+    awningSeg.position.set(-6.38 + s * (14.6 / 8), 5.4, -7.1);
+    awningSeg.rotation.x = -0.22;
+    awningSeg.material = (s % 2 === 0) ? matAwningLakeBlue : matAwningLakeWhite;
+    awningSeg.parent = fishingRoot;
+    shadows?.addShadowCaster(awningSeg);
+  }
+
+  // Bàn trà tròn & ghế cafe thư giãn ven hồ kèm Ô che nắng lớn (Waterfront Cafe Seating & Sun Parasol)
+  const lakeTable = MeshBuilder.CreateCylinder('fishing-lake-table', { diameter: 1.4, height: 0.75, tessellation: 12 }, scene);
+  lakeTable.position.set(-2.2, 0.65, -8.2);
+  lakeTable.material = matsCozy.timberWarm;
+  lakeTable.parent = fishingRoot;
+
+  // Dù che nắng sọc xanh trắng phong cách resort biển Play Together
+  const umbrellaPole = MeshBuilder.CreateCylinder('fishing-umbrella-pole', { diameter: 0.08, height: 3.2 }, scene);
+  umbrellaPole.position.set(-2.2, 2.1, -8.2);
+  umbrellaPole.material = matsCozy.timber;
+  umbrellaPole.parent = fishingRoot;
+
+  const umbrellaCanopy = MeshBuilder.CreateCylinder('fishing-umbrella-canopy', { diameterTop: 0.2, diameterBottom: 3.4, height: 0.8, tessellation: 8 }, scene);
+  umbrellaCanopy.position.set(-2.2, 3.4, -8.2);
+  umbrellaCanopy.material = matAwningLakeBlue;
+  umbrellaCanopy.parent = fishingRoot;
+  shadows?.addShadowCaster(umbrellaCanopy);
+
+  [-3.2, -1.2].forEach((cx, cidx) => {
+    const chair = MeshBuilder.CreateBox(`fishing-lake-chair-${cidx}`, { width: 0.6, height: 0.5, depth: 0.6 }, scene);
+    chair.position.set(cx, 0.52, -8.2);
+    chair.material = matsCozy.timber;
+    chair.parent = fishingRoot;
+  });
 
   // ========================================================
   // 9. HỆ THỐNG ĐÈN ĐƯỜNG CỔ ĐIỂN VÀNG ẤM QUẢNG TRƯỜNG
@@ -670,7 +905,13 @@ export function createPlayTogetherPlaza(scene, shadows, foliage) {
       lightBulb.position.set(pos.x + side * 0.9, 5.2, pos.z);
       lightBulb.material = matStreetGlow;
       lightBulb.parent = plazaRoot;
+
+      // Quầng sáng sương mờ dịu mắt cho bóng đèn quảng trường
+      createLampHaloOnly(scene, plazaRoot, new Vector3(pos.x + side * 0.9, 5.2, pos.z), 1.05);
     });
+
+    // Vệt sáng ấm loang trên mặt đá quảng trường dưới chân mỗi cột đèn
+    createGroundLightPoolOnly(scene, plazaRoot, new Vector3(pos.x, 0.126, pos.z), 3.8);
   });
 
   // Hoạt hình xoay xúc xắc casino & turntable xe hơi

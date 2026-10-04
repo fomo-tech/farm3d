@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
+import { FarmingSystem } from '../src/game/farming/FarmingSystem.js';
+const system = Object.create(FarmingSystem.prototype);
+const sent = [], notices = [];
+Object.assign(system, { playerFarmId: 'farm_000002', tool: 'hand', pendingActions: new Set(), state: {},
+  controls: { onNetworkAction: payload => sent.push(payload) }, notify: text => notices.push(text), gateStates: new Map() });
+const tile = { metadata: { farmId: 'farm_000001', column: 0, row: 0 }, getAbsolutePosition: () => new Vector3(-48.15, 0, 107.2) };
+system.state[system.key(tile)] = { crop: 'carrot', state: 'watered', wateredAt: Date.now() - 100000, yield: 4 };
+assert.equal(system.determineSmartTool(tile), 'harvest');
+assert.equal(sent.length, 0, 'smart tool selection must have no side effects');
+system.gateStates.set('farm_000001', { open: false });
+system.applyTool(tile);
+assert.equal(sent.length, 0, 'closed gate prevents client theft request');
+system.gateStates.set('farm_000001', { open: true });
+system.applyTool(tile);
+assert.equal(sent.at(-1).action, 'steal_start');
+assert.equal(sent.at(-1).farmId, 'farm_000001');
+assert.equal(sent.at(-1).tileKey, '0:0');
+console.log('PASS: visitor smart-tool selection is pure, closed gate denied, ripe crop interaction starts server-authorized theft.');

@@ -1,8 +1,124 @@
+import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { FARM_CONFIG } from '../config.js';
+import { FISHING_CONFIG } from '../../../shared/fishingConfig.js';
 import { buildHumanMesh } from './buildHumanMesh.js';
 import { createVehicleRigs } from './createVehicleRigs.js';
+
+function createFishingRig(scene, root, human) {
+  const bobberMaterial = new StandardMaterial('local-fishing-bobber-material', scene);
+  bobberMaterial.diffuseColor = Color3.FromHexString('#ef4444');
+  bobberMaterial.emissiveColor = Color3.FromHexString('#fb7185').scale(0.22);
+  bobberMaterial.specularColor = Color3.White();
+  const bobber = MeshBuilder.CreateSphere('local-fishing-bobber', { diameter: 0.18, segments: 8 }, scene);
+  bobber.material = bobberMaterial;
+  bobber.setEnabled(false);
+
+  const linePoints = [new Vector3(), new Vector3(), new Vector3()];
+  const line = MeshBuilder.CreateLines('local-fishing-line', { points: linePoints, updatable: true }, scene);
+  line.color = Color3.FromHexString('#f8fafc');
+  line.alpha = 0.86;
+  line.setEnabled(false);
+
+  const target = new Vector3();
+  const baseTarget = new Vector3();
+  let phase = 'idle';
+  let elapsed = 0;
+  let castDistance = 8;
+  let animationId = 'basic_cast';
+
+  const animationDuration = (action, id = animationId) => {
+    const animation = FISHING_CONFIG.animations[id] || FISHING_CONFIG.animations.basic_cast;
+    const key = action === 'cast' ? 'castMs' : action === 'reel' ? 'reelMs' : 'catchMs';
+    return (animation[key] || 900) / 1000;
+  };
+
+  const hide = () => {
+    phase = 'idle';
+    elapsed = 0;
+    bobber.setEnabled(false);
+    line.setEnabled(false);
+    human.clearFishingPose?.();
+  };
+
+  const updateLine = () => {
+    const hand = (human.toolGrip || human.rightArm).getAbsolutePosition();
+    linePoints[0].copyFrom(hand);
+    linePoints[1].set(
+      (hand.x + bobber.position.x) * 0.5,
+      Math.max(hand.y, bobber.position.y) + 0.22,
+      (hand.z + bobber.position.z) * 0.5,
+    );
+    linePoints[2].copyFrom(bobber.position);
+    MeshBuilder.CreateLines(null, { points: linePoints, instance: line });
+  };
+
+  const update = delta => {
+    if (phase === 'idle') return;
+    elapsed += delta;
+    const hand = (human.toolGrip || human.rightArm).getAbsolutePosition();
+    if (phase === 'cast') {
+      const progress = Math.min(1, elapsed / 0.95);
+      Vector3.LerpToRef(hand, baseTarget, progress, bobber.position);
+    } else {
+      bobber.position.copyFrom(target);
+      bobber.position.y += Math.sin(elapsed * (phase === 'bite' ? 16 : 3.4)) * (phase === 'bite' ? 0.075 : 0.025);
+      if (phase === 'bite') bobber.position.x += Math.sin(elapsed * 20) * 0.045;
+    }
+    updateLine();
+  };
+
+  return {
+    update,
+    startCast(distance = 8, nextAnimationId = 'basic_cast') {
+      castDistance = Math.max(3, Number(distance) || 8);
+      animationId = nextAnimationId || 'basic_cast';
+      const position = root.getAbsolutePosition();
+      const forward = new Vector3(Math.sin(root.rotation.y), 0, Math.cos(root.rotation.y));
+      baseTarget.copyFrom(position).addInPlace(forward.scale(castDistance));
+      baseTarget.y = position.y + 0.13;
+      target.copyFrom(baseTarget);
+      phase = 'cast';
+      elapsed = 0;
+      bobber.position.copyFrom(position);
+      bobber.position.y += 0.9;
+      bobber.setEnabled(true);
+      line.setEnabled(true);
+      human.playFishingAction?.('cast', () => {
+        phase = 'waiting';
+        elapsed = 0;
+        human.setFishingPose?.(true);
+      }, animationDuration('cast'));
+    },
+    setPhase(nextPhase) {
+      if (phase === 'idle') return;
+      if (nextPhase === 'waiting' || nextPhase === 'bite') phase = nextPhase;
+    },
+    playReel() {
+      if (phase === 'idle') return;
+      phase = 'reel';
+      elapsed = 0;
+      human.playFishingAction?.('reel', () => human.setFishingPose?.(true), animationDuration('reel'));
+    },
+    finishCatch(success = true) {
+      if (phase === 'idle') return;
+      if (!success) { hide(); return; }
+      phase = 'catch';
+      elapsed = 0;
+      human.playFishingAction?.('catch', hide, animationDuration('catch'));
+    },
+    clear: hide,
+    dispose() {
+      hide();
+      bobberMaterial.dispose();
+      bobber.dispose();
+      line.dispose();
+    },
+  };
+}
 
 export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, controls = {}) {
   const root = new TransformNode('local-player', scene);
@@ -12,14 +128,16 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
   const human = buildHumanMesh(scene, 'local-player', {
     outfitId: controls.getOutfitId?.() || 'starter',
     outfitColor: controls.getOutfitColor?.() || '#f8fafc',
-    skinColor: '#fce7d2',
-    hairColor: '#76503b',
+    customization: controls.getCustomization?.() || null,
+    skinColor: controls.getCustomization?.()?.skinColor || '#e6b08f',
+    hairColor: controls.getCustomization?.()?.hairColor || '#76503b',
     overallsColor: '#2563eb',
     bootsColor: '#f7f0e6',
     hasHat: false,
     shadows: shadowGenerator,
   });
   human.root.parent = root;
+  const fishingRig = createFishingRig(scene, root, human);
 
   // 3D Vehicle Rigs (Bike, Scooter, Tractor)
   const vehicleRigs = createVehicleRigs(scene, root, shadowGenerator);
@@ -77,6 +195,15 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
         human.rightLeg.rotation.x = -1.2;
         human.leftArm.rotation.x = -0.4;
         human.rightArm.rotation.x = -0.4;
+        return;
+      }
+      if (human.isFishingBusy?.()) {
+        diagnostics.input = false;
+        diagnostics.speed = 0;
+        autoTarget = null;
+        onArrive = null;
+        human.animate(frameDelta, false, 0);
+        fishingRig.update(frameDelta);
         return;
       }
       const horizontal = (Number(keys.has('KeyD') || keys.has('ArrowRight')) - Number(keys.has('KeyA') || keys.has('ArrowLeft'))) + virtualInput.x;
@@ -202,6 +329,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
         // Procedural walking / breathing animation
         human.animate(frameDelta, visiblyMoving, actualSpeed);
       }
+      fishingRig.update(frameDelta);
     },
     moveTo(target, callback) {
       autoTarget = new Vector3(target.x, root.position.y, target.z);
@@ -219,6 +347,18 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       } else {
         human.setOutfit(idOrColor);
       }
+    },
+    applyCustomization(customization) {
+      human.applyCustomization?.(customization);
+    },
+    setGender(gender) {
+      human.setGender?.(gender);
+    },
+    setSkinTone(skinTone) {
+      human.setSkinTone?.(skinTone);
+    },
+    setLOD(level) {
+      human.setLOD?.(level);
     },
     setVehicle(vehicleId) {
       vehicleRigs.setVehicle(vehicleId);
@@ -239,6 +379,23 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
     setActiveTool(toolId) {
       human.setActiveTool(toolId);
     },
+    startFishingCast(options = {}) {
+      autoTarget = null;
+      onArrive = null;
+      fishingRig.startCast(options.distance || 8, options.animation || 'basic_cast');
+    },
+    setFishingPhase(phase) {
+      fishingRig.setPhase(phase);
+    },
+    playFishingReel() {
+      fishingRig.playReel();
+    },
+    finishFishingCatch(success = true) {
+      fishingRig.finishCatch(success);
+    },
+    clearFishing() {
+      fishingRig.clear();
+    },
     playAction(actionType, onHit, onEnd) {
       autoTarget = null;
       human.playAction(actionType, onHit, onEnd);
@@ -256,6 +413,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       window.removeEventListener('keyup', up);
       window.removeEventListener('blur', clearKeys);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      fishingRig.dispose();
     },
   };
 }

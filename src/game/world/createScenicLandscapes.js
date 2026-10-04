@@ -19,6 +19,7 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js'
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
 import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
+import { beachOceanHalfWidth, beachResourceWaterAt, beachGroundHeight } from '../../../shared/beachConfig.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
 import { WORLD_VILLAGES } from '../../../shared/villageLayout.js';
 import { WORLD_PALETTE, VILLAGE_THEME_GROUPS, createCozyMaterial } from './worldDesignSystem.js';
@@ -167,9 +168,10 @@ function createHayBaleStack(scene, parent, x, z, shadows, materials) {
 /**
  * Creates a summer beach umbrella and picnic lounge set.
  */
-function createBeachLoungeSpot(scene, parent, x, z, angle, shadows, materials) {
+export function createBeachLoungeSpot(scene, parent, x, z, angle, shadows, materials) {
+  if(beachResourceWaterAt(x,z,3)) return null;
   const root = new TransformNode(`beach-lounge-${x}-${z}`, scene);
-  root.position.set(x, 0, z);
+  root.position.set(x, beachGroundHeight(x,z) ?? 0, z);
   root.rotation.y = angle;
   root.parent = parent;
 
@@ -281,12 +283,12 @@ export function* createScenicLandscapesSteps(scene, foliage, shadows, foliageIns
 
   // Các điểm nghỉ dưỡng ven biển có dù che nắng và ghế phơi nắng (tại bãi cát z >= 305 và QL 406)
   const beachLounges = [
-    { x: -18.0, z: 308, rot: 0.4 },
-    { x: 18.0, z: 308, rot: -0.4 },
-    { x: -18.0, z: 330, rot: 0.2 },
-    { x: 18.0, z: 330, rot: -0.2 },
-    { x: -140, z: 418.0, rot: 0 },
-    { x: 140, z: 418.0, rot: Math.PI },
+    { x: -18.0, z: 340, rot: 0.4 },
+    { x: 18.0, z: 340, rot: -0.4 },
+    { x: -42.0, z: 349, rot: 0.2 },
+    { x: 42.0, z: 349, rot: -0.2 },
+    { x: -beachOceanHalfWidth(418)-14, z: 418.0, rot: 0 },
+    { x: beachOceanHalfWidth(418)+14, z: 418.0, rot: Math.PI },
   ];
     yield;
   for (const [_index, b] of (beachLounges).entries()) {
@@ -368,7 +370,7 @@ export function* createScenicLandscapesSteps(scene, foliage, shadows, foliageIns
     { x: 104, z: -16 },
     { x: 120, z: -18 },
     { x: 136, z: -20 },
-    { x: 152, z: -20 },
+    { x: 132, z: -16 },
     { x: 96, z: 22 },
     { x: 112, z: 24 },
     { x: 128, z: 26 },

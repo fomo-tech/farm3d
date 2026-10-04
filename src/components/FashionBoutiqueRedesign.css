@@ -1,0 +1,57 @@
+.fashion-redesign {
+backdrop-filter: none; background: #10263dcc;
+.fashion-modal-card { width: min(1180px, 96vw); background: #fffdf3; border-color: #fffdf3; box-shadow: 0 24px 80px #071e4966; }
+.fashion-modal-header { background: #fff9e8; border-color: #dddfd0; }
+.fashion-brand-icon { animation: none; }
+.fashion-brand h2 { color: #193858; }
+.fashion-brand small { color: #54718a; }
+.fashion-close-btn { color: #193858; border-color: #b9d7e7; background: #fff; }
+.fashion-close-btn:hover { background: #def3ff; color: #193858; }
+.fashion-modal-body { grid-template-columns: minmax(300px, 40%) minmax(0, 60%); background: #fffdf3; }
+.fashion-preview-column { background: #e3f3f7; border-color: #ccdfe5; }
+.fashion-viewport-container { height: clamp(340px, 52vh, 560px); border: 0; background: #e3f3f7; box-shadow: none; }
+.fashion-tool-btn { border-color: #b8d4e1; color: #193858; }
+.fashion-tool-btn.active, .fashion-tool-btn:hover { background: #258fc5; color: white; border-color: #258fc5; }
+.fashion-tool-pill { border-color: #b8d4e1; color: #193858; }
+.fashion-tool-pill.active, .fashion-tool-pill:hover { background: #258fc5; color: white; border-color: #258fc5; box-shadow: none; }
+.fashion-cart-summary { border-color: #cfdee5; background: #fffdf3; box-shadow: none; }
+.fashion-cart-alert.shopping, .fashion-cart-alert { background: #edf6fa; border-color: #c9dfeb; color: #193858; }
+.fashion-btn-primary:not(:disabled) { background: linear-gradient(#ffd368, #f6aa25); color: #51380a; box-shadow: 0 4px 0 #d88c14; }
+.fashion-btn-primary:hover:not(:disabled) { background: #ffc44d; }
+.fashion-btn-secondary { border-color: #c9dfeb; color: #193858; background: #fff; }
+.fashion-btn-secondary:hover { background: #def3ff; }
+.fashion-catalog-column { background: #fffdf3; }
+.fashion-nav-bar { order: 2; background: #eee6ca; border-top: 2px solid #ded4b6; border-bottom: 0; padding: 12px; }
+.fashion-nav-tab { flex: 1; background: transparent; color: #60707b; border-radius: 14px; }
+.fashion-nav-tab.active { background: #3fb4df; color: #fff; box-shadow: none; transform: none; }
+.fashion-tab-content { min-height: 0; background: #fffdf3; }
+.fashion-subheading h4 { color: #193858; }
+.fashion-grid-items { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.fashion-card { border: 2px solid transparent; background: transparent; box-shadow: none; padding: 8px; }
+.fashion-card:hover { border-color: #88c8df; background: #edf8fc; transform: none; box-shadow: none; }
+.fashion-card.selected { border-color: #299dcc; background: #e6f6fb; transform: none; box-shadow: none; }
+.fashion-card-thumb { width: min(128px, 100%); height: auto; aspect-ratio: 1; margin: 0 auto 8px; border-radius: 50%; background: #bce6ef !important; }
+.fashion-cart-actions { flex-wrap: wrap; }
+.fashion-cart-actions > small { width: 100%; color: #936718; }
+.fashion-mesh-thumbnail { width: 100%; height: 100%; object-fit: contain; }
+.fashion-thumbnail-loading { color: #377998; font-size: 12px; }
+.fashion-card-info small, .fashion-rarity-stars { display: none; }
+.fashion-card-info strong { font-size: 14px; color: #193858; min-height: 32px; }
+.selection-badge { background: #20b66f; box-shadow: none; }
+.card-tag-ribbon.popular, .card-tag-ribbon.cute { background: #2189b6; }
+.fashion-try-tag { color: #258fc5; }
+.fashion-dye-swatch.selected { border-color: #258fc5; box-shadow: 0 0 0 3px #bce6ef; }
+.fashion-subtab-btn.active, .fashion-subtab-btn:hover { background: #def3ff; border-color: #258fc5; color: #193858; box-shadow: none; }
+.fashion-modal-card button:focus-visible { outline: 3px solid #1674a9; outline-offset: 3px; }
+@media (max-width: 860px) {
+ .fashion-modal-card { max-height: 96dvh; }
+ .fashion-modal-body { grid-template-columns: 1fr; overflow-y: auto; }
+ .fashion-preview-column { border-bottom-color: #ccdfe5; padding: 10px; }
+ .fashion-viewport-container { height: 320px; }
+ .fashion-catalog-column { min-height: 400px; overflow: visible; }
+ .fashion-nav-bar { order: 0; position: sticky; top: 0; z-index: 4; }
+ .fashion-grid-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+ .fashion-brand small { display: none; }
+ .fashion-modal-body > * { min-width: 0; }
+}
+}

@@ -7,6 +7,8 @@ import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTextur
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 import { getScenicPoiDescriptor } from '../world/createScenicLandscapes.js';
+import { COASTAL_BUS_CONFIG } from '../../../shared/beachConfig.js';
+import { getTerrainHeight } from '../world/TerrainHeightSystem.js';
 
 function makeMat(scene, name, hex, emissiveHex = null) {
   return createToyMaterial(scene, name, hex, { emissiveHex });
@@ -445,6 +447,7 @@ function createChibiBus(scene, shadows, config, materials) {
       const curStart = waypoints[currentSegment];
       const curEnd = waypoints[(currentSegment + 1) % waypoints.length];
       Vector3.LerpToRef(curStart, curEnd, segmentProgress, root.position);
+      root.position.y=getTerrainHeight(root.position.x,root.position.z);
 
       const targetYaw = Math.atan2(curEnd.x - curStart.x, curEnd.z - curStart.z);
       // Smooth yaw rotation
@@ -467,6 +470,13 @@ function createChibiBus(scene, shadows, config, materials) {
  * Creates the entire 8-bus inter-village fleet and 16 correctly oriented shelters.
  */
 export function createBusRoute(scene, shadows) {
+  const steps = createBusRouteSteps(scene, shadows);
+  let result;
+  do { result = steps.next(); } while (!result.done);
+  return result.value;
+}
+
+export function* createBusRouteSteps(scene, shadows) {
   const materials = {
     timber: makeMat(scene, 'bus-stop-timber', '#543621'),
     bench: makeMat(scene, 'bus-stop-bench', '#8b5a2b'),
@@ -482,141 +492,146 @@ export function createBusRoute(scene, shadows) {
   };
   materials.glass.alpha = 0.55;
 
-  // 16 Chibi Ghibli Bus Stop Shelters - 100% CORRECTLY FACING ROADS:
-  // - Shelters along East side of North-South road (x = 0): face West (-X) -> rot = Math.PI / 2
-  // - Shelters along South side of East-West roads: face North (+Z) -> rot = Math.PI
-  // - Shelters along North side of East-West roads: face South (-Z) -> rot = 0
+  // 19 Chibi Ghibli Bus Stop Shelters - 100% CORRECTLY FACING ROADS:
+  // 4 Trạm cuối (Gateway Terminals) tại 4 cửa ngõ giáp Quảng trường trung tâm (Bắc, Nam, Đông, Tây)
+  // Xe buýt từ các làng chạy đến các trạm này dừng đón/trả khách rồi quay đầu, tuyệt đối không vào quảng trường.
   const shelters = [
-    // 1. Trục Đại lộ Bắc - Nam (x = 0): đặt ở x = 5.2, quay mặt sang Tây (-X) về phía lòng đường
-    { x: 5.2, z: 18, name: 'Quảng Trường Trung Tâm', badge: 'T1 · T2 · T3 · T4', rot: Math.PI / 2 },
+    // 1. Bốn trạm cuối Gateway Terminals tại 4 cửa ngõ Quảng trường:
+    { x: 5.4, z: 54, name: 'Trạm Cửa Nam - Quảng Trường', badge: 'Tuyến 01 · 02', rot: Math.PI / 2 },
+    { x: 5.4, z: -54, name: 'Trạm Cửa Bắc - Tòa Thị Chính', badge: 'Tuyến 03', rot: Math.PI / 2 },
+    { x: -54, z: 5.4, name: 'Trạm Cửa Tây - Phố Chợ', badge: 'Tuyến 04A', rot: 0 },
+    { x: 54, z: 5.4, name: 'Trạm Cửa Đông - Hồ Pha Lê', badge: 'Tuyến 04B', rot: 0 },
+
+    // 2. Trục Đại lộ Nam (x = 0):
     { x: 5.2, z: 86, name: 'Làng Bình Minh', badge: 'T1 · T2', rot: Math.PI / 2 },
-    { x: 5.2, z: 330, name: 'Bãi Biển Bình Minh', badge: 'Tuyến 02', rot: Math.PI / 2 },
+    { ...COASTAL_BUS_CONFIG.shelter, name: 'Bãi Biển Bình Minh', badge: 'Tuyến 02', rot: Math.PI },
     { x: 5.2, z: -394, name: 'Làng Phú Điền', badge: 'Tuyến 03', rot: Math.PI / 2 },
 
-    // 2. Trục Quốc Lộ 86 (z = 86): đặt ở lề Nam z = 80.8, quay mặt sang Bắc (+Z) về phía lòng đường
+    // 3. Trục Quốc Lộ 86 (z = 86):
     { x: -300, z: 80.8, name: 'Làng Hoa Mai', badge: 'Tuyến 01', rot: Math.PI },
     { x: -594, z: 80.8, name: 'Làng Đồi Gió', badge: 'Tuyến 01', rot: Math.PI },
     { x: 300, z: 80.8, name: 'Làng Ven Sông', badge: 'T1 · T4', rot: Math.PI },
     { x: 594, z: 80.8, name: 'Làng An Nhiên', badge: 'Tuyến 01', rot: Math.PI },
 
-    // 3. Trục Quốc Lộ Nam 406 (z = 406): đặt ở lề Nam z = 400.8, quay mặt sang Bắc (+Z) về phía lòng đường
+    // 4. Trục Quốc Lộ Nam 406 (z = 406):
     { x: -300, z: 400.8, name: 'Làng Thu Phong', badge: 'Tuyến 02', rot: Math.PI },
     { x: 300, z: 400.8, name: 'Làng Hướng Dương', badge: 'Tuyến 02', rot: Math.PI },
 
-    // 4. Trục Quốc Lộ Bắc -234 (z = -234): đặt ở lề Nam z = -239.2, quay mặt sang Bắc (+Z) về phía lòng đường
+    // 5. Trục Quốc Lộ Bắc -234 (z = -234):
     { x: -300, z: -239.2, name: 'Làng Thanh Hà', badge: 'Tuyến 03', rot: Math.PI },
     { x: -594, z: -239.2, name: 'Làng Mộc Lan', badge: 'Tuyến 03', rot: Math.PI },
     { x: 300, z: -239.2, name: 'Làng Tân Lộc', badge: 'Tuyến 03', rot: Math.PI },
     { x: 594, z: -239.2, name: 'Làng Hải Vân', badge: 'Tuyến 03', rot: Math.PI },
 
-    // 5. Trục Phố Chợ & Vùng Hồ (z = 3): đặt ở lề Bắc z = 8.2, quay mặt sang Nam (-Z) về phía lòng đường
-    { x: -118, z: 8.2, name: 'Phố Chợ Phía Tây', badge: 'Tuyến 04', rot: 0 },
-    { x: 132, z: 8.2, name: 'Hồ Pha Lê', badge: 'Tuyến 04', rot: 0 },
+    // 6. Trục Phố Chợ & Vùng Hồ:
+    { x: -118, z: 5.4, name: 'Phố Chợ Phía Tây', badge: 'Tuyến 04A', rot: 0 },
+    { x: 132, z: 5.4, name: 'Hồ Pha Lê', badge: 'Tuyến 04B', rot: 0 },
   ];
 
-  shelters.forEach(s => {
+  for (const s of shelters) {
     createBusStopShelter(scene, s.x, s.z, s.name, s.badge, materials, s.rot);
-  });
+    yield;
+  }
 
   // Fleet Waypoints & Stops:
   // Tốc độ Siêu Tốc Express: 48.0 m/s (~173 km/h - di chuyển cực nhanh qua các làng mà vẫn 100% vật lý 3D)
   const CRUISE_SPEED = 48.0;
 
-  // ROUTE 01: Hoa Mai Express - Highway 86
+  // ROUTE 01: Hoa Mai Express - Highway 86 (Bến cuối tại Trạm Cửa Nam z = 54, quay đầu tại z = 50)
   const route01Waypoints = [
-    new Vector3(0, 0, 18),    // 0: Trạm Trung Tâm
-    new Vector3(0, 0, 86),    // 1: Trạm Bình Minh
-    new Vector3(-300, 0, 86), // 2: Trạm Hoa Mai
-    new Vector3(-594, 0, 86), // 3: Trạm Đồi Gió
-    new Vector3(-612, 0, 86), // 4: Turnaround Tây
-    new Vector3(-594, 0, 86), // 5: Trạm Đồi Gió
-    new Vector3(-300, 0, 86), // 6: Trạm Hoa Mai
-    new Vector3(0, 0, 86),    // 7: Trạm Bình Minh
-    new Vector3(300, 0, 86),  // 8: Trạm Ven Sông
-    new Vector3(594, 0, 86),  // 9: Trạm An Nhiên
-    new Vector3(612, 0, 86),  // 10: Turnaround Đông
-    new Vector3(594, 0, 86),  // 11: Trạm An Nhiên
-    new Vector3(300, 0, 86),  // 12: Trạm Ven Sông
-    new Vector3(0, 0, 86),    // 13: Trạm Bình Minh
+    new Vector3(0, 0, 54),    // 0: Trạm Cửa Nam - Quảng Trường
+    new Vector3(0, 0, 50),    // 1: Quay đầu Cửa Nam
+    new Vector3(0, 0, 86),    // 2: Trạm Bình Minh
+    new Vector3(-300, 0, 86), // 3: Trạm Hoa Mai
+    new Vector3(-594, 0, 86), // 4: Trạm Đồi Gió
+    new Vector3(-612, 0, 86), // 5: Turnaround Tây
+    new Vector3(-594, 0, 86), // 6: Trạm Đồi Gió
+    new Vector3(-300, 0, 86), // 7: Trạm Hoa Mai
+    new Vector3(0, 0, 86),    // 8: Trạm Bình Minh
+    new Vector3(300, 0, 86),  // 9: Trạm Ven Sông
+    new Vector3(594, 0, 86),  // 10: Trạm An Nhiên
+    new Vector3(612, 0, 86),  // 11: Turnaround Đông
+    new Vector3(594, 0, 86),  // 12: Trạm An Nhiên
+    new Vector3(300, 0, 86),  // 13: Trạm Ven Sông
+    new Vector3(0, 0, 86),    // 14: Trạm Bình Minh
   ];
   const route01Stops = [
-    { id: 'stop-center', name: 'Quảng Trường Trung Tâm', waypointIndex: 0 },
-    { id: 'stop-bm', name: 'Làng Bình Minh', waypointIndex: 1 },
-    { id: 'stop-hm', name: 'Làng Hoa Mai', waypointIndex: 2 },
-    { id: 'stop-dg', name: 'Làng Đồi Gió', waypointIndex: 3 },
-    { id: 'stop-vs', name: 'Làng Ven Sông', waypointIndex: 8 },
-    { id: 'stop-an', name: 'Làng An Nhiên', waypointIndex: 9 },
+    { id: 'stop-south-gate', name: 'Trạm Cửa Nam - Quảng Trường', waypointIndex: 0 },
+    { id: 'stop-bm', name: 'Làng Bình Minh', waypointIndex: 2 },
+    { id: 'stop-hm', name: 'Làng Hoa Mai', waypointIndex: 3 },
+    { id: 'stop-dg', name: 'Làng Đồi Gió', waypointIndex: 4 },
+    { id: 'stop-vs', name: 'Làng Ven Sông', waypointIndex: 9 },
+    { id: 'stop-an', name: 'Làng An Nhiên', waypointIndex: 10 },
   ];
 
-  // ROUTE 02: Biển Xanh Coastal - Highway 406
-  const route02Waypoints = [
-    new Vector3(0, 0, 18),    // 0: Trạm Trung Tâm
-    new Vector3(0, 0, 86),    // 1: Trạm Bình Minh
-    new Vector3(0, 0, 330),   // 2: Trạm Bãi Biển
-    new Vector3(0, 0, 406),   // 3: Ngã tư QL 406
-    new Vector3(-300, 0, 406),// 4: Trạm Thu Phong
-    new Vector3(-315, 0, 406),// 5: Turnaround Thu Phong
-    new Vector3(0, 0, 406),   // 6: Ngã tư
-    new Vector3(300, 0, 406), // 7: Trạm Hướng Dương
-    new Vector3(315, 0, 406), // 8: Turnaround Hướng Dương
-    new Vector3(0, 0, 406),   // 9: Ngã tư
-    new Vector3(0, 0, 330),   // 10: Trạm Bãi Biển
-    new Vector3(0, 0, 86),    // 11: Trạm Bình Minh
-  ];
+  // ROUTE 02: Biển Xanh Coastal - Highway 406 (Bến cuối tại Trạm Cửa Nam z = 54, quay đầu tại z = 50)
+  const route02Waypoints = COASTAL_BUS_CONFIG.waypoints.map(([x,z])=>new Vector3(x,0,z));
   const route02Stops = [
-    { id: 'stop-center', name: 'Quảng Trường Trung Tâm', waypointIndex: 0 },
-    { id: 'stop-bm', name: 'Làng Bình Minh', waypointIndex: 1 },
-    { id: 'stop-beach', name: 'Bãi Biển Bình Minh', waypointIndex: 2 },
-    { id: 'stop-tp', name: 'Làng Thu Phong', waypointIndex: 4 },
-    { id: 'stop-hd', name: 'Làng Hướng Dương', waypointIndex: 7 },
+    { id: 'stop-south-gate', name: 'Trạm Cửa Nam - Quảng Trường', waypointIndex: 0 },
+    { id: 'stop-bm', name: 'Làng Bình Minh', waypointIndex: 2 },
+    { id: 'stop-beach', name: 'Bãi Biển Bình Minh', waypointIndex: COASTAL_BUS_CONFIG.stops.beach },
+    { id: 'stop-tp', name: 'Làng Thu Phong', waypointIndex: COASTAL_BUS_CONFIG.stops.thuPhong },
+    { id: 'stop-hd', name: 'Làng Hướng Dương', waypointIndex: COASTAL_BUS_CONFIG.stops.huongDuong },
   ];
 
-  // ROUTE 03: Cao Nguyên Highland - Northern Highway -234 & Phu Dien
+  // ROUTE 03: Cao Nguyên Highland - Northern Highway -234 & Phu Dien (Bến cuối tại Trạm Cửa Bắc z = -54, quay đầu tại z = -50)
   const route03Waypoints = [
-    new Vector3(0, 0, 18),     // 0: Trạm Trung Tâm
-    new Vector3(0, 0, -234),   // 1: Ngã tư QL -234
-    new Vector3(-300, 0, -234),// 2: Trạm Thanh Hà
-    new Vector3(-594, 0, -234),// 3: Trạm Mộc Lan
-    new Vector3(-612, 0, -234),// 4: Turnaround Tây
-    new Vector3(-300, 0, -234),// 5: Trạm Thanh Hà
-    new Vector3(0, 0, -234),   // 6: Ngã tư
-    new Vector3(0, 0, -394),   // 7: Trạm Phú Điền
-    new Vector3(0, 0, -408),   // 8: Turnaround Phú Điền
-    new Vector3(0, 0, -234),   // 9: Ngã tư
-    new Vector3(300, 0, -234), // 10: Trạm Tân Lộc
-    new Vector3(594, 0, -234), // 11: Trạm Hải Vân
-    new Vector3(612, 0, -234), // 12: Turnaround Đông
-    new Vector3(300, 0, -234), // 13: Trạm Tân Lộc
-    new Vector3(0, 0, -234),   // 14: Ngã tư
+    new Vector3(0, 0, -54),    // 0: Trạm Cửa Bắc - Tòa Thị Chính
+    new Vector3(0, 0, -50),    // 1: Quay đầu Cửa Bắc
+    new Vector3(0, 0, -90),    // 2: Tòa Thị Chính
+    new Vector3(0, 0, -234),   // 3: Ngã tư QL -234
+    new Vector3(-300, 0, -234),// 4: Trạm Thanh Hà
+    new Vector3(-594, 0, -234),// 5: Trạm Mộc Lan
+    new Vector3(-612, 0, -234),// 6: Turnaround Tây
+    new Vector3(-300, 0, -234),// 7: Trạm Thanh Hà
+    new Vector3(0, 0, -234),   // 8: Ngã tư QL -234
+    new Vector3(0, 0, -394),   // 9: Trạm Phú Điền
+    new Vector3(0, 0, -408),   // 10: Turnaround Phú Điền
+    new Vector3(0, 0, -234),   // 11: Ngã tư QL -234
+    new Vector3(300, 0, -234), // 12: Trạm Tân Lộc
+    new Vector3(594, 0, -234), // 13: Trạm Hải Vân
+    new Vector3(612, 0, -234), // 14: Turnaround Đông
+    new Vector3(300, 0, -234), // 15: Trạm Tân Lộc
+    new Vector3(0, 0, -234),   // 16: Ngã tư QL -234
+    new Vector3(0, 0, -90),    // 17: Tòa Thị Chính
   ];
   const route03Stops = [
-    { id: 'stop-center', name: 'Quảng Trường Trung Tâm', waypointIndex: 0 },
-    { id: 'stop-th', name: 'Làng Thanh Hà', waypointIndex: 2 },
-    { id: 'stop-ml', name: 'Làng Mộc Lan', waypointIndex: 3 },
-    { id: 'stop-pd', name: 'Làng Phú Điền', waypointIndex: 7 },
-    { id: 'stop-tl', name: 'Làng Tân Lộc', waypointIndex: 10 },
-    { id: 'stop-hv', name: 'Làng Hải Vân', waypointIndex: 11 },
+    { id: 'stop-north-gate', name: 'Trạm Cửa Bắc - Tòa Thị Chính', waypointIndex: 0 },
+    { id: 'stop-th', name: 'Làng Thanh Hà', waypointIndex: 4 },
+    { id: 'stop-ml', name: 'Làng Mộc Lan', waypointIndex: 5 },
+    { id: 'stop-pd', name: 'Làng Phú Điền', waypointIndex: 9 },
+    { id: 'stop-tl', name: 'Làng Tân Lộc', waypointIndex: 12 },
+    { id: 'stop-hv', name: 'Làng Hải Vân', waypointIndex: 13 },
   ];
 
-  // ROUTE 04: Hồ Pha Lê Scenic - West Market & Crystal Lake & Ven Song
-  const route04Waypoints = [
-    new Vector3(0, 0, 18),     // 0: Trạm Trung Tâm
-    new Vector3(0, 0, 3),      // 1: Ngã ba
-    new Vector3(-118, 0, 3),   // 2: Trạm Phố Chợ Phía Tây
-    new Vector3(-128, 0, 3),   // 3: Turnaround Chợ Tây
-    new Vector3(0, 0, 3),      // 4: Trung tâm
-    new Vector3(132, 0, 3),    // 5: Trạm Hồ Pha Lê
-    new Vector3(145, 0, 3),    // 6: Turnaround Hồ
-    new Vector3(0, 0, 3),      // 7: Trung tâm
-    new Vector3(0, 0, 86),     // 8: Trạm Bình Minh
-    new Vector3(300, 0, 86),   // 9: Trạm Ven Sông
-    new Vector3(0, 0, 86),     // 10: Trạm Bình Minh
+  // ROUTE 04A: Phố Chợ Phía Tây Shuttle (Bến cuối tại Trạm Cửa Tây x = -54, quay đầu tại x = -50)
+  const route04AWaypoints = [
+    new Vector3(-54, 0, 0),    // 0: Trạm Cửa Tây - Phố Chợ
+    new Vector3(-50, 0, 0),    // 1: Quay đầu Cửa Tây
+    new Vector3(-84, 0, 0),    // 2: Đại lộ Tây
+    new Vector3(-118, 0, 0),   // 3: Trạm Phố Chợ Phía Tây
+    new Vector3(-130, 0, 0),   // 4: Turnaround Chợ Tây
+    new Vector3(-118, 0, 0),   // 5: Trạm Phố Chợ Phía Tây
+    new Vector3(-84, 0, 0),    // 6: Đại lộ Tây
   ];
-  const route04Stops = [
-    { id: 'stop-center', name: 'Quảng Trường Trung Tâm', waypointIndex: 0 },
-    { id: 'stop-market', name: 'Phố Chợ Phía Tây', waypointIndex: 2 },
-    { id: 'stop-lake', name: 'Hồ Pha Lê', waypointIndex: 5 },
-    { id: 'stop-vs', name: 'Làng Ven Sông', waypointIndex: 9 },
+  const route04AStops = [
+    { id: 'stop-west-gate', name: 'Trạm Cửa Tây - Phố Chợ', waypointIndex: 0 },
+    { id: 'stop-market', name: 'Phố Chợ Phía Tây', waypointIndex: 3 },
+  ];
+
+  // ROUTE 04B: Hồ Pha Lê & Bến Câu Cá Shuttle (Bến cuối tại Trạm Cửa Đông x = 54, quay đầu tại x = 50)
+  const route04BWaypoints = [
+    new Vector3(54, 0, 0),     // 0: Trạm Cửa Đông - Hồ Pha Lê
+    new Vector3(50, 0, 0),     // 1: Quay đầu Cửa Đông
+    new Vector3(84, 0, 0),     // 2: Đại lộ Đông
+    new Vector3(132, 0, 0),    // 3: Trạm Hồ Pha Lê
+    new Vector3(145, 0, 0),    // 4: Turnaround Hồ
+    new Vector3(132, 0, 0),    // 5: Trạm Hồ Pha Lê
+    new Vector3(84, 0, 0),     // 6: Đại lộ Đông
+  ];
+  const route04BStops = [
+    { id: 'stop-east-gate', name: 'Trạm Cửa Đông - Hồ Pha Lê', waypointIndex: 0 },
+    { id: 'stop-lake', name: 'Hồ Pha Lê', waypointIndex: 3 },
   ];
 
   // === ĐỘI HÌNH 8 XE BUÝT CHIBI CHẠY LIÊN TỤC SONG SONG (Hạn chế tối đa thời gian chờ) ===
@@ -635,6 +650,7 @@ export function createBusRoute(scene, shadows) {
     initialProgress: 0.1,
   }, materials);
 
+  yield;
   const bus1B = createChibiBus(scene, shadows, {
     id: 'bus-01B',
     routeCode: '01B',
@@ -645,11 +661,12 @@ export function createBusRoute(scene, shadows) {
     cruiseSpeed: CRUISE_SPEED,
     waypoints: route01Waypoints,
     stops: route01Stops,
-    initialSegment: 7,
+    initialSegment: 8,
     initialProgress: 0.4,
   }, materials);
 
   // Tuyến 02: 2 xe chạy đối xứng trục Biển & Làng Nam 406
+  yield;
   const bus2A = createChibiBus(scene, shadows, {
     id: 'bus-02A',
     routeCode: '02A',
@@ -664,6 +681,7 @@ export function createBusRoute(scene, shadows) {
     initialProgress: 0.1,
   }, materials);
 
+  yield;
   const bus2B = createChibiBus(scene, shadows, {
     id: 'bus-02B',
     routeCode: '02B',
@@ -674,11 +692,12 @@ export function createBusRoute(scene, shadows) {
     cruiseSpeed: CRUISE_SPEED,
     waypoints: route02Waypoints,
     stops: route02Stops,
-    initialSegment: 6,
+    initialSegment: 7,
     initialProgress: 0.5,
   }, materials);
 
   // Tuyến 03: 2 xe chạy đối xứng trục Cao Nguyên & Làng Bắc -234
+  yield;
   const bus3A = createChibiBus(scene, shadows, {
     id: 'bus-03A',
     routeCode: '03A',
@@ -693,6 +712,7 @@ export function createBusRoute(scene, shadows) {
     initialProgress: 0.1,
   }, materials);
 
+  yield;
   const bus3B = createChibiBus(scene, shadows, {
     id: 'bus-03B',
     routeCode: '03B',
@@ -703,25 +723,28 @@ export function createBusRoute(scene, shadows) {
     cruiseSpeed: CRUISE_SPEED,
     waypoints: route03Waypoints,
     stops: route03Stops,
-    initialSegment: 8,
+    initialSegment: 9,
     initialProgress: 0.5,
   }, materials);
 
-  // Tuyến 04: 2 xe chạy đối xứng vòng Phố Chợ, Hồ Pha Lê & Ven Sông
+  // Tuyến 04A: Xe đưa đón Phố Chợ Phía Tây
+  yield;
   const bus4A = createChibiBus(scene, shadows, {
     id: 'bus-04A',
     routeCode: '04A',
-    routeName: 'Hồ Pha Lê Scenic',
+    routeName: 'Phố Chợ Tây',
     bodyColor: '#38bdf8',
     accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
     ledColor: '#38bdf8',
     cruiseSpeed: CRUISE_SPEED,
-    waypoints: route04Waypoints,
-    stops: route04Stops,
+    waypoints: route04AWaypoints,
+    stops: route04AStops,
     initialSegment: 0,
     initialProgress: 0.1,
   }, materials);
 
+  // Tuyến 04B: Xe đưa đón Hồ Pha Lê & Bến Câu Cá
+  yield;
   const bus4B = createChibiBus(scene, shadows, {
     id: 'bus-04B',
     routeCode: '04B',
@@ -730,12 +753,13 @@ export function createBusRoute(scene, shadows) {
     accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
     ledColor: '#818cf8',
     cruiseSpeed: CRUISE_SPEED,
-    waypoints: route04Waypoints,
-    stops: route04Stops,
-    initialSegment: 5,
-    initialProgress: 0.5,
+    waypoints: route04BWaypoints,
+    stops: route04BStops,
+    initialSegment: 0,
+    initialProgress: 0.1,
   }, materials);
 
+  yield;
   const buses = [bus1A, bus1B, bus2A, bus2B, bus3A, bus3B, bus4A, bus4B];
 
   // Transit Management State

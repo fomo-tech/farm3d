@@ -1,7 +1,9 @@
 import { createServer } from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { purchaseFarm, listLandMarket, getAssignment, initVillageRegistry, isAssignedFarm, listVillageAssignments, listVillages, positionForLot, villageChannel, villageForFarm } from './VillageRegistry.js';
-import { authenticate, casinoRefundStale, farmAction, initGameStore, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
+import { authenticate, casinoRefundStale, farmAction, initGameStore, initFarmSecurity, farmSecurity, loadFarmAssignment, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
+import { decodeFarmId } from '../shared/villageLayout.js';
+import { farmGateOpen } from '../shared/farmSecurity.js';
 import { casinoState, placeCasinoBet, tickCasino } from './CasinoRooms.js';
 import { FARM_ACTIVE_PLOTS, FARM_LOT_SPEC, FARM_TILE_KEY_PATTERN, farmTilePosition as sharedFarmTilePosition } from '../shared/farmLayout.js';
 import { WORLD_VILLAGES, villageGeometry } from '../shared/villageLayout.js';
@@ -248,6 +250,7 @@ wss.on('connection', socket => {
         client.venue = VALID_VENUES.has(account.position.venue) ? account.position.venue : null;
         client.roomId = roomKey(client.villageId, client.venue);
       }
+      client.customization = account.progress?.customization || null;
 
       safeSend(socket, {
         type: 'welcome',
@@ -295,7 +298,12 @@ wss.on('connection', socket => {
         return;
       }
       const previousRoom = client.roomId;
+      if (!requestedVenue && farmSecurity.blocksMovement(client, { x, z })) {
+        safeSend(socket, { type: 'move_ack', accepted: false, x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, serverTime: Date.now() });
+        return;
+      }
       client.x = x; client.y = y; client.z = z; client.rotation = rotation; client.venue = requestedVenue; client.roomId = roomKey(client.villageId, client.venue); client.lastSeen = Date.now();
+      farmSecurity.observeMovement(client.playerId, client, farmTilePosition);
       safeSend(socket, { type: 'move_ack', accepted: true, x, y, z, rotation, venue: client.venue, roomId: client.roomId, serverTime: Date.now() });
       if (Date.now() - client.lastPersisted > 2000) {
         client.lastPersisted = Date.now();
@@ -339,6 +347,23 @@ wss.on('connection', socket => {
         safeSend(socket, response); finishAction(tracked.key, [response]);
         return;
       }
+      if (action === 'steal_start' || action === 'steal_finish') {
+        const assignment = await loadFarmAssignment(targetVillage.villageId, farmId);
+        const decoded = decodeFarmId(farmId);
+        const stolen = await farmSecurity.steal({ assignment, farmId, storageFarmId: `farm_${String(decoded.lot).padStart(6, '0')}`, tileKey, playerId: client.playerId, position: client, tilePosition,
+          phase: action === 'steal_start' ? 'start' : 'finish', token: message.token });
+        if (stolen.error) { const response = { type: 'action_error', requestId: message.requestId, message: stolen.error }; safeSend(socket, response); finishAction(tracked.key, [response]); return; }
+        if (stolen.pending) {
+          const response = { type: 'theft_pending', requestId: message.requestId, farmId, tileKey, token: stolen.pending.token, durationMs: stolen.pending.readyAt - Date.now() };
+          safeSend(socket, response); finishAction(tracked.key, [response]); return;
+        }
+        const player = await loadPlayer(client.playerId);
+        const response = { type: 'account_state', requestId: message.requestId, progress: player.progress, result: { stolenAmount: stolen.amount } };
+        const update = { type: 'farm_update', requestId: message.requestId, farmId, tileKey, action: 'steal', crop: stolen.tileData.crop, tileData: stolen.tileData, byPlayer: client.name, byPlayerId: client.playerId };
+        safeSend(socket, response); broadcastFarmUpdate(client, update); finishAction(tracked.key, [response, update]);
+        for (const other of clients.values()) if (other.playerId === assignment.playerId) safeSend(other.socket, { type: 'action_error', message: `${client.name} đã lấy ${stolen.amount} nông sản trong vườn khi cổng mở.` });
+        return;
+      }
       const result = await farmAction(client.playerId, targetVillage.villageId, client.farmId, { farmId, tileKey, action, crop, wateredAt, plantedAt });
       if (result.error) {
         const errorResponse = { type: 'action_error', requestId: message.requestId, message: result.error };
@@ -364,6 +389,16 @@ wss.on('connection', socket => {
     if (message.type === 'game_action') {
       const tracked = beginAction(client, message.requestId);
       if (tracked.duplicate) return;
+      if (message.action === 'farm_gate') {
+        const farmId = String(message.payload?.farmId || '');
+        const village = await villageForFarm(farmId);
+        const assignment = village && await loadFarmAssignment(village.villageId, farmId);
+        const result = assignment ? await farmSecurity.toggle(assignment, farmId, client.playerId, message.payload?.open, client, [...clients.values()]) : { error: 'Lô đất chưa có chủ.' };
+        const response = result.error ? { type: 'action_error', requestId: message.requestId, message: result.error } : { type: 'farm_gate', requestId: message.requestId, ...result };
+        safeSend(socket, response); finishAction(tracked.key, [response]);
+        if (!result.error) channelPlayers(client.channelId).filter(other => other !== client).forEach(other => safeSend(other.socket, { type: 'farm_gate', ...result }));
+        return;
+      }
       if (message.action === 'casino_bet') {
         if (client.venue !== 'casino') {
           const response = { type: 'action_error', requestId: message.requestId, message: 'Hãy vào hội quán trò chơi để đặt cược.' };
@@ -388,26 +423,30 @@ wss.on('connection', socket => {
         }
         const assignment = bought.assignment;
         client.farmId = assignment.farmId; client.villageId = assignment.villageId;
+        farmSecurity.gates.set(`${assignment.villageId}:${assignment.lot}`, farmGateOpen(assignment));
         const player = await loadPlayer(client.playerId);
         const response = { type: 'account_state', requestId: message.requestId, progress: player.progress, livestock: player.livestock, result: { landPurchase: { farmId: assignment.farmId, villageId: assignment.villageId, villageName: assignment.villageName, lot: assignment.lot, farmConfig: assignment.farmConfig } } };
         await savePosition(client.playerId, { x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION });
         safeSend(socket, response); finishAction(tracked.key, [response]);
         await refreshPublicFarms(client.channelId); broadcastPresence(client.channelId); return;
       }
-      if (!client.farmId && ['claim_seeds', 'upgrade_land', 'upgrade_barn', 'upgrade_home', 'buy_animal', 'feed_animals', 'collect_animals'].includes(message.action)) {
+      if (!client.farmId && ['claim_seeds', 'upgrade_land', 'upgrade_barn', 'upgrade_home', 'build_pen', 'sell_animal', 'buy_animal', 'feed_animals', 'collect_animals'].includes(message.action)) {
         const response = { type: 'action_error', requestId: message.requestId, message: 'Bạn cần mua lô đất trước khi sử dụng tính năng nông trại.' };
         safeSend(socket, response); finishAction(tracked.key, [response]); return;
       }
-      const result = await performAction(client.playerId, String(message.action || ''), message.payload || {}, { x: client.x, z: client.z, venue: client.venue });
+      const result = await performAction(client.playerId, String(message.action || ''), message.payload || {}, { x: client.x, z: client.z, venue: client.venue, farmId: client.farmId, villageId: client.villageId });
       if (result.error) { const response = { type: 'action_error', requestId: message.requestId, message: result.error }; safeSend(socket, response); finishAction(tracked.key, [response]); return; }
       client.name = result.player.name;
       client.outfit = result.player.progress.outfit;
       client.vehicle = result.player.progress.vehicle;
       client.homeTier = result.player.progress.homeTier;
+      if (result.player.progress.customization) {
+        client.customization = result.player.progress.customization;
+      }
       const response = { type: 'account_state', requestId: message.requestId, progress: result.player.progress, livestock: result.player.livestock, result: result.result };
       safeSend(socket, response);
       finishAction(tracked.key, [response]);
-      if (['character_create', 'feed_animals', 'collect_animals', 'upgrade_barn', 'upgrade_home', 'buy_outfit'].includes(message.action)) {
+      if (['character_create', 'build_pen', 'buy_animal', 'sell_animal', 'feed_animals', 'collect_animals', 'upgrade_barn', 'upgrade_home', 'buy_outfit', 'fashion_save_customization'].includes(message.action)) {
         await refreshPublicFarms(client.channelId);
       }
     }
@@ -477,6 +516,7 @@ setInterval(async () => {
 
 setInterval(() => {
   const cutoff = Date.now() - ACTION_CACHE_TTL;
+  for (const [id, pending] of farmSecurity?.pending || []) if (pending.expiresAt < Date.now()) farmSecurity.pending.delete(id);
   recentActions.forEach((value, key) => { if (value.createdAt < cutoff) recentActions.delete(key); });
 }, 60_000).unref();
 
@@ -491,4 +531,5 @@ setInterval(() => {
 
 await initGameStore();
 await initVillageRegistry();
+await initFarmSecurity();
 httpServer.listen(PORT, '0.0.0.0', () => console.log(`Farm multiplayer listening on http://localhost:${PORT} · MongoDB connected`));

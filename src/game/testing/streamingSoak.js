@@ -1,5 +1,6 @@
 import { FarmWorld } from '../world/FarmWorld.js';
 import { WORLD_LAYOUT } from '../world/worldLayout.js';
+import { auditCoastalMeshes } from './auditCoastalMeshes.js';
 
 const status = document.querySelector('#status');
 const metrics = document.querySelector('#metrics');
@@ -19,11 +20,18 @@ let maxGap = 0;
 // Real farm locations, including neighbouring and distant grid cells. Revisit
 // the same route to expose unbounded cache growth and stale streaming jobs.
 const farms = WORLD_LAYOUT.farms;
-const route = [WORLD_LAYOUT.spawn,
+const focusX = Number(params.get('x'));
+const focusZ = Number(params.get('z'));
+const focus = params.has('x') && params.has('z') && Number.isFinite(focusX) && Number.isFinite(focusZ)
+  ? { x: focusX, z: focusZ } : WORLD_LAYOUT.spawn;
+report.focus = focus;
+report.orbitCamera = params.get('orbit') === '1';
+let initialAlpha = null;
+const route = [focus,
   ...[0, 8, 16, 32, 64, 96, 128, 160, 200, 240].map(index => {
     const farm = farms[Math.min(index, farms.length - 1)];
     return { x: farm.x, z: farm.z - 14 };
-  }), WORLD_LAYOUT.spawn];
+  }), focus];
 
 const observer = new PerformanceObserver(list => {
   if (!running) return;
@@ -35,8 +43,10 @@ const observer = new PerformanceObserver(list => {
 observer.observe({ type: 'longtask', buffered: false });
 
 let world;
+let auditBootChannel=null;
 world = new FarmWorld(canvas, text => { status.textContent = text; }, {
-  initialLocation: { ...WORLD_LAYOUT.spawn, y: 0 },
+  initialLocation: { ...focus, y: 0 },
+  graphicsQuality: params.get('quality'),
   getPlayerName: () => 'Streaming Test', getPlayerFarmId: () => farms[0].id,
   getUnlockedPlots: () => 12, getCrop: () => 'carrot',
   onReady: () => {
@@ -51,6 +61,22 @@ world = new FarmWorld(canvas, text => { status.textContent = text; }, {
   onFatalError: message => { report.failures.push(message); status.textContent = message; },
 });
 
+// Geometry audit setup only: build the identical world with short cooperative
+// tasks even when the browser throttles RAF. Never use this mode for FPS claims.
+if(params.get('audit')==='1') {
+  report.mode='coastal-geometry-audit';
+  report.auditBootPump=true;
+  auditBootChannel=new MessageChannel();
+  auditBootChannel.port1.onmessage=()=>{
+    if(report.ready || world.renderFailure || world.scene.isDisposed) {
+      auditBootChannel.port1.close();auditBootChannel.port2.close();return;
+    }
+    world.scheduler.update(4);
+    auditBootChannel.port2.postMessage(0);
+  };
+  auditBootChannel.port2.postMessage(0);
+}
+
 start.onclick = () => {
   running = true; startedAt = performance.now(); lastFrame = 0; segment = -1;
   report.startedAt = new Date().toISOString(); start.disabled = true;
@@ -60,6 +86,10 @@ start.onclick = () => {
 function tick(now) {
   if (!running) return;
   const elapsed = now - startedAt;
+  if (report.orbitCamera) {
+    initialAlpha ??= world.scene.activeCamera.alpha;
+    world.scene.activeCamera.alpha = initialAlpha + elapsed / 2000;
+  }
   if (lastFrame && document.visibilityState === 'visible') {
     const gap = now - lastFrame;
     maxGap = Math.max(maxGap, gap);
@@ -108,9 +138,13 @@ document.querySelector('#export').onclick = () => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 document.querySelector('#show-report').onclick = () => {
+  report.coastalAudit = auditCoastalMeshes(world.scene);
   report.runtime = window.__farmDebug?.getReport();
   const output = document.querySelector('#report');
   output.hidden = false;
   output.textContent = JSON.stringify(report);
 };
-window.addEventListener('pagehide', () => { observer.disconnect(); world.dispose(); });
+window.addEventListener('pagehide', () => {
+  auditBootChannel?.port1.close();auditBootChannel?.port2.close();
+  observer.disconnect(); world.dispose();
+});

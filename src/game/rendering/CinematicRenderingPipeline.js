@@ -12,6 +12,9 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
   let currentPreset = 'day';
   let currentQuality = options.quality || (options.lightweight ? 'balanced' : 'ultra');
   let stableSamples = !!options.stableSamples;
+  const engine = scene.getEngine();
+  const supportedSamples = engine.webGLVersion >= 2 ? Math.max(1, engine.getCaps().maxMSAASamples || 1) : 1;
+  const resolveSamples = quality => quality === 'eco' ? 1 : Math.min(options.lightweight ? 2 : 4, supportedSamples);
 
   try {
     pipeline = new DefaultRenderingPipeline('cinematic-pipeline', true, scene, [camera]);
@@ -20,14 +23,17 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     const isUltra = quality === 'ultra';
     const isEco = quality === 'eco';
 
-    // 1. Khử răng cưa phần cứng siêu sắc nét (4x/2x Hardware MSAA) kết hợp FXAA hậu kỳ
-    pipeline.samples = stableSamples ? 1 : (isEco ? 1 : (isUltra && !options.lightweight ? 4 : 2));
-    pipeline.fxaaEnabled = true;
+    // 1. Khử răng cưa phần cứng siêu sắc nét (4x Hardware MSAA trên desktop, 2x trên mobile)
+    // MSAA khử răng cưa hình học trực tiếp ở rasterizer phần cứng, giữ nguyên 100% độ nét của texture & text
+    pipeline.samples = resolveSamples(quality);
 
-    // Contrast Adaptive Sharpening (CAS): Micro-contrast that makes leaves, textures, and edges pop.
+    // Tắt hoàn toàn FXAA khi có MSAA phần cứng để triệt tiêu hiện tượng mờ nhòe (FXAA làm mờ texture & viền)
+    pipeline.fxaaEnabled = pipeline.samples < 2;
+
+    // Contrast Adaptive Sharpening (CAS): Giữ độ sắc nét vi mô tinh tế, không tạo viền sáng/tối
     pipeline.sharpenEnabled = true;
     if (pipeline.sharpen) {
-      pipeline.sharpen.edgeAmount = isEco ? 0.03 : (isUltra ? 0.08 : 0.05);
+      pipeline.sharpen.edgeAmount = isEco ? 0.02 : (isUltra ? 0.08 : 0.05);
       pipeline.sharpen.colorAmount = 1.0;
     }
 
@@ -40,12 +46,12 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
       pipeline.bloomScale = 0.5;
     }
 
-    // 2. Khronos PBR Neutral Tone Mapping (chuẩn Cozy Farmy): Giữ độ no màu rực rỡ, không bị cháy trắng
+    // 2. Khronos PBR Neutral Tone Mapping (chuẩn Cozy Farmy): Giữ độ no màu rực rỡ, không bị cháy trắng hay bệt đen
     pipeline.imageProcessingEnabled = true;
     pipeline.imageProcessing.toneMappingEnabled = true;
     pipeline.imageProcessing.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_KHR_PBR_NEUTRAL;
-    pipeline.imageProcessing.contrast = 1.08;
-    pipeline.imageProcessing.exposure = 0.96;
+    pipeline.imageProcessing.contrast = 1.01;
+    pipeline.imageProcessing.exposure = 0.92;
     pipeline.imageProcessing.vignetteEnabled = false;
     isolateColorGrading(scene, pipeline.imageProcessing);
   } catch (err) {
@@ -54,8 +60,8 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
       scene.imageProcessingConfiguration.isEnabled = true;
       scene.imageProcessingConfiguration.toneMappingEnabled = true;
       scene.imageProcessingConfiguration.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_KHR_PBR_NEUTRAL;
-      scene.imageProcessingConfiguration.contrast = 1.08;
-      scene.imageProcessingConfiguration.exposure = 0.96;
+      scene.imageProcessingConfiguration.contrast = 1.01;
+      scene.imageProcessingConfiguration.exposure = 0.92;
     }
   }
 
@@ -69,29 +75,39 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
       if (!pipeline || (quality === currentQuality && stableSamples === keepSamplesStable)) return;
       currentQuality = quality;
       stableSamples = keepSamplesStable;
-      const samples = stableSamples || quality === 'eco' ? 1 : (quality === 'ultra' && !options.lightweight ? 4 : 2);
-      if (pipeline.samples !== samples) pipeline.samples = samples;
-      if (quality === 'ultra') {
-        pipeline.fxaaEnabled = true;
-        pipeline.sharpenEnabled = true;
+      const isEco = quality === 'eco';
+
+      if (keepSamplesStable) {
+        // Trong chế độ Auto (keepSamplesStable = true), giữ nguyên cấu hình pipeline (samples, fxaa, sharpen)
+        // để tuyệt đối không trigger _buildPipeline(), chỉ tinh chỉnh thông số sharpen mà không giật khung hình
         if (pipeline.sharpen) {
-          pipeline.sharpen.edgeAmount = 0.08;
-          pipeline.sharpen.colorAmount = 1.0;
+          pipeline.sharpen.edgeAmount = isEco ? 0.02 : 0.05;
         }
-        pipeline.bloomEnabled = false;
-      } else if (quality === 'balanced') {
-        pipeline.fxaaEnabled = true;
-        pipeline.sharpenEnabled = true;
-        if (pipeline.sharpen) {
-          pipeline.sharpen.edgeAmount = 0.05;
-          pipeline.sharpen.colorAmount = 1.0;
+      } else {
+        const nextSamples = resolveSamples(quality);
+        if (pipeline.samples !== nextSamples) pipeline.samples = nextSamples;
+
+        if (quality === 'ultra') {
+          pipeline.fxaaEnabled = nextSamples < 2;
+          pipeline.sharpenEnabled = true;
+          if (pipeline.sharpen) {
+            pipeline.sharpen.edgeAmount = 0.08;
+            pipeline.sharpen.colorAmount = 1.0;
+          }
+          pipeline.bloomEnabled = false;
+        } else if (quality === 'balanced') {
+          pipeline.fxaaEnabled = nextSamples < 2;
+          pipeline.sharpenEnabled = true;
+          if (pipeline.sharpen) {
+            pipeline.sharpen.edgeAmount = 0.05;
+            pipeline.sharpen.colorAmount = 1.0;
+          }
+          pipeline.bloomEnabled = false;
+        } else if (quality === 'eco') {
+          pipeline.fxaaEnabled = true;
+          pipeline.sharpenEnabled = false;
+          pipeline.bloomEnabled = false;
         }
-        pipeline.bloomEnabled = false;
-      } else if (quality === 'eco') {
-        pipeline.fxaaEnabled = true;
-        pipeline.sharpenEnabled = true;
-        if (pipeline.sharpen) pipeline.sharpen.edgeAmount = 0.03;
-        pipeline.bloomEnabled = false;
       }
       // Quality changes recreate the postprocess: detach its shared config again.
       applyColorPreset(isolateColorGrading(scene, pipeline.imageProcessing), currentPreset);

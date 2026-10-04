@@ -13,7 +13,7 @@ export function isolateColorGrading(scene, postProcess) {
 export function applyColorPreset(config, preset) {
   if (!config) return;
   const settings = {
-    day: [1.08, 0.96], dawn: [1.05, 0.94], dusk: [1.05, 0.94], night: [1.04, 0.95],
+    day: [1.01, 0.92], dawn: [1.01, 0.94], dusk: [1.05, 0.94], night: [1.02, 0.95],
   };
   const [contrast, exposure] = settings[preset] || settings.day;
   config.contrast = contrast;

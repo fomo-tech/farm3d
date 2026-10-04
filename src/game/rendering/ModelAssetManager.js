@@ -14,8 +14,136 @@ import { ROAD_SAFETY_CONFIG, isRoadResourceBlocked, recordBlockedRoadResource } 
 export { MODEL_PATHS } from './AssetRegistry.js';
 
 const cachesByScene = new WeakMap();
+const proceduralMaterialsByScene = new WeakMap();
 let spawnCounter = 0;
 const spawnQueues = new WeakMap();
+
+// A GLB is not expensive only because of download size. Babylon also parses
+// its JSON, creates vertex buffers and builds materials on the main thread.
+// The four assets below were the source of the 1.4s+ import.then freeze seen
+// in the runtime soak. Keep this policy local and explicit so a future,
+// compressed/decimated replacement can opt back into the detailed models.
+export const MODEL_PERFORMANCE_CONFIG = Object.freeze({
+  useProceduralHeavyAssets: true,
+  heavyAssetUrls: Object.freeze([
+    '/models/animals/cow.glb',
+    '/models/animals/alpaca.glb',
+    '/models/animals/shiba.glb',
+    '/models/village.glb',
+  ]),
+});
+
+const HEAVY_ASSET_URLS = new Set(MODEL_PERFORMANCE_CONFIG.heavyAssetUrls);
+
+function isHeavyAsset(idOrUrl) {
+  return HEAVY_ASSET_URLS.has(String(resolveModelAsset(idOrUrl)?.url || idOrUrl));
+}
+
+function proceduralMaterial(scene, key, hex, roughness = 0.82) {
+  let materials = proceduralMaterialsByScene.get(scene);
+  if (!materials) {
+    materials = new Map();
+    proceduralMaterialsByScene.set(scene, materials);
+    scene.onDisposeObservable.addOnce(() => proceduralMaterialsByScene.delete(scene));
+  }
+  if (materials.has(key)) return materials.get(key);
+  const value = new StandardMaterial(`procedural-heavy-${key}`, scene);
+  value.diffuseColor = Color3.FromHexString(hex);
+  value.ambientColor = value.diffuseColor.scale(0.42);
+  value.specularColor = Color3.Black();
+  value.roughness = roughness;
+  value.freeze();
+  materials.set(key, value);
+  return value;
+}
+
+function proceduralPart(scene, root, name, mesh, material, position, options = {}) {
+  mesh.name = name;
+  mesh.position.copyFrom(position);
+  mesh.material = material;
+  mesh.parent = root;
+  mesh.isPickable = false;
+  mesh.receiveShadows = true;
+  mesh.metadata = { ...(mesh.metadata || {}), proceduralAsset: true };
+  options.shadows?.addShadowCaster(mesh);
+  return mesh;
+}
+
+function createProceduralAnimal(scene, root, assetUrl, options = {}) {
+  const meshes = [];
+  const body = proceduralMaterial(scene, 'animal-body', '#f4c98f');
+  const cream = proceduralMaterial(scene, 'animal-cream', '#fff4d6');
+  const dark = proceduralMaterial(scene, 'animal-dark', '#4a3027');
+  const pink = proceduralMaterial(scene, 'animal-pink', '#f38ba8');
+  const black = proceduralMaterial(scene, 'animal-black', '#151827');
+  const part = (name, mesh, material, position) => meshes.push(proceduralPart(scene, root, name, mesh, material, position, options));
+
+  const sphere = (name, size, position, material, segments = 8) =>
+    part(name, MeshBuilder.CreateSphere(name, { diameter: size, segments }, scene), material, position);
+  const box = (name, size, position, material) =>
+    part(name, MeshBuilder.CreateBox(name, size, scene), material, position);
+  const leg = (name, x, z, height, material) => {
+    const mesh = MeshBuilder.CreateCylinder(name, { height, diameter: height * 0.32, tessellation: 6 }, scene);
+    return part(name, mesh, material, new Vector3(x, height * 0.5, z));
+  };
+
+  if (/cow\.glb$/i.test(assetUrl)) {
+    sphere('cow-body', 2.2, new Vector3(0, 1.35, 0), cream, 8);
+    sphere('cow-head', 1.05, new Vector3(0.85, 2.05, -0.06), cream, 8);
+    sphere('cow-muzzle', 0.54, new Vector3(1.27, 1.92, -0.06), pink, 8);
+    [[-0.35, -0.65], [0.45, -0.65], [-0.35, 0.65], [0.45, 0.65]].forEach(([x, z], index) => leg(`cow-leg-${index}`, x, z, 0.95, cream));
+    [[-0.36, -0.24], [0.34, 0.18], [-0.08, 0.5]].forEach(([x, z], index) => sphere(`cow-spot-${index}`, 0.48, new Vector3(x, 1.42, z), dark, 7));
+    sphere('cow-eye', 0.13, new Vector3(1.18, 2.25, -0.4), black, 6);
+    sphere('cow-horn', 0.2, new Vector3(0.76, 2.68, -0.22), dark, 6);
+  } else if (/alpaca\.glb$/i.test(assetUrl)) {
+    sphere('alpaca-body', 1.65, new Vector3(0, 1.2, 0), cream, 8);
+    sphere('alpaca-neck', 0.78, new Vector3(0.42, 2.05, 0), cream, 8);
+    sphere('alpaca-head', 0.78, new Vector3(0.7, 2.68, -0.02), cream, 8);
+    [[0.48, -0.28], [0.48, 0.28], [-0.38, -0.3], [-0.38, 0.3]].forEach(([x, z], index) => leg(`alpaca-leg-${index}`, x, z, 0.86, dark));
+    [[0.65, -0.34], [0.65, 0.34]].forEach(([x, z], index) => {
+      const ear = MeshBuilder.CreateCylinder(`alpaca-ear-${index}`, { height: 0.32, diameter: 0.16, tessellation: 5 }, scene);
+      ear.rotation.z = index ? -0.5 : 0.5;
+      part(`alpaca-ear-${index}`, ear, cream, new Vector3(x, 3.15, z));
+    });
+    sphere('alpaca-eye', 0.1, new Vector3(0.98, 2.78, -0.31), black, 6);
+  } else {
+    // Shiba: compact silhouette with ears and a curled tail, intentionally
+    // low-poly so it remains readable without a multi-megabyte GLB parse.
+    sphere('shiba-body', 1.25, new Vector3(0, 0.9, 0), body, 8);
+    sphere('shiba-head', 0.92, new Vector3(0.55, 1.62, -0.02), body, 8);
+    sphere('shiba-muzzle', 0.42, new Vector3(0.9, 1.49, -0.03), cream, 8);
+    [[-0.3, -0.32], [0.35, -0.32], [-0.3, 0.32], [0.35, 0.32]].forEach(([x, z], index) => leg(`shiba-leg-${index}`, x, z, 0.62, body));
+    [[0.32, -0.31], [0.32, 0.31]].forEach(([x, z], index) => {
+      const ear = MeshBuilder.CreateCylinder(`shiba-ear-${index}`, { height: 0.38, diameter: 0.3, tessellation: 4 }, scene);
+      ear.rotation.z = index ? -0.55 : 0.55;
+      part(`shiba-ear-${index}`, ear, body, new Vector3(x, 2.2, z));
+    });
+    sphere('shiba-eye', 0.1, new Vector3(0.8, 1.78, -0.32), black, 6);
+    sphere('shiba-tail', 0.48, new Vector3(-0.7, 1.35, 0), body, 7);
+  }
+  return meshes;
+}
+
+function createProceduralVillageHouse(scene, root, options = {}) {
+  const wall = proceduralMaterial(scene, 'house-wall', '#f4dfb7');
+  const roof = proceduralMaterial(scene, 'house-roof', '#c86b47');
+  const wood = proceduralMaterial(scene, 'house-wood', '#754934');
+  const glass = proceduralMaterial(scene, 'house-window', '#8bd7e8');
+  const meshes = [];
+  const part = (name, mesh, material, position) => meshes.push(proceduralPart(scene, root, name, mesh, material, position, options));
+  part('house-base', MeshBuilder.CreateBox('house-base', { width: 4.8, height: 2.8, depth: 3.8 }, scene), wall, new Vector3(0, 1.4, 0));
+  part('house-roof', MeshBuilder.CreateBox('house-roof', { width: 5.4, height: 0.42, depth: 4.4 }, scene), roof, new Vector3(0, 3.05, 0));
+  part('house-door', MeshBuilder.CreateBox('house-door', { width: 0.85, height: 1.55, depth: 0.12 }, scene), wood, new Vector3(0, 0.78, -1.96));
+  [-1.55, 1.55].forEach((x, index) => part(`house-window-${index}`, MeshBuilder.CreateBox(`house-window-${index}`, { width: 0.92, height: 0.72, depth: 0.1 }, scene), glass, new Vector3(x, 1.75, -1.97)));
+  part('house-chimney', MeshBuilder.CreateBox('house-chimney', { width: 0.48, height: 1.1, depth: 0.48 }, scene), wood, new Vector3(1.45, 3.55, 0.55));
+  return meshes;
+}
+
+function createProceduralHeavyAsset(scene, root, assetUrl, options = {}) {
+  if (/animals\/(cow|alpaca|shiba)\.glb$/i.test(assetUrl)) return createProceduralAnimal(scene, root, assetUrl, options);
+  if (/village\.glb$/i.test(assetUrl)) return createProceduralVillageHouse(scene, root, options);
+  return [createFallback(scene, root, `heavy-${assetUrl}`)];
+}
 
 function yieldModelSpawn(scene, priority, relevant, work, label) {
   let queue = spawnQueues.get(scene);
@@ -29,13 +157,23 @@ function yieldModelSpawn(scene, priority, relevant, work, label) {
 
 export function getModelWorkStats(scene) {
   const cache = cachesByScene.get(scene);
-  return { spawn: spawnQueues.get(scene)?.getStats(), activeLoads: cache?.activeLoads || 0, pendingLoads: cache?.loadQueue.length || 0, maxLoadMs: cache?.maxLoadMs || 0 };
+  return {
+    spawn: spawnQueues.get(scene)?.getStats(),
+    activeLoads: cache?.activeLoads || 0,
+    pendingLoads: cache?.loadQueue.length || 0,
+    maxLoadMs: cache?.maxLoadMs || 0,
+    lastLoad: cache?.lastLoad || null,
+    slowLoads: cache?.slowLoads || [],
+  };
 }
 
 function getSceneCache(scene) {
   let cache = cachesByScene.get(scene);
   if (!cache) {
-    cache = { containers: new Map(), pending: new Map(), states: new Map(), loadQueue: [], activeLoads: 0 };
+    cache = {
+      containers: new Map(), pending: new Map(), states: new Map(), loadQueue: [], activeLoads: 0,
+      lastLoad: null, slowLoads: [],
+    };
     cachesByScene.set(scene, cache);
     scene.onDisposeObservable.addOnce(() => {
       cache.containers.forEach((container) => container.dispose());
@@ -125,7 +263,13 @@ export async function loadModelContainer(scene, idOrUrl, options = {}) {
         const { rootUrl, filename } = splitModelUrl(asset.url);
         const loadStart = performance.now();
         const container = await withTimeout(SceneLoader.LoadAssetContainerAsync(rootUrl, filename, scene), timeoutMs, asset.url);
-        cache.maxLoadMs = Math.max(cache.maxLoadMs || 0, performance.now() - loadStart);
+        const loadMs = performance.now() - loadStart;
+        cache.maxLoadMs = Math.max(cache.maxLoadMs || 0, loadMs);
+        cache.lastLoad = { id: asset.id, url: asset.url, ms: loadMs };
+        if (loadMs > 200) {
+          cache.slowLoads.push(cache.lastLoad);
+          if (cache.slowLoads.length > 8) cache.slowLoads.shift();
+        }
         if (scene.isDisposed) {
           container.dispose();
           return null;
@@ -194,6 +338,20 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
   root.metadata = { ...(root.metadata || {}), asset: idOrUrl, assetStatus: 'loading' };
   let activeInstance = null;
   let loadEpoch = 0;
+
+  // Do not let a large GLB enter Babylon's synchronous parser during play.
+  // The generated low-poly silhouettes keep the object readable and preserve
+  // animation/parenting behavior while avoiding the long import.then task.
+  const resolvedUrl = String(resolveModelAsset(idOrUrl)?.url || idOrUrl);
+  if (MODEL_PERFORMANCE_CONFIG.useProceduralHeavyAssets && isHeavyAsset(idOrUrl)) {
+    const childMeshes = createProceduralHeavyAsset(scene, root, resolvedUrl, { shadows });
+    root.metadata.assetStatus = 'ready';
+    root.metadata.assetBackend = 'procedural-low-poly';
+    root.metadata.assetSource = resolvedUrl;
+    root.computeWorldMatrix(true);
+    onLoaded?.({ root, instance: null, childMeshes });
+    return root;
+  }
 
   const materialize = () => {
     const epoch = loadEpoch;
@@ -286,7 +444,7 @@ export function spawnVillageHouse(scene, houseIdx = 0, options = {}) {
   return spawnModelSync(scene, MODEL_PATHS.village, {
     position, rotation, scaling, shadows, name, parent, selectNodeName: `house${houseIdx}`,
     onLoaded: ({ root, instance }) => {
-      attachVillageHouse(root, instance, `house${houseIdx}`);
+      if (instance) attachVillageHouse(root, instance, `house${houseIdx}`);
     },
   });
 }

@@ -59,9 +59,9 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     ambientScale: 0.65,
   });
 
-  const fenceMat = createToyMaterial(scene, isOwner ? 'mat-toy-fence-owner' : 'mat-toy-fence-neighbor', isOwner ? PLAY_TOGETHER_PALETTE.farm.fenceWhite : '#f1f5f9', {
-    specularPower: 80,
-    specularLevel: 0.45,
+  const fenceMat = createToyMaterial(scene, isOwner ? 'mat-toy-fence-owner' : 'mat-toy-fence-neighbor', isOwner ? PLAY_TOGETHER_PALETTE.farm.fenceWhite : '#e5dfd5', {
+    specularPower: 40,
+    specularLevel: 0.08,
     ambientScale: 0.58,
   });
 
@@ -216,31 +216,6 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     stone.parent = root;
   });
 
-  // Hai bồn hoa đón khách trước hiên cổng
-  const planterMat = createToyMaterial(scene, 'mat-toy-planter', '#b7794f', { specularPower: 24, ambientScale: 0.58 });
-  const flowerMat = createToyMaterial(scene, 'mat-toy-planter-flower', isOwner ? '#f472b6' : '#a78bfa', {
-    emissiveHex: isOwner ? '#fb7185' : '#8b5cf6',
-    specularPower: 28,
-  });
-  [-7.2, 7.2].forEach((x, index) => {
-    const planter = MeshBuilder.CreateCylinder(`estate-planter-${origin.farmId}-${index}`, {
-      diameter: 1.55,
-      height: 0.24,
-      tessellation: 12,
-    }, scene);
-    planter.position.set(x, 0.22, -7.2);
-    planter.material = planterMat;
-    planter.parent = root;
-
-    const flower = MeshBuilder.CreateSphere(`estate-planter-flower-${origin.farmId}-${index}`, {
-      diameter: 0.76,
-      segments: 10,
-    }, scene);
-    flower.scaling.y = 0.72;
-    flower.position.set(x, 0.75, -7.2);
-    flower.material = flowerMat;
-    flower.parent = root;
-  });
 
   // 4. Cây Táo Đỏ Trĩu Quả ở Góc Vườn Sân Trước (Fruit-bearing Apple Tree)
   const treeRoot = new TransformNode(`estate-tree-${origin.farmId}`, scene);

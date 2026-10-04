@@ -26,7 +26,7 @@ const auto = createCinematicRenderingPipeline(autoScene, autoCamera, { quality: 
 const processing = auto.pipeline.imageProcessing;
 for (let i = 0; i < 20; i++) {
   auto.setQuality(i % 2 ? 'balanced' : 'eco', true);
-  assert.equal(auto.pipeline.samples, 1);
+  assert.equal(auto.pipeline.samples, 4);
   assert.equal(auto.pipeline.imageProcessing, processing, 'Auto must not rebuild grading between effect levels');
 }
 autoScene.dispose(); autoEngine.dispose();

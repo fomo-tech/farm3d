@@ -8,6 +8,7 @@ import { WORLD_VILLAGES } from '../../../shared/villageLayout.js';
 import { landscapeVariation } from './LandscapeArt.js';
 import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
+import { isPointInLakeOrRiver } from './WaterSafetyZone.js';
 
 // Public woodland margins only. Nothing decorative can block parcels or roads.
 export function* livingMeadowPlacements() {
@@ -17,7 +18,7 @@ export function* livingMeadowPlacements() {
         const x = village.offsetX + side * (64 + column * 2.2 + landscapeVariation(row, column, 3));
         const z = village.offsetZ + 102 + row * 2.2 + landscapeVariation(row, column, 6);
         if (isPointOnRoadCorridor(x, z, 3) || isPointInsideAnyFarmLot(x, z, 2)) continue;
-        if (Math.hypot(x - 167, z - 2) < 65) continue;
+        if (isPointInLakeOrRiver(x, z, 3.0)) continue;
         const noise = landscapeVariation(x, z, 23);
         if (noise < .22) continue; // Irregular open pockets, not a carpet grid.
         yield { x, z, kind: noise > .93 ? 'pink' : noise > .86 ? 'cream' : 'grass', scale: .6 + noise * .5 };
@@ -84,8 +85,10 @@ export function* createLivingMeadowSteps(scene, { mobile = false } = {}) {
     yield;
   }
   let elapsed = 1;
+  let isEnabled = true;
   return {
     update(dt, position) {
+      if (!isEnabled) return;
       elapsed += dt;
       if (!position || elapsed < .25) return;
       elapsed = 0;
@@ -93,6 +96,14 @@ export function* createLivingMeadowSteps(scene, { mobile = false } = {}) {
         // Cache behind the fog with generous hysteresis; zero popping in camera view
         const radius = (mobile ? 140 : 185) + (batch.mesh.isEnabled() ? 30 : 0);
         batch.mesh.setEnabled(Math.hypot(position.x-batch.x,position.z-batch.z) < radius);
+      }
+    },
+    setEnabled(enabled) {
+      isEnabled = Boolean(enabled);
+      if (!isEnabled) {
+        for (const batch of batches) {
+          batch.mesh.setEnabled(false);
+        }
       }
     },
     getStats: () => ({ instances: count, batches: batches.length, visibleBatches: batches.filter(b => b.mesh.isEnabled()).length }),

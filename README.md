@@ -6,16 +6,11 @@ Project sạch, độc lập với các game hiện tại. Bản nền dùng Rea
 
 ```sh
 npm install
-npm run dev:server
-```
-
-Mở terminal thứ hai:
-
-```sh
 npm run dev
 ```
 
-Game client chạy tại `http://localhost:4176`, multiplayer server chạy tại `http://localhost:8787`.
+Game client chạy tại `http://localhost:4177`, multiplayer server chạy tại `http://localhost:8787`.
+Lệnh dev chạy cả hai; dùng `npm run dev:client` hoặc `npm run dev:server` khi cần chạy riêng.
 Mở nhiều tab để thử nhiều người chơi trong cùng kênh. Nếu server tắt, client tự chuyển sang
 offline và thử kết nối lại sau mỗi 2,5 giây.
 

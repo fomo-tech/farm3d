@@ -22,8 +22,9 @@ export function calculateRenderDpr({ quality = 'ultra', nativeDpr = 1, width = 1
   const pixelLimit = Math.sqrt(preset.pixels / Math.max(1, width * height));
   // Ultra and Balanced prioritize crisp native 1:1 pixel mapping on High-DPI screens.
   const targetDpr = Math.min(Math.max(1, nativeDpr), limit, pixelLimit);
+  const minDpr = (mobile || quality === 'eco') ? 0.75 : 1.0;
   const effectiveScale = quality === 'ultra' ? 1 : scale;
-  return Math.max(0.75, targetDpr * effectiveScale);
+  return Math.max(minDpr, targetDpr * effectiveScale);
 }
 
 // Slow hysteresis avoids oscillation and ignores stalls caused by tab suspension/loading.

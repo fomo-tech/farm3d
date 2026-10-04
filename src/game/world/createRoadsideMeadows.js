@@ -10,6 +10,7 @@
 
 import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
+import { isPointInLakeOrRiver } from './WaterSafetyZone.js';
 
 const CORRIDORS = [
   { z: 86, minX: -570, maxX: 570, theme: 'meadow' },
@@ -31,9 +32,9 @@ export function roadsideMeadowPlacements() {
         const px = x + (noise(x, road.z, side + 8) - 0.5) * 8;
         const pz = road.z + side * (18 + noise(x, road.z, side + 12) * 8);
 
-        // Clearance checks: bushes must never intersect roads, farm lots, or lake
+        // Clearance checks: bushes must never intersect roads, farm lots, lake, or river
         if (isPointOnRoadCorridor(px, pz, 1.2) || isPointInsideAnyFarmLot(px, pz, 2.0)) continue;
-        if (Math.hypot(px - 167, pz - 2) < 52) continue;
+        if (isPointInLakeOrRiver(px, pz, 3.0)) continue;
         if (pz > 320 && pz < 390 && Math.abs(px) < 125) continue;
 
         placements.push({ x: px, z: pz, theme: road.theme });

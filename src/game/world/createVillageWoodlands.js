@@ -1,6 +1,7 @@
 import { WORLD_VILLAGES } from '../../../shared/villageLayout.js';
 import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
+import { isPointInLakeOrRiver } from './WaterSafetyZone.js';
 import { landscapeVariation } from './LandscapeArt.js';
 
 // Forest pockets frame residential areas; the playable parcels remain untouched.
@@ -12,7 +13,7 @@ export function villageWoodlandPlacements() {
         const x = village.offsetX + side * (66 + depth * 5 + landscapeVariation(row, depth, 5) * 3);
         const z = village.offsetZ + 110 + row * 10 + landscapeVariation(row, depth, 9) * 4;
         if (isPointOnRoadCorridor(x, z, 5) || isPointInsideAnyFarmLot(x, z, 5)) continue;
-        if (Math.hypot(x - 167, z - 2) < 65) continue;
+        if (isPointInLakeOrRiver(x, z, 4.0)) continue;
         const v = landscapeVariation(x, z, 7);
         placements.push({ x, z, type: v < .12 ? 'birch' : 'oak', scale: 1.7 + v * .3 });
       }

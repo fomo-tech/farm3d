@@ -8,6 +8,7 @@
   let body;
   let badge;
   let currentStage = 'HTML loaded';
+  let hasReachedReady = false;
   let lastFrameAt = 0;
   let lastFrameWarningAt = 0;
   let worldRunning = false;
@@ -27,6 +28,18 @@
   const animationFrames = [];
   const sessionMetrics = { revision: 'streaming-audit-v2', frames: 0, maxFrameGapMs: 0, frameGapsOver1000: 0, longTasks: 0, maxLongTaskMs: 0 };
   let lastFramePerformanceAt = 0;
+  let lastVisibilityChangeAt = Date.now();
+  let webglContextLost = false;
+  document.addEventListener('visibilitychange', () => {
+    lastVisibilityChangeAt = Date.now();
+    // Background render suspension is intentional, not a foreground frame gap.
+    lastFrameAt = Date.now();
+    lastFramePerformanceAt = 0;
+    lastTickAt = Date.now();
+    blockedSince = 0;
+  });
+  document.addEventListener('webglcontextlost', () => { webglContextLost = true; }, true);
+  document.addEventListener('webglcontextrestored', () => { webglContextLost = false; }, true);
   function recordCallback(stage, start, end) {
     if (end - start < 4) return;
     slowCallbacks.push({ stage, start, end, duration: end - start });
@@ -64,6 +77,7 @@
       `Time: ${new Date().toISOString()}`,
       `Viewport: ${innerWidth}x${innerHeight} @ DPR ${devicePixelRatio || 1}`,
       `Online: ${navigator.onLine}`,
+      `Render lifecycle: ${textOf({ visibility: document.visibilityState, focused: document.hasFocus(), lastVisibilityChangeAt, webglContextLost })}`,
       `Memory: ${navigator.deviceMemory || 'unknown'} GB`,
       `CPU: ${navigator.hardwareConcurrency || 'unknown'} cores`,
       `UA: ${navigator.userAgent}`,
@@ -125,7 +139,7 @@
   }
 
   window.__farmDebug = {
-    mark(stage) { currentStage = stage; ensureUi(); render(); },
+    mark(stage) { if (hasReachedReady) return; currentStage = stage; ensureUi(); render(); },
     report(error, source) { report(source || 'APP ERROR', error); },
     stage(stage) { finishStage(); runtimeStage = stage; stageStartedAt = performance.now(); },
     endStage() { finishStage(); runtimeStage = 'outside measured render work'; },
@@ -156,7 +170,7 @@
       lastFrameAt = now;
     },
     stopFrames() { worldRunning = false; },
-    ready() { currentStage = 'World ready'; ensureUi(); if (entries.length === 0) panel?.classList.remove('visible'); render(); },
+    ready() { hasReachedReady = true; currentStage = 'World ready'; ensureUi(); if (entries.length === 0) panel?.classList.remove('visible'); render(); },
     getReport() { return { stage: currentStage, runtimeStage, snapshot: runtimeSnapshot, metrics: { ...sessionMetrics }, react: window.__farmReactMetrics || null, slowCallbacks: slowCallbacks.slice(), animationFrames: animationFrames.slice(), entries: entries.slice(), system: systemReport() }; },
   };
 
@@ -181,7 +195,7 @@
     } else blockedSince = 0;
     if (now - lastFrameAt >= 8000 && now - lastFrameWarningAt >= 20000) {
       lastFrameWarningAt = now;
-      report('RENDER STALL', `Không có khung hình mới trong ${Math.round((now - lastFrameAt) / 1000)} giây. Giai đoạn: ${currentStage}. Nếu trang bị khóa hoàn toàn, cảnh báo chỉ hiện khi luồng giao diện hoạt động trở lại.`);
+      report('RENDER STALL', `Không có khung hình mới trong ${Math.round((now - lastFrameAt) / 1000)} giây. Giai đoạn: ${currentStage}. Tab: ${document.visibilityState}; focus: ${document.hasFocus()}; WebGL context lost: ${webglContextLost}. Nếu trang bị khóa hoàn toàn, cảnh báo chỉ hiện khi luồng giao diện hoạt động trở lại.`);
     }
   }, 2000);
 
@@ -243,6 +257,8 @@
   document.addEventListener('DOMContentLoaded', ensureUi);
 
   setTimeout(function () {
-    if (currentStage !== 'World ready') report('BOOT TIMEOUT', `Game chưa sẵn sàng sau ${Math.round((Date.now() - startedAt) / 1000)} giây`);
-  }, 30000);
+    if (!hasReachedReady && currentStage !== 'World ready' && !worldRunning && sessionMetrics.frames === 0) {
+      report('BOOT TIMEOUT', `Game chưa sẵn sàng sau ${Math.round((Date.now() - startedAt) / 1000)} giây`);
+    }
+  }, 45000);
 })();

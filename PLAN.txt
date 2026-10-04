@@ -1,0 +1,168 @@
+Mình đề xuất xây casino thành một khu giải trí multiplayer trong game, có sảnh chung và từng bàn chơi riêng. Kế hoạch dưới đây giả định **dùng xu giải trí không quy đổi tiền thật, không nạp/rút để cá cược**. Nên tách xu casino khỏi xu mua trang phục để tránh ảnh hưởng kinh tế nông trại.
+
+## 1. Sảnh casino và phòng chơi
+
+Thiết kế sang trọng nhưng vui tươi: xanh navy, xanh ngọc, vàng champagne; không dùng tông hồng.
+
+- Sảnh có bốn khu: Tài Xỉu, Bầu Cua, Bài Cào, Tiến Lên Miền Nam.
+- Danh sách bàn hiển thị số người, mức cược, trạng thái ván.
+- Tạo phòng công khai hoặc riêng có mật khẩu.
+- Vào bàn, chọn ghế, sẵn sàng, xem người chơi khác.
+- Chat nhanh, biểu cảm nhân vật, lịch sử ván.
+- Hỗ trợ người xem; chỉ người ngồi bàn được chơi.
+- Mất kết nối có thời gian quay lại, không làm mất trạng thái ván.
+
+## 2. Tài Xỉu — bàn xúc xắc 3D
+
+Chu trình mỗi ván:
+
+**Mở cược → chốt cược → lắc xúc xắc → mở kết quả → trả thưởng → ván mới.**
+
+Tính năng đầy đủ:
+
+- Đặt Tài/Xỉu bằng các mệnh giá chip.
+- Tăng cược, đặt lại mức cược trước, hủy cược khi chưa chốt.
+- Hiển thị tổng cược của mình và toàn bàn.
+- Đồng hồ đếm ngược theo thời gian server.
+- Ba xúc xắc 3D, bát và nắp, animation lắc/mở.
+- Tổng điểm, kết quả, lịch sử các ván.
+- Thông báo thắng/thua và số dư sau quyết toán.
+
+**Cần chốt bộ luật trước khi viết:** cách xử lý bộ ba đồng số, khoảng điểm Tài/Xỉu và tỷ lệ trả thưởng. Không để client tự quyết định.
+
+Animation chỉ minh họa kết quả server đã tạo; không dùng va chạm vật lý trên máy người chơi để tính kết quả.
+
+## 3. Bầu Cua — bàn hình ảnh 3D
+
+Sáu cửa: **Bầu, Cua, Tôm, Cá, Gà, Nai**.
+
+- Icon 3D đồng bộ, rõ ở kích thước nhỏ.
+- Ba xúc xắc mang hình sáu linh vật.
+- Đặt nhiều cửa trong một ván.
+- Chip xếp trên từng cửa, hiển thị phần cược của mình.
+- Chốt cược, lắc, mở, tô sáng cửa trúng.
+- Hiển thị số lần xuất hiện của mỗi linh vật.
+- Lịch sử kết quả và bảng thanh toán chi tiết.
+
+Quy tắc trả thưởng phải ghi rõ **tiền thắng** và **tiền cược hoàn lại**, tránh hiểu nhầm khi linh vật xuất hiện 1–3 lần.
+
+## 4. Bài Cào — phòng chơi chung
+
+Đề xuất bản đầu: **bài cào so điểm, không nhà cái**, từ 2–6 người.
+
+- Ngồi bàn, sẵn sàng, đóng mức cược cố định.
+- Chia ba lá, bài úp với người khác.
+- Xem bài của mình, lật bài khi đến giai đoạn so.
+- Tính điểm, xác định thắng/hòa, chia thưởng.
+- Animation chia bài, lật bài, gom chip.
+- Người vào giữa ván chỉ được xem và tham gia ván sau.
+
+Cần cấu hình rõ: cách tính điểm, ba lá hình có phải trường hợp đặc biệt không, thứ tự trường hợp đặc biệt và xử lý hòa. **Không trộn nhiều biến thể bài cào trong cùng một bàn.**
+
+## 5. Tiến Lên Miền Nam — phòng 2–4 người
+
+Đây là phần phức tạp nhất, nên triển khai sau khi hệ thống phòng và đồng bộ đã ổn định.
+
+- Chia 13 lá/người.
+- Sắp bài tự động; chọn nhiều lá; gợi ý bộ hợp lệ.
+- Đánh bài, bỏ lượt, đếm thời gian lượt.
+- Kiểm tra bài lẻ, đôi, sám, sảnh, đôi thông, tứ quý.
+- Luật chặt heo, chặt đôi thông/tứ quý.
+- Xử lý hết bài, xếp hạng và tổng kết.
+- Mất kết nối: giữ ghế trong thời gian cấu hình; hết thời gian áp dụng hành động mặc định.
+- Không tiết lộ bài trên tay của đối thủ cho client hoặc người xem.
+
+Những luật cần chốt: người đi đầu, thắng trắng, thối heo, phạt chặt, cóng và cách tính điểm. Mỗi phòng hiển thị bộ luật đang áp dụng trước khi người chơi sẵn sàng.
+
+**Nên phát hành Tiến Lên chế độ tính điểm trước**, sau đó mới cân nhắc dùng xu giải trí.
+
+## 6. Kiến trúc và file config
+
+Tách luật khỏi giao diện để sửa về sau:
+
+```text
+shared/casino/
+  casinoConfig.js
+  taiXiuRules.js
+  bauCuaRules.js
+  baiCaoRules.js
+  tienLenRules.js
+
+server/casino/
+  CasinoRoomManager.js
+  CasinoWalletService.js
+  CasinoRoundService.js
+  games/
+
+src/game/casino/
+  scenes/
+  animations/
+  assets/
+
+src/components/casino/
+  CasinoLobby.jsx
+  CasinoTable.jsx
+  CasinoHistory.jsx
+```
+
+Config chứa:
+
+- Số ghế, giới hạn phòng.
+- Mệnh giá chip, cược tối thiểu/tối đa.
+- Thời gian đặt cược, lượt chơi, trả thưởng.
+- Bộ luật và tỷ lệ thanh toán.
+- Thời gian reconnect.
+- Chất lượng hiệu ứng và giới hạn tài nguyên.
+
+Server lưu **phiên bản luật cho từng ván**; sửa config không được đổi luật của ván đang diễn ra.
+
+## 7. Đồng bộ, công bằng và chống lỗi xu
+
+Đây là phần bắt buộc, không làm sau cùng:
+
+- Server quyết định kết quả, chia bài, lượt chơi và số dư.
+- Sinh ngẫu nhiên bằng nguồn ngẫu nhiên bảo mật.
+- Mỗi thao tác có mã yêu cầu để chống đặt cược/trả thưởng hai lần.
+- Giữ xu khi đặt cược, quyết toán bằng giao dịch nguyên tử.
+- Chặn cược muộn, cược âm, vượt số dư hoặc vượt hạn mức.
+- Lưu nhật ký ván và sổ giao dịch để đối soát.
+- Khi server khởi động lại phải phục hồi hoặc hoàn tiền ván chưa hoàn tất.
+- Client reconnect nhận snapshot hiện tại, không tự dựng lại kết quả.
+- Tuyệt đối không điều chỉnh kết quả theo người chơi hoặc lịch sử thắng/thua.
+
+## 8. Hình ảnh và hiệu năng
+
+- Bàn, chip, xúc xắc dùng GLB dùng chung geometry/material.
+- Icon và texture dùng WebP; không dùng emoji làm hình vật phẩm chính.
+- Chỉ tải chi tiết bàn khi người chơi vào phòng.
+- Tái sử dụng chip, xúc xắc và hiệu ứng bằng object pool.
+- Không tạo thêm engine cho từng bàn trong thế giới.
+- Không dựng hàng nghìn chip thật: dùng instance và giới hạn số chip hiển thị.
+- Tắt animation, observer và tài nguyên không cần thiết khi rời bàn.
+- Kiểm tra frame gap khi vào/ra casino, giống vấn đề cửa hàng trước đây.
+
+## 9. Thứ tự triển khai
+
+| Giai đoạn | Nội dung |
+|---|---|
+| 1 | Chốt luật, config, xu giải trí, sổ giao dịch và bộ test luật |
+| 2 | Sảnh, phòng, ghế, ready, người xem, reconnect |
+| 3 | Tài Xỉu đầy đủ từ đặt cược đến quyết toán |
+| 4 | Bầu Cua với asset và animation 3D |
+| 5 | Bài Cào multiplayer, bài riêng tư, xử lý hòa |
+| 6 | Tiến Lên: kiểm tra bộ bài, lượt, chặt, xếp hạng |
+| 7 | Hoàn thiện hình ảnh, âm thanh, responsive và tối ưu |
+| 8 | Test nhiều client, lỗi mạng, khởi động lại server và đối soát xu |
+
+## 10. Điều kiện mới được báo hoàn thành
+
+- Chơi hết ván bằng nhiều client thật, không chỉ test giao diện.
+- Không sai luật ở các trường hợp biên.
+- Không mất hoặc nhân đôi xu khi spam, reconnect hay restart server.
+- Không lộ bài đối thủ.
+- Không kẹt bàn khi có người thoát.
+- Vào/ra phòng không gây ngắt vài giây.
+- Kiểm tra trực tiếp hình ảnh trên desktop và điện thoại.
+- Có báo cáo rõ phần đã kiểm chứng và phần còn giới hạn.
+
+Phạm vi này nên triển khai theo từng giai đoạn trên, dùng chung nền tảng phòng và giao dịch; không làm bốn mini-game rời rạc rồi ghép lại.

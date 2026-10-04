@@ -23,7 +23,8 @@ export function FloatingPlotBubble({
       let minDistance = Infinity;
 
       for (const tile of world.farming.tiles) {
-        const d = Math.hypot(tile.position.x - playerPos.x, tile.position.z - playerPos.z);
+        const tilePos = tile.getAbsolutePosition ? tile.getAbsolutePosition() : (tile.absolutePosition || tile.position);
+        const d = Math.hypot(tilePos.x - playerPos.x, tilePos.z - playerPos.z);
         if (d < minDistance) {
           minDistance = d;
           nearest = tile;

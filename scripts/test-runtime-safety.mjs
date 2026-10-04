@@ -12,6 +12,7 @@ let now = 100000;
 const timers = [];
 const storage = new Map();
 const performanceObservers = new Map();
+const documentListeners = new Map();
 class TestPerformanceObserver {
   static supportedEntryTypes = ['longtask', 'long-animation-frame'];
   constructor(callback) { this.callback = callback; }
@@ -26,7 +27,8 @@ const context = {
   performance: { now() { return now; } },
   location: { search: '', hostname: 'localhost', href: 'http://localhost/' },
   navigator: { onLine: true },
-  document: { body: null, visibilityState: 'visible', addEventListener() {} },
+  document: { body: null, visibilityState: 'visible', hasFocus() { return true; },
+    addEventListener(name, handler) { documentListeners.set(name, handler); } },
   innerWidth: 1920, innerHeight: 1080, devicePixelRatio: 1,
   localStorage: { setItem(key, value) { storage.set(key, value); } },
   setInterval(callback) { timers.push(callback); }, setTimeout() {},
@@ -56,5 +58,18 @@ performanceObservers.get('long-animation-frame')({ getEntries: () => [{ startTim
     sourceFunctionName: 'expensiveCallback', sourceCharPosition: 42, forcedStyleAndLayoutDuration: 0 }] }] });
 assert.equal(debug.getReport().animationFrames[0].scripts[0].sourceFunctionName, 'expensiveCallback');
 assert.ok(debug.getReport().entries.some(entry => entry.type === 'SLOW FRAME SOURCE'));
+const gapsBeforeBackground = debug.getReport().metrics.frameGapsOver1000;
+context.document.visibilityState = 'hidden';
+documentListeners.get('visibilitychange')();
+now += 130000;
+context.document.visibilityState = 'visible';
+documentListeners.get('visibilitychange')();
+debug.frame();
+assert.equal(debug.getReport().metrics.frameGapsOver1000, gapsBeforeBackground,
+  'Intentional background pause must not become a foreground freeze');
+documentListeners.get('webglcontextlost')();
+assert.match(debug.getReport().system, /"webglContextLost":true/);
+documentListeners.get('webglcontextrestored')();
+assert.match(debug.getReport().system, /"webglContextLost":false/);
 debug.stopFrames();
 console.log('PASS: bounded collision, freeze watchdog, persisted reports and blocked-movement diagnostics');

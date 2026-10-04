@@ -1,0 +1,676 @@
+{
+  "revision": "streaming-audit-v2",
+  "mode": "coastal-geometry-audit",
+  "startedAt": null,
+  "durationSeconds": 900,
+  "samples": [],
+  "failures": [],
+  "transitions": 0,
+  "cycles": 0,
+  "ready": true,
+  "completed": false,
+  "gaps": [],
+  "longTasks": [],
+  "focus": {
+    "x": 0,
+    "z": 406
+  },
+  "orbitCamera": true,
+  "auditBootPump": true,
+  "coastalAudit": {
+    "count": 0,
+    "thinPlacementsChecked": 2629,
+    "meshes": []
+  },
+  "runtime": {
+    "stage": "World ready",
+    "runtimeStage": "Babylon draw / shadows / postprocess",
+    "snapshot": {
+      "fps": 60,
+      "graphicsQuality": "balanced",
+      "renderWidth": 1202,
+      "renderHeight": 819,
+      "resolutionScale": "1.00",
+      "x": "0.0",
+      "z": "406.0",
+      "chunk": "0:4",
+      "meshes": 12264,
+      "activeMeshes": 95,
+      "nearbyShadowCasters": 2,
+      "streamingScheduler": {
+        "steps": 11666,
+        "maxStepMs": 41.5,
+        "lastBatchMs": 2.1000000089406967,
+        "overruns": 0,
+        "slowestStep": {
+          "label": "boot: atmosphere",
+          "ms": 41.5
+        },
+        "pending": 0
+      },
+      "modelWork": {
+        "spawn": {
+          "completed": 150,
+          "cancelled": 0,
+          "maxJobMs": 22,
+          "overruns": 0,
+          "pending": 0
+        },
+        "activeLoads": 0,
+        "pendingLoads": 0,
+        "maxLoadMs": 729
+      },
+      "autoGraphics": {
+        "effects": "balanced",
+        "scale": 1
+      },
+      "farmCache": {
+        "built": 1,
+        "building": 0,
+        "selected": 1,
+        "active": 1
+      },
+      "textureWorker": {
+        "mode": "worker",
+        "pending": 0,
+        "completed": 3,
+        "maxJobMs": 29
+      },
+      "upgradedHomesReady": 0,
+      "fogStreaming": {
+        "mode": "clear",
+        "fps": 60,
+        "pendingNear": 0,
+        "targetFogEnd": 720,
+        "fogStart": 280,
+        "fogEnd": 720,
+        "cameraFarClip": 760
+      },
+      "livingMeadow": null,
+      "foliageBatches": {
+        "placements": 4104,
+        "detailBatches": 135,
+        "enabledBatches": 135,
+        "lodBatches": 244,
+        "missingRepresentations": 377,
+        "pending": 121,
+        "species": 8
+      },
+      "topMeshGroups": [],
+      "indexedMeshes": 8585,
+      "dynamicCandidates": 3678,
+      "spatialIndexReady": true,
+      "spatialIndexPending": 0,
+      "worldId": "binh-minh-003",
+      "farmLayoutVersion": 7,
+      "farmLayoutSynced": null,
+      "movement": {
+        "input": false,
+        "collided": false,
+        "speed": 0,
+        "ridingBus": false
+      }
+    },
+    "metrics": {
+      "revision": "streaming-audit-v2",
+      "frames": 1536,
+      "maxFrameGapMs": 212.09999999403954,
+      "frameGapsOver1000": 0,
+      "longTasks": 4,
+      "maxLongTaskMs": 171
+    },
+    "react": null,
+    "slowCallbacks": [
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25673.5,
+        "end": 25684,
+        "duration": 10.5
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25689.90000000596,
+        "end": 25699.90000000596,
+        "duration": 10
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25707.10000000894,
+        "end": 25717.20000000298,
+        "duration": 10.099999994039536
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25723.29999999702,
+        "end": 25733.10000000894,
+        "duration": 9.800000011920929
+      },
+      {
+        "stage": "scene.render",
+        "start": 25739.60000000894,
+        "end": 25746.20000000298,
+        "duration": 6.5999999940395355
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25746.29999999702,
+        "end": 25756.40000000596,
+        "duration": 10.100000008940697
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25756.79999999702,
+        "end": 25766.79999999702,
+        "duration": 10
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25773.20000000298,
+        "end": 25783.60000000894,
+        "duration": 10.400000005960464
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25789.90000000596,
+        "end": 25799.90000000596,
+        "duration": 10
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25806.60000000894,
+        "end": 25816.20000000298,
+        "duration": 9.599999994039536
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25823.29999999702,
+        "end": 25833.70000000298,
+        "duration": 10.400000005960464
+      },
+      {
+        "stage": "scene.render",
+        "start": 25839.79999999702,
+        "end": 25846.79999999702,
+        "duration": 7
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25846.90000000596,
+        "end": 25857.10000000894,
+        "duration": 10.200000002980232
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25857.60000000894,
+        "end": 25868.29999999702,
+        "duration": 10.699999988079071
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25873.90000000596,
+        "end": 25884.10000000894,
+        "duration": 10.200000002980232
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25890,
+        "end": 25900.20000000298,
+        "duration": 10.200000002980232
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25906.60000000894,
+        "end": 25916.29999999702,
+        "duration": 9.699999988079071
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25923.29999999702,
+        "end": 25933.70000000298,
+        "duration": 10.400000005960464
+      },
+      {
+        "stage": "scene.render",
+        "start": 25939.70000000298,
+        "end": 25946.90000000596,
+        "duration": 7.200000002980232
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25947,
+        "end": 25957.10000000894,
+        "duration": 10.100000008940697
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25957.60000000894,
+        "end": 25970.10000000894,
+        "duration": 12.5
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25973.5,
+        "end": 25986.5,
+        "duration": 13
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 25990.20000000298,
+        "end": 26003.40000000596,
+        "duration": 13.200000002980232
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26006.90000000596,
+        "end": 26018.20000000298,
+        "duration": 11.299999997019768
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26023.5,
+        "end": 26033.5,
+        "duration": 10
+      },
+      {
+        "stage": "scene.render",
+        "start": 26039.79999999702,
+        "end": 26046.60000000894,
+        "duration": 6.800000011920929
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26046.60000000894,
+        "end": 26056.90000000596,
+        "duration": 10.299999997019768
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26057.5,
+        "end": 26067.70000000298,
+        "duration": 10.200000002980232
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26073.40000000596,
+        "end": 26084.40000000596,
+        "duration": 11
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26090.20000000298,
+        "end": 26101.29999999702,
+        "duration": 11.099999994039536
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26106.90000000596,
+        "end": 26117.70000000298,
+        "duration": 10.799999997019768
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26123.5,
+        "end": 26133.20000000298,
+        "duration": 9.700000002980232
+      },
+      {
+        "stage": "scene.render",
+        "start": 26139.90000000596,
+        "end": 26146.5,
+        "duration": 6.5999999940395355
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26146.60000000894,
+        "end": 26156,
+        "duration": 9.399999991059303
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26157,
+        "end": 26167,
+        "duration": 10
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26173.70000000298,
+        "end": 26183.70000000298,
+        "duration": 10
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26190.40000000596,
+        "end": 26199.90000000596,
+        "duration": 9.5
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26207.10000000894,
+        "end": 26217.5,
+        "duration": 10.399999991059303
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26223.60000000894,
+        "end": 26233.5,
+        "duration": 9.899999991059303
+      },
+      {
+        "stage": "scene.render",
+        "start": 26240,
+        "end": 26246.5,
+        "duration": 6.5
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26246.60000000894,
+        "end": 26256.90000000596,
+        "duration": 10.299999997019768
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26257.5,
+        "end": 26267.79999999702,
+        "duration": 10.299999997019768
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26273.70000000298,
+        "end": 26283.5,
+        "duration": 9.799999997019768
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26290.40000000596,
+        "end": 26300.40000000596,
+        "duration": 10
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26307.20000000298,
+        "end": 26317.5,
+        "duration": 10.299999997019768
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26323.70000000298,
+        "end": 26335.5,
+        "duration": 11.799999997019768
+      },
+      {
+        "stage": "scene.render",
+        "start": 26340,
+        "end": 26346.70000000298,
+        "duration": 6.700000002980232
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26346.70000000298,
+        "end": 26356.10000000894,
+        "duration": 9.400000005960464
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26357.10000000894,
+        "end": 26367,
+        "duration": 9.899999991059303
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26373.79999999702,
+        "end": 26383.5,
+        "duration": 9.700000002980232
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26390.29999999702,
+        "end": 26400.5,
+        "duration": 10.200000002980232
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26407.10000000894,
+        "end": 26416.90000000596,
+        "duration": 9.799999997019768
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26423.79999999702,
+        "end": 26434.10000000894,
+        "duration": 10.300000011920929
+      },
+      {
+        "stage": "scene.render",
+        "start": 26440.10000000894,
+        "end": 26446.5,
+        "duration": 6.399999991059303
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26446.60000000894,
+        "end": 26456.20000000298,
+        "duration": 9.599999994039536
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26457.20000000298,
+        "end": 26466.70000000298,
+        "duration": 9.5
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26473.79999999702,
+        "end": 26483.40000000596,
+        "duration": 9.600000008940697
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26490.5,
+        "end": 26502.20000000298,
+        "duration": 11.700000002980232
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26507.20000000298,
+        "end": 26518.20000000298,
+        "duration": 11
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26523.90000000596,
+        "end": 26534,
+        "duration": 10.099999994039536
+      },
+      {
+        "stage": "scene.render",
+        "start": 26540.29999999702,
+        "end": 26546.90000000596,
+        "duration": 6.600000008940697
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26547,
+        "end": 26556.40000000596,
+        "duration": 9.400000005960464
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26557.40000000596,
+        "end": 26568.29999999702,
+        "duration": 10.899999991059303
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26574.20000000298,
+        "end": 26589.10000000894,
+        "duration": 14.900000005960464
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26590.70000000298,
+        "end": 26605.20000000298,
+        "duration": 14.5
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26607.40000000596,
+        "end": 26617.79999999702,
+        "duration": 10.399999991059303
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26624,
+        "end": 26633.79999999702,
+        "duration": 9.799999997019768
+      },
+      {
+        "stage": "scene.render",
+        "start": 26640.40000000596,
+        "end": 26646.40000000596,
+        "duration": 6
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26646.40000000596,
+        "end": 26655.60000000894,
+        "duration": 9.200000002980232
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26657.29999999702,
+        "end": 26666.79999999702,
+        "duration": 9.5
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26674,
+        "end": 26683.79999999702,
+        "duration": 9.799999997019768
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26690.79999999702,
+        "end": 26701.40000000596,
+        "duration": 10.600000008940697
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26707.29999999702,
+        "end": 26720.40000000596,
+        "duration": 13.100000008940697
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26724.20000000298,
+        "end": 26737.60000000894,
+        "duration": 13.400000005960464
+      },
+      {
+        "stage": "scene.render",
+        "start": 26740.5,
+        "end": 26748.79999999702,
+        "duration": 8.299999997019768
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26748.90000000596,
+        "end": 26761.40000000596,
+        "duration": 12.5
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26762.29999999702,
+        "end": 26773.10000000894,
+        "duration": 10.800000011920929
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26774.10000000894,
+        "end": 26784.29999999702,
+        "duration": 10.199999988079071
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26791.10000000894,
+        "end": 26802.5,
+        "duration": 11.399999991059303
+      },
+      {
+        "stage": "Babylon draw / shadows / postprocess",
+        "start": 26807.40000000596,
+        "end": 26819.60000000894,
+        "duration": 12.200000002980232
+      }
+    ],
+    "animationFrames": [
+      {
+        "start": 811,
+        "duration": 212,
+        "scripts": [
+          {
+            "duration": 171,
+            "invoker": "import.then",
+            "sourceURL": "http://localhost:4177/node_modules/@babylonjs/loaders/glTF/2.0/glTFLoader.pure.js?v=8197edef",
+            "sourceFunctionName": "",
+            "sourceCharPosition": 3181,
+            "forcedLayoutMs": 0
+          },
+          {
+            "duration": 37,
+            "invoker": "FrameRequestCallback",
+            "sourceURL": "http://localhost:4177/node_modules/@babylonjs/core/Engines/abstractEngine.pure.js?v=8197edef",
+            "sourceFunctionName": "",
+            "sourceCharPosition": 41917,
+            "forcedLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "start": 1969.2000000029802,
+        "duration": 128,
+        "scripts": [
+          {
+            "duration": 103,
+            "invoker": "import.then",
+            "sourceURL": "http://localhost:4177/node_modules/@babylonjs/loaders/glTF/2.0/glTFLoader.pure.js?v=8197edef",
+            "sourceFunctionName": "",
+            "sourceCharPosition": 15988,
+            "forcedLayoutMs": 0
+          },
+          {
+            "duration": 22,
+            "invoker": "FrameRequestCallback",
+            "sourceURL": "http://localhost:4177/node_modules/@babylonjs/core/Engines/abstractEngine.pure.js?v=8197edef",
+            "sourceFunctionName": "",
+            "sourceCharPosition": 41917,
+            "forcedLayoutMs": 0
+          }
+        ]
+      },
+      {
+        "start": 2384.2999999970198,
+        "duration": 160,
+        "scripts": [
+          {
+            "duration": 143,
+            "invoker": "IMG[src=\"blob:http://localhost:4177/06c921d5-0239-4d68-ab6b-96b5354c74b4\"].onload",
+            "sourceURL": "http://localhost:4177/node_modules/@babylonjs/core/Misc/fileTools.pure.js?v=8197edef",
+            "sourceFunctionName": "loadHandler",
+            "sourceCharPosition": 10459,
+            "forcedLayoutMs": 0
+          },
+          {
+            "duration": 17,
+            "invoker": "FrameRequestCallback",
+            "sourceURL": "http://localhost:4177/node_modules/@babylonjs/core/Engines/abstractEngine.pure.js?v=8197edef",
+            "sourceFunctionName": "",
+            "sourceCharPosition": 41917,
+            "forcedLayoutMs": 0
+          }
+        ]
+      }
+    ],
+    "entries": [],
+    "system": "URL: http://localhost:4177/performance.html?debug=1&quality=balanced&x=0&z=406&orbit=1&audit=1\nStage: World ready\nRuntime stage: Babylon draw / shadows / postprocess\nLast runtime snapshot: {\"fps\":60,\"graphicsQuality\":\"balanced\",\"renderWidth\":1202,\"renderHeight\":819,\"resolutionScale\":\"1.00\",\"x\":\"0.0\",\"z\":\"406.0\",\"chunk\":\"0:4\",\"meshes\":12264,\"activeMeshes\":95,\"nearbyShadowCasters\":2,\"streamingScheduler\":{\"steps\":11666,\"maxStepMs\":41.5,\"lastBatchMs\":2.1000000089406967,\"overruns\":0,\"slowestStep\":{\"label\":\"boot: atmosphere\",\"ms\":41.5},\"pending\":0},\"modelWork\":{\"spawn\":{\"completed\":150,\"cancelled\":0,\"maxJobMs\":22,\"overruns\":0,\"pending\":0},\"activeLoads\":0,\"pendingLoads\":0,\"maxLoadMs\":729},\"autoGraphics\":{\"effects\":\"balanced\",\"scale\":1},\"farmCache\":{\"built\":1,\"building\":0,\"selected\":1,\"active\":1},\"textureWorker\":{\"mode\":\"worker\",\"pending\":0,\"completed\":3,\"maxJobMs\":29},\"upgradedHomesReady\":0,\"fogStreaming\":{\"mode\":\"clear\",\"fps\":60,\"pendingNear\":0,\"targetFogEnd\":720,\"fogStart\":280,\"fogEnd\":720,\"cameraFarClip\":760},\"livingMeadow\":null,\"foliageBatches\":{\"placements\":4104,\"detailBatches\":135,\"enabledBatches\":135,\"lodBatches\":244,\"missingRepresentations\":377,\"pending\":121,\"species\":8},\"topMeshGroups\":[],\"indexedMeshes\":8585,\"dynamicCandidates\":3678,\"spatialIndexReady\":true,\"spatialIndexPending\":0,\"worldId\":\"binh-minh-003\",\"farmLayoutVersion\":7,\"farmLayoutSynced\":null,\"movement\":{\"input\":false,\"collided\":false,\"speed\":0,\"ridingBus\":false}}\nRuntime counters: {\"revision\":\"streaming-audit-v2\",\"frames\":1536,\"maxFrameGapMs\":212.09999999403954,\"frameGapsOver1000\":0,\"longTasks\":4,\"maxLongTaskMs\":171}\nReact profile: null\nTime: 2026-10-04T07:46:47.257Z\nViewport: 1202x819 @ DPR 1\nOnline: true\nMemory: 32 GB\nCPU: 24 cores\nUA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36"
+  }
+}

@@ -66,6 +66,30 @@ if (!windmillCenter) {
   process.exit(1);
 }
 
+// Central Plaza Fountain (0, 0)
+const fountainCenter = collision.isColliding(0, 0);
+console.log(`5b. Central Fountain center (0, 0) collision: ${fountainCenter} (Expected: true)`);
+if (!fountainCenter) {
+  console.error('FAIL: Central Fountain did not block player!');
+  process.exit(1);
+}
+
+// Casino Building Body (-29, -25)
+const casinoCenter = collision.isColliding(-29, -25);
+console.log(`5c. Casino building body (-29, -25) collision: ${casinoCenter} (Expected: true)`);
+if (!casinoCenter) {
+  console.error('FAIL: Casino building did not block player!');
+  process.exit(1);
+}
+
+// Roadside Shop (-11.5, 60)
+const shopCenter = collision.isColliding(-11.5, 60);
+console.log(`5d. Roadside shop (-11.5, 60) collision: ${shopCenter} (Expected: true)`);
+if (!shopCenter) {
+  console.error('FAIL: Roadside shop did not block player!');
+  process.exit(1);
+}
+
 // Test 3: Farm Plot 1 Entrance vs Fence
 const farm1 = WORLD_LAYOUT.farms[0];
 console.log(`Checking Farm 1 at (${farm1.x}, ${farm1.z}):`);

@@ -1,23 +1,83 @@
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
-import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
+import { Vector3, Matrix } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
+import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { createFaceTexture } from './createFaceTexture.js';
+import {
+  CHARACTER_ANIMATION_CONFIG,
+  CHARACTER_LOD_CONFIG,
+  CHARACTER_RENDER_CONFIG,
+  normalizeCharacterAppearance,
+  safeCharacterHex,
+  getSkinTone,
+} from '../../../shared/characterConfig.js';
+
+const BODY_PROFILES = Object.freeze({
+  female: { torsoX: 0.97, torsoY: 1.0, torsoZ: 0.98, head: 1.02, limb: 0.97, shoulder: 0.265, hip: 1.04 },
+  male: { torsoX: 1.04, torsoY: 1.02, torsoZ: 1.02, head: 0.99, limb: 1.03, shoulder: 0.28, hip: 0.98 },
+  neutral: { torsoX: 1.0, torsoY: 1.0, torsoZ: 1.0, head: 1.0, limb: 1.0, shoulder: 0.27, hip: 1.0 },
+});
+
+const HAIR_STYLE_ALIASES = Object.freeze({
+  hair_ponytail: 'ponytail',
+  hair_classic: 'classic',
+  hair_anime_bangs: 'anime_bangs',
+  hair_twintails: 'twintails',
+  hair_chic_bob: 'bob',
+  hair_wavy_curly: 'wavy',
+  hair_slick_side: 'slick',
+  hair_slick_back: 'slick',
+});
+
+const TOP_ALIASES = Object.freeze({
+  top_tank_basic: 'tank',
+  top_tee_white: 'starter',
+  top_hoodie_cozy: 'hoodie_pastel',
+  top_bomber_varsity: 'bomber',
+  top_croptop_sport: 'croptop_summer',
+  top_polo_preppy: 'polo',
+  top_knit_sweater: 'knit',
+});
+
+const BOTTOM_ALIASES = Object.freeze({
+  bot_denim_shorts: 'shorts_denim',
+  bot_overalls_bib: 'overalls_blue',
+  bot_tennis_skirt: 'skirt_pleated',
+  bot_cargo_wide: 'cargo_pants',
+  bot_jogger_sport: 'joggers_cozy',
+});
+
+const SHOE_ALIASES = Object.freeze({
+  shoe_chunky_white: 'sneaker_chunky',
+  shoe_running_neon: 'runner_neon',
+  shoe_vintage_boots: 'boots_vintage',
+  shoe_puffy_slides: 'slides',
+  shoe_doll_flats: 'flats',
+});
+
+const EAR_ALIASES = Object.freeze({
+  human: 'human',
+  cat_ears: 'cat',
+  rabbit_ears: 'rabbit',
+  bear_ears: 'bear',
+  elf_ears: 'elf',
+});
 
 function makeMat(scene, name, hex, emissiveHex = null, specular = 0.14, specularPower = 48) {
   let m = scene.getMaterialByName(name);
   if (!m) {
     m = new StandardMaterial(name, scene);
-    m.diffuseColor = Color3.FromHexString(hex);
-    m.ambientColor = m.diffuseColor.scale(0.44);
+    m.diffuseColor = Color3.FromHexString(safeCharacterHex(hex, '#f1f5f9'));
+    m.ambientColor = m.diffuseColor.scale(0.24);
     m.specularColor = new Color3(specular, specular, specular);
     m.specularPower = specularPower;
     if (emissiveHex) {
-      m.emissiveColor = Color3.FromHexString(emissiveHex);
+      m.emissiveColor = Color3.FromHexString(safeCharacterHex(emissiveHex, '#0f172a'));
     } else {
-      // A small local fill keeps the avatar readable when the key light is behind it.
-      m.emissiveColor = m.diffuseColor.scale(0.10);
+      m.emissiveColor = Color3.Black();
     }
   }
   return m;
@@ -25,12 +85,13 @@ function makeMat(scene, name, hex, emissiveHex = null, specular = 0.14, specular
 
 /** Original Bình Minh chibi avatar. Keep transform nodes stable for tools and animations. */
 export function buildHumanMesh(scene, idPrefix, options = {}) {
+  const appearance = normalizeCharacterAppearance({ ...options, ...(options.customization || {}) });
   const outfitId = options.outfitId || 'starter';
-  const outfitColor = options.outfitColor || '#f8fafc';
-  const skinColor = options.skinColor || '#fde8d7';       // Làn da trắng hồng búp bê
-  const hairColor = options.hairColor || '#76503b';       // Nâu hạt dẻ sáng, rõ dưới nắng
-  const overallsColor = options.overallsColor || options.pantsColor || '#2563eb'; // Quần yếm denim xanh
-  const bootsColor = options.bootsColor || '#ffffff';     // Sneaker trắng sứ
+  const outfitColor = safeCharacterHex(options.outfitColor || '#f8fafc', '#f8fafc');
+  const skinColor = safeCharacterHex(options.skinColor || appearance.skinColor, appearance.skinColor);
+  const hairColor = safeCharacterHex(options.hairColor || '#76503b', '#76503b');
+  const overallsColor = safeCharacterHex(options.overallsColor || options.pantsColor || '#2563eb', '#2563eb');
+  const bootsColor = safeCharacterHex(options.bootsColor || '#f7f0e6', '#f7f0e6');
   const hasHat = Boolean(options.hasHat ?? false);
   const shadowGenerator = options.shadows || null;
 
@@ -41,6 +102,9 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     sproutGreen: makeMat(scene, `${idPrefix}-pt-sprout`, '#4ade80', '#22c55e', 0.25, 48),
     shirt: makeMat(scene, `${idPrefix}-pt-shirt`, outfitColor, null, 0.10, 32),
     shirtTrim: makeMat(scene, `${idPrefix}-pt-trim`, '#ffffff', null, 0.12, 32),
+    topAccent: makeMat(scene, `${idPrefix}-pt-top-accent`, '#f97316', null, 0.14, 40),
+    topDark: makeMat(scene, `${idPrefix}-pt-top-dark`, '#1e3a5f', null, 0.12, 36),
+    knit: makeMat(scene, `${idPrefix}-pt-knit`, '#f59e0b', null, 0.10, 30),
     hoodieCords: makeMat(scene, `${idPrefix}-pt-cords`, '#f8fafc', null, 0.15, 32),
     overalls: makeMat(scene, `${idPrefix}-pt-overalls`, overallsColor, null, 0.08, 24),
     brass: makeMat(scene, `${idPrefix}-pt-brass`, '#f59e0b', '#b45309', 0.65, 96),
@@ -55,13 +119,33 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     hatRibbon: makeMat(scene, `${idPrefix}-pt-ribbon`, '#ef4444', null, 0.18, 48),
     catEarInner: makeMat(scene, `${idPrefix}-pt-catear-in`, '#fda4af', null, 0.12, 32),
     catEarOuter: makeMat(scene, `${idPrefix}-pt-catear-out`, '#f8fafc', null, 0.18, 48),
+    rabbitEarInner: makeMat(scene, `${idPrefix}-pt-rab-in`, '#fbcfe8', null, 0.12, 32),
+    rabbitEarOuter: makeMat(scene, `${idPrefix}-pt-rab-out`, '#f8fafc', null, 0.18, 48),
+    bearEarInner: makeMat(scene, `${idPrefix}-pt-bear-in`, '#fde68a', null, 0.12, 32),
+    bearEarOuter: makeMat(scene, `${idPrefix}-pt-bear-out`, '#92400e', null, 0.18, 48),
+    skirt: makeMat(scene, `${idPrefix}-pt-skirt`, '#f43f5e', null, 0.10, 32),
+    bottomPocket: makeMat(scene, `${idPrefix}-pt-bottom-pocket`, '#334155', null, 0.08, 28),
+    shoeBoot: makeMat(scene, `${idPrefix}-pt-shoe-boot`, '#78350f', null, 0.18, 42),
+    shoeNeon: makeMat(scene, `${idPrefix}-pt-shoe-neon`, '#34d399', '#10b981', 0.24, 48),
   };
-  // Keep the face and rear hair legible under the world's strong overhead sun.
-  materials.skin.emissiveColor = materials.skin.diffuseColor.scale(0.38);
-  materials.hair.emissiveColor = materials.hair.diffuseColor.scale(0.26);
-  materials.shirt.emissiveColor = materials.shirt.diffuseColor.scale(0.32);
+  // Soft, subtle subsurface scatter on skin; no radioactive glow on hair and shirt.
+  materials.skin.ambientColor = materials.skin.diffuseColor.scale(CHARACTER_RENDER_CONFIG.material.skinAmbient);
+  materials.skin.emissiveColor = materials.skin.diffuseColor.scale(CHARACTER_RENDER_CONFIG.material.skinEmissive);
+  materials.hair.ambientColor = materials.hair.diffuseColor.scale(CHARACTER_RENDER_CONFIG.material.hairAmbient);
+  materials.shirt.ambientColor = materials.shirt.diffuseColor.scale(CHARACTER_RENDER_CONFIG.material.clothingAmbient);
+  materials.hair.emissiveColor = Color3.Black();
+  materials.shirt.emissiveColor = Color3.Black();
 
   const root = new TransformNode(`${idPrefix}-pt-root`, scene);
+  const proportions = CHARACTER_RENDER_CONFIG.proportions;
+  const armJoints = [];
+  const armSurfaces = [];
+  const legJoints = [];
+  const detailVisibility = new Map();
+  const longSleeves = [];
+  const shortSleeves = [];
+  const shoulderSurfaces = [];
+  let clothingScaled = false;
 
   // ========================================================
   // 1. TORSO NODE (Thân giọt nước Chibi mũm mĩm & Áo Hoodie)
@@ -71,8 +155,16 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   torsoNode.parent = root;
 
   // Tapered fabric torso, with a clean hem instead of a spherical belly.
-  const shirtBody = MeshBuilder.CreateCylinder(`${idPrefix}-shirt-body`, {
-    height: 0.43, diameterTop: 0.47, diameterBottom: 0.55, tessellation: 24,
+  const shirtBody = MeshBuilder.CreateLathe(`${idPrefix}-shirt-body`, {
+    shape: [
+      new Vector3(0.235,-0.215,0), new Vector3(0.251,-0.205,0),
+      new Vector3(0.261,-0.18,0), new Vector3(0.267,-0.12,0),
+      new Vector3(0.263,-0.04,0), new Vector3(0.253,0.05,0),
+      new Vector3(0.243,0.13,0), new Vector3(0.232,0.18,0),
+      new Vector3(0.214,0.207,0), new Vector3(0.187,0.220,0),
+      new Vector3(0.153,0.224,0),
+    ],
+    tessellation: 32, cap: 3,
   }, scene);
   shirtBody.position.y = 0.22;
   shirtBody.material = materials.shirt;
@@ -132,6 +224,63 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     cordTip.material = materials.shirtTrim;
     cordTip.parent = torsoNode;
     hoodieDetails.push(cordTip);
+  });
+
+  // Modular fashion silhouettes. Keep them as rounded primitives so a new
+  // outfit can be swapped without loading another GLB or skeleton.
+  const topVariants = {
+    bomber: new TransformNode(`${idPrefix}-top-bomber`, scene),
+    polo: new TransformNode(`${idPrefix}-top-polo`, scene),
+    knit: new TransformNode(`${idPrefix}-top-knit`, scene),
+  };
+  Object.values(topVariants).forEach(node => {
+    node.parent = torsoNode;
+    node.setEnabled(false);
+  });
+
+  const bomberBody = shirtBody.clone(`${idPrefix}-bomber-body`);
+  bomberBody.scaling.set(1.045, 1.015, 1.045);
+  bomberBody.position.set(0, 0.22, 0.01);
+  bomberBody.material = materials.topDark;
+  bomberBody.parent = topVariants.bomber;
+  const bomberHem = MeshBuilder.CreateTorus(`${idPrefix}-bomber-hem`, { diameter: 0.52, thickness: 0.035, tessellation: 18 }, scene);
+  bomberHem.position.y = 0.03;
+  bomberHem.material = materials.topAccent;
+  bomberHem.parent = topVariants.bomber;
+  const bomberCollar = MeshBuilder.CreateTorus(`${idPrefix}-bomber-collar`, { diameter: 0.28, thickness: 0.035, tessellation: 16 }, scene);
+  bomberCollar.position.y = 0.43;
+  bomberCollar.material = materials.topAccent;
+  bomberCollar.parent = topVariants.bomber;
+  [-0.13, 0.13].forEach((sx, index) => {
+    const stripe = MeshBuilder.CreateBox(`${idPrefix}-bomber-stripe-${index}`, { width: 0.035, height: 0.32, depth: 0.028 }, scene);
+    stripe.position.set(sx, 0.22, 0.24);
+    stripe.material = materials.topAccent;
+    stripe.parent = topVariants.bomber;
+  });
+
+  const poloCollar = MeshBuilder.CreateTorus(`${idPrefix}-polo-collar`, { diameter: 0.30, thickness: 0.042, tessellation: 16 }, scene);
+  poloCollar.position.set(0, 0.43, 0.02);
+  poloCollar.material = materials.shirtTrim;
+  poloCollar.parent = topVariants.polo;
+  [-0.04, 0.04].forEach((sx, index) => {
+    const button = MeshBuilder.CreateCylinder(`${idPrefix}-polo-button-${index}`, { height: 0.018, diameter: 0.035, tessellation: 10 }, scene);
+    button.rotation.x = Math.PI / 2;
+    button.position.set(sx, 0.31 - index * 0.07, 0.275);
+    button.material = materials.brass;
+    button.parent = topVariants.polo;
+  });
+
+  const knitBody = shirtBody.clone(`${idPrefix}-knit-body`);
+  knitBody.scaling.set(1.045, 1.015, 1.045);
+  knitBody.position.set(0, 0.22, 0.01);
+  knitBody.material = materials.knit;
+  knitBody.parent = topVariants.knit;
+  [0.09, 0.20, 0.31].forEach((y, index) => {
+    const knitRib = MeshBuilder.CreateTorus(`${idPrefix}-knit-rib-${index}`, { diameter: 0.49, thickness: 0.012, tessellation: 18 }, scene);
+    knitRib.position.set(0, y, 0.02);
+    knitRib.scaling.z = 0.88;
+    knitRib.material = materials.shirtTrim;
+    knitRib.parent = topVariants.knit;
   });
 
   // Rounded overalls keep a clean silhouette from the gameplay camera.
@@ -211,7 +360,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   // 3. HEAD & CURVED FACE MESH (Ôm khít hộp sọ, 0% bay lơ lửng)
   // ========================================================
   const headNode = new TransformNode(`${idPrefix}-head-node`, scene);
-  headNode.position.y = 0.50;
+  headNode.position.y = proportions.headAnchor;
   headNode.scaling.setAll(0.91);
   headNode.parent = torsoNode;
 
@@ -230,13 +379,16 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     eyeColor: '#3b2b28',
     irisColor: '#785242',
     blushColor: '#ef9e94',
-    smileColor: '#8d5450',
+    smileColor: '#55302b',
   });
 
   const faceMat = new StandardMaterial(`${idPrefix}-face-mat`, scene);
-  faceMat.diffuseColor = Color3.Black();
+  faceMat.diffuseColor = Color3.White();
+  faceMat.emissiveColor = Color3.White();
   faceMat.emissiveTexture = faceSystem.texture;
-  faceMat.opacityTexture = faceSystem.texture;
+  faceMat.diffuseTexture = faceSystem.texture;
+  faceMat.useAlphaFromDiffuseTexture = true;
+  faceMat.transparencyMode = 2;
   faceMat.specularColor = Color3.Black();
   faceMat.backFaceCulling = false;
   faceMat.disableLighting = true;
@@ -244,10 +396,10 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
 
   // MẶT NẠ CONG CURVED FACE MESH: Uốn cong theo mặt cầu hộp sọ
   const faceGround = MeshBuilder.CreateGround(`${idPrefix}-curved-face`, {
-    width: 0.70,
-    height: 0.60,
-    subdivisionsX: 12,
-    subdivisionsY: 12,
+    width: 0.84,
+    height: 0.68,
+    subdivisionsX: 8,
+    subdivisionsY: 8,
   }, scene);
 
   // Ground rotates -90 degrees: negative local height becomes the FRONT (+Z).
@@ -269,12 +421,14 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   faceGround.parent = headNode;
 
   // 2 Tai tròn xinh xắn hai bên đầu
+  const humanEars = [];
   [-0.49, 0.49].forEach((tx, idx) => {
     const ear = MeshBuilder.CreateSphere(`${idPrefix}-ear-${idx}`, { diameter: 0.17, segments: 10 }, scene);
     ear.scaling.set(0.58, 0.9, 0.62);
     ear.position.set(tx, 0.36, 0.01);
     ear.material = materials.skin;
     ear.parent = headNode;
+    humanEars.push(ear);
   });
 
   // ========================================================
@@ -284,11 +438,42 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   hairRoot.parent = headNode;
 
   // Khối tóc sau gáy & đỉnh đầu mượt mà
-  const hairDome = MeshBuilder.CreateSphere(`${idPrefix}-hair-dome`, { diameter: 1.0, segments: 20 }, scene);
+  const hairDome = MeshBuilder.CreateSphere(`${idPrefix}-hair-dome`, { diameter: 1.0, segments: 24 }, scene);
   hairDome.scaling.set(1.06, 1.0, 0.90);
   hairDome.position.set(0, 0.48, -0.07);
   hairDome.material = materials.hair;
   hairDome.parent = hairRoot;
+
+  // A full sphere covered the forehead and read as a helmet. Pull the
+  // lower front into the skull; keep the crown and rear volume intact.
+  const scalpPositions = hairDome.getVerticesData('position');
+  for (let i = 0; i < scalpPositions.length; i += 3) {
+    const localY = scalpPositions[i + 1];
+    const localZ = scalpPositions[i + 2];
+    if (localY < 0.13 && localZ > 0) {
+      const retreat = Math.min(1, (0.13 - localY) / 0.28);
+      scalpPositions[i + 2] *= 1 - retreat * 0.85;
+    }
+  }
+  hairDome.updateVerticesData('position', scalpPositions);
+  const scalpNormals = [];
+  VertexData.ComputeNormals(scalpPositions, hairDome.getIndices(), scalpNormals);
+  hairDome.updateVerticesData('normal', scalpNormals);
+  hairDome.refreshBoundingInfo();
+
+  const quiffNode = new TransformNode(`${idPrefix}-quiff`, scene);
+  quiffNode.parent = hairRoot;
+  [-0.19, 0, 0.17].forEach((x, i) => {
+    const tuft = MeshBuilder.CreateCylinder(`${idPrefix}-quiff-${i}`, {
+      height: 0.22 + (i === 1 ? 0.08 : 0), diameterBottom: 0.38,
+      diameterTop: 0.07, tessellation: 12,
+    }, scene);
+    tuft.parent = quiffNode;
+    tuft.position.set(x, 0.84, 0.14);
+    tuft.rotation.z = -0.45;
+    tuft.rotation.x = 0.30;
+    tuft.material = materials.hair;
+  });
 
   // CỌNG MẦM CÂY KAIA ĐUNG ĐƯA (SPROUT AHOGE)
   const sproutNode = new TransformNode(`${idPrefix}-sprout-node`, scene);
@@ -351,6 +536,75 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     lock.parent = hairRoot;
   });
 
+  // CÁC KIỂU TÓC THỜI TRANG ĐA DẠNG (MODULAR HAIRSTYLES)
+  // 1. Tóc hai chùm nhí nhảnh (Twintails)
+  const twintailsNode = new TransformNode(`${idPrefix}-twintails-node`, scene);
+  twintailsNode.parent = hairRoot;
+  twintailsNode.setEnabled(false);
+  [-0.50, 0.50].forEach((tx, idx) => {
+    const tie = MeshBuilder.CreateTorus(`${idPrefix}-hair-tie-${idx}`, { diameter: 0.15, thickness: 0.038, tessellation: 12 }, scene);
+    tie.position.set(tx, 0.54, -0.06);
+    tie.material = materials.sproutGreen;
+    tie.parent = twintailsNode;
+
+    const pigtail = MeshBuilder.CreateSphere(`${idPrefix}-pigtail-${idx}`, { diameter: 0.32, segments: 12 }, scene);
+    pigtail.scaling.set(0.85, 1.45, 0.95);
+    pigtail.position.set(tx * 1.15, 0.36, -0.10);
+    pigtail.rotation.z = idx === 0 ? 0.35 : -0.35;
+    pigtail.material = materials.hair;
+    pigtail.parent = twintailsNode;
+  });
+
+  // 2. Tóc ngắn Bob uốn cụp (Cute Bob)
+  const bobNode = new TransformNode(`${idPrefix}-bob-node`, scene);
+  bobNode.parent = hairRoot;
+  bobNode.setEnabled(false);
+  [-0.48, 0.48].forEach((bx, idx) => {
+    const bobWing = MeshBuilder.CreateSphere(`${idPrefix}-bob-wing-${idx}`, { diameter: 0.36, segments: 12 }, scene);
+    bobWing.scaling.set(0.68, 1.25, 0.85);
+    bobWing.position.set(bx, 0.36, 0.04);
+    bobWing.material = materials.hair;
+    bobWing.parent = bobNode;
+  });
+
+  // 3. Tóc xoăn sóng nước bồng bềnh (Wavy Curls)
+  const wavyNode = new TransformNode(`${idPrefix}-wavy-node`, scene);
+  wavyNode.parent = hairRoot;
+  wavyNode.setEnabled(false);
+  [-0.44, 0.44].forEach((wx, idx) => {
+    const w1 = MeshBuilder.CreateSphere(`${idPrefix}-wavy-1-${idx}`, { diameter: 0.32, segments: 10 }, scene);
+    w1.scaling.set(0.72, 1.3, 0.72);
+    w1.position.set(wx, 0.32, -0.04);
+    w1.material = materials.hair;
+    w1.parent = wavyNode;
+
+    const w2 = MeshBuilder.CreateSphere(`${idPrefix}-wavy-2-${idx}`, { diameter: 0.28, segments: 10 }, scene);
+    w2.scaling.set(0.65, 1.2, 0.65);
+    w2.position.set(wx * 0.95, 0.15, -0.08);
+    w2.material = materials.hair;
+    w2.parent = wavyNode;
+  });
+
+  // 4. Tóc vuốt ngược cá tính (Slick Back)
+  const slickNode = new TransformNode(`${idPrefix}-slick-node`, scene);
+  slickNode.parent = hairRoot;
+  slickNode.setEnabled(false);
+  const slickPuff = MeshBuilder.CreateSphere(`${idPrefix}-slick-puff`, { diameter: 0.52, segments: 12 }, scene);
+  slickPuff.scaling.set(0.9, 0.55, 1.25);
+  slickPuff.position.set(0, 0.86, 0.08);
+  slickPuff.material = materials.hair;
+  slickPuff.parent = slickNode;
+
+  const ponytailNode = new TransformNode(`${idPrefix}-ponytail`, scene);
+  ponytailNode.parent = hairRoot;
+  ponytailNode.position.set(0, 0.57, -0.42);
+  const ponytail = MeshBuilder.CreateCapsule(`${idPrefix}-ponytail-lock`, {height: 0.62, radius: 0.13, tessellation: 14}, scene);
+  ponytail.parent = ponytailNode;
+  ponytail.position.set(0, -0.22, -0.08);
+  ponytail.rotation.x = -0.32;
+  ponytail.material = materials.hair;
+  ponytailNode.setEnabled(false);
+
   // BĂNG ĐÔ TAI MÈO THỜI TRANG (CAT EARS HEADBAND)
   const catEarsNode = new TransformNode(`${idPrefix}-cat-ears-node`, scene);
   catEarsNode.parent = headNode;
@@ -392,6 +646,57 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     earInner.parent = catEarsNode;
   });
 
+  // TAI THỎ ĐÁNG YÊU (RABBIT EARS)
+  const rabbitEarsNode = new TransformNode(`${idPrefix}-rabbit-ears-node`, scene);
+  rabbitEarsNode.parent = headNode;
+  rabbitEarsNode.setEnabled(false);
+  [-0.22, 0.22].forEach((rx, idx) => {
+    const ear = MeshBuilder.CreateSphere(`${idPrefix}-rab-ear-${idx}`, { diameter: 0.26, segments: 12 }, scene);
+    ear.scaling.set(0.55, 2.2, 0.4);
+    ear.rotation.z = idx === 0 ? 0.18 : -0.18;
+    ear.position.set(rx, 1.05, 0.02);
+    ear.material = materials.rabbitEarOuter;
+    ear.parent = rabbitEarsNode;
+
+    const earIn = MeshBuilder.CreateSphere(`${idPrefix}-rab-in-${idx}`, { diameter: 0.18, segments: 10 }, scene);
+    earIn.scaling.set(0.45, 1.8, 0.25);
+    earIn.rotation.z = idx === 0 ? 0.18 : -0.18;
+    earIn.position.set(rx, 1.03, 0.05);
+    earIn.material = materials.rabbitEarInner;
+    earIn.parent = rabbitEarsNode;
+  });
+
+  // TAI GẤU TRÒN XINH (BEAR EARS)
+  const bearEarsNode = new TransformNode(`${idPrefix}-bear-ears-node`, scene);
+  bearEarsNode.parent = headNode;
+  bearEarsNode.setEnabled(false);
+  [-0.38, 0.38].forEach((bx, idx) => {
+    const bEar = MeshBuilder.CreateSphere(`${idPrefix}-bear-ear-${idx}`, { diameter: 0.28, segments: 12 }, scene);
+    bEar.scaling.set(1.0, 0.9, 0.5);
+    bEar.position.set(bx, 0.82, -0.04);
+    bEar.material = materials.bearEarOuter;
+    bEar.parent = bearEarsNode;
+
+    const bIn = MeshBuilder.CreateSphere(`${idPrefix}-bear-in-${idx}`, { diameter: 0.18, segments: 10 }, scene);
+    bIn.scaling.set(0.9, 0.8, 0.3);
+    bIn.position.set(bx, 0.82, -0.02);
+    bIn.material = materials.bearEarInner;
+    bIn.parent = bearEarsNode;
+  });
+
+  // TAI YÊU TINH VỂNH (ELF EARS)
+  const elfEarsNode = new TransformNode(`${idPrefix}-elf-ears-node`, scene);
+  elfEarsNode.parent = headNode;
+  elfEarsNode.setEnabled(false);
+  [-0.52, 0.52].forEach((ex, idx) => {
+    const elfEar = MeshBuilder.CreateCylinder(`${idPrefix}-elf-ear-${idx}`, { height: 0.28, diameterTop: 0.02, diameterBottom: 0.16, tessellation: 4 }, scene);
+    elfEar.rotation.z = idx === 0 ? 1.15 : -1.15;
+    elfEar.rotation.y = idx === 0 ? -0.3 : 0.3;
+    elfEar.position.set(ex * 1.08, 0.42, -0.02);
+    elfEar.material = materials.skin;
+    elfEar.parent = elfEarsNode;
+  });
+
   // Mũ cói nông dân truyền thống
   const hatNode = new TransformNode(`${idPrefix}-hat-node`, scene);
   hatNode.parent = headNode;
@@ -403,8 +708,9 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   hatBrim.material = materials.hatStraw;
   hatBrim.parent = hatNode;
 
-  const hatCrown = MeshBuilder.CreateCylinder(`${idPrefix}-hat-crown`, { height: 0.22, diameterTop: 0.74, diameterBottom: 0.86, tessellation: 16 }, scene);
-  hatCrown.position.set(0, 0.86, -0.06);
+  const hatCrown = MeshBuilder.CreateSphere(`${idPrefix}-hat-crown`, { diameter: 0.88, segments: 20 }, scene);
+  hatCrown.scaling.set(1, 0.50, 1);
+  hatCrown.position.set(0, 0.81, -0.06);
   hatCrown.rotation.x = -0.08;
   hatCrown.material = materials.hatStraw;
   hatCrown.parent = hatNode;
@@ -420,51 +726,205 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   // ========================================================
   function createArm(isLeft) {
     const side = isLeft ? 1 : -1;
+    let shoulderElbow = null;
     const armRoot = new TransformNode(`${idPrefix}-arm-root-${isLeft ? 'l' : 'r'}`, scene);
-    armRoot.position.set(side * 0.31, 0.36, 0);
+    armRoot.position.set(side * 0.31, proportions.shoulderHeight, 0);
     armRoot.parent = torsoNode;
 
     // Tay áo hoodie phồng to
-    const sleeve = MeshBuilder.CreateCylinder(`${idPrefix}-sleeve-${isLeft ? 'l' : 'r'}`, {
-      height: 0.18, diameterTop: 0.20, diameterBottom: 0.19, tessellation: 16,
+    const sleeve = MeshBuilder.CreateCapsule(`${idPrefix}-sleeve-${isLeft ? 'l' : 'r'}`, {
+      height: 0.29, radius: 0.115, tessellation: 16, subdivisions: 2,
     }, scene);
     sleeve.rotation.z = side * 0.16;
-    sleeve.position.set(0, -0.06, 0);
+    sleeve.position.set(-side * 0.025, -0.065, 0);
     sleeve.material = materials.shirt;
     sleeve.parent = armRoot;
-
-    // Cổ tay áo bo chun gấu phồng (Ribbed Cuff)
-    const cuff = MeshBuilder.CreateTorus(`${idPrefix}-cuff-${isLeft ? 'l' : 'r'}`, {
-      diameter: 0.16,
-      thickness: 0.032,
-      tessellation: 14,
+    sleeve.setEnabled(false);
+    // The shoulder ball overlaps both torso and arm in every pose.
+    const shoulder = MeshBuilder.CreateSphere(`${idPrefix}-shoulder-${side}`, { diameter: 0.175, segments: 20 }, scene);
+    shoulder.parent = armRoot;
+    shoulder.position.x = -side * 0.025;
+    shoulder.material = materials.skin;
+    shoulder.setEnabled(false);
+    // Keep the inner armhole anchored inside the torso. The outer rings follow
+    // the arm, so lifting it cannot pull the entire shoulder away from the shirt.
+    const bridge = new Mesh(`${idPrefix}-shoulder-bridge-${side}`, scene);
+    bridge.parent = torsoNode;
+    bridge.material = materials.shirt;
+    bridge.metadata = { articulatedSurface: true, sleeveLength: 0.24, radius: 0.098 };
+    shoulderSurfaces.push(bridge);
+    const bridgePositions = new Float32Array(17 * 21 * 3);
+    const bridgeNormals = new Float32Array(bridgePositions.length);
+    const bridgeIndices = [];
+    for (let r = 0; r < 16; r++) for (let s = 0; s < 20; s++) {
+      const a = r * 21 + s, b = a + 21;
+      if (side > 0) bridgeIndices.push(a, b, a + 1, a + 1, b, b + 1);
+      else bridgeIndices.push(a, a + 1, b, a + 1, b + 1, b);
+    }
+    const rotation = new Matrix();
+    const outer = new Vector3(), transformed = new Vector3(), endpoint = new Vector3();
+    const updateBridge = () => {
+      Matrix.RotationYawPitchRollToRef(armRoot.rotation.y, armRoot.rotation.x, armRoot.rotation.z, rotation);
+      outer.set(0, -0.14, 0);
+      Vector3.TransformCoordinatesToRef(outer, rotation, endpoint);
+      endpoint.addInPlace(armRoot.position);
+      for (let r = 0; r < 17; r++) {
+        const t = r / 8, u = 1 - t;
+        const angle = t * Math.PI / 2;
+        for (let s = 0; s <= 20; s++) {
+          const theta = s / 20 * Math.PI * 2;
+          const cosine = Math.cos(theta), sine = Math.sin(theta);
+          if (r > 8) {
+            const progress = (r - 8) / 8;
+            const y = -0.14 - progress * (bridge.metadata.sleeveLength - 0.14);
+            const radius = bridge.metadata.radius * (1 - progress * 0.22);
+            const bend = Math.max(0, Math.min(1, (-y - 0.24) / 0.16));
+            const a = (shoulderElbow?.rotation.x || 0) * bend * bend * (3 - 2 * bend);
+            const dy = y + proportions.upperArmLength, z = sine * radius;
+            outer.set(side * cosine * radius, dy * Math.cos(a) - z * Math.sin(a) - proportions.upperArmLength, dy * Math.sin(a) + z * Math.cos(a));
+            Vector3.TransformCoordinatesToRef(outer, rotation, transformed);
+            transformed.addInPlace(armRoot.position);
+            const p = (r * 21 + s) * 3;
+            bridgePositions[p] = transformed.x;
+            bridgePositions[p + 1] = transformed.y;
+            bridgePositions[p + 2] = transformed.z;
+            continue;
+          }
+          outer.set(side * cosine * bridge.metadata.radius, -0.14, sine * bridge.metadata.radius);
+          Vector3.TransformCoordinatesToRef(outer, rotation, transformed);
+          transformed.addInPlace(armRoot.position);
+          const p = (r * 21 + s) * 3;
+          bridgePositions[p] = side * 0.17 * u * u + armRoot.position.x * 2 * u * t + endpoint.x * t * t
+            + (transformed.x - endpoint.x) * Math.sin(angle);
+          bridgePositions[p + 1] = proportions.shoulderHeight * u * u + armRoot.position.y * 2 * u * t + endpoint.y * t * t
+            + cosine * 0.112 * Math.cos(angle) + (transformed.y - endpoint.y) * Math.sin(angle);
+          bridgePositions[p + 2] = endpoint.z * t * t + sine * 0.112 * u + (transformed.z - endpoint.z) * t;
+        }
+      }
+      VertexData.ComputeNormals(bridgePositions, bridgeIndices, bridgeNormals);
+      if (bridge.getTotalVertices()) {
+        bridge.updateVerticesData('position', bridgePositions, true);
+        bridge.updateVerticesData('normal', bridgeNormals);
+      } else {
+        const data = new VertexData();
+        data.positions = bridgePositions; data.normals = bridgeNormals; data.indices = bridgeIndices;
+        data.applyToMesh(bridge, true);
+      }
+    };
+    updateBridge();
+    armSurfaces.push({mesh: bridge, update: updateBridge});
+    const upperSleeve = MeshBuilder.CreateCapsule(`${idPrefix}-upper-sleeve-${side}`, {
+      height: proportions.upperArmLength + 0.16, radius: 0.092, tessellation: 12,
     }, scene);
-    cuff.position.set(0, -0.19, 0);
-    cuff.material = materials.shirtTrim;
-    cuff.parent = armRoot;
-    hoodieDetails.push(cuff);
+    upperSleeve.parent = armRoot;
+    upperSleeve.position.y = -proportions.upperArmLength / 2;
+    upperSleeve.material = materials.shirt;
+    upperSleeve.setEnabled(false);
+    longSleeves.push(upperSleeve);
 
     // Cánh tay Chibi ngắn mũm mĩm
-    const arm = MeshBuilder.CreateCylinder(`${idPrefix}-arm-${isLeft ? 'l' : 'r'}`, {
-      height: 0.30,
-      diameterTop: 0.14,
-      diameterBottom: 0.12,
+    const arm = MeshBuilder.CreateCapsule(`${idPrefix}-arm-${isLeft ? 'l' : 'r'}`, {
+      height: proportions.upperArmLength + 0.13,
+      radius: 0.066,
       tessellation: 12,
     }, scene);
-    arm.position.y = -0.24;
+    arm.position.y = -proportions.upperArmLength / 2;
     arm.material = materials.skin;
     arm.parent = armRoot;
 
+    const elbow = new TransformNode(`${idPrefix}-elbow-${isLeft ? 'l' : 'r'}`, scene);
+    elbow.parent = armRoot;
+    elbow.position.y = -proportions.upperArmLength;
+    shoulderElbow = elbow;
+    const elbowSurface = MeshBuilder.CreateSphere(`${idPrefix}-elbow-surface-${side}`, { diameter: 0.13, segments: 12 }, scene);
+    elbowSurface.parent = elbow;
+    elbowSurface.material = materials.skin;
+    const forearm = MeshBuilder.CreateCapsule(`${idPrefix}-forearm-${isLeft ? 'l' : 'r'}`, {
+      height: proportions.forearmLength + 0.12, radius: 0.064, tessellation: 12,
+    }, scene);
+    forearm.parent = elbow;
+    forearm.position.y = -proportions.forearmLength / 2;
+    forearm.material = materials.skin;
+    const longSleeve = MeshBuilder.CreateCapsule(`${idPrefix}-long-sleeve-${side}`, { height: 0.43, radius: 0.089, tessellation: 12 }, scene);
+    longSleeve.parent = elbow;
+    longSleeve.position.y = -0.14;
+    longSleeve.material = materials.shirt;
+    longSleeve.setEnabled(false);
+    longSleeves.push(longSleeve);
+    armJoints.push(elbow);
+    // One continuous surface, rather than separate capsules meeting at a seam.
+    // Bend vertex rings around the elbow using the same articulated joint.
+    const rings = [-0.14, -0.18, -0.22, -0.27, -0.32, -0.38, -0.48, -0.58, -0.63];
+    const segments = 20;
+    const indices = [];
+    for (let r = 0; r < rings.length - 1; r++) for (let s = 0; s < segments; s++) {
+      const a = r * (segments + 1) + s, b = a + segments + 1;
+      indices.push(a, b, a + 1, a + 1, b, b + 1);
+    }
+    const createSurface = (suffix, radius, material, short = false) => {
+      const mesh = new Mesh(`${idPrefix}-${suffix}-${side}`, scene);
+      mesh.parent = armRoot;
+      mesh.material = material;
+      const positions = new Float32Array(rings.length * (segments + 1) * 3);
+      const normals = new Float32Array(positions.length);
+      const update = () => {
+        rings.forEach((y, r) => {
+          if (short) y = -0.14 - r / (rings.length - 1) * 0.10;
+          const bend = Math.max(0, Math.min(1, (-y - 0.24) / 0.16));
+          const weight = bend * bend * (3 - 2 * bend);
+          const angle = elbow.rotation.x * weight, c = Math.cos(angle), sn = Math.sin(angle);
+          const lengthRatio = r / (rings.length - 1);
+          const softRadius = radius * (1.06 - 0.27 * lengthRatio + 0.05 * Math.sin(lengthRatio * Math.PI));
+          for (let s = 0; s <= segments; s++) {
+            const theta = s / segments * Math.PI * 2;
+            const localY = y + proportions.upperArmLength;
+            const z = Math.sin(theta) * softRadius;
+            const p = (r * (segments + 1) + s) * 3;
+            positions[p] = Math.cos(theta) * softRadius;
+            positions[p + 1] = localY * c - z * sn - proportions.upperArmLength;
+            positions[p + 2] = localY * sn + z * c;
+          }
+        });
+        VertexData.ComputeNormals(positions, indices, normals);
+        if (mesh.getTotalVertices()) {
+          mesh.updateVerticesData('position', positions, true);
+          mesh.updateVerticesData('normal', normals);
+        } else {
+          const data = new VertexData();
+          data.positions = positions; data.normals = normals; data.indices = indices;
+          data.applyToMesh(mesh, true);
+        }
+      };
+      update();
+      armSurfaces.push({ mesh, update });
+      return mesh;
+    };
+    createSurface('continuous-arm', 0.068, materials.skin);
+    const shortFabric = createSurface('continuous-short-sleeve', 0.096, materials.shirt, true);
+    shortFabric.setEnabled(false);
+    const fabric = createSurface('continuous-sleeve', 0.096, materials.shirt);
+    fabric.setEnabled(false);
+    fabric.setEnabled(false);
+    arm.setEnabled(false);
+    forearm.setEnabled(false);
+    elbowSurface.setEnabled(false);
+    // Existing rigid sections are superseded by the deforming fabric.
+    longSleeves.splice(longSleeves.indexOf(upperSleeve), 1);
+    longSleeves.splice(longSleeves.indexOf(longSleeve), 1);
+    upperSleeve.setEnabled(false);
+    longSleeve.setEnabled(false);
+
     // Bàn tay bánh Mochi tròn nhẵn cực kỳ đáng yêu (Mitten Style)
     const hand = MeshBuilder.CreateSphere(`${idPrefix}-hand-${isLeft ? 'l' : 'r'}`, { diameter: 0.155, segments: 10 }, scene);
-    hand.position.set(0, -0.37, 0.02);
+    hand.scaling.set(0.75, 1.0, 0.65);
+    hand.position.set(0, -proportions.forearmLength - 0.005, 0.02);
     hand.material = materials.skin;
-    hand.parent = armRoot;
+    hand.parent = elbow;
 
     const thumb = MeshBuilder.CreateSphere(`${idPrefix}-thumb-${isLeft ? 'l' : 'r'}`, { diameter: 0.065, segments: 8 }, scene);
-    thumb.position.set(-side * 0.05, -0.35, 0.05);
+    thumb.position.set(-side * 0.05, -proportions.forearmLength, 0.05);
     thumb.material = materials.skin;
-    thumb.parent = armRoot;
+    thumb.parent = elbow;
 
     return armRoot;
   }
@@ -478,7 +938,40 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   shortsSeat.material = materials.overalls;
   shortsSeat.parent = torsoNode;
 
+  // Chân váy xòe Tennis phong cách Play Together (Pleated Tennis Skirt)
+  const pleatedSkirt = MeshBuilder.CreateCylinder(`${idPrefix}-pleated-skirt`, {
+    height: 0.22,
+    diameterTop: 0.52,
+    diameterBottom: 0.74,
+    tessellation: 24,
+  }, scene);
+  pleatedSkirt.position.y = -0.06;
+  pleatedSkirt.material = materials.skirt;
+  pleatedSkirt.parent = torsoNode;
+  pleatedSkirt.setEnabled(false);
+
+  const cargoDetailsNode = new TransformNode(`${idPrefix}-cargo-details`, scene);
+  cargoDetailsNode.parent = torsoNode;
+  cargoDetailsNode.setEnabled(false);
+  [-0.22, 0.22].forEach((sx, index) => {
+    const pocket = MeshBuilder.CreateBox(`${idPrefix}-cargo-pocket-${index}`, { width: 0.10, height: 0.11, depth: 0.018 }, scene);
+    pocket.position.set(sx * 0.8, -0.10, 0.19);
+    pocket.material = materials.bottomPocket;
+    pocket.parent = cargoDetailsNode;
+  });
+
+  const joggerDetailsNode = new TransformNode(`${idPrefix}-jogger-details`, scene);
+  joggerDetailsNode.parent = torsoNode;
+  joggerDetailsNode.setEnabled(false);
+  [-0.15, 0.15].forEach((sx, index) => {
+    const stripe = MeshBuilder.CreateBox(`${idPrefix}-jogger-stripe-${index}`, { width: 0.025, height: 0.38, depth: 0.025 }, scene);
+    stripe.position.set(sx, -0.20, 0.16);
+    stripe.material = materials.shoeNeon;
+    stripe.parent = joggerDetailsNode;
+  });
+
   const legOutfitParts = [];
+  const shoeOutfitParts = [];
   function createLeg(isLeft) {
     const side = isLeft ? 1 : -1;
     const legRoot = new TransformNode(`${idPrefix}-leg-root-${isLeft ? 'l' : 'r'}`, scene);
@@ -496,28 +989,97 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     pantLeg.material = materials.overalls;
     pantLeg.parent = legRoot;
 
-    // Gấu quần xắn bo tròn
-    const pantCuff = MeshBuilder.CreateTorus(`${idPrefix}-pant-cuff-${isLeft ? 'l' : 'r'}`, {
-      diameter: 0.21,
-      thickness: 0.03,
-      tessellation: 14,
+    const thigh = MeshBuilder.CreateCapsule(`${idPrefix}-thigh-${isLeft ? 'l' : 'r'}`, {
+      height: proportions.thighLength + 0.06, radius: 0.072, tessellation: 12,
     }, scene);
-    pantCuff.position.y = -0.29;
-    pantCuff.material = materials.overalls;
-    pantCuff.parent = legRoot;
-
-    const calf = MeshBuilder.CreateCylinder(`${idPrefix}-calf-${isLeft ? 'l' : 'r'}`, {
-      height: 0.17, diameterTop: 0.12, diameterBottom: 0.10, tessellation: 12,
+    thigh.position.y = -proportions.thighLength / 2;
+    thigh.parent = legRoot;
+    thigh.material = materials.skin;
+    const knee = new TransformNode(`${idPrefix}-knee-${isLeft ? 'l' : 'r'}`, scene);
+    knee.position.y = -proportions.thighLength;
+    knee.parent = legRoot;
+    legJoints.push(knee);
+    const kneeSurface = MeshBuilder.CreateSphere(`${idPrefix}-knee-surface-${side}`, { diameter: 0.143, segments: 12 }, scene);
+    kneeSurface.parent = knee;
+    kneeSurface.material = materials.skin;
+    const calf = MeshBuilder.CreateCapsule(`${idPrefix}-calf-${isLeft ? 'l' : 'r'}`, {
+      height: proportions.shinLength + 0.05, radius: 0.061, tessellation: 12,
     }, scene);
-    calf.position.y = -0.27;
+    calf.position.y = -proportions.shinLength / 2;
     calf.material = materials.skin;
-    calf.parent = legRoot;
-    legOutfitParts.push({ pantLeg, pantCuff, calf });
+    calf.parent = knee;
+    const shinPants = MeshBuilder.CreateCapsule(`${idPrefix}-shin-pants-${side}`, {height: proportions.shinLength + 0.09, radius: 0.095, tessellation: 12}, scene);
+    shinPants.parent = knee;
+    shinPants.position.y = -proportions.shinLength / 2;
+    shinPants.material = materials.overalls;
+    shinPants.setEnabled(false);
+    const longPants = new Mesh(`${idPrefix}-continuous-pants-${side}`, scene);
+    longPants.parent = legRoot;
+    longPants.material = materials.overalls;
+    const rings = [0.025, -0.10, -0.25, -0.34, -0.40, -0.46, -0.56, -0.66, -0.75];
+    const positions = new Float32Array(rings.length * 13 * 3);
+    const normals = new Float32Array(positions.length);
+    const indices = [];
+    for (let r = 0; r < rings.length - 1; r++) for (let s = 0; s < 12; s++) {
+      const a = r * 13 + s, b = a + 13;
+      indices.push(a, b, a + 1, a + 1, b, b + 1);
+    }
+    const skinLeg = new Mesh(`${idPrefix}-continuous-leg-${side}`, scene);
+    skinLeg.parent = legRoot;
+    skinLeg.material = materials.skin;
+    const skinPositions = new Float32Array(positions.length);
+    const skinNormals = new Float32Array(positions.length);
+    const updatePants = () => {
+      rings.forEach((y, r) => {
+        const bend = Math.max(0, Math.min(1, (-y - 0.32) / 0.16));
+        const weight = bend * bend * (3 - 2 * bend);
+        const angle = knee.rotation.x * weight, c = Math.cos(angle), sn = Math.sin(angle);
+        const radius = 0.109 - (r / (rings.length - 1)) * 0.016;
+        for (let s = 0; s <= 12; s++) {
+          const theta = s / 12 * Math.PI * 2, z = Math.sin(theta) * radius;
+          const localY = y + proportions.thighLength, p = (r * 13 + s) * 3;
+          positions[p] = Math.cos(theta) * radius;
+          positions[p + 1] = localY * c - z * sn - proportions.thighLength;
+          positions[p + 2] = localY * sn + z * c;
+          const skinRadius = 0.076 - r / (rings.length - 1) * 0.018;
+          const skinZ = Math.sin(theta) * skinRadius;
+          skinPositions[p] = Math.cos(theta) * skinRadius;
+          skinPositions[p + 1] = localY * c - skinZ * sn - proportions.thighLength;
+          skinPositions[p + 2] = localY * sn + skinZ * c;
+        }
+      });
+      VertexData.ComputeNormals(positions, indices, normals);
+      VertexData.ComputeNormals(skinPositions, indices, skinNormals);
+      if (skinLeg.getTotalVertices()) {
+        skinLeg.updateVerticesData('position', skinPositions, true);
+        skinLeg.updateVerticesData('normal', skinNormals);
+      } else {
+        const data = new VertexData();
+        data.positions = skinPositions; data.normals = skinNormals; data.indices = indices;
+        data.applyToMesh(skinLeg, true);
+      }
+      if (longPants.getTotalVertices()) {
+        longPants.updateVerticesData('position', positions, true);
+        longPants.updateVerticesData('normal', normals);
+      } else {
+        const data = new VertexData();
+        data.positions = positions; data.normals = normals; data.indices = indices;
+        data.applyToMesh(longPants, true);
+      }
+    };
+    updatePants();
+    longPants.setEnabled(false);
+    armSurfaces.push({ mesh: skinLeg, update: updatePants });
+    thigh.setEnabled(false);
+    calf.setEnabled(false);
+    kneeSurface.setEnabled(false);
+    legOutfitParts.push({ pantLeg, calf, thigh, shinPants, kneeSurface, longPants });
 
     // GIÀY SNEAKER CHUNKY ĐẾ BÁNH MÌ THỜI THƯỢNG (PLAY TOGETHER KICKS)
     const sneakerGroup = new TransformNode(`${idPrefix}-sneaker-${isLeft ? 'l' : 'r'}`, scene);
-    sneakerGroup.position.set(0, -0.38, 0.04);
-    sneakerGroup.parent = legRoot;
+    sneakerGroup.position.set(0, -proportions.shinLength - 0.035, 0.04);
+    sneakerGroup.scaling.setAll(proportions.shoeScale);
+    sneakerGroup.parent = knee;
 
     // Thân giày bo tròn mập mạp
     const sneakerUpper = MeshBuilder.CreateSphere(`${idPrefix}-sneaker-up-${isLeft ? 'l' : 'r'}`, { diameter: 0.29, segments: 12 }, scene);
@@ -550,39 +1112,357 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     sneakerPlatform.material = materials.sneakerSole;
     sneakerPlatform.parent = sneakerGroup;
 
+    // Alternate silhouettes share the same ankle anchor and remain disabled
+    // until selected by the fashion configuration.
+    const bootCuff = MeshBuilder.CreateTorus(`${idPrefix}-boot-cuff-${isLeft ? 'l' : 'r'}`, { diameter: 0.19, thickness: 0.042, tessellation: 14 }, scene);
+    bootCuff.position.y = 0.08;
+    bootCuff.material = materials.shoeBoot;
+    bootCuff.parent = sneakerGroup;
+    const bootToe = MeshBuilder.CreateSphere(`${idPrefix}-boot-toe-${isLeft ? 'l' : 'r'}`, { diameter: 0.30, segments: 12 }, scene);
+    bootToe.scaling.set(0.86, 0.78, 1.16);
+    bootToe.position.set(0, -0.02, 0.02);
+    bootToe.material = materials.shoeBoot;
+    bootToe.parent = sneakerGroup;
+    const bootSole = MeshBuilder.CreateSphere(`${idPrefix}-boot-sole-${isLeft ? 'l' : 'r'}`, { diameter: 0.32, segments: 10 }, scene);
+    bootSole.scaling.set(0.88, 0.23, 1.12);
+    bootSole.position.y = -0.13;
+    bootSole.material = materials.sneakerSole;
+    bootSole.parent = sneakerGroup;
+
+    const runnerBand = MeshBuilder.CreateBox(`${idPrefix}-runner-band-${isLeft ? 'l' : 'r'}`, { width: 0.24, height: 0.045, depth: 0.18 }, scene);
+    runnerBand.position.set(0, 0.04, 0.02);
+    runnerBand.material = materials.shoeNeon;
+    runnerBand.parent = sneakerGroup;
+    const runnerHeel = MeshBuilder.CreateSphere(`${idPrefix}-runner-heel-${isLeft ? 'l' : 'r'}`, { diameter: 0.13, segments: 8 }, scene);
+    runnerHeel.scaling.set(0.8, 0.9, 0.45);
+    runnerHeel.position.set(0, -0.01, -0.13);
+    runnerHeel.material = materials.shoeNeon;
+    runnerHeel.parent = sneakerGroup;
+
+    const slideSole = MeshBuilder.CreateSphere(`${idPrefix}-slide-sole-${isLeft ? 'l' : 'r'}`, { diameter: 0.30, segments: 10 }, scene);
+    slideSole.scaling.set(0.90, 0.20, 1.12);
+    slideSole.position.y = -0.11;
+    slideSole.material = materials.sneakerSole;
+    slideSole.parent = sneakerGroup;
+    const slideStrap = MeshBuilder.CreateSphere(`${idPrefix}-slide-strap-${isLeft ? 'l' : 'r'}`, { diameter: 0.23, segments: 10 }, scene);
+    slideStrap.scaling.set(0.88, 0.28, 0.40);
+    slideStrap.position.set(0, -0.01, 0.02);
+    slideStrap.material = materials.sneakerBody;
+    slideStrap.parent = sneakerGroup;
+    const slideFoot = MeshBuilder.CreateSphere(`${idPrefix}-slide-foot-${isLeft ? 'l' : 'r'}`, {diameter: 0.25, segments: 10}, scene);
+    slideFoot.parent = sneakerGroup;
+    slideFoot.scaling.set(0.77, 0.42, 1.03);
+    slideFoot.position.set(0, -0.035, 0.02);
+    slideFoot.material = materials.skin;
+
+    const flatSole = MeshBuilder.CreateSphere(`${idPrefix}-flat-sole-${isLeft ? 'l' : 'r'}`, { diameter: 0.29, segments: 10 }, scene);
+    flatSole.scaling.set(0.88, 0.18, 1.08);
+    flatSole.position.y = -0.11;
+    flatSole.material = materials.shoeBoot;
+    flatSole.parent = sneakerGroup;
+    const flatStrap = MeshBuilder.CreateBox(`${idPrefix}-flat-strap-${isLeft ? 'l' : 'r'}`, { width: 0.22, height: 0.045, depth: 0.035 }, scene);
+    flatStrap.position.set(0, 0.02, 0.06);
+    flatStrap.material = materials.sneakerAccent;
+    flatStrap.parent = sneakerGroup;
+    const flatUpper = MeshBuilder.CreateSphere(`${idPrefix}-flat-upper-${isLeft ? 'l' : 'r'}`, {diameter: 0.27, segments: 10}, scene);
+    flatUpper.parent = sneakerGroup;
+    flatUpper.scaling.set(0.82, 0.48, 1.08);
+    flatUpper.position.set(0, -0.03, 0.015);
+    flatUpper.material = materials.sneakerBody;
+
+    const variants = [bootCuff, bootToe, bootSole, runnerBand, runnerHeel, slideSole, slideStrap, slideFoot, flatSole, flatStrap, flatUpper];
+    variants.forEach(mesh => mesh.setEnabled(false));
+    shoeOutfitParts.push({
+      base: [sneakerUpper, sneakerCap, sneakerStripe, sneakerPlatform],
+      boots: [bootCuff, bootToe, bootSole],
+      runner: [runnerBand, runnerHeel],
+      slides: [slideSole, slideStrap, slideFoot],
+      flats: [flatSole, flatStrap, flatUpper],
+    });
+
     return legRoot;
   }
 
   const leftLeg = createLeg(true);
   const rightLeg = createLeg(false);
+  const animatedJoints = [leftArm, rightArm, leftLeg, rightLeg, ...armJoints, ...legJoints];
+  const previousRotations = animatedJoints.map(() => new Vector3());
+
+  let activeBodyProfile = BODY_PROFILES[appearance.gender] || BODY_PROFILES.neutral;
+  let activeSkinTone = appearance.skinTone;
+  let activeLod = 0;
+  let activeHairStyle = 'classic';
+  let activeEarType = 'human';
+  let activeTopStyle = 'starter';
+  let activeBottomStyle = 'shorts_denim';
+  let activeShoeStyle = 'sneaker_chunky';
+
+  function setBodyProfile(gender = 'neutral') {
+    activeBodyProfile = BODY_PROFILES[gender] || BODY_PROFILES.neutral;
+    headNode.scaling.setAll(proportions.headScale * activeBodyProfile.head);
+    torsoNode.scaling.set(activeBodyProfile.torsoX, activeBodyProfile.torsoY, activeBodyProfile.torsoZ);
+    leftArm.scaling.setAll(activeBodyProfile.limb);
+    rightArm.scaling.setAll(activeBodyProfile.limb);
+    leftArm.position.x = activeBodyProfile.shoulder;
+    rightArm.position.x = -activeBodyProfile.shoulder;
+    leftLeg.scaling.setAll(activeBodyProfile.limb);
+    rightLeg.scaling.setAll(activeBodyProfile.limb);
+    shortsSeat.scaling.x = activeBodyProfile.hip;
+    pleatedSkirt.scaling.x = activeBodyProfile.hip;
+    root.metadata = { ...(root.metadata || {}), characterGender: gender };
+  }
+
+  function setMaterialColor(material, color, ambientScale = 0.24) {
+    const safe = safeCharacterHex(color, '#f1f5f9');
+    material.diffuseColor = Color3.FromHexString(safe);
+    material.ambientColor = material.diffuseColor.scale(ambientScale);
+    material.emissiveColor = Color3.Black();
+  }
 
   function applyOutfit(id, color) {
     if (color) {
-      materials.shirt.diffuseColor = Color3.FromHexString(color);
-      materials.shirt.ambientColor = materials.shirt.diffuseColor.scale(0.44);
-      materials.shirt.emissiveColor = materials.shirt.diffuseColor.scale(0.32);
+      setMaterialColor(materials.shirt, color);
     }
     const farmer = id === 'farmer';
-    teeHem.setEnabled(!farmer);
+    teeHem.setEnabled(false);
     const shortsColors = { starter: '#4778b6', farmer: '#2563eb', rose: '#ad6d8d', lake: '#395e98', royal: '#63528b' };
-    materials.overalls.diffuseColor = Color3.FromHexString(shortsColors[id] || shortsColors.starter);
-    materials.overalls.ambientColor = materials.overalls.diffuseColor.scale(0.44);
-    materials.overalls.emissiveColor = materials.overalls.diffuseColor.scale(0.10);
+    setMaterialColor(materials.overalls, shortsColors[id] || shortsColors.starter);
     overallDetails.forEach(mesh => mesh.setEnabled(farmer));
     hoodieDetails.forEach(mesh => mesh.setEnabled(farmer));
+    longSleeves.forEach(mesh => mesh.setEnabled(farmer));
+    shoulderSurfaces.forEach(mesh => {
+      mesh.metadata.sleeveLength = farmer ? 0.63 : 0.24;
+      mesh.metadata.radius = 0.098;
+      mesh.material = materials.shirt;
+    });
     backpackNode.setEnabled(farmer);
     sproutNode.setEnabled(farmer);
-    legOutfitParts.forEach(({ pantLeg, pantCuff, calf }) => {
+    legOutfitParts.forEach(({ pantLeg, calf, shinPants, kneeSurface, longPants }) => {
+      shinPants.setEnabled(false);
+      longPants.setEnabled(farmer);
+      kneeSurface.setEnabled(false);
+      pantLeg.setEnabled(!farmer);
       pantLeg.scaling.y = farmer ? 1 : 0.65;
       pantLeg.position.y = farmer ? -0.14 : -0.10;
-      pantCuff.position.y = farmer ? -0.29 : -0.20;
-      calf.setEnabled(!farmer);
+      calf.setEnabled(false);
     });
     hatNode.setEnabled(farmer);
     catEarsNode.setEnabled(id === 'cat' || id === 'party');
+    activeTopStyle = farmer ? 'farmer' : 'starter';
+    activeBottomStyle = farmer ? 'farmer' : 'shorts_denim';
+    activeShoeStyle = 'sneaker_chunky';
+    Object.values(topVariants).forEach(node => node.setEnabled(false));
+    cargoDetailsNode.setEnabled(false);
+    joggerDetailsNode.setEnabled(false);
+    shoeOutfitParts.forEach(({ base, boots, runner, slides, flats }) => {
+      base.forEach(mesh => mesh.setEnabled(true));
+      [...boots, ...runner, ...slides, ...flats].forEach(mesh => mesh.setEnabled(false));
+    });
   }
 
-  applyOutfit(outfitId, outfitColor);
+  function setHair(style = 'classic', color = null) {
+    const resolvedStyle = HAIR_STYLE_ALIASES[style] || style;
+    activeHairStyle = resolvedStyle;
+    if (color) {
+      setMaterialColor(materials.hair, color);
+      setMaterialColor(fringeMaterial, color);
+    }
+    const showHairDetails = activeLod < 2;
+    quiffNode.setEnabled(showHairDetails && (resolvedStyle === 'classic' || resolvedStyle === 'anime_bangs'));
+    fringe.setEnabled(activeLod < 1);
+    twintailsNode.setEnabled(showHairDetails && resolvedStyle === 'twintails');
+    bobNode.setEnabled(showHairDetails && resolvedStyle === 'bob');
+    wavyNode.setEnabled(showHairDetails && resolvedStyle === 'wavy');
+    slickNode.setEnabled(showHairDetails && resolvedStyle === 'slick');
+    ponytailNode.setEnabled(resolvedStyle === 'ponytail');
+    sproutNode.setEnabled(showHairDetails && (resolvedStyle === 'anime_bangs' || resolvedStyle === 'classic_sprout'));
+    root.metadata = { ...(root.metadata || {}), hairStyle: style };
+  }
+
+  function setEars(earType = 'human') {
+    const resolvedType = EAR_ALIASES[earType] || earType;
+    activeEarType = resolvedType;
+    const showEarDetails = activeLod < 2;
+    catEarsNode.setEnabled(showEarDetails && resolvedType === 'cat');
+    rabbitEarsNode.setEnabled(showEarDetails && resolvedType === 'rabbit');
+    bearEarsNode.setEnabled(showEarDetails && resolvedType === 'bear');
+    elfEarsNode.setEnabled(showEarDetails && resolvedType === 'elf');
+    const showHuman = resolvedType === 'human' || resolvedType === 'cat' || resolvedType === 'rabbit' || resolvedType === 'bear';
+    humanEars.forEach(m => m.setEnabled(showHuman));
+    root.metadata = { ...(root.metadata || {}), ears: earType };
+  }
+
+  function setTop(topId = 'starter', color = null) {
+    const resolvedTop = TOP_ALIASES[topId] || topId;
+    activeTopStyle = resolvedTop;
+    if (color) {
+      setMaterialColor(materials.shirt, color);
+      setMaterialColor(materials.topDark, color);
+      setMaterialColor(materials.knit, color);
+    }
+    const isHoodie = resolvedTop === 'hoodie_pastel' || resolvedTop === 'farmer';
+    hoodieDetails.forEach(m => m.setEnabled(isHoodie));
+    longSleeves.forEach(mesh => mesh.setEnabled(isHoodie || resolvedTop === 'bomber' || resolvedTop === 'knit'));
+    const sleeveMaterial = resolvedTop === 'bomber' ? materials.topDark : resolvedTop === 'knit' ? materials.knit : materials.shirt;
+    [...longSleeves, ...shortSleeves].forEach(mesh => { mesh.material = sleeveMaterial; });
+    shoulderSurfaces.forEach(mesh => { mesh.material = resolvedTop === 'tank' ? materials.skin : sleeveMaterial; });
+    shoulderSurfaces.forEach(mesh => {
+      mesh.metadata.sleeveLength = isHoodie || resolvedTop === 'bomber' || resolvedTop === 'knit' || resolvedTop === 'tank' ? 0.63 : 0.24;
+      mesh.metadata.radius = resolvedTop === 'tank' ? 0.070 : 0.098;
+    });
+    shortSleeves.forEach(mesh => mesh.setEnabled(resolvedTop !== 'tank' && !isHoodie && resolvedTop !== 'bomber' && resolvedTop !== 'knit'));
+    Object.entries(topVariants).forEach(([variant, node]) => {
+      node.setEnabled(activeLod < 2 && variant === resolvedTop);
+    });
+    teeHem.setEnabled(false);
+    if (resolvedTop === 'croptop_summer') {
+      shirtBody.scaling.set(1.0, 0.72 * (clothingScaled ? proportions.torsoHeightScale : 1), 1.0);
+      shirtBody.position.y = 0.28 * (clothingScaled ? proportions.torsoHeightScale : 1);
+    } else {
+      shirtBody.scaling.set(1.0, clothingScaled ? proportions.torsoHeightScale : 1, 1.0);
+      shirtBody.position.y = 0.22 * (clothingScaled ? proportions.torsoHeightScale : 1);
+    }
+    root.metadata = { ...(root.metadata || {}), topId };
+  }
+
+  function setBottom(bottomId = 'shorts_denim', color = null) {
+    const resolvedBottom = BOTTOM_ALIASES[bottomId] || bottomId;
+    activeBottomStyle = resolvedBottom;
+    const isOveralls = resolvedBottom === 'overalls_blue' || resolvedBottom === 'farmer';
+    const isSkirt = resolvedBottom === 'skirt_pleated';
+    const isLongPants = resolvedBottom === 'cargo_pants' || resolvedBottom === 'joggers_cozy';
+    if (color) {
+      setMaterialColor(materials.overalls, color);
+      setMaterialColor(materials.skirt, color);
+      setMaterialColor(materials.bottomPocket, color);
+    }
+    overallDetails.forEach(m => m.setEnabled(isOveralls));
+    pleatedSkirt.setEnabled(isSkirt);
+    cargoDetailsNode.setEnabled(activeLod < 2 && resolvedBottom === 'cargo_pants');
+    joggerDetailsNode.setEnabled(activeLod < 2 && resolvedBottom === 'joggers_cozy');
+    shortsSeat.setEnabled(!isSkirt);
+    legOutfitParts.forEach(({ pantLeg, calf, shinPants, kneeSurface, longPants }) => {
+      shinPants.setEnabled(false);
+      longPants.setEnabled(isLongPants || isOveralls);
+      kneeSurface.setEnabled(false);
+      if (isSkirt) {
+        pantLeg.setEnabled(false);
+        calf.setEnabled(false);
+      } else if (isLongPants || isOveralls) {
+        pantLeg.setEnabled(false);
+        pantLeg.scaling.y = 1.9;
+        pantLeg.position.y = -0.20;
+        calf.setEnabled(false);
+      } else {
+        pantLeg.setEnabled(true);
+        pantLeg.scaling.y = 0.75;
+        pantLeg.position.y = -0.10;
+        calf.setEnabled(false);
+      }
+    });
+    root.metadata = { ...(root.metadata || {}), bottomId };
+  }
+
+  function setShoes(shoeId = 'sneaker_chunky', color = null) {
+    const resolvedShoe = SHOE_ALIASES[shoeId] || shoeId;
+    activeShoeStyle = resolvedShoe;
+    if (color) {
+      setMaterialColor(materials.sneakerBody, color, 0.44);
+      setMaterialColor(materials.shoeBoot, color);
+    }
+    if (resolvedShoe === 'runner_neon') {
+      setMaterialColor(materials.sneakerAccent, '#22c55e', 0.3);
+    } else if (resolvedShoe === 'boots_vintage') {
+      setMaterialColor(materials.sneakerAccent, '#78350f', 0.3);
+    } else {
+      setMaterialColor(materials.sneakerAccent, '#3b82f6', 0.3);
+    }
+    const isBoot = resolvedShoe === 'boots_vintage';
+    const isSlides = resolvedShoe === 'slides';
+    const isFlats = resolvedShoe === 'flats';
+    shoeOutfitParts.forEach(({ base, boots, runner, slides, flats }) => {
+      base.forEach(mesh => mesh.setEnabled(activeLod === 2 || (!isBoot && !isSlides && !isFlats)));
+      boots.forEach(mesh => mesh.setEnabled(activeLod < 2 && isBoot));
+      runner.forEach(mesh => mesh.setEnabled(activeLod < 2 && resolvedShoe === 'runner_neon'));
+      slides.forEach(mesh => mesh.setEnabled(activeLod < 2 && isSlides));
+      flats.forEach(mesh => mesh.setEnabled(activeLod < 2 && isFlats));
+    });
+    root.metadata = { ...(root.metadata || {}), shoeId };
+  }
+
+  function setGender(gender = 'neutral') {
+    setBodyProfile(gender);
+  }
+
+  function setSkinTone(value = 'peach') {
+    const tone = getSkinTone(typeof value === 'string' ? value : value?.skinTone);
+    const color = typeof value === 'object' ? value.skinColor || tone.hex : tone.hex;
+    setMaterialColor(materials.skin, color, CHARACTER_RENDER_CONFIG.material.skinAmbient);
+    materials.skin.emissiveColor = materials.skin.diffuseColor.scale(CHARACTER_RENDER_CONFIG.material.skinEmissive);
+    activeSkinTone = tone.id;
+    root.metadata = { ...(root.metadata || {}), skinTone: tone.id };
+  }
+
+  function setFaceFeatures(features) {
+    faceSystem.updateFeatures(features);
+  }
+
+  function applyCustomization(custom) {
+    if (!custom) return;
+    if (Object.prototype.hasOwnProperty.call(custom, 'gender')) setGender(custom.gender);
+    if (Object.prototype.hasOwnProperty.call(custom, 'skinTone') || Object.prototype.hasOwnProperty.call(custom, 'skinColor')) {
+      setSkinTone(custom);
+    }
+    const hair = custom.hairStyle || custom.hair;
+    if (hair || custom.hairColor) setHair(hair, custom.hairColor);
+    const top = custom.topId || custom.topStyle || custom.top;
+    if (top || custom.topColor) setTop(top, custom.topColor);
+    const bottom = custom.bottomId || custom.bottomStyle || custom.bottom;
+    if (bottom || custom.bottomColor) setBottom(bottom, custom.bottomColor);
+    const shoe = custom.shoeId || custom.shoeStyle || custom.shoe || custom.shoes;
+    if (shoe || custom.shoeColor) setShoes(shoe, custom.shoeColor);
+    const ears = custom.ears || custom.earType;
+    if (ears) setEars(ears);
+    if (custom.eyeType || custom.eyeColor || custom.noseType || custom.mouthType || custom.blushType) {
+      setFaceFeatures({
+        eyeType: custom.eyeType,
+        eyeColor: custom.eyeColor,
+        noseType: custom.noseType,
+        mouthType: custom.mouthType,
+        blushType: custom.blushType,
+      });
+    }
+  }
+
+  setGender(appearance.gender);
+  setSkinTone(appearance);
+  if (options.customization) {
+    applyCustomization(options.customization);
+  } else {
+    applyOutfit(outfitId, outfitColor);
+  }
+  root.metadata = {
+    ...(root.metadata || {}),
+    characterLod: activeLod,
+    characterGender: appearance.gender,
+    skinTone: activeSkinTone,
+    characterVersion: CHARACTER_RENDER_CONFIG.version,
+    renderStyle: CHARACTER_RENDER_CONFIG.style,
+    geometryBudget: CHARACTER_RENDER_CONFIG.geometryBudget,
+  };
+
+  // Stretch clothing only: head and articulated limbs keep their own anchors.
+  const bodyAnchors = new Set([headNode, leftArm, rightArm, leftLeg, rightLeg]);
+  torsoNode.getChildren().forEach(node => {
+    if (bodyAnchors.has(node) || node.metadata?.articulatedSurface) return;
+    node.position.y *= proportions.torsoHeightScale;
+    node.scaling.y *= proportions.torsoHeightScale;
+  });
+  clothingScaled = true;
+  const neck = MeshBuilder.CreateCapsule(`${idPrefix}-neck`, { height: 0.20, radius: 0.08, tessellation: 12 }, scene);
+  neck.parent = torsoNode;
+  neck.position.y = 0.65;
+  neck.material = materials.skin;
 
   // ========================================================
   // 6. CÔNG CỤ NÔNG TRẠI 3D (Handheld Tool Props)
@@ -592,10 +1472,12 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   const toolMatCan = makeMat(scene, 'tool-mat-can', '#38bdf8', '#0284c7');
   const toolMatPouch = makeMat(scene, 'tool-mat-pouch', '#d97706');
   const toolMatBasket = makeMat(scene, 'tool-mat-basket', '#b45309');
+  const toolMatRod = makeMat(scene, 'tool-mat-fishing-rod', '#8b5a2b');
+  const toolMatRodTip = makeMat(scene, 'tool-mat-fishing-rod-tip', '#38bdf8', '#0284c7');
 
   const toolsNode = new TransformNode(`${idPrefix}-tools-root`, scene);
-  toolsNode.parent = rightArm;
-  toolsNode.position.set(0, -0.40, 0.06);
+  toolsNode.parent = armJoints[1];
+  toolsNode.position.set(0, -proportions.forearmLength - 0.03, 0.06);
 
   // Cuốc (Hoe)
   const hoeNode = new TransformNode(`${idPrefix}-tool-hoe`, scene);
@@ -646,6 +1528,32 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   basket.parent = basketNode;
   basketNode.setEnabled(false);
 
+  // Cần câu modular: giữ ở tay phải và tái sử dụng cho mọi loại cần config.
+  const fishingRodNode = new TransformNode(`${idPrefix}-tool-fishing-rod`, scene);
+  fishingRodNode.parent = toolsNode;
+  fishingRodNode.position.set(0, -0.05, 0.05);
+  fishingRodNode.rotation.z = -0.18;
+  const fishingRodGrip = MeshBuilder.CreateCylinder(`${idPrefix}-fishing-rod-grip`, {
+    height: 0.28, diameterTop: 0.075, diameterBottom: 0.095, tessellation: 10,
+  }, scene);
+  fishingRodGrip.position.set(0, -0.20, 0.04);
+  fishingRodGrip.material = toolMatRod;
+  fishingRodGrip.parent = fishingRodNode;
+  const fishingRodShaft = MeshBuilder.CreateCylinder(`${idPrefix}-fishing-rod-shaft`, {
+    height: 1.45, diameterTop: 0.018, diameterBottom: 0.048, tessellation: 8,
+  }, scene);
+  fishingRodShaft.position.set(0, 0.58, 0.04);
+  fishingRodShaft.rotation.z = -0.02;
+  fishingRodShaft.material = toolMatRod;
+  fishingRodShaft.parent = fishingRodNode;
+  const fishingRodTip = MeshBuilder.CreateCylinder(`${idPrefix}-fishing-rod-tip`, {
+    height: 0.16, diameterTop: 0.012, diameterBottom: 0.022, tessellation: 8,
+  }, scene);
+  fishingRodTip.position.set(0, 1.37, 0.04);
+  fishingRodTip.material = toolMatRodTip;
+  fishingRodTip.parent = fishingRodNode;
+  fishingRodNode.setEnabled(false);
+
   if (shadowGenerator) {
     [head, shirtBody, dungareesBib, packBody].forEach(m => shadowGenerator.addShadowCaster(m));
   }
@@ -659,6 +1567,11 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   let onActionHit = null;
   let onActionEnd = null;
   let actionHitFired = false;
+  let fishingAction = null;
+  let fishingActionTime = 0;
+  let fishingActionDuration = 0.9;
+  let onFishingActionEnd = null;
+  let fishingPose = false;
 
   function updateToolVisibility() {
     const effective = currentAction;
@@ -666,6 +1579,71 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     waterCanNode.setEnabled(effective === 'water');
     seedBagNode.setEnabled(effective === 'seed');
     basketNode.setEnabled(effective === 'harvest' || effective === 'celebrate');
+    fishingRodNode.setEnabled(Boolean(fishingAction || fishingPose));
+  }
+
+  function resetFishingPose() {
+    rightArm.rotation.set(0, 0, 0);
+    leftArm.rotation.set(0, 0, 0);
+    torsoNode.rotation.set(0, 0, 0);
+    torsoNode.position.y = 0.60;
+    headNode.rotation.set(0, 0, 0);
+  }
+
+  function animateFishing(delta) {
+    const elapsed = fishingAction ? fishingActionTime : animTimer;
+    const progress = fishingAction ? Math.min(1, fishingActionTime / fishingActionDuration) : 1;
+    const bob = Math.sin(elapsed * 2.6) * 0.025;
+    torsoNode.position.y = 0.60 + bob;
+    torsoNode.rotation.y = fishingPose ? -0.10 : 0;
+    leftLeg.rotation.x *= 0.82;
+    rightLeg.rotation.x *= 0.82;
+
+    if (!fishingAction) {
+      rightArm.rotation.x = -0.95;
+      rightArm.rotation.y = 0.18;
+      rightArm.rotation.z = -0.12;
+      leftArm.rotation.x = -0.65;
+      leftArm.rotation.y = -0.08;
+      leftArm.rotation.z = 0.10;
+      headNode.rotation.z = Math.sin(elapsed * 1.8) * 0.025;
+      return;
+    }
+
+    if (fishingAction === 'cast') {
+      if (progress < 0.38) {
+        const wind = progress / 0.38;
+        rightArm.rotation.x = -0.82 - wind * 1.0;
+        rightArm.rotation.y = 0.18 + wind * 0.18;
+        rightArm.rotation.z = -0.12 - wind * 0.12;
+        leftArm.rotation.x = -0.55 - wind * 0.45;
+        torsoNode.rotation.x = -wind * 0.08;
+      } else {
+        const release = (progress - 0.38) / 0.62;
+        const ease = 1 - Math.pow(1 - release, 3);
+        rightArm.rotation.x = -1.82 + ease * 1.25;
+        rightArm.rotation.y = 0.36 - ease * 0.16;
+        rightArm.rotation.z = -0.24 + ease * 0.14;
+        leftArm.rotation.x = -1.0 + ease * 0.38;
+        torsoNode.rotation.x = -0.08 + ease * 0.08;
+      }
+    } else if (fishingAction === 'reel') {
+      const pump = Math.sin(progress * Math.PI * 3.2);
+      rightArm.rotation.x = -1.12 - pump * 0.34;
+      rightArm.rotation.y = 0.30 + pump * 0.08;
+      rightArm.rotation.z = -0.20;
+      leftArm.rotation.x = -0.92 - pump * 0.22;
+      leftArm.rotation.y = -0.18;
+      torsoNode.rotation.x = 0.05 + Math.abs(pump) * 0.05;
+    } else if (fishingAction === 'catch') {
+      const lift = Math.sin(progress * Math.PI);
+      rightArm.rotation.x = -1.2 - lift * 1.0;
+      rightArm.rotation.z = -0.25 - lift * 0.15;
+      leftArm.rotation.x = -1.0 - lift * 0.72;
+      leftArm.rotation.z = 0.15 + lift * 0.12;
+      torsoNode.position.y = 0.60 + lift * 0.15;
+      headNode.rotation.x = -lift * 0.18;
+    }
   }
 
   return {
@@ -682,14 +1660,62 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     catEarsNode,
     sproutNode,
     faceSystem,
+    joints: { elbows: armJoints, knees: legJoints },
+    toolGrip: toolsNode,
 
     setOutfitColor(color) {
-      materials.shirt.diffuseColor = Color3.FromHexString(color);
-      materials.shirt.emissiveColor = materials.shirt.diffuseColor.scale(0.32);
+      setMaterialColor(materials.shirt, color);
     },
     setOutfit(id, color) {
       applyOutfit(id, color);
     },
+    setHair,
+    setEars,
+    setTop,
+    setBottom,
+    setShoes,
+    setGender,
+    setSkinTone,
+    setLOD(level = 0) {
+      const nextLod = Math.max(0, Math.min(2, Math.round(Number(level) || 0)));
+      if (activeLod === 2 && nextLod < 2) {
+        detailVisibility.forEach((enabled, mesh) => mesh.setEnabled(enabled));
+        detailVisibility.clear();
+      }
+      activeLod = nextLod;
+      setHair(activeHairStyle);
+      setEars(activeEarType);
+      setTop(activeTopStyle);
+      setBottom(activeBottomStyle);
+      setShoes(activeShoeStyle);
+      if (activeLod === 2) {
+        root.getChildMeshes().forEach(mesh => {
+          if (!/-(?:cord|button|polo-button|knit-rib|cuff|pant-cuff|tee-hem|thumb|sidelock|sneaker-str)/.test(mesh.name)) return;
+          if (!detailVisibility.has(mesh)) detailVisibility.set(mesh, mesh.isEnabled(false));
+          mesh.setEnabled(false);
+        });
+      }
+      root.metadata = { ...(root.metadata || {}), characterLod: activeLod };
+    },
+    getAppearance() {
+      return {
+        gender: root.metadata?.characterGender || appearance.gender,
+        skinTone: activeSkinTone,
+        lod: activeLod,
+        hairStyle: activeHairStyle,
+        ears: activeEarType,
+        topId: activeTopStyle,
+        bottomId: activeBottomStyle,
+        shoeId: activeShoeStyle,
+        renderStyle: CHARACTER_RENDER_CONFIG.style,
+      };
+    },
+    getRenderStats() {
+      const meshes = root.getChildMeshes().filter(mesh => mesh.isEnabled());
+      return { enabledMeshes: meshes.length, triangles: meshes.reduce((sum, mesh) => sum + mesh.getTotalIndices() / 3, 0), materials: new Set(meshes.map(mesh => mesh.material)).size, lod: activeLod };
+    },
+    setFaceFeatures,
+    applyCustomization,
     setHatVisible(visible) {
       if (hatNode) hatNode.setEnabled(visible);
     },
@@ -704,12 +1730,15 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
       updateToolVisibility();
     },
     playAction(actionType, onHitCallback = null, onEndCallback = null) {
+      fishingAction = null;
+      fishingPose = false;
       currentAction = actionType;
       actionTime = 0;
       actionHitFired = false;
       onActionHit = onHitCallback;
       onActionEnd = onEndCallback;
-      actionDuration = actionType === 'water' ? 0.8 : (actionType === 'harvest' ? 0.75 : 0.65);
+      actionDuration = CHARACTER_ANIMATION_CONFIG.actionDurations[actionType]
+        || CHARACTER_ANIMATION_CONFIG.actionDurations.default;
 
       if (actionType === 'harvest' || actionType === 'celebrate') {
         faceSystem.setExpression('excited');
@@ -721,17 +1750,73 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
 
       updateToolVisibility();
     },
+    playFishingAction(actionType, onEndCallback = null, durationOverride = null) {
+      currentAction = null;
+      fishingAction = actionType;
+      fishingPose = false;
+      fishingActionTime = 0;
+      const fallbackDuration = actionType === 'cast' ? 0.95 : actionType === 'reel' ? 0.9 : 0.82;
+      fishingActionDuration = Number.isFinite(durationOverride) && durationOverride > 0 ? durationOverride : fallbackDuration;
+      onFishingActionEnd = onEndCallback;
+      faceSystem.setExpression(actionType === 'catch' ? 'excited' : 'happy');
+      updateToolVisibility();
+    },
+    setFishingPose(active = true) {
+      currentAction = null;
+      fishingAction = null;
+      fishingPose = Boolean(active);
+      updateToolVisibility();
+    },
+    clearFishingPose() {
+      fishingAction = null;
+      fishingPose = false;
+      onFishingActionEnd = null;
+      resetFishingPose();
+      updateToolVisibility();
+    },
+    isFishingBusy() {
+      return Boolean(fishingAction || fishingPose);
+    },
     isPerformingAction() {
       return Boolean(currentAction);
     },
     animate(delta, isMoving = false, speed = 1.0) {
+      // Preserve existing action timing while lifting the hips for longer legs.
+      delta = Math.min(0.1, Math.max(0, Number(delta) || 0));
+      animatedJoints.forEach((joint, i) => previousRotations[i].copyFrom(joint.rotation));
+      try {
+      torsoNode.position.y = 0.60;
       animTimer += delta;
+      ponytailNode.rotation.x = Math.sin(animTimer * (isMoving ? 8 : 2)) * (isMoving ? 0.12 : 0.025);
+      const cycle = animTimer * CHARACTER_ANIMATION_CONFIG.walkCycleSpeed * Math.max(0.6, speed / 4);
+      armJoints.forEach((joint, i) => {
+        joint.rotation.x = fishingAction || fishingPose ? -0.65 : currentAction ? -0.30 : isMoving ? -0.22 - Math.max(0, Math.sin(cycle + i * Math.PI)) * 0.35 : -0.08;
+      });
+      legJoints.forEach((joint, i) => {
+        joint.rotation.x = isMoving ? Math.max(0, Math.sin(cycle + i * Math.PI)) * 0.75 : 0;
+      });
 
       // Cập nhật biểu cảm khuôn mặt
       faceSystem.update(delta);
 
       // Cọng mầm cây đung đưa trên đỉnh đầu
       sproutNode.rotation.z = Math.sin(animTimer * 4.5) * 0.18;
+
+      if (fishingAction || fishingPose) {
+        if (fishingAction) fishingActionTime += delta;
+        animateFishing(delta);
+        if (fishingAction && fishingActionTime >= fishingActionDuration) {
+          fishingAction = null;
+          fishingPose = false;
+          fishingRodNode.setEnabled(false);
+          resetFishingPose();
+          onFishingActionEnd?.();
+          onFishingActionEnd = null;
+          faceSystem.setExpression('happy');
+          updateToolVisibility();
+        }
+        return;
+      }
 
       // 1. Xử lý Action Animation chuyên biệt
       if (currentAction) {
@@ -834,7 +1919,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
 
       // 2. DÁNG CHẠY WADDLE RUN PLAY TOGETHER (Lắc lư chim cánh cụt nhí nhảnh)
       if (isMoving) {
-        const walkCycle = animTimer * 10.5 * Math.max(0.6, speed / 4);
+        const walkCycle = animTimer * CHARACTER_ANIMATION_CONFIG.walkCycleSpeed * Math.max(0.6, speed / 4);
 
         // Chân bước nhanh nhí nhảnh
         leftLeg.rotation.x = Math.sin(walkCycle) * 0.68;
@@ -842,11 +1927,11 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
 
         // Tay xòe nhẹ cân bằng nhí nhảnh kiểu Chibi Play Together
         leftArm.rotation.x = -Math.sin(walkCycle) * 0.48;
-        leftArm.rotation.z = -0.20 - Math.abs(Math.sin(walkCycle)) * 0.14;
+        leftArm.rotation.z = -0.07 - Math.abs(Math.sin(walkCycle)) * 0.025;
         leftArm.rotation.y = 0;
 
         rightArm.rotation.x = Math.sin(walkCycle) * 0.48;
-        rightArm.rotation.z = 0.20 + Math.abs(Math.sin(walkCycle)) * 0.14;
+        rightArm.rotation.z = 0.07 + Math.abs(Math.sin(walkCycle)) * 0.025;
         rightArm.rotation.y = 0;
 
         // ĐẶC TRƯNG PLAY TOGETHER: BODY WADDLE ROLL (Lắc lư thân người sang 2 bên)
@@ -855,9 +1940,9 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
 
         // Hiệu ứng nhún đàn hồi Chibi (Squash & Stretch)
         torsoNode.position.y = 0.60 + Math.abs(Math.sin(walkCycle)) * 0.06;
-        torsoNode.scaling.y = 1.0 - Math.abs(Math.sin(walkCycle)) * 0.035;
-        torsoNode.scaling.x = 1.0 + Math.abs(Math.sin(walkCycle)) * 0.02;
-        torsoNode.scaling.z = 1.0 + Math.abs(Math.sin(walkCycle)) * 0.02;
+        torsoNode.scaling.y = activeBodyProfile.torsoY * (1.0 - Math.abs(Math.sin(walkCycle)) * 0.035);
+        torsoNode.scaling.x = activeBodyProfile.torsoX * (1.0 + Math.abs(Math.sin(walkCycle)) * 0.02);
+        torsoNode.scaling.z = activeBodyProfile.torsoZ * (1.0 + Math.abs(Math.sin(walkCycle)) * 0.02);
 
         torsoNode.rotation.x = 0.05;
         headNode.rotation.x = 0.03;
@@ -871,10 +1956,10 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
         backpackNode.rotation.z = Math.sin(walkCycle) * 0.08;
       } else {
         // ĐỨNG THỞ IDLE DỊU DÀNG
-        const idleCycle = animTimer * 2.5;
+        const idleCycle = animTimer * CHARACTER_ANIMATION_CONFIG.idleBreathSpeed;
 
         torsoNode.position.y = 0.60 + Math.sin(idleCycle) * 0.012;
-        torsoNode.scaling.set(1.0, 1.0, 1.0);
+        torsoNode.scaling.set(activeBodyProfile.torsoX, activeBodyProfile.torsoY, activeBodyProfile.torsoZ);
         torsoNode.rotation.set(0, 0, 0);
 
         headNode.rotation.z = Math.sin(idleCycle * 0.5) * 0.035;
@@ -892,6 +1977,12 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
         rightArm.rotation.x *= 0.85;
         rightArm.rotation.z *= 0.85;
         rightArm.rotation.y = 0;
+      }
+      } finally {
+        torsoNode.position.y += proportions.hipHeight - 0.60;
+        const blend = 1 - Math.exp(-delta / CHARACTER_ANIMATION_CONFIG.locomotionBlendSeconds);
+        animatedJoints.forEach((joint, i) => Vector3.LerpToRef(previousRotations[i], joint.rotation, blend, joint.rotation));
+        armSurfaces.forEach(surface => { if (surface.mesh.isEnabled()) surface.update(); });
       }
     },
   };

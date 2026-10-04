@@ -1,9 +1,9 @@
 // Shared outdoor art direction. Decorative variation never changes collisions.
 export const LANDSCAPE_ART = Object.freeze({
-  grass: '#91C94B', grassMid: '#78B83D', grassLight: '#AACF63',
-  leaf: '#73B638', leafLight: '#98CD4A', leafShade: '#3F812F',
+  grass: '#7EB644', grassMid: '#6FA638', grassLight: '#94CB58',
+  leaf: '#68AD30', leafLight: '#8EC242', leafShade: '#387328',
   trunk: '#855329', trunkShade: '#684020', birch: '#DAD8C5',
-  path: '#DDB473', pathLight: '#EAC68B',
+  path: '#A89C8D', pathLight: '#C2B6A7',
   water: '#359EBE', shallows: '#62C9D5',
 });
 

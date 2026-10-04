@@ -18,6 +18,7 @@ import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
+import { isPointInLakeOrRiver } from './WaterSafetyZone.js';
 import { FoliageInstancingEngine } from './FoliageInstancingEngine.js';
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 
@@ -61,11 +62,8 @@ export function createGlobalDenseFlora(scene, foliage, shadows, foliageInstancin
       // Civic Plaza safe zone (radius 52m)
       if (Math.hypot(px, pz) < 52) continue;
 
-      // Crystal Lake water body exclusion
-      if (Math.hypot(px - 165, pz - 2) < 46) continue;
-
-      // Ven Song River water body exclusion
-      if (px >= 270 && px <= 294 && pz >= 82 && pz <= 395) continue;
+      // Water Body Safety Check (Crystal Lake & Grand Winding River)
+      if (isPointInLakeOrRiver(px, pz, 4.0)) continue;
 
       // Seaside ocean exclusion
       if (pz > 328) continue;

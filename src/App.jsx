@@ -1,6 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
-import { FISHING_GEAR, LAKE_FISH, FISHING_WATER_NAMES, fishingWaterAt } from '../shared/fishing.js';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { FARM_CONFIG, farmBarnUpgradeCost } from '../shared/farmConfig.js';
+import {
+  FISHING_CONFIG,
+  FISHING_GEAR,
+  FISHING_GEAR_ORDER,
+  LAKE_FISH,
+  FISHING_WATER_NAMES,
+  fishingWaterAt,
+  fishingInventoryCount,
+  fishingCapacity,
+} from '../shared/fishing.js';
 import { FarmWorld } from './game/world/FarmWorld.js';
+import { LivestockRefresh } from './components/LivestockRefresh.jsx';
 import { readGraphicsQuality } from './game/rendering/GraphicsSettings.js';
 import { loadWorldSession, saveWorldSession } from './game/network/WorldSession.js';
 import { GameClient } from './game/network/GameClient.js';
@@ -31,9 +42,12 @@ import { recordAppRender, transitHudSnapshot } from './game/rendering/HudRuntime
 import { ElderDialogueModal } from './components/ElderDialogueModal.jsx';
 import { OnboardingHUD } from './components/OnboardingHUD.jsx';
 import { HudContextAction } from './components/HudContextAction.jsx';
+import { ChibiRadarMinimap } from './components/ChibiRadarMinimap.jsx';
 import { FarmGuideModal } from './components/FarmGuideModal.jsx';
 import { GraduationModal } from './components/GraduationModal.jsx';
 import { RoadsideShopModal } from './components/RoadsideShopModal.jsx';
+import { FashionBoutiqueModal } from './components/FashionBoutiqueModal.jsx';
+import { getDefaultCustomization } from './game/data/fashionCatalog.js';
 import { FloatingPlotBubble } from './components/FloatingPlotBubble.jsx';
 import { OrderBulletinBoard } from './components/OrderBulletinBoard.jsx';
 import { FloatingRewards, emitReward } from './components/FloatingRewards.jsx';
@@ -44,8 +58,6 @@ import {
   Icon3dSeeds,
   Icon3dWateringCan,
   Icon3dBasket,
-  Icon3dGoldCoin,
-  Icon3dGem,
   Icon3dCarrot,
   Icon3dMap,
   Icon3dBackpack,
@@ -63,13 +75,12 @@ import {
   Icon3dBell,
   Icon3dChicken,
   Icon3dCow,
+  Icon3dSheep,
   Icon3dCorn,
   Icon3dNonLa,
   Icon3dRiceSpike,
   Icon3dLotus,
   Icon3dCoast,
-  Icon3dJump,
-  Icon3dSprint,
   Icon3dDismount,
   Icon3dAudioOn,
   Icon3dAudioOff,
@@ -136,6 +147,14 @@ const cityDistrictIcons = {
   services: <Icon3dModernCity size={20} />, community: <Icon3dNonLa size={20} />,
 };
 const cityDestinations = WORLD_LAYOUT.cityDistricts.filter(district => district.id !== 'civic');
+const fishingGearIcons = {
+  'rod-bamboo': Icon3dFishingRodBamboo,
+  'rod-pro': Icon3dFishingRodPro,
+  'bait-worm': Icon3dBaitWorm,
+  'bait-lure': Icon3dBaitLure,
+  'fish-chum': Icon3dFishChum,
+  'cooler-box': Icon3dCoolerBox,
+};
 const outfits = [
   { id: 'starter', name: 'Áo phông mộc mạc', icon: <Icon3dShirt />, color: '#f8fafc', cost: 0 },
   { id: 'farmer', name: 'Nông dân Bình Minh', icon: <Icon3dNonLa />, color: '#f1b445', cost: 100 },
@@ -155,9 +174,25 @@ const cropIcons = {
   carrot: <Icon3dCarrot size={24} />,
   wheat: <Icon3dRiceSpike size={24} />,
   tomato: <Icon3dTomato size={24} />,
-  strawberry: <Icon3dStrawberry size={24} />
+  strawberry: <Icon3dStrawberry size={24} />,
+  pumpkin: <Icon3dFlower size={24} />,
+  melon: <Icon3dSprout size={24} />,
+  turnip: <Icon3dCarrot size={24} />,
 };
 const recipeIcons = { flour: <Icon3dFlourBowl size={24} />, cheese: <Icon3dCheese size={24} />, jam: <Icon3dJamJar size={24} /> };
+
+function HudImageIcon({ asset, className = '', alt = '' }) {
+  return (
+    <img
+      className={`pt-hud-img-icon ${className}`}
+      src={`/assets/hud/${asset}.webp`}
+      alt={alt}
+      loading="eager"
+      decoding="async"
+      draggable="false"
+    />
+  );
+}
 
 function playerFarmTarget(farmId) {
   const farm = WORLD_LAYOUT.farms.find(item => item.id === farmId) || WORLD_LAYOUT.farms[0];
@@ -190,7 +225,9 @@ export default function App() {
   const [bootProgress, setBootProgress] = useState({ phase: 'init', percentage: 0, message: 'Đang khởi động thế giới 3D…', current: 0, total: 40 });
   const [debugEnabled, setDebugEnabled] = useState(() => new URLSearchParams(window.location.search).get('debug') === '1');
   const clockRef = useRef(Math.floor(Date.now() / 1000));
+  const [timeMode, setTimeMode] = useState('auto');
   const [fishingWater, setFishingWater] = useState(null);
+  const [fishingTick, setFishingTick] = useState(0);
   const [network, setNetwork] = useState({ connected: false, phase: 'connecting', online: 1, queued: 0, attempt: 0 });
   const [casinoResult, setCasinoResult] = useState('Chọn bàn và chờ ván online.');
   const [casinoState, setCasinoState] = useState(null);
@@ -211,9 +248,12 @@ export default function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [graphicsQuality, setGraphicsQuality] = useState(readGraphicsQuality);
   const [cameraViewMode, setCameraViewMode] = useState('explore');
+  const [cameraCleanMode, setCameraCleanMode] = useState(false);
   const [targetDistance, setTargetDistance] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [currentFarmZone, setCurrentFarmZone] = useState(null);
+  const [nearbyFarmGate, setNearbyFarmGate] = useState(null);
+  const [theftProgress, setTheftProgress] = useState(null);
   const busTransitRef = useRef(null);
 
   const hasPendingNotifications =
@@ -240,8 +280,12 @@ export default function App() {
           setBoot({ phase: 'ready', error: '' });
           setBootProgress(prev => ({ ...prev, percentage: 100, phase: 'ready', message: 'Thế giới đã sẵn sàng!' }));
           if (worldRef.current) { worldRef.current.cameraViewMode = cameraViewMode; worldRef.current.resetCameraView(); }
-          const outfit = outfits.find(item => item.id === progressRef.current?.outfit) || outfits[0];
-          worldRef.current?.setPlayerOutfit(outfit.id, outfit.color);
+          if (progressRef.current?.customization) {
+            worldRef.current?.setPlayerCustomization(progressRef.current.customization);
+          } else {
+            const outfit = outfits.find(item => item.id === progressRef.current?.outfit) || outfits[0];
+            worldRef.current?.setPlayerOutfit(outfit.id, outfit.color);
+          }
           worldRef.current?.setPlayerVehicle(progressRef.current?.vehicle || 'walk');
           worldRef.current?.setPlayerHomeTier(progressRef.current?.homeTier || 1);
           worldRef.current?.setClock(clockRef.current);
@@ -257,6 +301,9 @@ export default function App() {
         onLandInteract: farmId => { setFocusedLand(farmId); setPanel('land'); gameClientRef.current?.send({ type: 'resync' }); },
         getHomeTier: () => progressRef.current?.homeTier || 1,
         onFarmZoneChange: zone => setCurrentFarmZone(zone),
+        onNearbyFarmGate: setNearbyFarmGate,
+        onTheftProgress: setTheftProgress,
+        onFarmGateAction: payload => gameClientRef.current?.sendGameAction('farm_gate', payload),
         onToolChange: tool => setActiveTool(tool),
         onHelpNeighbor: neighborFarmId => {
           setStatus(`Đang gửi xác nhận tưới giúp ${neighborFarmId} tới server…`);
@@ -272,6 +319,7 @@ export default function App() {
         getUnlockedPlots: () => progressRef.current?.unlockedPlots ?? 0,
         getOutfitId: () => progressRef.current?.outfit || 'starter',
         getOutfitColor: () => (outfits.find(item => item.id === progressRef.current?.outfit) || outfits[0]).color,
+        getCustomization: () => progressRef.current?.customization || null,
         getVehicle: () => progressRef.current?.vehicle || 'walk',
         getPlayerSpeed: () => vehicles.find(vehicle => vehicle.id === progressRef.current?.vehicle)?.speed || 7,
         onVenue: venue => setPanel(venue === 'supplies' ? 'shop' : venue),
@@ -280,6 +328,7 @@ export default function App() {
         onQualityChange: setGraphicsQuality,
         onBusTransitChange: status => { busTransitRef.current = transitHudSnapshot(status); },
         onNpcInteract: npcId => {
+          if (npcId === 'beach_fisher') { setPanel('fishing'); return; }
           if (npcId === 'village_elder') {
             setDialogueOpen(true);
           }
@@ -332,6 +381,11 @@ export default function App() {
       onFarmSync: farms => {
         worldRef.current?.applyRemoteFarmSync(farms);
       },
+      onFarmGate: update => {
+        worldRef.current?.applyFarmGate(update);
+        if (update.farmId === sessionRef.current?.farmId) setStatus(update.open ? 'Cổng đã mở. Người khác có thể vào vườn.' : 'Cổng đã đóng. Vườn được bảo vệ.');
+      },
+      onTheftPending: pending => worldRef.current?.farming?.beginTheftCountdown(pending),
       onFarmScope: scope => {
         if (scope.lots) { setLandLots(scope.lots); worldRef.current?.setLandListings(scope.lots); }
         worldRef.current?.applyPublicFarmScope(scope.farms || [], scope.crops || {});
@@ -384,8 +438,12 @@ export default function App() {
           progressRef.current = state.progress;
           worldRef.current?.setPlayerVehicle(state.progress.vehicle || 'walk');
           worldRef.current?.setPlayerHomeTier(state.progress.homeTier || 1);
-          const serverOutfit = outfits.find(item => item.id === state.progress.outfit) || outfits[0];
-          worldRef.current?.setPlayerOutfit(serverOutfit.id, serverOutfit.color);
+          if (state.progress.customization) {
+            worldRef.current?.setPlayerCustomization(state.progress.customization);
+          } else {
+            const serverOutfit = outfits.find(item => item.id === state.progress.outfit) || outfits[0];
+            worldRef.current?.setPlayerOutfit(serverOutfit.id, serverOutfit.color);
+          }
           worldRef.current?.refreshFarm?.();
           if ([ONBOARDING_STEPS.EXPLAIN_SYSTEMS, ONBOARDING_STEPS.CLAIM_REWARD].includes(state.progress.onboarding?.step) && state.progress.onboarding.step !== previousStep) {
             window.setTimeout(() => setDialogueOpen(true), 250);
@@ -400,7 +458,15 @@ export default function App() {
             return updated;
           });
         }
-        if (state.result?.fishCaught) setStatus(`Câu được ${LAKE_FISH[state.result.fishCaught]?.name || 'một con cá'}!`);
+        if (state.progress?.fishing?.pending) {
+          worldRef.current?.setFishingPhase?.(Date.now() >= state.progress.fishing.pending.biteAt ? 'bite' : 'waiting');
+        } else if (state.result?.fishCaught) {
+          worldRef.current?.finishFishingCatch?.(true);
+          const fish = LAKE_FISH[state.result.fishCaught];
+          const weight = Number(state.result.weight || 0).toFixed(2);
+          setStatus(`Câu được ${fish?.name || 'một con cá'} · ${weight} kg · +${state.result.value || fish?.price || 0} xu giá trị`);
+        }
+        if (state.result?.fishSold) setStatus(`Đã bán ${state.result.fishSold.count} con cá · +${state.result.fishSold.coins} xu.`);
         if (state.result?.casinoBet) setCasinoResult('Đã nhận cược. Đang chờ kết quả chung của bàn.');
         if (state.result?.casinoSettlement) {
           const { reward, amount } = state.result.casinoSettlement;
@@ -471,18 +537,49 @@ export default function App() {
     if (gameClientRef.current) gameClientRef.current.profile = session;
   }, [session]);
 
+  const handleToggleTime = useCallback(() => {
+    const modes = ['auto', 'night', 'dusk', 'day', 'dawn'];
+    const nextIdx = (modes.indexOf(timeMode) + 1) % modes.length;
+    const nextMode = modes[nextIdx];
+    setTimeMode(nextMode);
+
+    let targetClock = Math.floor(Date.now() / 1000);
+    if (nextMode === 'night') targetClock = 210;
+    else if (nextMode === 'dusk') targetClock = 150;
+    else if (nextMode === 'day') targetClock = 80;
+    else if (nextMode === 'dawn') targetClock = 25;
+
+    clockRef.current = targetClock;
+    worldRef.current?.setClock(targetClock);
+    setStatus(
+      nextMode === 'night' ? '🌙 Chuyển sang Ban Đêm: Thưởng thức đèn đường lung linh!'
+      : nextMode === 'dusk' ? '🌅 Chuyển sang Hoàng Hôn lãng mạn'
+      : nextMode === 'day' ? '☀️ Chuyển sang Ban Ngày ngập nắng'
+      : nextMode === 'dawn' ? '🌄 Chuyển sang Bình Minh sớm'
+      : '⏰ Chuyển sang chu kỳ thời gian tự động'
+    );
+  }, [timeMode]);
+
   useEffect(() => {
     const timer = window.setInterval(function updateWorldClock() {
-      const now = Math.floor(Date.now() / 1000);
-      clockRef.current = now;
+      let now = clockRef.current;
+      if (timeMode === 'auto') {
+        now = Math.floor(Date.now() / 1000);
+        clockRef.current = now;
+      }
       if (window.__farmDebug) window.__farmDebug.measure('clock: atmosphere.setTime', () => worldRef.current?.setClock(now));
       else worldRef.current?.setClock(now);
       const position = worldRef.current?.getPlayerState?.();
       const nextFishing = position && !position.venue ? fishingWaterAt(position.x, position.z) : null;
       setFishingWater(prev => (prev === nextFishing ? prev : nextFishing));
+      const pending = progressRef.current?.fishing?.pending;
+      if (pending) {
+        setFishingTick(tick => tick + 1);
+        worldRef.current?.setFishingPhase?.(Date.now() >= pending.biteAt ? 'bite' : 'waiting');
+      }
     }, 1000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [timeMode]);
 
   // Synchronize 3D Objective Marker & Live Distance Counter
   useEffect(() => {
@@ -559,6 +656,7 @@ export default function App() {
   const animalStatus = livestockSummary(animals);
   const chickenCount = animals.filter(animal => animal.species === 'chicken').length;
   const cowCount = animals.filter(animal => animal.species === 'cow').length;
+  const sheepCount = animals.filter(animal => animal.species === 'sheep').length;
   const feedAnimals = () => {
     gameClientRef.current?.sendGameAction('feed_animals');
     setStatus('Server đang xử lý thức ăn vật nuôi…');
@@ -619,7 +717,7 @@ export default function App() {
     setStatus('Server đang mở rộng đất…');
   };
   const upgradeBarn = () => {
-    const cost = progress.barnLevel * 350;
+    const cost = farmBarnUpgradeCost(progress.barnLevel);
     if (progress.coins < cost) { setStatus(`Cần ${cost} xu để nâng kho`); return; }
     gameClientRef.current?.sendGameAction('upgrade_barn');
     setStatus('Server đang nâng cấp kho…');
@@ -669,6 +767,29 @@ export default function App() {
     if (progress.coins < amount) { setCasinoResult('Không đủ xu để đặt cược.'); return; }
     gameClientRef.current?.sendGameAction('casino_bet', { game, choice, amount, roundId });
     setCasinoResult('Đang gửi cược tới server…');
+  };
+  const fishingCast = () => {
+    if (!fishingWater) { setStatus('Hãy đứng sát bờ nước để thả câu.'); return; }
+    if (!progress.fishing?.equippedRod) { setStatus('Hãy mua và trang bị cần câu trước.'); return; }
+    worldRef.current?.startFishingCast({
+      distance: Math.min(
+        FISHING_CONFIG.rods[progress.fishing.equippedRod]?.castDistance || 8,
+        FISHING_CONFIG.zones[fishingWater]?.castDistance || 8,
+      ),
+      animation: FISHING_CONFIG.rods[progress.fishing.equippedRod]?.animation || 'basic_cast',
+    });
+    gameClientRef.current?.sendGameAction('fishing_cast');
+    setStatus('Đã giăng câu · chờ phao rung…');
+  };
+  const fishingReel = () => {
+    worldRef.current?.playFishingReel?.();
+    gameClientRef.current?.sendGameAction('fishing_reel');
+    setStatus('Đang giật cần…');
+  };
+  const fishingSellAll = () => {
+    if (!fishingInventoryCount(progress.fishing)) return;
+    gameClientRef.current?.sendGameAction('fishing_sell_all');
+    setStatus('Đang bán toàn bộ cá cho Lão Ngư…');
   };
   const selectTool = tool => {
     if (tool !== 'hand' && !worldRef.current?.canUseFarmTools()) {
@@ -855,14 +976,14 @@ export default function App() {
       {debugEnabled && <LiveWorldDebug worldRef={worldRef} />}
       {venueMode && <section className="venue-banner"><b>{venueMode.label}</b><span>Chọn thao tác hoặc đến gần quầy rồi nhấn E</span><div className="venue-banner-actions"><button type="button" onClick={() => setPanel(venueMode.venue === 'supplies' ? 'shop' : venueMode.venue)}>{venueMode.venue === 'casino' ? 'Chơi Tài Xỉu / Bầu Cua' : 'Nói chuyện với chủ tiệm'}</button><button type="button" onClick={() => { setPanel(null); worldRef.current?.exitVenue(); }}>Ra cửa hàng</button></div></section>}
 
-      {gameStarted && (
+      {gameStarted && !cameraCleanMode && (
         <>
           {/* PLAY TOGETHER STANDARD TOPBAR */}
           <header className="topbar pt-topbar">
         {/* Left: Player Profile Card with 3D Level Star & Jelly EXP */}
         <div className="pt-profile-card" onClick={() => setGuideOpen(true)} title="Bấm để mở Cẩm Nang Nông Trại">
           <div className="pt-avatar-ring">
-            <Icon3dNonLa size={38} />
+            <HudImageIcon asset="farmer-avatar" className="pt-avatar-img" alt="" />
             <div className="pt-level-star" title={`Cấp độ nông dân: ${progress.level}`}>
               <Icon3dStar size={14} />
               <span>{progress.level}</span>
@@ -898,14 +1019,14 @@ export default function App() {
             <Icon3dVillageGate size={18} />
             <b>{session.farmAddress?.villageName || worldRegion?.village?.name || 'Thung Lũng Bình Minh'}</b>
           </div>
-          <GameClock />
+          <GameClock timeMode={timeMode} onToggleTime={handleToggleTime} />
         </div>
 
         {/* Right: Candy Currency Dock & System Bubbles */}
         <div className="pt-currency-dock">
           {/* Gold Coin Candy Pill */}
           <div className="pt-candy-pill pt-gold-pill" onClick={() => setPanel('shop')} title="Đồng vàng nông trại (Bấm để mở Cửa Hàng)">
-            <div className="pt-pill-icon"><Icon3dGoldCoin size={26} /></div>
+            <div className="pt-pill-icon"><HudImageIcon asset="coin" alt="" /></div>
             <span className="pt-pill-val">{progress.coins.toLocaleString('vi-VN')}</span>
             <button type="button" className="pt-pill-plus" aria-label="Mở cửa hàng vật tư" onClick={e => { e.stopPropagation(); setPanel('shop'); }}>
               <Icon3dPlus size={14} />
@@ -922,10 +1043,23 @@ export default function App() {
 
           {/* Gems Candy Pill */}
           <div className="pt-candy-pill pt-gem-pill" title="Đá quý xanh">
-            <div className="pt-pill-icon"><Icon3dGem size={24} /></div>
+            <div className="pt-pill-icon"><HudImageIcon asset="gem" alt="" /></div>
             <span className="pt-pill-val">{progress.gems}</span>
           </div>
 
+          <button
+            type="button"
+            className="pt-candy-btn pt-camera-btn"
+            onClick={() => {
+              setCameraCleanMode(true);
+              farmAudio.playFanfare();
+              setStatus('Đã bật chế độ chụp ảnh! Nhấn Chụp Ảnh hoặc Thoát.');
+            }}
+            aria-label="Chế độ chụp ảnh"
+            title="Chế độ chụp ảnh / Ẩn HUD"
+          >
+            <HudImageIcon asset="camera" alt="" />
+          </button>
           <button type="button" className="pt-candy-btn pt-bag-btn" onClick={() => handleMenuClick('inventory')} aria-label="Mở túi đồ" title="Túi đồ (B / I)">
             <Icon3dBackpack size={26} />
           </button>
@@ -973,7 +1107,7 @@ export default function App() {
           </div>
           <div className="world-action-controls pt-action-bubbles">
             <button type="button" className="pt-action-bubble pt-jump-bubble" onClick={() => worldRef.current?.jumpPlayer()} aria-label="Nhảy" title="Nhảy (Phím Cách)">
-              <i><Icon3dJump size={34} /></i>
+              <i><HudImageIcon asset="jump" alt="" /></i>
               <b>Nhảy</b>
             </button>
             <button
@@ -986,7 +1120,7 @@ export default function App() {
               aria-label="Chạy nhanh"
               title="Chạy nhanh (Giữ Shift)"
             >
-              <i><Icon3dSprint size={30} /></i>
+              <i><HudImageIcon asset="sprint" alt="" /></i>
               <b>Chạy</b>
             </button>
           </div>
@@ -994,6 +1128,8 @@ export default function App() {
       )}
 
       {/* Floating Indicator when walking inside a Farm Estate */}
+      {nearbyFarmGate && !venueMode && <button type="button" className="farm-gate-action" disabled={!network.connected} onClick={() => worldRef.current?.interactFarmGate()}>{nearbyFarmGate.open ? 'Đóng cổng' : 'Mở cổng'} · E</button>}
+      {theftProgress && <aside className="farm-theft-progress" role="status"><b>Đang lấy nông sản</b><small>Đứng yên · di chuyển để hủy</small><div><i style={{ animationDuration: `${theftProgress.durationMs}ms` }} /></div></aside>}
       {currentFarmZone && (
         <aside className={`farm-zone-badge ${currentFarmZone.isOwner ? 'owner' : 'visitor'}`}>
           <span className="zone-icon">{currentFarmZone.isOwner ? <Icon3dCrown size={24} /> : <Icon3dHouseCabin size={24} />}</span>
@@ -1008,10 +1144,12 @@ export default function App() {
 
       <HudContextAction action={contextAction} />
 
-      {currentFarmZone?.isOwner && !venueMode && animals.length > 0 && <section className="livestock-card">
+      {currentFarmZone?.isOwner && !venueMode && <section className="livestock-card">
+        <button type="button" className="livestock-action-btn" onClick={() => setPanel('livestock')}>Quản lý chăn nuôi · {animals.length} con</button>
         <div className="livestock-info">
           <span className="animal-tag" title={`${chickenCount} Gà mái`}><Icon3dChicken size={22} /> <b>{chickenCount}</b></span>
           <span className="animal-tag" title={`${cowCount} Bò sữa`}><Icon3dCow size={22} /> <b>{cowCount}</b></span>
+          <span className="animal-tag" title={`${sheepCount} Cừu`}><Icon3dSheep size={22} /> <b>{sheepCount}</b></span>
           <b>{animals.length === 0 ? 'Chưa có vật nuôi' : animalStatus.ready ? `${animalStatus.ready} sản phẩm sẵn sàng` : animalStatus.hungry ? `${animalStatus.hungry} con đang đói` : 'Đang sản xuất'}</b>
         </div>
         {animals.length > 0 && (
@@ -1066,6 +1204,44 @@ export default function App() {
         </div>
       </footer>}
 
+      {/* Play Together Real-time 360 GPS Radar Minimap */}
+      {!venueMode && !cameraCleanMode && gameStarted && (
+        <ChibiRadarMinimap
+          worldRef={worldRef}
+          playerFarmTarget={session.farmId ? playerFarmTarget(session.farmId) : null}
+          onOpenMap={() => handleMenuClick('map')}
+        />
+      )}
+
+      {/* Play Together Photo Mode / Clean View Controller */}
+      {cameraCleanMode && (
+        <div className="pt-photo-mode-controller">
+          <button
+            type="button"
+            className="pt-photo-shutter-btn"
+            onClick={() => {
+              farmAudio.playFanfare();
+              setStatus('📸 Đã chụp ảnh kỷ niệm góc nhìn điện ảnh!');
+              const flash = document.createElement('div');
+              flash.className = 'pt-screen-flash';
+              document.body.appendChild(flash);
+              setTimeout(() => flash.remove(), 600);
+            }}
+          >
+            <i>📷</i>
+            <span>Chụp Ảnh</span>
+          </button>
+          <button
+            type="button"
+            className="pt-photo-exit-btn"
+            onClick={() => setCameraCleanMode(false)}
+            title="Thoát chế độ chụp ảnh"
+          >
+            <span>✕ Thoát Chụp Ảnh</span>
+          </button>
+        </div>
+      )}
+
       {/* Play Together Kaia Smartphone OS Device Modal */}
       {phoneOpen && (
         <div className="pt-phone-backdrop" onClick={() => setPhoneOpen(false)}>
@@ -1074,7 +1250,7 @@ export default function App() {
 
             <div className="pt-phone-status-bar">
               <span className="pt-phone-clock">
-                <GameClock compact />
+                <GameClock compact timeMode={timeMode} onToggleTime={handleToggleTime} />
               </span>
               <div className="pt-phone-status-right">
                 <span className="pt-phone-signal">5G ●●●●</span>
@@ -1269,17 +1445,31 @@ export default function App() {
       )}
 
       {/* Panels */}
-      {panel && panel !== 'orders' && <div className="panel-backdrop" onClick={() => setPanel(null)}><section className="game-panel" onClick={event => event.stopPropagation()}>
-        <header><div><small>TRUNG TÂM NÔNG TRẠI</small><h2>{{ land: 'Mua đất · Quyền sở hữu', shop: 'Cửa hàng vật tư nông nghiệp', inventory: 'Kho nông sản', quests: 'Nhiệm vụ', factory: 'Xưởng chế biến', upgrade: 'Nâng cấp nông trại', map: 'Bản đồ Thung Lũng', city: 'Trung tâm thị trấn Ghibli', fashion: 'Cửa hàng thời trang Sophie', vehicles: 'Đại lý phương tiện & xưởng bay', casino: 'Casino & Giải Trí May Mắn', fishing: 'Cửa hàng đồ câu Lão Ngư' }[panel]}</h2></div><button type="button" onClick={() => setPanel(null)}>×</button></header>
+      {panel && panel !== 'orders' && panel !== 'fashion' && <div className="panel-backdrop" onClick={() => setPanel(null)}><section className="game-panel" onClick={event => event.stopPropagation()}>
+        <header><div><small>TRUNG TÂM NÔNG TRẠI</small><h2>{{ land: 'Mua đất · Quyền sở hữu', shop: 'Cửa hàng vật tư nông nghiệp', inventory: 'Kho nông sản', quests: 'Nhiệm vụ', factory: 'Xưởng chế biến', upgrade: 'Nâng cấp nông trại', map: 'Bản đồ Thung Lũng', city: 'Trung tâm thị trấn Ghibli', vehicles: 'Đại lý phương tiện & xưởng bay', casino: 'Casino & Giải Trí May Mắn', fishing: 'Cửa hàng đồ câu Lão Ngư' }[panel]}</h2></div><button type="button" onClick={() => setPanel(null)}>×</button></header>
         {panel === 'land' && <LandMarket lots={landLots} focusFarmId={focusedLand} playerId={session.playerId} ownsLand={Boolean(session.farmId)} coins={progress.coins} pending={landPending} onVisit={lot => { const gate = WORLD_VILLAGES.find(v => v.id === lot.villageId)?.gate; if (gate) travelTo({ id: lot.villageId, label: lot.villageName, ...gate }); }} onBuy={lot => { if (!network.connected) { setStatus('Chưa kết nối server.'); return; } setLandPending(true); gameClientRef.current?.sendGameAction('buy_land', { farmId: lot.farmId }); }} />}
+        {panel === 'livestock' && <LivestockRefresh>{() => <div className="item-list">
+          <h3>Chăn nuôi · {progress.coins} xu</h3>
+          <p>Xây chuồng, mua con giống, cho ăn rồi thu trứng, sữa và len. Heo trưởng thành được bán trực tiếp.</p>
+          {Object.values(FARM_CONFIG.animals).map(def => {
+            const herd = animals.filter(a => a.species === def.id);
+            const built = progress.animalPens?.[def.id] || herd.length > 0;
+            return <button key={def.id} disabled={!network.connected || progress.coins < (built ? def.buyCost : def.penCost) || herd.length >= def.capacity} onClick={() => gameClientRef.current?.sendGameAction(built ? 'buy_animal' : 'build_pen', { species: def.id })}>
+              <span><b>{def.name} · {herd.length}/{def.capacity}</b><small>{built ? `Mua con giống · thức ăn ${def.feedCost} xu/con · ${Math.ceil(def.productMs / 60000)} phút` : 'Xây chuồng trước khi mua con giống'}</small></span><em>{built ? def.buyCost : def.penCost} xu</em>
+            </button>;
+          })}
+          <button onClick={feedAnimals} disabled={!network.connected || !animals.some(a => !a.productReadyAt)}>Cho ăn · bắt đầu đợt mới</button>
+          <button onClick={collectAnimals} disabled={!network.connected || !animals.some(a => !FARM_CONFIG.animals[a.species]?.saleOnly && a.productReadyAt > 0 && a.productReadyAt <= Date.now())}>Thu trứng, sữa và len</button>
+          {animals.filter(a => FARM_CONFIG.animals[a.species]?.saleOnly).map(a => <button key={a.id} disabled={!network.connected || !a.productReadyAt || a.productReadyAt > Date.now()} onClick={() => gameClientRef.current?.sendGameAction('sell_animal', { id: a.id })}>Bán heo trưởng thành · {FARM_CONFIG.products.maturePig.sellPrice} xu</button>)}
+          {Object.entries(FARM_CONFIG.products).filter(([id]) => id !== 'maturePig').map(([id, product]) => <button key={id} disabled={!network.connected || !progress.inventory[id]} onClick={() => gameClientRef.current?.sendGameAction('sell_livestock_product', { id })}><span>{product.name} × {progress.inventory[id] || 0}</span><em>Bán · {product.sellPrice} xu</em></button>)}
+        </div>}</LivestockRefresh>}
         {panel === 'shop' && <div className="item-list">{Object.values(CROPS).map(crop => <button key={crop.id} disabled={progress.level < crop.level} onClick={() => chooseCrop(crop)}><i>{cropIcons[crop.id]}</i><span><b>{crop.name}</b><small>{Math.ceil(crop.growMs / 60000)} phút · mở cấp {crop.level}</small></span><em>{crop.seedCost} xu</em></button>)}</div>}
-        {panel === 'inventory' && <div className="item-list"><div className="capacity">Kho cấp {progress.barnLevel} · {inventoryCount(progress)}/{barnCapacity(progress)} chỗ</div>{Object.values(CROPS).map(crop => <button key={crop.id} disabled={!progress.inventory[crop.id]} onClick={() => sellItem(crop.id)}><i>{cropIcons[crop.id]}</i><span><b>{crop.name} × {progress.inventory[crop.id]}</b><small>Chạm để bán từng sản phẩm</small></span><em>+{crop.sellPrice} xu</em></button>)}<div className="animal-stock"><Icon3dEgg size={20} /> Trứng × {progress.inventory.egg}　<Icon3dMilk size={20} /> Sữa × {progress.inventory.milk}</div>{RECIPES.map(recipe => <button key={recipe.id} disabled={!progress.inventory[recipe.id]} onClick={() => sellProduct(recipe.id, recipe.coins, recipe.name)}><i>{recipeIcons[recipe.id]}</i><span><b>{recipe.name} × {progress.inventory[recipe.id]}</b><small>Sản phẩm đã chế biến</small></span><em>+{recipe.coins} xu</em></button>)}</div>}
+        {panel === 'inventory' && <div className="item-list"><div className="capacity">Kho cấp {progress.barnLevel} · {inventoryCount(progress)}/{barnCapacity(progress)} chỗ</div>{Object.values(CROPS).map(crop => <button key={crop.id} disabled={!progress.inventory[crop.id]} onClick={() => sellItem(crop.id)}><i>{cropIcons[crop.id]}</i><span><b>{crop.name} × {progress.inventory[crop.id]}</b><small>Chạm để bán từng sản phẩm</small></span><em>+{crop.sellPrice} xu</em></button>)}<div className="animal-stock"><Icon3dEgg size={20} /> Gà {progress.inventory.egg || 0} · Vịt {progress.inventory.duckEgg || 0}　<Icon3dMilk size={20} /> Sữa {progress.inventory.milk || 0}　<Icon3dFlower size={20} /> Len {progress.inventory.wool || 0}</div>{RECIPES.map(recipe => <button key={recipe.id} disabled={!progress.inventory[recipe.id]} onClick={() => sellProduct(recipe.id, recipe.coins, recipe.name)}><i>{recipeIcons[recipe.id]}</i><span><b>{recipe.name} × {progress.inventory[recipe.id]}</b><small>Sản phẩm đã chế biến</small></span><em>+{recipe.coins} xu</em></button>)}</div>}
         {panel === 'quests' && <div className="item-list">{QUESTS.map(quest => { const current = Math.min(quest.goal, progress.stats[quest.stat]); const claimed = progress.claimedQuests.includes(quest.id); return <button key={quest.id} disabled={claimed || current < quest.goal} onClick={() => claimQuest(quest)}><i>{claimed ? <Icon3dCheck /> : <Icon3dStar />}</i><span><b>{quest.title}</b><small>{current}/{quest.goal} · thưởng {quest.xp} XP</small></span><em>{claimed ? 'Đã nhận' : `+${quest.coins} xu`}</em></button>; })}</div>}
         {panel === 'factory' && <div className="item-list">{RECIPES.map(recipe => <button key={recipe.id} onClick={() => craft(recipe)}><i>{recipeIcons[recipe.id]}</i><span><b>{recipe.name}</b><small>{Object.entries(recipe.inputs).map(([id,count]) => `${CROPS[id]?.name || id} ${count}`).join(' · ')} · +{recipe.xp} XP</small></span><em>Chế biến</em></button>)}</div>}
-        {panel === 'upgrade' && <div className="item-list"><button onClick={upgradeLand}><i><Icon3dSprout /></i><span><b>Mở rộng đất · {progress.unlockedPlots}/48 ô</b><small>{EXPANSIONS.find(item => item.plots > progress.unlockedPlots) ? `Yêu cầu cấp ${EXPANSIONS.find(item => item.plots > progress.unlockedPlots).level}` : 'Đã đạt tối đa'}</small></span><em>{EXPANSIONS.find(item => item.plots > progress.unlockedPlots)?.cost || 'MAX'} xu</em></button><button onClick={upgradeBarn}><i><Icon3dBarn /></i><span><b>Nâng kho lên cấp {progress.barnLevel + 1}</b><small>Tăng thêm 20 chỗ chứa</small></span><em>{progress.barnLevel * 350} xu</em></button><button onClick={upgradeHome}><i><Icon3dHouseCabin /></i><span><b>{(progress.homeTier || 1) >= 2 ? 'Nhà Nông Trại Ấm Cúng' : 'Nâng cấp căn nhà gỗ'}</b><small>{(progress.homeTier || 1) >= 2 ? 'Đã sở hữu · cấp nhà 2' : 'Mở ở cấp 4 · thay căn nhà khởi đầu đơn giản'}</small></span><em>{(progress.homeTier || 1) >= 2 ? 'Đã mua' : '1800 xu'}</em></button></div>}
+        {panel === 'upgrade' && <div className="item-list"><button onClick={upgradeLand}><i><Icon3dSprout /></i><span><b>Mở rộng đất · {progress.unlockedPlots}/48 ô</b><small>{EXPANSIONS.find(item => item.plots > progress.unlockedPlots) ? `Yêu cầu cấp ${EXPANSIONS.find(item => item.plots > progress.unlockedPlots).level}` : 'Đã đạt tối đa'}</small></span><em>{EXPANSIONS.find(item => item.plots > progress.unlockedPlots)?.cost || 'MAX'} xu</em></button><button onClick={upgradeBarn}><i><Icon3dBarn /></i><span><b>Nâng kho lên cấp {progress.barnLevel + 1}</b><small>Tăng thêm 20 chỗ chứa</small></span><em>{farmBarnUpgradeCost(progress.barnLevel)} xu</em></button><button onClick={upgradeHome}><i><Icon3dHouseCabin /></i><span><b>{(progress.homeTier || 1) >= 2 ? 'Nhà Nông Trại Ấm Cúng' : 'Nâng cấp căn nhà gỗ'}</b><small>{(progress.homeTier || 1) >= 2 ? 'Đã sở hữu · cấp nhà 2' : 'Mở ở cấp 4 · thay căn nhà khởi đầu đơn giản'}</small></span><em>{(progress.homeTier || 1) >= 2 ? 'Đã mua' : '1800 xu'}</em></button></div>}
         {panel === 'map' && <><div className="destination-grid">{destinations.map(destination => <button key={destination.id} onClick={() => travelTo(destination)}><i>{destination.icon}</i><b>{destination.label}</b><small>{destination.description}</small><em>Đi xe buýt →</em></button>)}</div><div className="city-district-strip"><strong>PHÂN KHU TRUNG TÂM</strong>{cityDestinations.map(district => <button key={district.id} type="button" onClick={() => travelTo({ ...district, description: district.label })}><span>{cityDistrictIcons[district.id]}</span>{district.label}</button>)}</div></>}
         {panel === 'city' && <div className="destination-grid"><button onClick={() => setPanel('shop')}><i><Icon3dSprout size={28} /></i><b>Vật tư</b><small>Mua hạt giống theo cấp</small><em>Mở cửa hàng</em></button><button onClick={() => isFeatureLocked(progress, 'casino') ? setStatus('Casino mở sau khi hoàn thành hướng dẫn!') : setPanel('casino')}><i><Icon3dDice size={28} /></i><b>Casino giải trí</b><small>{isFeatureLocked(progress, 'casino') ? 'Khóa tân thủ' : 'Trò chơi xúc xắc may mắn'}</small><em>Vào chơi</em></button><button onClick={() => setPanel('fashion')}><i><Icon3dWardrobe size={28} /></i><b>Thời trang</b><small>Mua và thay trang phục Sophie</small><em>Xem đồ</em></button><button onClick={() => isFeatureLocked(progress, 'vehicles') ? setStatus('Đại lý xe mở sau khi hoàn thành hướng dẫn!') : setPanel('vehicles')}><i><Icon3dCub50 size={28} /></i><b>Đại lý xe</b><small>{isFeatureLocked(progress, 'vehicles') ? 'Khóa tân thủ' : 'Xe đạp cổ & chổi bay'}</small><em>Xem xe</em></button><button onClick={() => setPanel('fishing')}><i><Icon3dFishingRodPro size={28} /></i><b>Đồ câu cá</b><small>Cần câu trúc, cước & mồi câu</small><em>Mở tiệm</em></button></div>}
-        {panel === 'fashion' && <div className="item-list">{outfits.map(outfit => { const owned = progress.ownedOutfits.includes(outfit.id); return <button key={outfit.id} onClick={() => buyOutfit(outfit)}><i>{outfit.icon}</i><span><b>{outfit.name}</b><small>{progress.outfit === outfit.id ? 'Đang mặc' : owned ? 'Đã sở hữu' : 'Trang phục mới'}</small></span><em>{owned ? 'Mặc' : `${outfit.cost} xu`}</em></button>; })}</div>}
         {panel === 'vehicles' && <div className="item-list">{vehicles.map(vehicle => { const owned = progress.ownedVehicles.includes(vehicle.id); return <button key={vehicle.id} onClick={() => buyVehicle(vehicle)}><i>{vehicle.icon}</i><span><b>{vehicle.name}</b><small>Tốc độ {vehicle.speed} · {progress.vehicle === vehicle.id ? 'đang dùng' : owned ? 'đã sở hữu' : 'chưa mua'}</small></span><em>{owned ? 'Chọn' : `${vehicle.cost} xu`}</em></button>; })}</div>}
         {panel === 'casino' && <LiveCasinoGames state={casinoState} coins={progress.coins} connected={network.connected} inside={venueMode?.venue === 'casino'} pending={progress.casinoPending} message={casinoResult} onBet={playCasino} />}
         {panel === 'fishing' && (
@@ -1289,40 +1479,72 @@ export default function App() {
             </div>
             <div className="fishing-guide">{fishingWater ? `Bạn đang ở ${FISHING_WATER_NAMES[fishingWater]}. Trang bị cần, thả phao rồi giật khi cá cắn.` : 'Đứng sát bờ hồ, sông hoặc biển để câu cá.'}</div>
             {fishingWater && <div className="fishing-actions">
-              <button type="button" disabled={!network.connected || !progress.fishing?.equippedRod || Boolean(progress.fishing?.pending && Date.now() < progress.fishing.pending.expiresAt)} onClick={() => gameClientRef.current?.sendGameAction('fishing_cast')}>Thả phao</button>
-              <button type="button" disabled={!network.connected || !progress.fishing?.pending || Date.now() < progress.fishing.pending.biteAt || Date.now() > progress.fishing.pending.expiresAt} onClick={() => gameClientRef.current?.sendGameAction('fishing_reel')}>{progress.fishing?.pending && Date.now() >= progress.fishing.pending.biteAt && Date.now() <= progress.fishing.pending.expiresAt ? 'Cá cắn! Giật cần' : 'Đợi cá cắn…'}</button>
+              <button type="button" disabled={!network.connected || !progress.fishing?.equippedRod || Boolean(progress.fishing?.pending && Date.now() < progress.fishing.pending.expiresAt)} onClick={fishingCast}>Giăng câu</button>
+              <button type="button" disabled={!network.connected || !progress.fishing?.pending || Date.now() < progress.fishing.pending.biteAt || Date.now() > progress.fishing.pending.expiresAt} onClick={fishingReel}>{progress.fishing?.pending && Date.now() >= progress.fishing.pending.biteAt && Date.now() <= progress.fishing.pending.expiresAt ? 'Cá cắn! Giật cần' : 'Đợi cá cắn…'}</button>
             </div>}
-            {[
-              { id: 'rod_bamboo', name: 'Cần câu trúc mộc', desc: 'Cần câu dẻo dai làm thủ công từ tre làng', cost: 150, icon: <Icon3dFishingRodBamboo size={30} /> },
-              { id: 'rod_carbon', name: 'Cần máy Carbon Pro', desc: 'Cần câu máy quay săn cá lớn hồ sâu', cost: 650, icon: <Icon3dFishingRodPro size={30} /> },
-              { id: 'bait_worm', name: 'Mồi trùn quế (x10)', desc: 'Mồi sống nhạy bén thu hút cá chép, cá rô', cost: 50, icon: <Icon3dBaitWorm size={28} /> },
-              { id: 'bait_lure', name: 'Mồi ruồi lông vũ (x5)', desc: 'Mồi giả óng ánh săn cá hồi biển hồ', cost: 120, icon: <Icon3dBaitLure size={28} /> },
-              { id: 'fish_chum', name: 'Thính thơm dụ cá (x3)', desc: 'Rải xuống nước tụ cá thành đàn lớn', cost: 80, icon: <Icon3dFishChum size={28} /> },
-              { id: 'cooler_box', name: 'Thùng ướp lạnh ngư dân', desc: 'Bảo quản cá tươi ngon sau mỗi chuyến câu', cost: 400, icon: <Icon3dCoolerBox size={28} /> },
-            ].map(item => (
-              <button key={item.id} onClick={() => {
-                if (progress.coins < item.cost) {
-                  setStatus(`Bạn cần thêm ${item.cost - progress.coins} xu để mua ${item.name}!`);
-                  return;
-                }
-                if (!FISHING_GEAR[item.id]) { setStatus('Món này sẽ mở trong bản cập nhật sau.'); return; }
-                gameClientRef.current?.sendGameAction('fishing_buy', { id: item.id });
-              }}>
-                <i>{item.icon}</i>
-                <span>
-                  <b>{item.name}</b>
-                  <small>{item.desc}</small>
-                </span>
-                <em>{item.cost} xu</em>
-              </button>
-            ))}
-            <div className="fishing-guide">Cần đang dùng: {FISHING_GEAR[progress.fishing?.equippedRod]?.name || 'Chưa có'} · Mồi: {FISHING_GEAR[progress.fishing?.equippedBait]?.name || 'Không dùng'}</div>
-            {Object.entries(FISHING_GEAR).map(([id, gear]) => <button key={`equip-${id}`} type="button" disabled={id.startsWith('rod_') ? !progress.fishing?.ownedRods?.includes(id) : !(progress.fishing?.bait?.[id] > 0)} onClick={() => gameClientRef.current?.sendGameAction('fishing_equip', { id })}><span><b>{gear.name}</b><small>{id.startsWith('rod_') ? 'Đã sở hữu' : `Còn ${progress.fishing?.bait?.[id] || 0} mồi`}</small></span><em>{id === progress.fishing?.equippedRod || id === progress.fishing?.equippedBait ? 'Đang dùng' : 'Trang bị'}</em></button>)}
-            <div className="fishing-guide">Cá đã câu</div>
-            {Object.entries(LAKE_FISH).map(([id, fish]) => <button key={`sell-${id}`} type="button" disabled={!(progress.fishing?.fish?.[id] > 0)} onClick={() => gameClientRef.current?.sendGameAction('fishing_sell', { id })}><span><b>{fish.name} × {progress.fishing?.fish?.[id] || 0}</b><small>Bán cho Lão Ngư</small></span><em>+{fish.price} xu</em></button>)}
+            <div className="fishing-section-title">Cửa hàng đồ câu</div>
+            {FISHING_GEAR_ORDER.map(id => {
+              const item = FISHING_GEAR[id];
+              const GearIcon = fishingGearIcons[item.icon] || Icon3dFishingRodPro;
+              const owned = item.kind === 'rod'
+                ? progress.fishing?.ownedRods?.includes(id)
+                : item.kind === 'tool'
+                  ? Boolean(progress.fishing?.ownedTools?.[id])
+                  : false;
+              return <button key={`buy-${id}`} type="button" disabled={!network.connected || progress.coins < item.cost || owned} onClick={() => gameClientRef.current?.sendGameAction('fishing_buy', { id })}>
+                <i><GearIcon size={item.kind === 'rod' ? 30 : 28} /></i>
+                <span><b>{item.name}</b><small>{item.description}</small><small>{item.kind === 'rod' ? `Tầm ném ${item.castDistance}m · sức kéo ${item.reelPower}` : item.kind === 'bait' ? `Gói x${item.quantity} · tốc độ cá cắn ${item.biteSpeed}x` : `Sức chứa cá +${item.capacity}`}</small></span>
+                <em>{owned ? 'Đã mua' : `${item.cost} xu`}</em>
+              </button>;
+            })}
+            <div className="fishing-guide" data-fishing-tick={fishingTick}>Cần: {FISHING_GEAR[progress.fishing?.equippedRod]?.name || 'Chưa có'} · Mồi: {FISHING_GEAR[progress.fishing?.equippedBait]?.name || 'Không dùng'} · Kho cá: {fishingInventoryCount(progress.fishing)}/{fishingCapacity(progress.fishing)}</div>
+            <div className="fishing-section-title">Trang bị</div>
+            {Object.values(FISHING_CONFIG.rods).map(rod => <button key={`equip-${rod.id}`} type="button" disabled={!progress.fishing?.ownedRods?.includes(rod.id)} onClick={() => gameClientRef.current?.sendGameAction('fishing_equip', { id: rod.id })}><span><b>{rod.name}</b><small>{rod.id === progress.fishing?.equippedRod ? 'Đang dùng' : 'Đã sở hữu'}</small></span><em>{rod.id === progress.fishing?.equippedRod ? 'Đang dùng' : 'Trang bị'}</em></button>)}
+            <button type="button" disabled={!progress.fishing?.equippedBait} onClick={() => gameClientRef.current?.sendGameAction('fishing_equip', { id: null })}><span><b>Không dùng mồi</b><small>Tiết kiệm mồi cho cá thường</small></span><em>{progress.fishing?.equippedBait ? 'Bỏ mồi' : 'Đang dùng'}</em></button>
+            {Object.values(FISHING_CONFIG.baits).map(bait => <button key={`equip-${bait.id}`} type="button" disabled={!(progress.fishing?.bait?.[bait.id] > 0)} onClick={() => gameClientRef.current?.sendGameAction('fishing_equip', { id: bait.id })}><span><b>{bait.name}</b><small>Còn {progress.fishing?.bait?.[bait.id] || 0} · hiếm +{Math.round(bait.rareBonus * 100)}%</small></span><em>{bait.id === progress.fishing?.equippedBait ? 'Đang dùng' : 'Trang bị'}</em></button>)}
+            <div className="fishing-section-title">Cá đã câu</div>
+            <div className="fishing-guide">Đã bắt {progress.fishing?.stats?.totalCaught || 0} con · cá hiếm {progress.fishing?.stats?.rareCaught || 0} · kỷ lục {Number(progress.fishing?.stats?.largestFish || 0).toFixed(2)} kg</div>
+            {Object.entries(LAKE_FISH).map(([id, fish]) => {
+              const record = progress.fishing?.fish?.[id];
+              const count = typeof record === 'number' ? record : record?.count || 0;
+              const averageWeight = typeof record === 'object' && record?.count ? record.totalWeight / record.count : 0;
+              return <button key={`sell-${id}`} type="button" disabled={!count} onClick={() => gameClientRef.current?.sendGameAction('fishing_sell', { id })}><span><b>{fish.name} × {count}</b><small>{fish.rarity} · {averageWeight ? `${averageWeight.toFixed(2)} kg/con` : 'Chưa có cá'} · bán cho Lão Ngư</small></span><em>+{fish.price} xu</em></button>;
+            })}
+            <button type="button" className="fishing-sell-all" disabled={!fishingInventoryCount(progress.fishing)} onClick={fishingSellAll}>Bán toàn bộ cá</button>
           </div>
         )}
       </section></div>}
+
+      {/* Sophie's Fashion Boutique Modal */}
+      {panel === 'fashion' && (
+        <FashionBoutiqueModal
+          currentCustomization={progress.customization || getDefaultCustomization()}
+          ownedItems={progress.ownedCustomization || []}
+          coins={progress.coins}
+          onSaveAndEquip={(newCustomization, newOwnedItemIds, totalCost) => {
+            worldRef.current?.setPlayerCustomization(newCustomization);
+            setProgress(prev => {
+              const updatedCoins = Math.max(0, prev.coins - totalCost);
+              const currentOwned = prev.ownedCustomization || [];
+              const updatedOwned = Array.from(new Set([...currentOwned, ...newOwnedItemIds]));
+              return {
+                ...prev,
+                coins: updatedCoins,
+                customization: newCustomization,
+                ownedCustomization: updatedOwned,
+              };
+            });
+            gameClientRef.current?.sendGameAction('fashion_save_customization', {
+              customization: newCustomization,
+              newOwnedItemIds,
+              totalCost,
+            });
+            setStatus('Đã thay đổi diện mạo thời trang!');
+            setPanel(null);
+          }}
+          onClose={() => setPanel(null)}
+        />
+      )}
 
       {/* Onboarding Modals */}
       {gameStarted && showCharacterCreation && (

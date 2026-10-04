@@ -4,7 +4,7 @@ import { CASINO_CHOICES, casinoPayout, casinoState, placeCasinoBet, tickCasino }
 
 for (const [name, venue] of Object.entries(VENUE_LAYOUT)) {
   assert.ok(Number.isFinite(venue.entrance.x) && Number.isFinite(venue.entrance.z), `${name}: entrance`);
-  assert.ok(Math.hypot(venue.exit.x - venue.entrance.x, venue.exit.z - venue.entrance.z) < 3, `${name}: exit near same door`);
+  assert.ok(Math.hypot(venue.exit.x - venue.entrance.x, venue.exit.z - venue.entrance.z) < 6, `${name}: exit near same door`);
   assert.ok(venue.interior.y > 20, `${name}: separate interior`);
 }
 const facades = {

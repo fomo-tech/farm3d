@@ -24,7 +24,7 @@ function createMat(scene, name, hex, emissiveHex = null) {
  * 5. Ngựa Nông Trại 3D (Farm Horse Model)
  * 6. Đàn Bướm Cầu Vồng Bay Lượn
  */
-export function createFarmAnimals(scene, shadows) {
+export function* createFarmAnimalsSteps(scene, shadows) {
   const animalRoot = new TransformNode('farm-animals-root', scene);
 
   const materials = {
@@ -225,29 +225,41 @@ export function createFarmAnimals(scene, shadows) {
   // === ĐẶT CÁC CON VẬT VÀO ĐÚNG KHU VỰC CHUỒNG TRANG TRẠI (ANIMAL PEN X:88, Z:112) ===
   // Bò sữa gặm cỏ trong chuồng trang trại đồng quê
   createChibiCow(85, 114, Math.PI / 4);
+  yield;
   createChibiCow(91, 116, -Math.PI / 3);
+  yield;
 
   // Cừu lông mềm trong đồng cỏ trang trại
   createChibiSheep(84, 118, Math.PI / 6);
+  yield;
   createChibiSheep(92, 112, -Math.PI / 4);
+  yield;
 
   // Chú chó Shiba canh cổng Nông Trại Thung Lũng
   createFarmDog(-70, 36, -Math.PI / 3);
+  yield;
   createFarmDog(-74, 34, Math.PI / 4);
+  yield;
 
   // Ngựa trang trại trong bãi cỏ chuồng trại (hoàn toàn an toàn khỏi trục đường x=60)
   createFarmHorse(88, 108, Math.PI / 3);
+  yield;
   createFarmHorse(94, 114, -Math.PI / 4);
+  yield;
 
   // Chú cáo cam lấp ló bìa rừng thông
   createFarmFox(120, -45, Math.PI / 2);
+  yield;
 
   // Đàn bướm hoa dập dờn quanh luống hoa
   createButterflySwarm(-14, -6);
+  yield;
   createButterflySwarm(14, 8);
+  yield;
 
   // Đàn vịt vàng 3D bơi lội nhấp nhô trên Hồ Pha Lê
   createLakeDucks(165, 2);
+  yield;
 
   const observer = scene.onBeforeRenderObservable.add(() => {
     const dt = scene.getEngine().getDeltaTime() / 1000;
@@ -261,4 +273,11 @@ export function createFarmAnimals(scene, shadows) {
       animalRoot.dispose(false, true);
     }
   };
+}
+
+export function createFarmAnimals(scene, shadows) {
+  const steps = createFarmAnimalsSteps(scene, shadows);
+  let result;
+  do { result = steps.next(); } while (!result.done);
+  return result.value;
 }

@@ -21,8 +21,11 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import '@babylonjs/core/Meshes/thinInstanceMesh.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { CHUNK_SIZE, chunkAt } from './WorldPartition.js';
+import { streamingPosition } from './streamingPosition.js';
 import { ROAD_SAFETY_CONFIG, isRoadResourceBlocked, recordBlockedRoadResource } from './RoadSafetyZone.js';
+import { isPointInLakeOrRiver } from './WaterSafetyZone.js';
 import { LANDSCAPE_ART as ART, landscapeVariation } from './LandscapeArt.js';
+import { beachResourceWaterAt as beachWaterAt } from '../../../shared/beachConfig.js';
 
 let instanceCounter = 0;
 
@@ -62,13 +65,17 @@ export class FoliageInstancingEngine {
   }
 
   getStats() {
-    let placements = 0, detailBatches = 0, enabledBatches = 0;
+    let placements = 0, detailBatches = 0, enabledBatches = 0, lodBatches = 0, missingRepresentations = 0;
     for (const chunk of this.chunks.values()) for (const group of chunk.groups.values()) {
       placements += group.requests.length;
       detailBatches += group.meshes.length;
       enabledBatches += group.meshes.filter(mesh => mesh.isEnabled() && mesh.isVisible).length;
+      const lodVisible = group.proxy?.isEnabled() && group.proxy.isVisible;
+      if (lodVisible) lodBatches++;
+      if (!lodVisible && !group.meshes.some(mesh => mesh.isEnabled() && mesh.isVisible)) missingRepresentations++;
     }
-    return { placements, detailBatches, enabledBatches, pending: this.dirtyChunks.size, species: this.loadedPrototypes.size };
+    return { placements, detailBatches, enabledBatches, lodBatches, missingRepresentations,
+      pending: this.dirtyChunks.size, species: this.loadedPrototypes.size };
   }
 
   _makeFacetedMaterial(name, hex, ambientScale = 0.30) {
@@ -451,6 +458,10 @@ export class FoliageInstancingEngine {
       let mesh = group.meshes[index];
       if (!mesh) {
         mesh = base.clone(`foliage-chunk-${chunk.x}-${chunk.z}-${typeKey}-${index}`, null, true);
+        // Babylon stores thin-instance world attributes on Geometry. Clones
+        // sharing geometry overwrite each other's GPU matrices (and disposal
+        // can invalidate another chunk). Isolate before attaching buffers.
+        mesh.makeGeometryUnique();
         mesh.position.set(0, 0, 0);
         mesh.rotation.set(0, 0, 0);
         mesh.rotationQuaternion = null;
@@ -473,28 +484,69 @@ export class FoliageInstancingEngine {
     group.dirty = false;
   }
 
+  setEnabled(enabled) {
+    const nextState = Boolean(enabled);
+    if (this._enabled === nextState) return;
+    this._enabled = nextState;
+
+    if (this.rootNode) {
+      this.rootNode.setEnabled(nextState);
+    }
+
+    if (!nextState) {
+      for (const chunk of this.chunks.values()) {
+        for (const group of chunk.groups.values()) {
+          if (group.proxy) group.proxy.setEnabled(false);
+          for (const mesh of group.meshes) {
+            mesh.setEnabled(false);
+          }
+        }
+      }
+    } else {
+      this.lastChunkUpdate = -1000;
+    }
+  }
+
   updateChunks() {
+    if (this._enabled === false) return;
     const now = performance.now();
     if (this.lastChunkUpdate > 0 && now - this.lastChunkUpdate < 100) return;
     this.lastChunkUpdate = now;
 
     // Track active player/camera location properly with lockedTarget support
-    const cam = this.scene.activeCamera;
-    const target = cam?.lockedTarget?.position || cam?.lockedTarget?.getAbsolutePosition?.() || cam?.target || cam?.position;
+    const target = streamingPosition(this.scene);
     if (!target) return;
     const center = chunkAt(target.x, target.z);
 
-    // Keep detailed meshes within 4 chunks (~400m-480m) around the player
+    // Full detail nearby; retain original low-poly silhouettes farther away.
     let evicted = 0;
     for (const chunk of this.chunks.values()) {
       const distance = Math.max(Math.abs(chunk.x - center.x), Math.abs(chunk.z - center.z));
-      const shouldDetail = distance <= (chunk.detailed ? 5 : 4);
+      // Nearby batches are already distance-managed. Protect this bounded ring
+      // from camera/submesh rejection while mutable thin-instance bounds settle.
+      // Far chunks continue using normal frustum culling.
+      const protect = distance <= 1;
+      if (chunk.cullingProtected !== protect) {
+        chunk.cullingProtected = protect;
+        for (const group of chunk.groups.values()) {
+          if (group.proxy) group.proxy.alwaysSelectAsActiveMesh = protect;
+          for (const mesh of group.meshes) mesh.alwaysSelectAsActiveMesh = protect;
+        }
+      }
+      const shouldDetail = distance <= (chunk.detailed ? 3 : 2);
       if (shouldDetail) chunk.lastUsed = now;
       if (shouldDetail === chunk.detailed) continue;
       if (!shouldDetail && evicted >= 2) continue;
       chunk.detailed = shouldDetail;
       for (const group of chunk.groups.values()) {
         if (!shouldDetail) {
+          // A pending group must first construct a usable proxy. Never clear
+          // its build request just because the player left the cell.
+          if (!group.proxy || group.dirty) {
+            group.dirty = true;
+            this.dirtyChunks.add(`${chunk.x}:${chunk.z}`);
+            continue;
+          }
           group.proxy?.setEnabled(true);
           for (const mesh of group.meshes) {
             mesh.setEnabled(false);
@@ -502,12 +554,14 @@ export class FoliageInstancingEngine {
           evicted++;
           group.dirty = false;
         } else {
-          if (group.meshes.length > 0) {
+          if (group.meshes.length > 0 && !group.dirty &&
+              group.meshes.every(mesh => mesh.thinInstanceCount === group.requests.length)) {
             group.proxy?.setEnabled(false);
             for (const mesh of group.meshes) {
               mesh.setEnabled(true);
             }
           } else {
+            group.proxy?.setEnabled(true);
             group.dirty = true;
           }
         }
@@ -530,16 +584,21 @@ export class FoliageInstancingEngine {
       if (!chunk) continue;
       const next = [...chunk.groups].find(([, group]) => group.dirty);
       if (next) this._buildGroup(chunk, next[0], next[1]);
+      if (next) {
+        const distance = Math.max(Math.abs(chunk.x - center.x), Math.abs(chunk.z - center.z));
+        if (next[1].proxy) next[1].proxy.alwaysSelectAsActiveMesh = distance <= 1;
+        for (const mesh of next[1].meshes) mesh.alwaysSelectAsActiveMesh = distance <= 1;
+      }
       if (![...chunk.groups.values()].some(group => group.dirty)) this.dirtyChunks.delete(key);
-      if (++built >= 6 || performance.now() - now > 8) break;
+      if (++built >= 2 || performance.now() - now > 2.5) break;
     }
 
-    // Cache retention: only cold detail beyond 5 chunks is trimmed
+    // Cache retention: only cold detail beyond the retained detail ring is trimmed.
     const cached = [...this.chunks.values()].filter(chunk =>
       [...chunk.groups.values()].some(group => group.meshes.length));
     if (cached.length > 32 && performance.now() - now < 8) {
       const victim = cached.filter(chunk => !chunk.detailed &&
-        Math.max(Math.abs(chunk.x - center.x), Math.abs(chunk.z - center.z)) > 5)
+        Math.max(Math.abs(chunk.x - center.x), Math.abs(chunk.z - center.z)) > 3)
         .sort((a, b) => (a.lastUsed || 0) - (b.lastUsed || 0))[0];
       if (victim) {
         const group = [...victim.groups.values()].find(group => group.meshes.length);
@@ -559,6 +618,8 @@ export class FoliageInstancingEngine {
    * Runs in O(1) time and batches with zero draw call overhead.
    */
   spawnTree(type, x, z, options = {}) {
+    if (beachWaterAt(x,z,3*(options.scale || 1))) return;
+    if (isPointInLakeOrRiver(x, z, 2.5 * (options.scale || 1))) return;
     if (ROAD_SAFETY_CONFIG.blockRoadResources && isRoadResourceBlocked(x, z, 1.2)) {
       recordBlockedRoadResource(`foliage-${type}`, x, z);
       return;

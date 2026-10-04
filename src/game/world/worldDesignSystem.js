@@ -1,4 +1,5 @@
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
@@ -22,18 +23,18 @@ export const WORLD_PALETTE = Object.freeze({
   grassShade: ART.grassMid,
   roadWarm: ART.pathLight,
   roadStone: ART.path,
-  sidewalkCream: '#C9B58B',
+  sidewalkCream: '#d2c7b8',     // Đá phiến kem ngà êm dịu, không chói lóa
   waterShallow: ART.shallows,
   waterDeep: ART.water,
   // 1. Tường & Bệ móng
-  wallPlaster: '#f1e8d8',       // Vôi kem vẫn rõ chi tiết dưới nắng mạnh
-  wallPlasterWarm: '#f7ebd2',   // Vôi vàng nhạt nắng sớm
-  wallTimberStucco: '#fef08a',  // Vữa trát vàng ấm
+  wallPlaster: '#ede4d4',       // Vôi kem vẫn rõ chi tiết dưới nắng mạnh
+  wallPlasterWarm: '#f2e6cf',   // Vôi vàng nhạt nắng sớm
+  wallTimberStucco: '#f5e49b',  // Vữa trát vàng ấm
   stoneFoundation: '#78716c',   // Đá cuội móng kiên cố
   stonePlinth: '#a8a29e',       // Đá granit xám ấm
 
   // 2. Mái nhà & Hiên
-  roofTerracotta: '#f28a65',    // Mái cam san hô tươi, nổi bật trên tường kem
+  roofTerracotta: '#eb7e59',    // Mái cam san hô tươi, nổi bật trên tường kem
   roofRidge: '#9a3412',         // Sống ngói gốm sẫm màu
   roofWarmTile: '#b45309',      // Ngói gốm đất nung vàng hổ phách
   roofThatch: '#d97706',        // Mái rạ vàng quê hương
@@ -43,17 +44,19 @@ export const WORLD_PALETTE = Object.freeze({
   woodOakDark: '#5c381e',       // Gỗ sồi nâu sẫm chịu lực
   woodOakWarm: '#78350f',       // Gỗ sồi đỏ ấm áp
   woodTeak: '#92400e',          // Gỗ tếch bóng mộc
-  woodFenceWhite: '#f8fafc',    // Hàng rào gỗ sơn trắng ngà
+  woodFenceWhite: '#ede6dc',    // Hàng rào gỗ sơn trắng kem sữa ngọc trai mềm
   woodPlankWeathered: '#8d6e53',// Ván gỗ bến nước mộc mạc
 
   // 4. Đường dạo & Quảng trường
-  plazaMarbleWhite: '#ebe7df',   // Đá sáng nhưng không cháy trắng
-  plazaMarbleCream: '#e9d6b7',   // Đá lát viền kem ngà hoa cúc
-  pathCobblestone: '#ebd9bd',   // Lối đi sỏi nhẵn màu kem bơ
-  roadHoneyEarth: '#d5aa96',    // Đất nện hồng cát sáng
-  curbStone: '#e7e5e4',         // Viền đá bó vỉa hè
+  plazaMarbleWhite: '#e2ddd3',   // Đá sáng nhưng không cháy trắng
+  plazaMarbleCream: '#dfd2bc',   // Đá lát viền kem ngà hoa cúc
+  pathCobblestone: '#d5c7b3',   // Lối đi sỏi nhẵn màu kem bơ
+  roadHoneyEarth: '#c7a391',    // Đất nện hồng cát sáng
+  curbStone: '#c5bbae',         // Viền đá bó vỉa hè
 
   // 5. Đèn & Ánh sáng ấm
+  lampIronGraphite: '#424956',  // Sắt rèn xám graphite ấm (không đen kịt)
+  lampWoodWarm: '#5c4436',      // Cột gỗ sồi ấm áp
   lanternWarmGold: '#fbbf24',   // Đèn lồng vàng ấm
   lanternAmber: '#f59e0b',      // Ánh sáng hổ phách ấm cúng
   lanternCore: '#fef08a',       // Tim đèn phát sáng dịu mắt
@@ -289,6 +292,115 @@ export function createRusticSignboard(scene, title, subtitle = '', accentColor =
 }
 
 /**
+ * HỆ THỐNG QUẦNG SÁNG & VỆT SÁNG MẶT ĐẤT ĐÈN ĐƯỜNG (STREET LAMP GLOW & GROUND LIGHT POOLS)
+ * Tối ưu hóa 60 FPS: Tất cả đèn đường, đèn lồng chia sẻ chung 1 Dynamic Texture & 1 Material
+ */
+export function getOrCreateLampMaterials(scene) {
+  let haloMat = scene.getMaterialByName('ghibli-lamp-halo');
+  let poolMat = scene.getMaterialByName('ghibli-ground-light-pool');
+
+  if (!haloMat || !poolMat) {
+    let haloTex = scene.getTextureByName('ghibli-lamp-halo-tex');
+    if (!haloTex) {
+      haloTex = new DynamicTexture('ghibli-lamp-halo-tex', { width: 128, height: 128 }, scene, false, Texture.BILINEAR_SAMPLINGMODE);
+      haloTex.hasAlpha = true;
+      const ctx = haloTex.getContext();
+      const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      grad.addColorStop(0.00, 'rgba(255, 252, 220, 1.0)');
+      grad.addColorStop(0.28, 'rgba(254, 215, 120, 0.82)');
+      grad.addColorStop(0.62, 'rgba(245, 158, 11, 0.32)');
+      grad.addColorStop(0.85, 'rgba(217, 119, 6, 0.10)');
+      grad.addColorStop(1.00, 'rgba(180, 83, 9, 0.0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 128, 128);
+      haloTex.update();
+    }
+
+    let poolTex = scene.getTextureByName('ghibli-ground-pool-tex');
+    if (!poolTex) {
+      poolTex = new DynamicTexture('ghibli-ground-pool-tex', { width: 128, height: 128 }, scene, false, Texture.BILINEAR_SAMPLINGMODE);
+      poolTex.hasAlpha = true;
+      const pctx = poolTex.getContext();
+      const pgrad = pctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      pgrad.addColorStop(0.00, 'rgba(254, 225, 140, 0.70)');
+      pgrad.addColorStop(0.38, 'rgba(251, 191, 36, 0.45)');
+      pgrad.addColorStop(0.72, 'rgba(245, 158, 11, 0.16)');
+      pgrad.addColorStop(1.00, 'rgba(245, 158, 11, 0.0)');
+      pctx.fillStyle = pgrad;
+      pctx.fillRect(0, 0, 128, 128);
+      poolTex.update();
+    }
+
+    if (!haloMat) {
+      haloMat = new StandardMaterial('ghibli-lamp-halo', scene);
+      haloMat.emissiveTexture = haloTex;
+      haloMat.opacityTexture = haloTex;
+      haloMat.emissiveColor = Color3.FromHexString('#fef08a');
+      haloMat.disableLighting = true;
+      haloMat.backFaceCulling = false;
+      haloMat.alpha = 0.85;
+      haloMat.fogEnabled = false;
+    }
+
+    if (!poolMat) {
+      poolMat = new StandardMaterial('ghibli-ground-light-pool', scene);
+      poolMat.emissiveTexture = poolTex;
+      poolMat.opacityTexture = poolTex;
+      poolMat.emissiveColor = Color3.FromHexString('#fed7aa');
+      poolMat.disableLighting = true;
+      poolMat.backFaceCulling = false;
+      poolMat.alpha = 0.65;
+      poolMat.zOffset = -6;
+      poolMat.fogEnabled = false;
+    }
+  }
+
+  return { haloMat, poolMat };
+}
+
+export function createLampHaloOnly(scene, parent, position, radius = 0.85) {
+  const { haloMat } = getOrCreateLampMaterials(scene);
+  const key = `${Math.round(position.x * 10)}_${Math.round(position.y * 10)}_${Math.round(position.z * 10)}`;
+  const halo = MeshBuilder.CreateDisc(`lamp-halo-${key}`, {
+    radius,
+    tessellation: 16,
+  }, scene);
+  // Babylon billboards discard parent rotation. A non-billboard anchor first
+  // transforms the lamp's local offset, then the halo faces the camera at zero offset.
+  if (parent) {
+    const anchor=new TransformNode(`lamp-anchor-${key}`,scene);
+    anchor.position.copyFrom(position); anchor.parent=parent;
+    halo.parent=anchor;
+  } else halo.position.copyFrom(position);
+  halo.billboardMode = Mesh.BILLBOARDMODE_ALL;
+  halo.material = haloMat;
+  halo.isPickable = false;
+  return halo;
+}
+
+export function createGroundLightPoolOnly(scene, parent, position, radius = 2.8) {
+  const { poolMat } = getOrCreateLampMaterials(scene);
+  const key = `${Math.round(position.x * 10)}_${Math.round(position.y * 10)}_${Math.round(position.z * 10)}`;
+  const pool = MeshBuilder.CreateDisc(`lamp-pool-${key}`, {
+    radius,
+    tessellation: 20,
+  }, scene);
+  pool.rotation.x = Math.PI / 2;
+  pool.position.copyFrom(position);
+  pool.material = poolMat;
+  pool.isPickable = false;
+  if (parent) pool.parent = parent;
+  return pool;
+}
+
+export function createLampGlowAndPool(scene, parent, bulbPos, groundY = 0.086, haloRadius = 0.85, poolRadius = 2.8) {
+  const halo = createLampHaloOnly(scene, parent, bulbPos, haloRadius);
+  const groundPos = new Vector3(bulbPos.x, groundY, bulbPos.z);
+  const pool = createGroundLightPoolOnly(scene, parent, groundPos, poolRadius);
+  return { halo, pool };
+}
+
+/**
  * Đèn treo lồng gỗ vàng ấm (Hanging Warm Amber Lantern)
  */
 export function createWarmHangingLantern(scene, position, parent = null, shadows = null) {
@@ -325,5 +437,9 @@ export function createWarmHangingLantern(scene, position, parent = null, shadows
   base.material = matIron;
   base.parent = root;
 
+  // Quầng sáng sương mờ dịu mắt bao quanh đèn lồng
+  createLampHaloOnly(scene, root, new Vector3(0, -0.38, 0), 0.72);
+
   return root;
 }
+

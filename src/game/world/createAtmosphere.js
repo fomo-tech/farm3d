@@ -141,6 +141,19 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
   moonGlowMat.fogEnabled = false;
   moonGlow.material = moonGlowMat;
 
+  // Hào quang sương mờ dịu mắt tầng rộng của vầng trăng ngọc trai (Ghibli Moon Corona)
+  const moonGlowOuter = MeshBuilder.CreateDisc('moon-glow-outer', { radius: 78, tessellation: 24 }, scene);
+  moonGlowOuter.parent = moonRoot;
+  moonGlowOuter.billboardMode = Mesh.BILLBOARDMODE_ALL;
+  const moonGlowOuterMat = new StandardMaterial('moon-glow-outer-mat', scene);
+  moonGlowOuterMat.emissiveTexture = sunTex;
+  moonGlowOuterMat.opacityTexture = sunTex;
+  moonGlowOuterMat.emissiveColor = Color3.FromHexString('#c7d2fe');
+  moonGlowOuterMat.alpha = 0.32;
+  moonGlowOuterMat.disableLighting = true;
+  moonGlowOuterMat.fogEnabled = false;
+  moonGlowOuter.material = moonGlowOuterMat;
+
   // =========================================================================
   // 4. VÒM SAO TRỜI ĐÊM LẤP LÁNH (TWINKLING STARFIELD DOME)
   // =========================================================================
@@ -510,15 +523,54 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
   firefliesPlaza.updateSpeed = 0.012;
   firefliesPlaza.start();
 
+  // Đom đóm dạ quang bay lượn quanh đài phun nước trung tâm
+  const firefliesFountain = new ParticleSystem('fireflies-fountain', 28, scene);
+  firefliesFountain.particleTexture = glowTex;
+  firefliesFountain.emitter = new Vector3(0, 1.5, 0);
+  firefliesFountain.minEmitBox = new Vector3(-8, 0, -8);
+  firefliesFountain.maxEmitBox = new Vector3(8, 3.5, 8);
+  firefliesFountain.color1 = new Color3(0.75, 1.0, 0.4).toColor4(0.95);
+  firefliesFountain.color2 = new Color3(0.35, 0.95, 0.65).toColor4(0.75);
+  firefliesFountain.colorDead = new Color3(0.35, 0.95, 0.65).toColor4(0.0);
+  firefliesFountain.minSize = 0.16;
+  firefliesFountain.maxSize = 0.40;
+  firefliesFountain.minLifeTime = 2.4;
+  firefliesFountain.maxLifeTime = 5.0;
+  firefliesFountain.direction1 = new Vector3(-0.25, 0.25, -0.25);
+  firefliesFountain.direction2 = new Vector3(0.25, 0.5, 0.25);
+  firefliesFountain.minEmitPower = 0.1;
+  firefliesFountain.maxEmitPower = 0.35;
+  firefliesFountain.updateSpeed = 0.012;
+  firefliesFountain.start();
+
   const villageNightLight = new PointLight('village-night-light', new Vector3(-112, 5.0, 35), scene);
   villageNightLight.diffuse = Color3.FromHexString('#f59e0b');
   villageNightLight.intensity = 0;
   villageNightLight.range = 85;
 
-  const plazaNightLight = new PointLight('plaza-night-light', new Vector3(0, 5.0, -135), scene);
+  // Đài phun nước trung tâm Quảng trường: x = 0, z = 0
+  const plazaNightLight = new PointLight('plaza-night-light', new Vector3(0, 4.5, 0), scene);
   plazaNightLight.diffuse = Color3.FromHexString('#fbbf24');
   plazaNightLight.intensity = 0;
-  plazaNightLight.range = 95;
+  plazaNightLight.range = 55;
+
+  // Khu thương mại & vui chơi phía Bắc: x = 0, z = -135
+  const northMallNightLight = new PointLight('north-mall-night-light', new Vector3(0, 5.0, -135), scene);
+  northMallNightLight.diffuse = Color3.FromHexString('#f59e0b');
+  northMallNightLight.intensity = 0;
+  northMallNightLight.range = 65;
+
+  // Cửa ngõ trung chuyển phía Nam: x = 0, z = 54
+  const southGatewayNightLight = new PointLight('south-gateway-night-light', new Vector3(0, 3.8, 54), scene);
+  southGatewayNightLight.diffuse = Color3.FromHexString('#fbbf24');
+  southGatewayNightLight.intensity = 0;
+  southGatewayNightLight.range = 42;
+
+  // Cửa ngõ trung chuyển phía Bắc: x = 0, z = -54
+  const northGatewayNightLight = new PointLight('north-gateway-night-light', new Vector3(0, 3.8, -54), scene);
+  northGatewayNightLight.diffuse = Color3.FromHexString('#fbbf24');
+  northGatewayNightLight.intensity = 0;
+  northGatewayNightLight.range = 42;
 
   let currentPhase = 'day';
 
@@ -537,10 +589,10 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       trans: Color3.FromHexString('#f472b6'),
       haze: Color3.FromHexString('#fde047'),
       ground: Color3.FromHexString('#fed7aa'),
-      ambIntensity: 0.60,
+      ambIntensity: 0.48,
       ambColor: Color3.FromHexString('#fdf2e9'),
-      ambGround: Color3.FromHexString('#cee9c7'),
-      sunIntensity: 0.76,
+      ambGround: Color3.FromHexString('#9bb698'),
+      sunIntensity: 0.54,
       sunColor: Color3.FromHexString('#ffe5bc'),
       sunDir: new Vector3(-0.82, -0.32, -0.25),
       sunDiscAlpha: 0.85,
@@ -550,7 +602,7 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       sunDustRate: 18,
       petalRate: 16,
       fireflyRate: 0,
-      shadowDarkness: 0.32,
+      shadowDarkness: 0.22,
       lampIntensity: 0.15,
       cloudTint: Color3.FromHexString('#fed7aa'),
     },
@@ -559,17 +611,17 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       name: 'day',
       clearColor: new Color4(0.85, 0.93, 0.99, 1),
       fogColor: new Color3(0.88, 0.94, 0.99),
-      // 5-Stop Sky Gradient
+      // 5-Stop Sky Gradient: Bầu trời trong trẻo tươi mát không cháy chói
       zenith: Color3.FromHexString('#1e40af'),
       upper: Color3.FromHexString('#38bdf8'),
       trans: Color3.FromHexString('#bae6fd'),
       haze: Color3.FromHexString('#f0f9ff'),
       ground: Color3.FromHexString('#f8fafc'),
-      ambIntensity: 0.64,
-      ambColor: Color3.FromHexString('#e6f4ff'),
-      ambGround: Color3.FromHexString('#b1bea5'),
-      sunIntensity: 0.88,
-      sunColor: Color3.FromHexString('#fff0db'),
+      ambIntensity: 0.50,
+      ambColor: Color3.FromHexString('#e0f2fe'),
+      ambGround: Color3.FromHexString('#9bb698'),
+      sunIntensity: 0.60,
+      sunColor: Color3.FromHexString('#fff7ed'),
       sunDir: new Vector3(-0.45, -0.85, -0.32),
       sunDiscAlpha: 1.0,
       starAlpha: 0,
@@ -578,7 +630,7 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       sunDustRate: 22,
       petalRate: 16,
       fireflyRate: 0,
-      shadowDarkness: 0.30,
+      shadowDarkness: 0.20,
       lampIntensity: 0.0,
       cloudTint: Color3.White(),
     },
@@ -593,10 +645,10 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       trans: Color3.FromHexString('#f43f5e'),
       haze: Color3.FromHexString('#fb923c'),
       ground: Color3.FromHexString('#fed7aa'),
-      ambIntensity: 0.60,
+      ambIntensity: 0.48,
       ambColor: Color3.FromHexString('#fef3c7'),
-      ambGround: Color3.FromHexString('#e9d8b8'),
-      sunIntensity: 0.70,
+      ambGround: Color3.FromHexString('#c2aa88'),
+      sunIntensity: 0.54,
       sunColor: Color3.FromHexString('#ffdab9'),
       sunDir: new Vector3(0.85, -0.22, 0.22),
       sunDiscAlpha: 0.95,
@@ -606,37 +658,37 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       sunDustRate: 14,
       petalRate: 12,
       fireflyRate: 18,
-      shadowDarkness: 0.34,
+      shadowDarkness: 0.22,
       lampIntensity: 0.95,
       cloudTint: Color3.FromHexString('#fbcfe8'),
     },
     {
       time: 180,
       name: 'night',
-      clearColor: new Color4(0.08, 0.12, 0.22, 1),
-      fogColor: new Color3(0.08, 0.12, 0.22),
-      // 5-Stop Sky Gradient
-      zenith: Color3.FromHexString('#090d16'),
-      upper: Color3.FromHexString('#0f172a'),
-      trans: Color3.FromHexString('#1e1b4b'),
-      haze: Color3.FromHexString('#0d9488'),
-      ground: Color3.FromHexString('#042f2e'),
-      ambIntensity: 0.52,
-      ambColor: Color3.FromHexString('#a5b4fc'),
-      ambGround: Color3.FromHexString('#738c87'),
-      sunIntensity: 0.65,
-      sunColor: Color3.FromHexString('#c7d2fe'),
-      sunDir: new Vector3(-0.62, -0.45, 0.65),
+      clearColor: new Color4(0.06, 0.09, 0.18, 1),
+      fogColor: new Color3(0.07, 0.10, 0.20),
+      // 5-Stop Sky Gradient: Bầu trời đêm Ghibli thơ mộng (Deep Indigo -> Sapphire -> Lavender Violet)
+      zenith: Color3.FromHexString('#0a0e27'),
+      upper: Color3.FromHexString('#151b4a'),
+      trans: Color3.FromHexString('#2a1b54'),
+      haze: Color3.FromHexString('#1e3a8a'),
+      ground: Color3.FromHexString('#0f172a'),
+      ambIntensity: 0.50,
+      ambColor: Color3.FromHexString('#b4c6ff'),
+      ambGround: Color3.FromHexString('#3b3765'),
+      sunIntensity: 0.58,
+      sunColor: Color3.FromHexString('#dbeafe'),
+      sunDir: new Vector3(-0.55, -0.65, 0.52),
       sunDiscAlpha: 0.0,
       starAlpha: 1.0,
       moonAlpha: 1.0,
-      auroraAlpha: 0.55,
+      auroraAlpha: 0.65,
       sunDustRate: 0,
       petalRate: 4,
-      fireflyRate: 36,
-      shadowDarkness: 0.26,
-      lampIntensity: 1.65,
-      cloudTint: Color3.FromHexString('#334155'),
+      fireflyRate: 48,
+      shadowDarkness: 0.20,
+      lampIntensity: 1.85,
+      cloudTint: Color3.FromHexString('#474e68'),
     },
   ];
 
@@ -717,7 +769,40 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       // Cập nhật đèn đêm ấm áp
       const curLamp = k1.lampIntensity + (k2.lampIntensity - k1.lampIntensity) * s;
       villageNightLight.intensity = curLamp;
-      plazaNightLight.intensity = curLamp;
+      plazaNightLight.intensity = curLamp * 1.35;
+      northMallNightLight.intensity = curLamp * 0.9;
+      southGatewayNightLight.intensity = curLamp * 0.85;
+      northGatewayNightLight.intensity = curLamp * 0.85;
+
+      // Cập nhật độ sáng vật liệu đèn đường, quầng sáng sương mờ & vệt sáng loang theo thời gian
+      const lampHaloMat = scene.getMaterialByName('ghibli-lamp-halo');
+      if (lampHaloMat) {
+        lampHaloMat.alpha = Math.min(0.95, curLamp * 0.52);
+      }
+      const groundPoolMat = scene.getMaterialByName('ghibli-ground-light-pool');
+      if (groundPoolMat) {
+        groundPoolMat.alpha = Math.min(0.72, curLamp * 0.40);
+      }
+      const gaslightMat = scene.getMaterialByName('ghibli-lamp-glow');
+      if (gaslightMat) {
+        const emissiveBoost = 0.5 + curLamp * 0.65;
+        gaslightMat.emissiveColor = new Color3(1.0 * emissiveBoost, 0.72 * emissiveBoost, 0.22 * emissiveBoost);
+      }
+      const townGlassWarmMat = scene.getMaterialByName('town-glass-warm');
+      if (townGlassWarmMat) {
+        const windowBoost = 0.4 + curLamp * 0.6;
+        townGlassWarmMat.emissiveColor = new Color3(0.98 * windowBoost, 0.86 * windowBoost, 0.48 * windowBoost);
+      }
+      const lanternAmberMat = scene.getMaterialByName('town-lantern-amber');
+      if (lanternAmberMat) {
+        const amberBoost = 0.5 + curLamp * 0.65;
+        lanternAmberMat.emissiveColor = new Color3(0.98 * amberBoost, 0.62 * amberBoost, 0.12 * amberBoost);
+      }
+      const lanternWarmGlowMat = scene.getMaterialByName('lantern-warm-glow');
+      if (lanternWarmGlowMat) {
+        const glowBoost = 0.5 + curLamp * 0.65;
+        lanternWarmGlowMat.emissiveColor = new Color3(0.98 * glowBoost, 0.62 * glowBoost, 0.12 * glowBoost);
+      }
       });
 
       trace('celestial alpha', () => {
@@ -730,6 +815,7 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       const moonVisibility = k1.moonAlpha + (k2.moonAlpha - k1.moonAlpha) * s;
       moonSphere.visibility = moonVisibility;
       moonGlow.visibility = moonVisibility;
+      moonGlowOuter.visibility = moonVisibility;
 
       const starVisibility = k1.starAlpha + (k2.starAlpha - k1.starAlpha) * s;
       starMat.alpha = starVisibility;
@@ -760,6 +846,7 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       const curFireflyRate = Math.round(k1.fireflyRate + (k2.fireflyRate - k1.fireflyRate) * s);
       firefliesFarm.emitRate = curFireflyRate;
       firefliesPlaza.emitRate = Math.round(curFireflyRate * 0.75);
+      firefliesFountain.emitRate = Math.round(curFireflyRate * 0.85);
     },
 
     update(dt = 0.016) {
@@ -868,6 +955,7 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       fallingPetals.dispose();
       firefliesFarm.dispose();
       firefliesPlaza.dispose();
+      firefliesFountain.dispose();
       glowTex.dispose();
       petalTex.dispose();
       skyTex.dispose();
@@ -875,6 +963,9 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       atmosphereRoot.dispose();
       villageNightLight.dispose();
       plazaNightLight.dispose();
+      northMallNightLight.dispose();
+      southGatewayNightLight.dispose();
+      northGatewayNightLight.dispose();
     },
   };
 }

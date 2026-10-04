@@ -754,6 +754,22 @@ export function Icon3dCow({ size = 24, className = '' }) {
   );
 }
 
+// 24b. Cừu bông 3D xinh xắn (Sheep / Livestock)
+export function Icon3dSheep({ size = 24, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 36 36" fill="none" className={`icon-3d ${className}`}>
+      <ellipse cx="18" cy="19" rx="10" ry="8" fill="#f8fafc" stroke="#64748b" strokeWidth="1.5" />
+      <circle cx="12" cy="16" r="4" fill="#ffffff" stroke="#94a3b8" strokeWidth="1.2" />
+      <circle cx="18" cy="13" r="4.5" fill="#ffffff" stroke="#94a3b8" strokeWidth="1.2" />
+      <circle cx="24" cy="16" r="4" fill="#ffffff" stroke="#94a3b8" strokeWidth="1.2" />
+      <path d="M 23 17 C 28 16, 31 19, 29 24 C 28 27, 25 28, 22 26 Z" fill="#475569" stroke="#1e293b" strokeWidth="1.2" />
+      <circle cx="26" cy="21" r="1" fill="#ffffff" />
+      <path d="M 14 26 L 14 31 M 22 26 L 22 31" stroke="#475569" strokeWidth="2" strokeLinecap="round" />
+      <path d="M 24 13 L 27 10 M 24 13 L 21 10" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 // 25. Bắp ngô vàng 3D (Corn / Animal Feed)
 export function Icon3dCorn({ size = 20, className = '' }) {
   return (
@@ -2876,9 +2892,453 @@ export function Icon3dCompass({ size = 28, className = '' }) {
     </svg>
   );
 }
+// =========================================================================
+// CASUAL LOW-POLY CHIBI & CUTECORE SPECIALIZED ICONS
+// 100% Thuần Vector Đa Tầng Lập Thể (Faceted Low-Poly × Pastel Cutecore)
+// =========================================================================
 
+// 93. Quả Cầu Máy Chủ Đa Diện Cutecore (Low-poly Server Crystal Globe)
+export function Icon3dServerGlobe({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="poly_globe_core" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="30%" stopColor="#a7f3d0" />
+          <stop offset="70%" stopColor="#38bdf8" />
+          <stop offset="100%" stopColor="#0284c7" />
+        </radialGradient>
+        <linearGradient id="orbit_gold" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fffbeb" />
+          <stop offset="40%" stopColor="#fde047" />
+          <stop offset="100%" stopColor="#f59e0b" />
+        </linearGradient>
+      </defs>
+      {/* Vòng quỹ đạo sau */}
+      <path d="M 6 28 C 6 20, 42 12, 42 20" stroke="url(#orbit_gold)" strokeWidth="3" strokeLinecap="round" opacity="0.6" />
 
+      {/* Quả cầu pha lê đa giác */}
+      <circle cx="24" cy="25" r="16" fill="url(#poly_globe_core)" stroke="#ffffff" strokeWidth="2" />
 
+      {/* Các mặt vát Low-poly (Faceted polygons) */}
+      <polygon points="24,10 18,17 24,20" fill="#ffffff" opacity="0.5" />
+      <polygon points="24,10 30,17 24,20" fill="#e0f2fe" opacity="0.6" />
+      <polygon points="18,17 12,25 20,27" fill="#67e8f9" opacity="0.35" />
+      <polygon points="30,17 36,25 28,27" fill="#0284c7" opacity="0.3" />
+      <polygon points="20,27 24,37 28,27" fill="#0369a1" opacity="0.4" />
+      <polygon points="20,27 24,20 28,27" fill="#ffffff" opacity="0.45" />
 
+      {/* Vòng quỹ đạo trước với hạt ngọc sao */}
+      <ellipse cx="24" cy="25" rx="20" ry="7" stroke="url(#orbit_gold)" strokeWidth="3" strokeDasharray="32 10" transform="rotate(-15 24 25)" />
+      <circle cx="39" cy="18" r="3.2" fill="#fef08a" stroke="#ffffff" strokeWidth="1.2" />
+
+      {/* Cột ăng-ten trái tim cutecore phát sóng */}
+      <line x1="24" y1="9" x2="24" y2="4" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" />
+      <path d="M 24 4 C 22 2, 20 4, 24 7 C 28 4, 26 2, 24 4 Z" fill="#f43f5e" stroke="#ffffff" strokeWidth="1" />
+      {/* Sóng vô tuyến trái tim */}
+      <path d="M 19 3 C 20 1, 28 1, 29 3" stroke="#f43f5e" strokeWidth="1.2" strokeLinecap="round" opacity="0.8" />
+    </svg>
+  );
+}
+
+// 94. Bảng Tin Tai Thỏ Cutecore (Low-poly Bunny Notice Board)
+export function Icon3dNoticeBoard({ size = 32, hasBadge = true, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="board_wood_poly" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fef3c7" />
+          <stop offset="50%" stopColor="#fde68a" />
+          <stop offset="100%" stopColor="#d97706" />
+        </linearGradient>
+        <radialGradient id="wax_heart_poly" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fda4af" />
+          <stop offset="50%" stopColor="#f43f5e" />
+          <stop offset="100%" stopColor="#be123c" />
+        </radialGradient>
+      </defs>
+
+      {/* Cặp tai thỏ cutecore nhô lên trên đỉnh */}
+      <path d="M 17 14 C 15 6, 17 2, 20 3 C 23 4, 21 11, 19 14 Z" fill="#ffffff" stroke="#f43f5e" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M 18 12 C 17 7, 18 5, 20 5 C 21 6, 20 10, 19 12 Z" fill="#fbcfe8" />
+
+      <path d="M 31 14 C 33 6, 31 2, 28 3 C 25 4, 27 11, 29 14 Z" fill="#ffffff" stroke="#f43f5e" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M 30 12 C 31 7, 30 5, 28 5 C 27 6, 28 10, 29 12 Z" fill="#fbcfe8" />
+
+      {/* Thân bảng gỗ vát cạnh low-poly */}
+      <rect x="8" y="12" width="32" height="28" rx="7" fill="url(#board_wood_poly)" stroke="#ffffff" strokeWidth="2.2" />
+
+      {/* Tờ giấy ghim cuộn góc */}
+      <rect x="13" y="16" width="22" height="20" rx="4" fill="#ffffff" stroke="#fde047" strokeWidth="1.2" />
+      <line x1="16" y1="21" x2="28" y2="21" stroke="#f43f5e" strokeWidth="2" strokeLinecap="round" />
+      <line x1="16" y1="26" x2="31" y2="26" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round" />
+      <line x1="16" y1="31" x2="26" y2="31" stroke="#cbd5e1" strokeWidth="1.8" strokeLinecap="round" />
+
+      {/* Con dấu sáp trái tim đỏ ở góc */}
+      <circle cx="33" cy="33" r="5" fill="url(#wax_heart_poly)" stroke="#ffffff" strokeWidth="1.2" />
+      <path d="M 33 32 C 32 30.5, 30.5 31.5, 33 34 C 35.5 31.5, 34 30.5, 33 32 Z" fill="#ffffff" />
+
+      {/* Chấm đỏ thông báo chưa đọc nếu có */}
+      {hasBadge && (
+        <circle cx="39" cy="11" r="5" fill="#ef4444" stroke="#ffffff" strokeWidth="2" />
+      )}
+    </svg>
+  );
+}
+
+// 95. Máy Phát Nhạc / Jukebox Mèo Con Cutecore (Low-poly Kitty Jukebox)
+export function Icon3dJukebox({ size = 32, isMuted = false, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="jukebox_pastel" cx="40%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="35%" stopColor="#fbcfe8" />
+          <stop offset="85%" stopColor="#c4b5fd" />
+          <stop offset="100%" stopColor="#8b5cf6" />
+        </radialGradient>
+        <radialGradient id="vinyl_black" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stopColor="#475569" />
+          <stop offset="60%" stopColor="#1e293b" />
+          <stop offset="100%" stopColor="#0f172a" />
+        </radialGradient>
+      </defs>
+
+      {/* Tai mèo trên máy hát */}
+      <polygon points="12,16 8,8 18,12" fill="#f472b6" stroke="#ffffff" strokeWidth="1.8" strokeLinejoin="round" />
+      <polygon points="36,16 40,8 30,12" fill="#f472b6" stroke="#ffffff" strokeWidth="1.8" strokeLinejoin="round" />
+
+      {/* Thân vòm máy hát pastel bo tròn */}
+      <path
+        d="M 12 40 L 12 22 C 12 14, 36 14, 36 22 L 36 40 Z"
+        fill="url(#jukebox_pastel)"
+        stroke="#ffffff"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+
+      {/* Đĩa than xoay đa diện tròn */}
+      <circle cx="24" cy="27" r="9" fill="url(#vinyl_black)" stroke="#ffffff" strokeWidth="1.2" />
+      <circle cx="24" cy="27" r="4" fill="#38bdf8" />
+      <circle cx="24" cy="27" r="1.5" fill="#fef08a" />
+
+      {/* Nốt nhạc bay ra hoặc gạch chéo mute */}
+      {isMuted ? (
+        <line x1="10" y1="10" x2="38" y2="38" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
+      ) : (
+        <g>
+          <path d="M 33 13 C 35 11, 38 12, 39 10" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="34" cy="14" r="1.8" fill="#f59e0b" />
+          <circle cx="40" cy="11" r="1.5" fill="#f43f5e" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// 96. Cần Câu Cá Phao Tim Cutecore (Low-poly Heart Fishing Rod)
+export function Icon3dFishingRodGold({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="rod_gold" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#b45309" />
+          <stop offset="50%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#fef08a" />
+        </linearGradient>
+        <radialGradient id="poly_fish" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="40%" stopColor="#fbbf24" />
+          <stop offset="100%" stopColor="#ea580c" />
+        </radialGradient>
+      </defs>
+
+      {/* Cần câu sợi thủy tinh vát góc uốn cong */}
+      <path
+        d="M 6 42 Q 18 16 38 10"
+        stroke="url(#rod_gold)"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+      />
+      <circle cx="8" cy="40" r="3" fill="#78350f" stroke="#ffffff" strokeWidth="1" />
+
+      {/* Dây cước buông xuống */}
+      <path d="M 38 10 Q 42 20 38 32" stroke="#ffffff" strokeWidth="1.2" strokeDasharray="3 2" />
+
+      {/* Phao câu hình trái tim bồng bềnh */}
+      <path
+        d="M 38 22 C 36 20, 34 22, 38 25 C 42 22, 40 20, 38 22 Z"
+        fill="#f43f5e"
+        stroke="#ffffff"
+        strokeWidth="1.2"
+      />
+
+      {/* Chú cá vàng Chibi cắn câu */}
+      <path
+        d="M 36 32 C 32 30, 28 34, 33 37 C 38 39, 42 34, 38 32 Z"
+        fill="url(#poly_fish)"
+        stroke="#ffffff"
+        strokeWidth="1.5"
+      />
+      {/* Vây cá tam giác origami */}
+      <polygon points="31,35 26,32 28,38" fill="#f97316" stroke="#ffffff" strokeWidth="1" />
+      <circle cx="36" cy="34" r="1.2" fill="#000000" />
+    </svg>
+  );
+}
+
+// 97. Xe Buýt Hộp Bánh Mật Ong (Low-poly Chibi City Bus)
+export function Icon3dCityBus({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="bus_butter" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fffbeb" />
+          <stop offset="35%" stopColor="#fde047" />
+          <stop offset="100%" stopColor="#f59e0b" />
+        </linearGradient>
+      </defs>
+
+      {/* Thân xe dáng hình hộp bo tròn vát góc */}
+      <rect x="8" y="15" width="32" height="22" rx="7" fill="url(#bus_butter)" stroke="#ffffff" strokeWidth="2.2" />
+
+      {/* Nóc xe trắng sữa */}
+      <path d="M 9 20 C 12 16, 36 16, 39 20" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" />
+
+      {/* Cửa sổ vòm kính bầu trời */}
+      <rect x="12" y="20" width="7" height="7" rx="2" fill="#bae6fd" stroke="#ffffff" strokeWidth="1.2" />
+      <rect x="21" y="20" width="7" height="7" rx="2" fill="#bae6fd" stroke="#ffffff" strokeWidth="1.2" />
+      <rect x="30" y="20" width="7" height="7" rx="2" fill="#bae6fd" stroke="#ffffff" strokeWidth="1.2" />
+
+      {/* Đèn pha tròn xoe */}
+      <circle cx="11" cy="31" r="2.2" fill="#ffffff" stroke="#f59e0b" strokeWidth="1" />
+      <circle cx="37" cy="31" r="2.2" fill="#ffffff" stroke="#f59e0b" strokeWidth="1" />
+
+      {/* Bánh xe kẹo socola */}
+      <circle cx="15" cy="37" r="4.2" fill="#451a03" stroke="#ffffff" strokeWidth="1.8" />
+      <circle cx="15" cy="37" r="1.8" fill="#fde047" />
+      <circle cx="33" cy="37" r="4.2" fill="#451a03" stroke="#ffffff" strokeWidth="1.8" />
+      <circle cx="33" cy="37" r="1.8" fill="#fde047" />
+
+      {/* Vệt khói trái tim ngộ nghĩnh phía sau */}
+      <path d="M 5 35 C 4 33, 2 34, 4 36 C 6 34, 5 33, 5 35 Z" fill="#fbcfe8" opacity="0.8" />
+    </svg>
+  );
+}
+
+// 98. Cà Rốt Hoàng Kim 3 Sao (Low-poly Golden Carrot 3-Star)
+export function Icon3dGoldenCarrot({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="carrot_poly_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fed7aa" />
+          <stop offset="35%" stopColor="#fb923c" />
+          <stop offset="85%" stopColor="#ea580c" />
+          <stop offset="100%" stopColor="#c2410c" />
+        </linearGradient>
+      </defs>
+
+      {/* Mầm lá đa giác xanh mint */}
+      <polygon points="24,14 19,6 23,10" fill="#86efac" stroke="#15803d" strokeWidth="1.2" />
+      <polygon points="24,14 24,3 26,10" fill="#4ade80" stroke="#15803d" strokeWidth="1.2" />
+      <polygon points="24,14 29,6 25,10" fill="#22c55e" stroke="#15803d" strokeWidth="1.2" />
+
+      {/* Thân củ cà rốt béo tròn vát cạnh low-poly */}
+      <path
+        d="M 17 16 C 18 13, 30 13, 31 16 C 33 22, 28 38, 24 43 C 20 38, 15 22, 17 16 Z"
+        fill="url(#carrot_poly_grad)"
+        stroke="#ffffff"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+      {/* Các vệt khía vàng */}
+      <line x1="20" y1="21" x2="26" y2="21" stroke="#ffedd5" strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="21" y1="28" x2="27" y2="28" stroke="#ffedd5" strokeWidth="1.6" strokeLinecap="round" />
+
+      {/* 3 Ngôi sao ngọc cutecore bồng bềnh */}
+      <polygon points="12,12 13.5,15 16.5,15.5 14,17.5 15,20.5 12,19 9,20.5 10,17.5 7.5,15.5 10.5,15" fill="#fde047" stroke="#ffffff" strokeWidth="1" />
+      <polygon points="36,12 37.5,15 40.5,15.5 38,17.5 39,20.5 36,19 33,20.5 34,17.5 31.5,15.5 34.5,15" fill="#fde047" stroke="#ffffff" strokeWidth="1" />
+      <polygon points="24,7 25,9 27,9.5 25.5,11 26,13 24,12 22,13 22.5,11 21,9.5 23,9" fill="#fef08a" stroke="#ffffff" strokeWidth="0.8" />
+    </svg>
+  );
+}
+
+// 99. Mũ Nồi Tai Mèo Dâu Tây (Low-poly Kitty Strawberry Beret)
+export function Icon3dKittyBeret({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="beret_pink" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="35%" stopColor="#fda4af" />
+          <stop offset="85%" stopColor="#fb7185" />
+          <stop offset="100%" stopColor="#e11d48" />
+        </radialGradient>
+      </defs>
+
+      {/* Cặp tai mèo nhung */}
+      <polygon points="14,18 11,8 20,12" fill="#ffe4e6" stroke="#ffffff" strokeWidth="1.8" strokeLinejoin="round" />
+      <polygon points="34,18 37,8 28,12" fill="#ffe4e6" stroke="#ffffff" strokeWidth="1.8" strokeLinejoin="round" />
+
+      {/* Thân mũ nồi phồng bánh tiêu */}
+      <ellipse cx="24" cy="24" rx="17" ry="11" fill="url(#beret_pink)" stroke="#ffffff" strokeWidth="2.2" />
+
+      {/* Quả dâu tây tí hon đính trên vành */}
+      <path d="M 28 20 C 26 19, 29 16, 31 18 C 33 16, 36 19, 34 22 C 32 24, 30 23, 28 20 Z" fill="#ef4444" stroke="#ffffff" strokeWidth="1" />
+      <circle cx="31" cy="18" r="0.8" fill="#22c55e" />
+
+      {/* Vành mũ ôm đầu */}
+      <ellipse cx="24" cy="30" rx="11" ry="3.5" fill="#be123c" stroke="#ffffff" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+// 100. Bong Bóng Trái Tim Cánh Thiên Thần (Cutecore Angel Heart Bubble)
+export function Icon3dHeartBubble({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="heart_glass" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="35%" stopColor="#fbcfe8" />
+          <stop offset="75%" stopColor="#f472b6" />
+          <stop offset="100%" stopColor="#db2777" />
+        </radialGradient>
+      </defs>
+
+      {/* Cánh thiên thần bên trái */}
+      <path d="M 12 24 C 6 20, 4 14, 10 12 C 14 10, 16 16, 15 22 Z" fill="#ffffff" stroke="#bae6fd" strokeWidth="1.5" strokeLinejoin="round" />
+      {/* Cánh thiên thần bên phải */}
+      <path d="M 36 24 C 42 20, 44 14, 38 12 C 34 10, 32 16, 33 22 Z" fill="#ffffff" stroke="#bae6fd" strokeWidth="1.5" strokeLinejoin="round" />
+
+      {/* Trái tim phồng 3D cutecore */}
+      <path
+        d="M 24 37 C 14 28, 10 20, 15 15 C 20 10, 24 16, 24 17 C 24 16, 28 10, 33 15 C 38 20, 34 28, 24 37 Z"
+        fill="url(#heart_glass)"
+        stroke="#ffffff"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+      />
+
+      {/* Vệt bóng kính hình cánh sao 4 cánh */}
+      <circle cx="19" cy="18" r="2.5" fill="#ffffff" opacity="0.8" />
+      <circle cx="21" cy="22" r="1.2" fill="#ffffff" opacity="0.6" />
+    </svg>
+  );
+}
+
+// 101. Xe Tải Nông Sản Chibi Thùng Gỗ (Low-poly Chibi Delivery Truck)
+export function Icon3dDeliveryTruck({ size = 32, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <linearGradient id="truck_cab" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#a7f3d0" />
+          <stop offset="60%" stopColor="#34d399" />
+          <stop offset="100%" stopColor="#059669" />
+        </linearGradient>
+        <linearGradient id="crate_wood" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fef3c7" />
+          <stop offset="100%" stopColor="#d97706" />
+        </linearGradient>
+      </defs>
+
+      {/* Thùng gỗ phía sau chở nông sản */}
+      <rect x="7" y="19" width="18" height="15" rx="3" fill="url(#crate_wood)" stroke="#ffffff" strokeWidth="1.8" />
+      {/* Táo đỏ trong thùng */}
+      <circle cx="12" cy="18" r="3.2" fill="#ef4444" stroke="#ffffff" strokeWidth="1" />
+      <circle cx="18" cy="17" r="3.2" fill="#f59e0b" stroke="#ffffff" strokeWidth="1" />
+
+      {/* Đầu cabin xe bo tròn góc */}
+      <path
+        d="M 23 34 L 23 21 C 23 18, 26 16, 30 16 L 35 16 C 38 16, 41 21, 41 25 L 41 34 Z"
+        fill="url(#truck_cab)"
+        stroke="#ffffff"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+      />
+      {/* Kính cabin vát góc */}
+      <path d="M 28 19 L 34 19 C 36 19, 38 22, 38 25 L 28 25 Z" fill="#e0f2fe" stroke="#ffffff" strokeWidth="1.2" />
+
+      {/* Bánh xe socola */}
+      <circle cx="13" cy="36" r="4.5" fill="#1e293b" stroke="#ffffff" strokeWidth="1.8" />
+      <circle cx="13" cy="36" r="2" fill="#a7f3d0" />
+      <circle cx="34" cy="36" r="4.5" fill="#1e293b" stroke="#ffffff" strokeWidth="1.8" />
+      <circle cx="34" cy="36" r="2" fill="#a7f3d0" />
+    </svg>
+  );
+}
+
+// 102. Ngọc Kẹo Tiến Trình Đa Giác (Low-poly Milestone Candy Gem)
+export function Icon3dMilestoneGem({ size = 20, variant = 'mint', isReached = false, className = '' }) {
+  const colors = {
+    mint: { core: ['#ffffff', '#6ee7b7', '#059669'], stroke: '#ffffff' },
+    lavender: { core: ['#ffffff', '#c4b5fd', '#7c3aed'], stroke: '#ffffff' },
+    strawberry: { core: ['#ffffff', '#fda4af', '#e11d48'], stroke: '#ffffff' },
+    honey: { core: ['#ffffff', '#fde047', '#d97706'], stroke: '#ffffff' },
+  }[variant] || { core: ['#ffffff', '#fde047', '#d97706'], stroke: '#ffffff' };
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d milestone-gem ${isReached ? 'reached' : 'unreached'} ${className}`}>
+      <defs>
+        <radialGradient id={`gem_grad_${variant}`} cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor={colors.core[0]} />
+          <stop offset="45%" stopColor={colors.core[1]} />
+          <stop offset="100%" stopColor={colors.core[2]} />
+        </radialGradient>
+      </defs>
+
+      {/* Viên đá quý đa diện vát góc (Faceted Diamond Gem) */}
+      <polygon
+        points="16,3 27,9 27,23 16,29 5,23 5,9"
+        fill={isReached ? `url(#gem_grad_${variant})` : '#64748b'}
+        stroke={isReached ? colors.stroke : '#94a3b8'}
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+
+      {isReached && (
+        <g>
+          {/* Các facet phát quang */}
+          <polygon points="16,3 27,9 16,13" fill="#ffffff" opacity="0.6" />
+          <polygon points="16,3 5,9 16,13" fill="#ffffff" opacity="0.3" />
+          <polygon points="5,9 5,23 16,17" fill="#ffffff" opacity="0.2" />
+          <polygon points="27,9 27,23 16,17" fill="#000000" opacity="0.15" />
+          {/* 4-point cutecore twinkle star */}
+          <circle cx="16" cy="15" r="2.2" fill="#ffffff" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// 103. Cánh Thiên Thần Nút Play Arcade Cutecore (Low-poly Play Wings)
+export function Icon3dPlayArcadeWings({ size = 36, className = '' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 54 54" fill="none" className={`icon-3d ${className}`}>
+      <defs>
+        <radialGradient id="wing_play_gold" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fffbeb" />
+          <stop offset="35%" stopColor="#fef08a" />
+          <stop offset="75%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#d97706" />
+        </radialGradient>
+      </defs>
+
+      {/* Cặp cánh lông vũ low-poly bên trái */}
+      <path d="M 17 27 C 7 23, 4 14, 11 11 C 15 9, 18 16, 19 25 Z" fill="#ffffff" stroke="#fef08a" strokeWidth="1.8" />
+      <path d="M 16 32 C 8 30, 7 24, 12 21 C 15 20, 18 25, 17 31 Z" fill="#fffbeb" stroke="#fde047" strokeWidth="1.5" />
+
+      {/* Cặp cánh lông vũ low-poly bên phải */}
+      <path d="M 37 27 C 47 23, 50 14, 43 11 C 39 9, 36 16, 35 25 Z" fill="#ffffff" stroke="#fef08a" strokeWidth="1.8" />
+      <path d="M 38 32 C 46 30, 47 24, 42 21 C 39 20, 36 25, 37 31 Z" fill="#fffbeb" stroke="#fde047" strokeWidth="1.5" />
+
+      {/* Nút Play kẹo dẻo tam giác bo tròn ở giữa */}
+      <circle cx="27" cy="27" r="14" fill="url(#wing_play_gold)" stroke="#ffffff" strokeWidth="2.5" />
+      <polygon points="24,20 34,27 24,34" fill="#ffffff" stroke="#b45309" strokeWidth="1.2" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 

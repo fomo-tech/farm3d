@@ -18,15 +18,28 @@ const seasonIcons = [Icon3dSpring, Icon3dSummer, Icon3dAutumn, Icon3dWinter];
 const seasons = ['Xuân', 'Hạ', 'Thu', 'Đông'];
 const clockText = clock => `${String(Math.floor((clock % 240) / 10) + 6).padStart(2, '0')}:${String((clock % 10) * 6).padStart(2, '0')}`;
 
-export const GameClock = memo(function GameClock({ compact = false }) {
-  const clock = useClock();
+export const GameClock = memo(function GameClock({ compact = false, timeMode = 'auto', onToggleTime = null, currentClock = null }) {
+  const internalClock = useClock();
+  const clock = currentClock !== null ? currentClock : internalClock;
   const season = Math.floor(clock / 240) % 4;
   if (compact) return <>{clockText(clock)} · {seasons[season]}</>;
   const TimeIcon = timeIcons[Math.floor((clock % 240) / 60)];
   const SeasonIcon = seasonIcons[season];
-  return <div className="pt-clock-strip">
+
+  const modeBadge = timeMode === 'night' ? <span className="pt-time-tag pt-time-night">🌙 Đêm</span>
+    : timeMode === 'dusk' ? <span className="pt-time-tag pt-time-dusk">🌅 Chiều</span>
+    : timeMode === 'day' ? <span className="pt-time-tag pt-time-day">☀️ Ngày</span>
+    : timeMode === 'dawn' ? <span className="pt-time-tag pt-time-dawn">🌄 Sáng</span>
+    : null;
+
+  return <div
+    className="pt-clock-strip"
+    onClick={onToggleTime}
+    title="Bấm để đổi thời gian: Ban Ngày ☀️ / Hoàng Hôn 🌅 / Ban Đêm 🌙 / Tự Động ⏰"
+  >
     <span className="pt-clock-icon"><TimeIcon size={24} /></span>
     <span className="pt-clock-time">{clockText(clock)}</span>
+    {modeBadge}
     <span className="pt-capsule-dot">·</span>
     <span className="pt-season-icon"><SeasonIcon size={20} /></span>
     <span className="pt-season-name">{seasons[season]}</span>

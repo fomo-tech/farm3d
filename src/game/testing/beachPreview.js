@@ -1,0 +1,34 @@
+import { Engine } from '@babylonjs/core/Engines/engine.js';
+import { Scene } from '@babylonjs/core/scene.js';
+import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera.js';
+import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight.js';
+import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight.js';
+import { Color3, Color4 } from '@babylonjs/core/Maths/math.color.js';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
+import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
+import { createCozyBeach } from '../world/landmarks/createCozyBeach.js';
+import { createSeasideOcean } from '../world/landmarks/createSeasideOcean.js';
+import { createLighthouse } from '../world/landmarks/createLighthouse.js';
+import { getWorldChunkStreamer } from '../world/WorldChunkStreamer.js';
+import { FrameBudgetScheduler } from '../engine/FrameBudgetScheduler.js';
+const engine=new Engine(document.querySelector('#view'),true);
+engine.setHardwareScalingLevel(1/Math.min(2,devicePixelRatio));
+const scene=new Scene(engine);scene.clearColor=new Color4(.73,.85,.89,1);
+scene.fogMode=Scene.FOGMODE_LINEAR;scene.fogColor=new Color3(.73,.85,.89);scene.fogStart=220;scene.fogEnd=620;
+const ambient=new HemisphericLight('ambient',new Vector3(0,1,0),scene);ambient.intensity=.7;ambient.groundColor=new Color3(.45,.45,.4);
+const sun=new DirectionalLight('sun',new Vector3(-.5,-1,.3),scene);sun.intensity=.3;
+const camera=new ArcRotateCamera('camera',-Math.PI/2,.85,155,new Vector3(0,0,344),scene);
+camera.attachControl(document.querySelector('#view'),true);camera.lowerBetaLimit=.15;camera.upperBetaLimit=1.45;camera.lowerRadiusLimit=12;camera.upperRadiusLimit=260;camera.maxZ=850;
+const player=new TransformNode('test-streaming-anchor',scene);player.position.set(0,0,340);scene.metadata={streamingPlayer:player};
+const scheduler=new FrameBudgetScheduler(3);createCozyBeach(scene,null,scheduler);createSeasideOcean(scene);createLighthouse(scene,null,{x:73,y:0,z:345});
+const streamer=getWorldChunkStreamer(scene);let lastReport=0,maxGap=0,last=performance.now();
+engine.runRenderLoop(()=>{
+  const now=performance.now();maxGap=Math.max(maxGap,now-last);last=now;
+  scheduler.update();scene.render();
+  if(now-lastReport>500){lastReport=now;const s=streamer.getStats();document.querySelector('#report').textContent=`Chi tiết ${s.ready}/${s.entries} · mesh ${scene.meshes.length} · vật liệu ${scene.materials.length} · FPS ${Math.round(engine.getFps())} · khoảng ngắt tối đa ${Math.round(maxGap)} ms · tab ${document.visibilityState}`;}
+});
+document.querySelector('#near').onclick=()=>{player.position.set(0,0,340);camera.setTarget(new Vector3(0,0,344));camera.beta=1.15;camera.radius=65;};
+document.querySelector('#overview').onclick=()=>{player.position.set(0,0,340);camera.setTarget(new Vector3(0,0,344));camera.radius=155;};
+document.querySelector('#far').onclick=()=>{player.position.set(800,0,800);camera.setTarget(new Vector3(0,0,344));camera.radius=155;};
+document.querySelector('#pier').onclick=()=>{player.position.set(-63,0,360);camera.setTarget(new Vector3(-66,0,350));camera.beta=1.15;camera.radius=24;};
+window.addEventListener('resize',()=>engine.resize());window.addEventListener('beforeunload',()=>{scene.dispose();engine.dispose();},{once:true});

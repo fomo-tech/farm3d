@@ -1,4 +1,7 @@
 import { MongoClient } from 'mongodb';
+import { calculateLandPrice, landPricingRadius } from '../shared/landConfig.js';
+import { FARM_CONFIG } from '../shared/farmConfig.js';
+import { farmGateOpen } from '../shared/farmSecurity.js';
 import { decodeFarmId, worldFarmId, worldFarmNumber } from '../shared/villageLayout.js';
 import { FARM_ACTIVE_PLOTS, FARM_LOT_SPEC, farmLotPosition, validateFarmLayout } from '../shared/farmLayout.js';
 
@@ -140,11 +143,11 @@ export async function listLandMarket() {
     const lot = i + 1;
     const position = positionForLot(worldFarmNumber(v.order, lot));
     const owner = occupied.find(a => a.villageId === v.villageId && a.lot === lot);
-    return { farmId: worldFarmId(v.order, lot), villageId: v.villageId, villageName: v.name, lot, ...position, distance: Math.round(Math.hypot(position.x, position.z)), ownerId: owner?.status !== 'pending' ? owner?.playerId || null : null, available: !owner };
+    return { farmId: worldFarmId(v.order, lot), villageId: v.villageId, villageName: v.name, lot, ...position, distance: Math.round(Math.hypot(position.x, position.z)), ownerId: owner?.status !== 'pending' ? owner?.playerId || null : null, available: !owner, gateOpen: owner ? farmGateOpen(owner) : true, gateUpdatedAt: owner?.gateUpdatedAt || 0 };
   }));
-  const farthest = Math.max(...lots.map(l => Math.hypot(l.x, l.z)));
+  const farthest = landPricingRadius(lots);
   const names = await players.find({ playerId: { $in: occupied.map(a => a.playerId) } }, { projection: { playerId: 1, name: 1 } }).toArray();
-  return lots.map(l => ({ ...l, userName: names.find(p => p.playerId === l.ownerId)?.name || null, price: 150 + Math.round(1850 * (1 - Math.hypot(l.x, l.z) / farthest) / 50) * 50 }));
+  return lots.map(l => ({ ...l, userName: names.find(p => p.playerId === l.ownerId)?.name || null, price: calculateLandPrice(l, farthest) }));
 }
 
 export async function purchaseFarm(playerId, farmId) {
@@ -163,7 +166,7 @@ export async function purchaseFarm(playerId, farmId) {
     activePlots: FARM_ACTIVE_PLOTS,
     houseType: 'starter-house', houseTier: 1,
     barnType: 'starter-barn', barnTier: 1,
-    fenceType: 'starter-fence', claimedAt: Date.now(),
+    fenceType: 'starter-fence', claimedAt: Date.now(), gateOpen: FARM_CONFIG.security.gate.defaultOpen,
   };
   try { await assignments.insertOne(doc); }
   catch (error) { if (error.code === 11000) return { error: 'Lô đất đang được mua hoặc bạn đã sở hữu đất.' }; throw error; }

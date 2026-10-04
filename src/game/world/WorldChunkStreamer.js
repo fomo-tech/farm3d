@@ -1,4 +1,5 @@
 import { CHUNK_SIZE, chunkAt } from './WorldPartition.js';
+import { streamingPosition } from './streamingPosition.js';
 
 const streamers = new WeakMap();
 
@@ -118,7 +119,7 @@ export function getWorldChunkStreamer(scene) {
   let lastX = 0;
   let lastZ = 0;
   const observer = scene.onBeforeRenderObservable.add(() => {
-    const target = scene.activeCamera?.target;
+    const target = streamingPosition(scene);
     if (!target) return;
     streamer.update(target, { x: target.x - lastX, z: target.z - lastZ });
     lastX = target.x;

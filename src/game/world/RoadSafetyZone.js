@@ -6,6 +6,7 @@
  */
 
 import { WORLD_VILLAGES } from '../../../shared/villageLayout.js';
+import { beachWaterAt, beachResourceWaterAt, beachRoadAt, beachPromenadeAt } from '../../../shared/beachConfig.js';
 
 const FARM_CROSSROAD_ROWS = [0, 1, 2, 3, 4, 5, 6];
 
@@ -60,6 +61,7 @@ export function recordBlockedRoadResource(resourceName, x, z) {
  * @returns {boolean} True nếu tài nguyên bị chặn
  */
 export function isRoadResourceBlocked(x, z, clearance = ROAD_SAFETY_CONFIG.defaultClearance) {
+  if (beachResourceWaterAt(x,z,clearance)) return true;
   if (!ROAD_SAFETY_CONFIG.blockRoadResources) return false;
   return isPointOnRoadCorridor(x, z, clearance);
 }
@@ -72,8 +74,11 @@ export function isRoadResourceBlocked(x, z, clearance = ROAD_SAFETY_CONFIG.defau
  * @returns {boolean} True if point is on or too close to a road corridor
  */
 export function isPointOnRoadCorridor(x, z, clearance = 4.0) {
+  if (beachWaterAt(x,z)) return false;
+  if (beachRoadAt(x,z,clearance)) return true;
+  if (beachPromenadeAt(x,z,clearance)) return true;
   // 1. Trục Đại lộ Bắc - Nam (x = 0): xuyên suốt từ z = -660 đến z = 415 (Lòng đường 8.5m + vỉa hè)
-  if (Math.abs(x) < (4.6 + clearance) && z >= -660 && z <= 415) {
+  if (Math.abs(x) < (4.6 + clearance) && z >= -660 && z <= 310) {
     return true;
   }
 
@@ -88,7 +93,7 @@ export function isPointOnRoadCorridor(x, z, clearance = 4.0) {
   }
 
   // 4. Tuyến Quốc Lộ Nam 406 (z = 406): kết nối Thu Phong - Biển - Hướng Dương (Lòng đường 6.0m)
-  if (Math.abs(z - 406) < (3.6 + clearance) && Math.abs(x) <= 340) {
+  if (Math.abs(z - 406) < (3.6 + clearance) && Math.abs(x) >= 240 && Math.abs(x) <= 620) {
     return true;
   }
 

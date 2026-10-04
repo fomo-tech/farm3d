@@ -1,4 +1,5 @@
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
+import { FARM_CONFIG } from '../../../shared/farmConfig.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
@@ -29,6 +30,12 @@ function getSoilMaterial(scene) {
  * @param {ShadowGenerator} shadows
  */
 export function createCropMesh(scene, cropId, progress, key, shadows = null) {
+  const crop = buildCropMesh(scene, cropId, progress, key, shadows);
+  crop.root.scaling.scaleInPlace(FARM_CONFIG.visuals.cropScale);
+  return crop;
+}
+
+function buildCropMesh(scene, cropId, progress, key, shadows = null) {
   // Bộ mô hình Chibi Play Together độc quyền thế hệ mới
   switch (cropId) {
     case 'carrot':

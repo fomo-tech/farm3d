@@ -1,9 +1,6 @@
-export const CROPS = Object.freeze({
-  carrot: { id: 'carrot', name: 'Cà rốt', icon: 'carrot', seedCost: 5, sellPrice: 12, growMs: 60_000, level: 1, color: '#ed8b35' },
-  wheat: { id: 'wheat', name: 'Lúa mì', icon: 'wheat', seedCost: 12, sellPrice: 30, growMs: 180_000, level: 2, color: '#d9ad45' },
-  tomato: { id: 'tomato', name: 'Cà chua', icon: 'tomato', seedCost: 20, sellPrice: 52, growMs: 300_000, level: 3, color: '#d94c3d' },
-  strawberry: { id: 'strawberry', name: 'Dâu tây', icon: 'strawberry', seedCost: 45, sellPrice: 120, growMs: 600_000, level: 5, color: '#ca3858' },
-});
+import { FARM_CONFIG, farmBarnCapacity } from '../../../shared/farmConfig.js';
+import { normalizeFishingState } from '../../../shared/fishingConfig.js';
+export { CROPS } from '../../../shared/farmConfig.js';
 
 export const ONBOARDING_STEPS = Object.freeze({
   CHARACTER_CREATION: 0,
@@ -27,21 +24,20 @@ export const RECIPES = Object.freeze([
   { id: 'jam', name: 'Mứt dâu', icon: 'jam', inputs: { strawberry: 2 }, coins: 55, xp: 30 },
 ]);
 
-export const EXPANSIONS = Object.freeze([
-  { plots: 24, cost: 500, level: 3 },
-  { plots: 36, cost: 1400, level: 6 },
-  { plots: 48, cost: 3200, level: 9 },
-]);
+export const EXPANSIONS = FARM_CONFIG.expansions;
 
 const initial = {
   version: 2, coins: 180, gems: 15, xp: 0, level: 1,
   selectedCrop: 'carrot', freeSeeds: 0,
-  inventory: { carrot: 0, wheat: 0, tomato: 0, strawberry: 0, egg: 0, milk: 0, flour: 0, cheese: 0, jam: 0 },
+  inventory: {
+    carrot: 0, wheat: 0, tomato: 0, strawberry: 0, pumpkin: 0, melon: 0, turnip: 0,
+    egg: 0, duckEgg: 0, milk: 0, wool: 0, flour: 0, cheese: 0, jam: 0,
+  },
   stats: { planted: 0, watered: 0, harvested: 0, orders: 0, animalsFed: 0, crafted: 0 },
   claimedQuests: [], completedOrders: [], unlockedPlots: 0, barnLevel: 0, toolLevel: 1,
   outfit: 'starter', ownedOutfits: ['starter'], vehicle: 'walk', ownedVehicles: ['walk'],
   homeTier: 0, ownedHomes: [], casinoPlays: 0,
-  fishing: { ownedRods: [], equippedRod: null, bait: { bait_worm: 0, bait_lure: 0 }, equippedBait: null, fish: {}, pending: null },
+  fishing: normalizeFishingState(),
   onboarding: {
     characterCreated: false,
     step: 0,
@@ -92,4 +88,4 @@ export function inventoryCount(progress) {
   return Object.values(progress.inventory).reduce((sum, value) => sum + value, 0);
 }
 
-export function barnCapacity(progress) { return 20 + (progress.barnLevel - 1) * 20; }
+export function barnCapacity(progress) { return farmBarnCapacity(progress.barnLevel); }

@@ -64,7 +64,7 @@ function createStallSign(scene, text, colorHex, parent, width = 3.6, height = 0.
 /**
  * Tạo khung quầy hàng nông thôn với mái bạt sọc uốn cong
  */
-function createBaseStall(scene, name, stripeColorHex, parent, shadows) {
+function* createBaseStallSteps(scene, name, stripeColorHex, parent, shadows) {
   const stallRoot = new TransformNode(name, scene);
   stallRoot.parent = parent;
 
@@ -85,6 +85,7 @@ function createBaseStall(scene, name, stripeColorHex, parent, shadows) {
   frontShelf.position.set(0, 0.65, 1.15);
   frontShelf.material = matWood;
   frontShelf.parent = stallRoot;
+  yield;
 
   // 2. 4 Cột gỗ chống mái bạt
   const postCoords = [
@@ -98,6 +99,7 @@ function createBaseStall(scene, name, stripeColorHex, parent, shadows) {
     post.parent = stallRoot;
     shadows?.addShadowCaster(post);
   });
+  yield;
 
   // 3. Mái bạt sọc lượn sóng (Striped Awning Roof)
   const awningSlices = 7;
@@ -125,6 +127,7 @@ function createBaseStall(scene, name, stripeColorHex, parent, shadows) {
     valance.position.set(sx, 2.7, 1.5);
     valance.material = (i % 2 === 0) ? matStripe1 : matStripe2;
     valance.parent = stallRoot;
+    yield;
   }
 
   return { stallRoot, matWood };
@@ -133,11 +136,12 @@ function createBaseStall(scene, name, stripeColorHex, parent, shadows) {
 /**
  * 1. Quầy Nông Sản Tươi Sống (Fresh Produce Stall)
  */
-function createProduceStall(scene, position, parent, shadows) {
-  const { stallRoot } = createBaseStall(scene, 'produce-stall', '#ef4444', parent, shadows);
+function* createProduceStallSteps(scene, position, parent, shadows) {
+  const { stallRoot } = yield* createBaseStallSteps(scene, 'produce-stall', '#ef4444', parent, shadows);
   stallRoot.position.set(position.x, position.y, position.z);
 
   createStallSign(scene, '🍎 NÔNG SẢN TƯƠI SẠCH 🥕', '#ef4444', stallRoot, 3.8, 0.75, 3.4);
+  yield;
 
   // Thùng 1: Táo đỏ căng bóng
   const crateApple = createCrate(scene, -1.3, 0.85, 1.0, stallRoot, 0.1, 0.15);
@@ -148,6 +152,7 @@ function createProduceStall(scene, position, parent, shadows) {
       apple.position.set(-1.3 + ax, 1.1, 1.0 + az);
       apple.material = matApple;
       apple.parent = stallRoot;
+      yield;
     }
   }
 
@@ -166,6 +171,7 @@ function createProduceStall(scene, position, parent, shadows) {
     leaf.position.set(cx, 1.3, 0.85);
     leaf.material = matLeaf;
     leaf.parent = stallRoot;
+    yield;
   }
 
   // Thùng 3: Dưa hấu to sọc xanh tròn
@@ -208,11 +214,12 @@ function createProduceStall(scene, position, parent, shadows) {
 /**
  * 2. Quầy Hoa Tươi & Hạt Giống Thần Kỳ (Flora & Seeds Stall)
  */
-function createFlowerStall(scene, position, parent, shadows) {
-  const { stallRoot } = createBaseStall(scene, 'flower-stall', '#eab308', parent, shadows);
+function* createFlowerStallSteps(scene, position, parent, shadows) {
+  const { stallRoot } = yield* createBaseStallSteps(scene, 'flower-stall', '#eab308', parent, shadows);
   stallRoot.position.set(position.x, position.y, position.z);
 
   createStallSign(scene, '🌸 HOA TƯƠI & HẠT GIỐNG 🌻', '#eab308', stallRoot, 3.8, 0.75, 3.4);
+  yield;
 
   const matPot = makeMat(scene, 'mat-flower-pot', '#c2410c');
   const flowerColors = ['#ec4899', '#8b5cf6', '#3b82f6', '#f59e0b'];
@@ -257,11 +264,12 @@ function createFlowerStall(scene, position, parent, shadows) {
 /**
  * 3. Quầy Bánh Mì Lò Củi & Bơ Sữa (Artisan Bakery Stall)
  */
-function createBakeryStall(scene, position, parent, shadows) {
-  const { stallRoot } = createBaseStall(scene, 'bakery-stall', '#d97706', parent, shadows);
+function* createBakeryStallSteps(scene, position, parent, shadows) {
+  const { stallRoot } = yield* createBaseStallSteps(scene, 'bakery-stall', '#d97706', parent, shadows);
   stallRoot.position.set(position.x, position.y, position.z);
 
   createStallSign(scene, '🥖 BÁNH MÌ & BƠ SỮA 🧀', '#d97706', stallRoot, 3.8, 0.75, 3.4);
+  yield;
 
   const matBread = makeMat(scene, 'mat-bread-crust', '#b45309');
   const matCheese = makeMat(scene, 'mat-cheese-yellow', '#fde047', '#eab308');
@@ -308,15 +316,17 @@ function createBakeryStall(scene, position, parent, shadows) {
 /**
  * 4. Quán Trà Sữa & Cà Phê Ngoài Trời (Sunny Cafe & Juice Bar)
  */
-function createCafeStall(scene, position, parent, shadows) {
-  const { stallRoot } = createBaseStall(scene, 'cafe-stall', '#10b981', parent, shadows);
+function* createCafeStallSteps(scene, position, parent, shadows) {
+  const { stallRoot } = yield* createBaseStallSteps(scene, 'cafe-stall', '#10b981', parent, shadows);
   stallRoot.position.set(position.x, position.y, position.z);
 
-  createStallSign(scene, '🍹 TRÀ SỮA & CÀ PHÊ ☕', '#10b981', stallRoot, 3.8, 0.75, 3.4);
+  yield 'boot: cafe signage';
+  createStallSign(scene, 'TRÀ SỮA & CÀ PHÊ', '#10b981', stallRoot, 3.8, 0.75, 3.4);
+  yield 'boot: cafe furniture';
 
   // Ly sinh tố nhiều màu trên bàn pha chế
   const drinkColors = ['#f43f5e', '#06b6d4', '#eab308'];
-  drinkColors.forEach((color, i) => {
+  for (const [i, color] of drinkColors.entries()) {
     const cup = MeshBuilder.CreateCylinder(`drink-cup-${i}`, { diameterTop: 0.16, diameterBottom: 0.12, height: 0.32 }, scene);
     cup.position.set(-0.6 + i * 0.45, 1.32, 0.9);
     cup.material = makeMat(scene, `drink-mat-${i}`, color, color);
@@ -328,7 +338,8 @@ function createCafeStall(scene, position, parent, shadows) {
     straw.rotation.z = 0.2;
     straw.material = makeMat(scene, `straw-mat-${i}`, '#ffffff');
     straw.parent = stallRoot;
-  });
+    yield;
+  }
 
   // Máy xay cà phê vintage
   const matEspresso = makeMat(scene, 'mat-espresso', '#334155', '#475569');
@@ -344,7 +355,7 @@ function createCafeStall(scene, position, parent, shadows) {
     { x: 5.5, z: 2.5, parasolColor: '#0ea5e9' },
   ];
 
-  cafeSeatingCoords.forEach((seat, idx) => {
+  for (const [idx, seat] of cafeSeatingCoords.entries()) {
     const seatRoot = new TransformNode(`cafe-seating-${idx}`, scene);
     seatRoot.parent = stallRoot;
     seatRoot.position.set(seat.x, 0, seat.z);
@@ -393,34 +404,55 @@ function createCafeStall(scene, position, parent, shadows) {
     canopy.material = makeMat(scene, `parasol-mat-${idx}`, seat.parasolColor);
     canopy.parent = seatRoot;
     shadows?.addShadowCaster(canopy);
-  });
+    yield;
+  }
 }
 
 /**
  * Factory chính tạo Chợ Phiên Nông Sản Thị Trấn Làng Gió
  */
 export function createFarmersMarket(scene, shadows, foliage, origin = { x: -92, z: 140 }) {
+  const steps = createFarmersMarketSteps(scene, shadows, foliage, origin);
+  let result;
+  do { result = steps.next(); } while (!result.done);
+  return result.value;
+}
+
+export function* createFarmersMarketSteps(scene, shadows, foliage, origin = { x: -92, z: 140 }) {
   const marketRoot = new TransformNode('farmers-market-root', scene);
   const at = (x, z) => ({ x: x + origin.x, y: 0, z: z + origin.z });
 
   // 1. Quầy Nông Sản Tươi tại góc Tây Bắc
-  createProduceStall(scene, at(-8, -6), marketRoot, shadows);
+  yield 'boot: produce stall';
+  yield* createProduceStallSteps(scene, at(-8, -6), marketRoot, shadows);
+  yield;
 
   // 2. Quầy Hoa Tươi & Hạt Giống tại góc Đông Bắc
-  createFlowerStall(scene, at(8, -6), marketRoot, shadows);
+  yield 'boot: flower stall';
+  yield* createFlowerStallSteps(scene, at(8, -6), marketRoot, shadows);
+  yield;
 
   // 3. Quầy Bánh Mì & Bơ Sữa tại góc Tây Nam
-  createBakeryStall(scene, at(-8, 6), marketRoot, shadows);
+  yield 'boot: bakery stall';
+  yield* createBakeryStallSteps(scene, at(-8, 6), marketRoot, shadows);
+  yield;
 
   // 4. Quán Trà Sữa & Cà Phê tại góc Đông Nam
-  createCafeStall(scene, at(8, 6), marketRoot, shadows);
+  yield 'boot: cafe stall';
+  yield* createCafeStallSteps(scene, at(8, 6), marketRoot, shadows);
+  yield;
 
   // 5. Cây cảnh & khóm hoa trang trí quảng trường chợ (bố trí nép sát các quầy hàng)
   if (foliage) {
+    yield 'boot: market landscaping';
     foliage.createHydrangeaBush(origin.x - 12, origin.z - 6, 1.1, '#10b981');
+    yield;
     foliage.createHydrangeaBush(origin.x + 12, origin.z - 6, 1.1, '#10b981');
+    yield;
     foliage.createHydrangeaBush(origin.x - 12, origin.z + 6, 1.1, '#10b981');
+    yield;
     foliage.createHydrangeaBush(origin.x + 12, origin.z + 6, 1.1, '#10b981');
+    yield;
     foliage.createFlowerPatch(origin.x, origin.z + 8, 8, 2.0);
   }
 

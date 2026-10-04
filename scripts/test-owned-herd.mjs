@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import { NullEngine } from '@babylonjs/core/Engines/nullEngine.js';
+import { Scene } from '@babylonjs/core/scene.js';
+import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
+import { OwnedHerd } from '../src/game/livestock/OwnedHerd.js';
+const engine=new NullEngine(); const scene=new Scene(engine); const parent=new TransformNode('pen',scene);
+const herd=new OwnedHerd(scene,parent);
+const animals=['chicken','duck','pig','cow','sheep'].map((species,id)=>({species,id:String(id)}));
+herd.sync(animals); assert.equal(herd.members.size,5); assert.equal(herd.pens.size,5);
+const count=scene.meshes.length; herd.sync(animals); assert.equal(scene.meshes.length,count);
+parent.setEnabled(false); scene.onBeforeRenderObservable.notifyObservers(scene); assert.equal(herd.time,0);
+parent.setEnabled(true); scene.onBeforeRenderObservable.notifyObservers(scene);
+herd.sync(animals.slice(0,3)); assert.equal(herd.members.size,3);
+herd.dispose(); assert.equal(scene.meshes.length,0); scene.dispose(); engine.dispose();
+console.log('PASS owned herd: five species, stable sync, streamed visibility, removal/disposal');

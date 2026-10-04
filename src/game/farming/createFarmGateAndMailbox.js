@@ -5,6 +5,7 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js'
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
 import { FARM_LOT_SPEC } from '../../../shared/farmLayout.js';
+import { FARM_CONFIG } from '../../../shared/farmConfig.js';
 
 /**
  * Tạo Cổng Nông Trại 3D Tinh Xảo & Biển Tên Sắc Nét và Thùng Thư Giao Lưu Play Together
@@ -36,6 +37,40 @@ export function createFarmGateAndSign(scene, farmConfig, shadows = null, onMailb
     cap.material = entranceMat;
     cap.parent = root;
   });
+  const leaves = [-1, 1].map((side, index) => {
+    const hinge = new TransformNode(`farm-gate-hinge-${farmConfig.id}-${index}`, scene);
+    hinge.position.set(side * FARM_LOT_SPEC.fenceGap / 2, 0, -1);
+    hinge.parent = root;
+    const width = FARM_LOT_SPEC.fenceGap / 2;
+    for (const y of [.35, .85]) {
+      const rail = MeshBuilder.CreateBox(`farm-gate-rail-${farmConfig.id}-${index}-${y}`, { width, height: .12, depth: .14 }, scene);
+      rail.position.set(-side * width / 2, y, 0); rail.parent = hinge; rail.material = entranceMat;
+      rail.metadata = { type: 'farm-gate', farmId: farmConfig.id };
+    }
+    for (let n = 0; n < 7; n++) {
+      const picket = MeshBuilder.CreateBox(`farm-gate-picket-${farmConfig.id}-${index}-${n}`, { width: .11, height: .9, depth: .13 }, scene);
+      picket.position.set(-side * (.18 + n * .39), .55, 0); picket.parent = hinge; picket.material = entranceMat;
+      picket.metadata = { type: 'farm-gate', farmId: farmConfig.id };
+    }
+    return { hinge, side };
+  });
+  let gateAnimation = null, gateObserver = null, gateState;
+  function setOpen(open, owned = true, immediate = false) {
+    leaves.forEach(({ hinge }) => hinge.setEnabled(owned));
+    if (gateState === open && !immediate) return;
+    gateState = open;
+    const target = open ? Math.PI / 2 : 0;
+    // Farm interior is +Z: left leaf rotates -90°, right leaf +90°.
+    if (immediate) { gateAnimation = null; if (gateObserver) { scene.onBeforeRenderObservable.remove(gateObserver); gateObserver = null; } leaves.forEach(({ hinge, side }) => { hinge.rotation.y = side * target; }); return; }
+    gateAnimation = { start: performance.now(), from: leaves.map(({ hinge }) => hinge.rotation.y), target };
+    if (!gateObserver) gateObserver = scene.onBeforeRenderObservable.add(() => {
+      if (!gateAnimation) return;
+      const t = Math.min(1, (performance.now() - gateAnimation.start) / FARM_CONFIG.security.gate.animationMs), eased = t * t * (3 - 2 * t);
+      leaves.forEach(({ hinge, side }, i) => { hinge.rotation.y = gateAnimation.from[i] + (side * gateAnimation.target - gateAnimation.from[i]) * eased; });
+      if (t === 1) { gateAnimation = null; scene.onBeforeRenderObservable.remove(gateObserver); gateObserver = null; }
+    });
+  }
+  setOpen(true, false, true);
 
   // One readable sign sits on the left fence wing; the gate opening stays clear.
   const signBoard = MeshBuilder.CreateBox(`gate-sign-board-${farmConfig.id}`, {
@@ -184,10 +219,12 @@ export function createFarmGateAndSign(scene, farmConfig, shadows = null, onMailb
   return {
     root,
     mailbox: mailboxRoot,
+    setOpen,
     updateSign(state) {
       drawSign(state);
     },
     dispose() {
+      if (gateObserver) scene.onBeforeRenderObservable.remove(gateObserver);
       textTex.dispose();
       signMat.dispose();
       root.dispose();

@@ -122,9 +122,9 @@ export class FarmChunk {
       ambientScale: 0.65,
     });
 
-    const fenceMat = createToyMaterial(scene, isOwner ? 'mat-toy-fence-owner' : 'mat-toy-fence-neighbor', isOwner ? PLAY_TOGETHER_PALETTE.farm.fenceWhite : '#f1f5f9', {
-      specularPower: 80,
-      specularLevel: 0.05,
+    const fenceMat = createToyMaterial(scene, isOwner ? 'mat-toy-fence-owner' : 'mat-toy-fence-neighbor', isOwner ? PLAY_TOGETHER_PALETTE.farm.fenceWhite : '#e5dfd5', {
+      specularPower: 40,
+      specularLevel: 0.08,
       ambientScale: 0.58,
     });
 
@@ -133,21 +133,12 @@ export class FarmChunk {
       specularPower: 32,
     });
 
-    const planterMat = createToyMaterial(scene, 'mat-toy-planter', '#b7794f', {
-      specularPower: 24,
-      ambientScale: 0.58,
-    });
-
-    const flowerMat = createToyMaterial(scene, 'mat-toy-planter-flower', isOwner ? '#f472b6' : '#a78bfa', {
-      emissiveHex: isOwner ? '#fb7185' : '#8b5cf6',
-      specularPower: 28,
-    });
 
     const leafBright = createToyMaterial(scene, 'mat-tree-leaf-bright', ART.leafLight, { ambientScale: 0.30, specularLevel: 0.03 });
     const leafMid = createToyMaterial(scene, 'mat-tree-leaf-mid', ART.leaf, { ambientScale: 0.30, specularLevel: 0.03 });
     const appleRed = createToyMaterial(scene, 'mat-tree-apple-red', '#D95660', { specularLevel: 0.03 });
 
-    return { soilMat, grassMat, borderMat, stonePathMat, fenceMat, lanternMat, planterMat, flowerMat, leafBright, leafMid, appleRed };
+    return { soilMat, grassMat, borderMat, stonePathMat, fenceMat, lanternMat, leafBright, leafMid, appleRed };
   }
 
   _buildHLOD() {
@@ -278,22 +269,6 @@ export class FarmChunk {
       stone.parent = this.detailRoot;
     });
 
-    [-7.2, 7.2].forEach((x, index) => {
-      const planter = MeshBuilder.CreateCylinder(`detail-planter-${this.farmId}-${index}`, {
-        diameter: 1.55, height: 0.24, tessellation: 12,
-      }, scene);
-      planter.position.set(x, 0.22, -7.2);
-      planter.material = this.materials.planterMat;
-      planter.parent = this.detailRoot;
-
-      const flower = MeshBuilder.CreateSphere(`detail-planter-flower-${this.farmId}-${index}`, {
-        diameter: 0.76, segments: 10,
-      }, scene);
-      flower.scaling.y = 0.72;
-      flower.position.set(x, 0.75, -7.2);
-      flower.material = this.materials.flowerMat;
-      flower.parent = this.detailRoot;
-    });
 
     const borderGirth = 0.24;
     const borderHeight = 0.18;

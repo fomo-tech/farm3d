@@ -80,7 +80,7 @@ console.log('\n2. Testing Road Intersections vs Bridge Infrastructure...');
 const highwayCrossings = [
   { name: 'Highway -234', z: -234, expectedBridge: 'bridge-highway-234' },
   { name: 'Highway 86', z: 86, expectedBridge: 'bridge-highway-86' },
-  { name: 'Highway 406', z: 406, expectedBridge: 'bridge-highway-406' },
+  { name: 'Coastal highway 310', z: 310, expectedBridge: 'bridge-highway-406' },
 ];
 
 highwayCrossings.forEach(hc => {

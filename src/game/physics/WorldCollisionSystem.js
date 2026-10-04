@@ -6,7 +6,9 @@
  */
 
 import { WORLD_LAYOUT } from '../world/worldLayout.js';
+import { BEACH_CONFIG, beachDeepWaterAt } from '../../../shared/beachConfig.js';
 import { VENUE_LAYOUT } from '../../../shared/venueLayout.js';
+import { farmBoundaryBlocked } from '../../../shared/farmSecurity.js';
 
 export class WorldCollisionSystem {
   constructor() {
@@ -15,6 +17,7 @@ export class WorldCollisionSystem {
     this.venueWalls = [];
     this.interiorBoxes = new Map();
     this.farmColliders = [];
+    this.farmGateStates = new Map();
     this.playerRadius = 0.45; // meters
 
     this.initStaticColliders();
@@ -33,12 +36,14 @@ export class WorldCollisionSystem {
           cos: Math.cos(yaw), sin: Math.sin(yaw), halfWidth, halfDepth,
         });
       };
-      // Body meshes are 16 x 12. The facade has a 3.6m central door.
-      addWall('back', 0, -6, 8, 0.3);
-      addWall('left', -8, 0, 0.3, 6);
-      addWall('right', 8, 0, 0.3, 6);
-      addWall('front-left', -4.9, 6, 3.1, 0.3);
-      addWall('front-right', 4.9, 6, 3.1, 0.3);
+      // Body meshes are 16 x 12. Solid building body + front entrance alcove.
+      addWall('body-core', 0, -0.6, 7.8, 5.4);
+      addWall('front-left', -4.9, 5.8, 3.1, 0.4);
+      addWall('front-right', 4.9, 5.8, 3.1, 0.4);
+      addWall('door-stop', 0, 4.6, 2.0, 0.3);
+      addWall('left', -7.8, 0, 0.4, 6);
+      addWall('right', 7.8, 0, 0.4, 6);
+      addWall('back', 0, -5.8, 8, 0.4);
 
       const room = venue.interior;
       const box = (part, lx, lz, halfWidth, halfDepth) => ({
@@ -48,7 +53,7 @@ export class WorldCollisionSystem {
       });
       const obstacles = [
         box('back-wall', 0, 9, 12, 0.2),
-        box('front-wall', 0, -18, 12, 0.2),
+        box('front-wall', 0, -17.8, 12, 0.2),
         box('left-wall', -12, -4, 0.2, 14),
         box('right-wall', 12, -4, 0.2, 14),
         box('counter', 0, 4.8, 5, 1.2),
@@ -57,14 +62,30 @@ export class WorldCollisionSystem {
         box('display-left', -4.5, -0.2, kind === 'casino' ? 1.5 : 1.2, kind === 'casino' ? 1.5 : 0.65),
         box('display-right', 4.5, -0.2, kind === 'casino' ? 1.5 : 1.2, kind === 'casino' ? 1.5 : 0.65),
       ];
+      if (kind === 'fashion') {
+        obstacles.push(
+          box('fashion-sofa', 6.0, -8.5, 1.8, 1.8),
+          box('fashion-booth-0', -8.5, -1.5, 1.6, 1.5),
+          box('fashion-booth-1', -8.5, 2.5, 1.6, 1.5),
+          box('fashion-mirror', 7.5, 8.4, 2.0, 0.6)
+        );
+      }
       this.interiorBoxes.set(kind, obstacles);
     }
+  }
+  setFarmGate(farmId, open, owned = true) {
+    if (owned) this.farmGateStates.set(farmId, open);
+    else this.farmGateStates.delete(farmId);
   }
 
   /**
    * Initializes static landmark and municipal building colliders.
    */
   initStaticColliders() {
+    // 0. Đài phun nước trung tâm (Central Fountain) tại (0, 0)
+    // Đường kính hồ 18m, vành đá torus dày 0.7m => bán kính r = 9.35m
+    this.addCircle('plaza-central-fountain', 0, 0, 9.35);
+
     // Four low flower islands in the town plaza; keep the cardinal walkways open.
     [[-14, -14], [14, -14], [-14, 14], [14, 14]].forEach(([x, z], index) => {
       this.addCircle(`plaza-flowerbed-${index}`, x, z, 2.1);
@@ -79,9 +100,16 @@ export class WorldCollisionSystem {
     // 3. Chuồng Ngựa Đỏ (Classic Red Barn) tại (42, 62)
     this.addBox('classic-red-barn', 35.5, 48.5, 56.5, 67.5);
 
-    // 4. Tiệm Tạp Hóa Ven Đường & Trạm Giao Hàng tại (-9.8, 58) và (9.8, 58)
-    this.addBox('roadside-shop', -12.0, -7.6, 56.2, 59.8);
-    this.addBox('delivery-station', 7.6, 12.0, 55.2, 60.8);
+    // 4. Tiệm Tạp Hóa Ven Đường & Trạm Giao Hàng tại (-11.5, 60) và (11.5, 60)
+    this.addBox('roadside-shop', -14.2, -8.8, 57.5, 62.5);
+    this.addBox('delivery-station', 8.8, 14.2, 57.5, 62.5);
+
+    // 4b. Trạm dừng xe buýt thông minh ngoại vi (Smart Bus Shelters)
+    this.addBox('bus-shelter-south', 7.5, 11.8, 78.0, 82.0);
+    this.addBox('bus-shelter-north', -11.5, -7.2, -70.0, -66.0);
+
+    // 4c. Kiosk nghỉ chân của Bác Trưởng Làng Ba (Village Elder)
+    this.addBox('village-elder-kiosk', -8.8, -6.0, 75.0, 78.2);
 
     // 5. Cối Xay Gió Hà Lan (Windmill) tại (-92, 108)
     this.addCircle('windmill-base', -92, 108, 5.0);
@@ -112,8 +140,8 @@ export class WorldCollisionSystem {
     this.addBox('steamboat-port-building', -44.0, -32.0, 353.5, 362.5);
 
     // 13. Công viên Glamping Bãi Biển tại (38, 345) - 2 chóp lều canvas
-    this.addCircle('glamping-tent-1', 14, 345, 3.0);
-    this.addCircle('glamping-tent-2', 62, 345, 3.0);
+    for (const item of BEACH_CONFIG.colliders) this.addBox(item.id, item.minX, item.maxX, item.minZ, item.maxZ);
+    BEACH_CONFIG.palms.forEach(([x,z],i)=>this.addCircle(`beach-palm-${i}`,x,z,.22));
 
     // 14. Vùng nước sâu Hồ Pha Lê (tâm 165, 2 - bán kính 22m, chừa lối bến câu cá x: 132..138)
     this.addCircle('crystal-lake-deep', 168, 2, 19.5);
@@ -285,7 +313,14 @@ export class WorldCollisionSystem {
    * @returns {boolean} True if point collides with any solid obstacle.
    */
   isColliding(cx, cz, r = this.playerRadius, venue = null) {
+    if(!venue && beachDeepWaterAt(cx,cz)) return true;
     if (venue && this.interiorBoxes.has(venue)) {
+      const room = VENUE_LAYOUT[venue]?.interior;
+      if (room) {
+        if (cx - r < room.x - 11.5 || cx + r > room.x + 11.5 || cz - r < room.z - 17.5 || cz + r > room.z + 8.5) {
+          return true;
+        }
+      }
       return this.interiorBoxes.get(venue).some(box => this.circleHitsBox(cx, cz, r, box));
     }
     const searchRadiusSq = 35 * 35; // 35m search window
@@ -320,6 +355,18 @@ export class WorldCollisionSystem {
       const combinedR = r + c.radius;
       if (dsq < combinedR * combinedR) {
         return true;
+      }
+    }
+
+    // 2b. Check mountain base colliders
+    if (this.mountainColliders) {
+      for (let i = 0; i < this.mountainColliders.length; i++) {
+        const m = this.mountainColliders[i];
+        const dsq = (cx - m.x) * (cx - m.x) + (cz - m.z) * (cz - m.z);
+        const combinedR = r + m.radius;
+        if (dsq < combinedR * combinedR) {
+          return true;
+        }
       }
     }
 
@@ -380,6 +427,9 @@ export class WorldCollisionSystem {
    * @returns {{ x: number, z: number, collided: boolean }} Resolved safe position
    */
   resolveMovement(curX, curZ, dx, dz, venue = null) {
+    if (!venue) for (const [id, open] of this.farmGateStates) {
+      if (farmBoundaryBlocked(id, open, { x: curX, z: curZ }, { x: curX + dx, z: curZ + dz })) return { x: curX, z: curZ, collided: true };
+    }
     if (![curX, curZ, dx, dz].every(Number.isFinite)) {
       throw new Error(`Collision: tọa độ không hợp lệ (${curX}, ${curZ}, ${dx}, ${dz})`);
     }

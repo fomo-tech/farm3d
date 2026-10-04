@@ -49,11 +49,13 @@ export class FrameBudgetScheduler {
 
       try {
         const stepStart = performance.now();
-        windowSafeDebug()?.stage(`stream job: ${current.id || 'anonymous'}`);
+        const stepLabel = current.stage || current.id || 'anonymous';
+        windowSafeDebug()?.stage(`stream job: ${stepLabel}`);
         if (typeof current.task.next === 'function') {
           // Generator or iterator step
           const result = current.task.next();
           finished = Boolean(result.done);
+          if (typeof result.value === 'string') current.stage = result.value;
         } else if (typeof current.task === 'function') {
           const result = current.task();
           finished = result !== false;
@@ -63,9 +65,10 @@ export class FrameBudgetScheduler {
         const stepMs = performance.now() - stepStart;
         this.stats.steps++;
         this.stats.maxStepMs = Math.max(this.stats.maxStepMs, stepMs);
+        if (stepMs > (this.stats.slowestStep?.ms || 0)) this.stats.slowestStep = { label: stepLabel, ms: stepMs };
         if (stepMs > 50) {
           this.stats.overruns++;
-          windowSafeDebug()?.report(`${current.id}: ${stepMs.toFixed(1)}ms`, 'STREAM JOB OVERRUN');
+          windowSafeDebug()?.report(`${stepLabel}: ${stepMs.toFixed(1)}ms`, 'STREAM JOB OVERRUN');
         }
       } catch (err) {
         console.warn('[FrameBudgetScheduler] Lỗi khi xử lý tác vụ streaming:', err);

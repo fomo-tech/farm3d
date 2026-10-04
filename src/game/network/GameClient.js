@@ -7,11 +7,13 @@ import { createRuntimeId } from '../runtime/BrowserRuntime.js';
 export class GameClient {
   constructor(options = {}) {
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    this.url = options.url || `${protocol}://${window.location.hostname}:8787`;
+    this.url = options.url || import.meta.env?.VITE_MULTIPLAYER_URL || `${protocol}://${window.location.hostname}:8787`;
     this.onState = options.onState || (() => {});
     this.onStatus = options.onStatus || (() => {});
     this.onFarmSync = options.onFarmSync || (() => {});
     this.onFarmUpdate = options.onFarmUpdate || (() => {});
+    this.onFarmGate = options.onFarmGate || (() => {});
+    this.onTheftPending = options.onTheftPending || (() => {});
     this.onFarmScope = options.onFarmScope || (() => {});
     this.onMailboxNotice = options.onMailboxNotice || (() => {});
     this.onEmote = options.onEmote || (() => {});
@@ -107,6 +109,12 @@ export class GameClient {
         } else if (message.type === 'farm_update') {
           this.acknowledge(message.requestId);
           this.onFarmUpdate(message);
+        } else if (message.type === 'farm_gate') {
+          this.acknowledge(message.requestId);
+          this.onFarmGate(message);
+        } else if (message.type === 'theft_pending') {
+          this.acknowledge(message.requestId);
+          this.onTheftPending(message);
         } else if (message.type === 'mailbox_notice') {
           this.onMailboxNotice(message);
         } else if (message.type === 'player_emote') {

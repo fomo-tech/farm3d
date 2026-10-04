@@ -15,13 +15,16 @@ function mat(scene, name, hex, emissiveHex = null) {
 
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 import { getWorldChunkStreamer } from './WorldChunkStreamer.js';
+import { isPointInLakeOrRiver } from './WaterSafetyZone.js';
 import {
   createMarshmallowTree,
   createCandyFlowerBush,
   createCandyPebbleRock,
 } from './createPlayTogetherProps.js';
 import { ROAD_SAFETY_CONFIG, isRoadResourceBlocked, recordBlockedRoadResource } from './RoadSafetyZone.js';
+import { beachResourceWaterAt as beachWaterAt } from '../../../shared/beachConfig.js';
 import { LANDSCAPE_ART as ART } from './LandscapeArt.js';
+import { createLampHaloOnly, createGroundLightPoolOnly } from './worldDesignSystem.js';
 
 function harmonizeGreenTree({ childMeshes }) {
   const updated = new Set();
@@ -65,20 +68,24 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
     ironBlack: mat(scene, 'lamp-iron', '#334155'),
   };
 
-  return {
+  const factory = {
     createMarshmallowTree(x, z, scale = 1.0, colorVariant = 'mint') {
+      if (isPointInLakeOrRiver(x, z, 2.0)) return null;
       return createMarshmallowTree(scene, x, z, { scale: scale * 1.5, colorVariant, shadows });
     },
 
     createCandyFlowerBush(x, z, scale = 1.0) {
+      if (isPointInLakeOrRiver(x, z, 2.0)) return null;
       return createCandyFlowerBush(scene, x, z, { scale: scale * 1.4, shadows });
     },
 
     createCandyPebbleRock(x, z, scale = 1.0, colorHex = '#94a3b8') {
+      if (isPointInLakeOrRiver(x, z, 2.0)) return null;
       return createCandyPebbleRock(scene, x, z, { scale: scale * 1.4, colorHex, shadows });
     },
 
     createCloudTree(x, z, scale = 1.0, withShadows = true) {
+      if (isPointInLakeOrRiver(x, z, 2.0)) return null;
       if (instancing) return instancing.spawnOak(x, z, scale * 1.1, withShadows);
       const treeModel = Math.random() > 0.5 ? MODEL_PATHS.trees.oak : MODEL_PATHS.trees.detailed;
       const s = scale * 4.2;
@@ -93,6 +100,7 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
     },
 
     createSakuraTree(x, z, scale = 1.0, withShadows = true) {
+      if (isPointInLakeOrRiver(x, z, 2.0)) return null;
       if (instancing) return instancing.spawnSakura(x, z, scale * 1.05, withShadows);
       const s = scale * 3.8;
       return spawnModelSync(scene, MODEL_PATHS.trees.oak, {
@@ -109,6 +117,7 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
      * 1. Cây thông núi cao nguyên (Alpine Pine) - Vùng Hồ Pha Lê
      */
     createAlpinePine(x, z, scale = 1.0, withShadows = true) {
+      if (isPointInLakeOrRiver(x, z, 2.0)) return null;
       if (instancing) return instancing.spawnPine(x, z, scale * 1.1, withShadows);
       const pineModel = Math.random() > 0.5 ? MODEL_PATHS.trees.pine : MODEL_PATHS.trees.pineRound;
       const s = scale * 4.6;
@@ -122,6 +131,7 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
     },
 
     createTropicalPalm(x, z, scale = 1.0, tiltAngle = 0.22, withShadows = true) {
+      if (isPointInLakeOrRiver(x, z, 2.0)) return null;
       if (instancing) return instancing.spawnPalm(x, z, scale * 1.05, withShadows);
       const palmModel = Math.random() > 0.5 ? MODEL_PATHS.trees.palmBend : MODEL_PATHS.trees.palm;
       const s = scale * 4.0;
@@ -135,6 +145,7 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
     },
 
     createGoldenMaple(x, z, scale = 1.0, withShadows = true) {
+      if (isPointInLakeOrRiver(x, z, 2.0)) return null;
       if (instancing) return instancing.spawnMaple(x, z, scale * 1.05, withShadows);
       const mapleModel = Math.random() > 0.5 ? MODEL_PATHS.trees.fall : MODEL_PATHS.trees.oakFall;
       const s = scale * 4.0;
@@ -148,16 +159,19 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
     },
 
     createWhiteBirch(x, z, scale = 1.0, withShadows = true) {
+      if (isPointInLakeOrRiver(x, z, 2.0)) return null;
       if (instancing) return instancing.spawnBirch(x, z, scale * 1.05, withShadows);
       return null;
     },
 
     createFruitTree(x, z, scale = 1.0, withShadows = true) {
+      if (isPointInLakeOrRiver(x, z, 2.0)) return null;
       if (instancing) return instancing.spawnFruit(x, z, scale * 1.05, withShadows);
       return null;
     },
 
     createHydrangeaBush(x, z, colorHex = '#a78bfa', scale = 1.0) {
+      if (isPointInLakeOrRiver(x, z, 1.5)) return null;
       if (typeof colorHex === 'number') {
         [colorHex, scale] = [scale, colorHex];
       }
@@ -173,6 +187,7 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
     },
 
     createRusticBench(x, z, rotationY = 0) {
+      if (isPointInLakeOrRiver(x, z, 1.5)) return null;
       if (ROAD_SAFETY_CONFIG.blockRoadResources && isRoadResourceBlocked(x, z, 0.8)) {
         recordBlockedRoadResource('rustic-bench', x, z);
         const dummy = new TransformNode('blocked-rustic-bench', scene);
@@ -207,15 +222,20 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
     },
 
     createVintageStreetLamp(x, z) {
-      return spawnModelSync(scene, MODEL_PATHS.town.lantern, {
+      if (isPointInLakeOrRiver(x, z, 1.5)) return null;
+      const lamp = spawnModelSync(scene, MODEL_PATHS.town.lantern, {
         position: new Vector3(x, 0, z),
         scaling: new Vector3(1.3, 1.3, 1.3),
         shadows,
         name: 'vintage-street-lamp',
       });
+      createLampHaloOnly(scene, lamp, new Vector3(0, 3.8, 0), 0.85);
+      createGroundLightPoolOnly(scene, lamp, new Vector3(0, 0.085, 0), 2.6);
+      return lamp;
     },
 
     createFlowerPatch(x, z, count = 9, radius = 2.4) {
+      if (isPointInLakeOrRiver(x, z, 1.5)) return null;
       if (ROAD_SAFETY_CONFIG.blockRoadResources && isRoadResourceBlocked(x, z, 0.8)) {
         recordBlockedRoadResource('flower-patch', x, z);
         const dummy = new TransformNode('blocked-flower-patch', scene);
@@ -226,6 +246,20 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
 
       const root = new TransformNode('flower-patch', scene);
       root.position.set(x, 0, z);
+      // Shared-material low-poly flower cluster remains while GLBs stream.
+      const lodRoot = new TransformNode('flower-patch-lod', scene);
+      lodRoot.parent = root;
+      for (let i = 0; i < 3; i++) {
+        const bloom = MeshBuilder.CreateSphere(`flower-patch-lod-${i}`, {
+          diameter: 0.45, segments: 4,
+        }, scene);
+        bloom.parent = lodRoot;
+        bloom.position.set(Math.cos(i * 2.1) * radius * 0.4, 0.25,
+          Math.sin(i * 2.1) * radius * 0.4);
+        bloom.scaling.y = 0.5;
+        bloom.material = materials.cloth;
+        bloom.isPickable = false;
+      }
 
       const flowerModels = [
         MODEL_PATHS.foliage.flowerRed,
@@ -234,7 +268,13 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
       ];
 
       let stems = [];
+      const clearStems = () => {
+        const old = stems;
+        stems = [];
+        old.forEach(node => { if (!node.isDisposed()) node.dispose(false, false); });
+      };
       const load = () => {
+      clearStems();
       const jobs = [];
       for (let i = 0; i < count; i++) {
         const angle = (i / count) * Math.PI * 2 + (i % 3) * 0.35;
@@ -259,14 +299,17 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
         if (flw.metadata?.blockedOnRoad) resolve(false);
         }));
       }
-      return Promise.all(jobs).then(() => true);
+      return Promise.all(jobs).then(results => {
+        const ready = results.every(Boolean);
+        if (!ready) clearStems();
+        return ready;
+      });
       };
       const unregister = getWorldChunkStreamer(scene).register(`flower-patch-${root.uniqueId}`, x, z, {
         detailDistance: 80, keepDistance: 112, load,
-        unload: () => { const old = stems; stems = []; old.forEach(node => { if (!node.isDisposed()) node.dispose(false, false); }); },
-        // Tiny flowers are distance-culled at far LOD; meadow texture supplies
-        // distant flower specks. Original GLBs remain cached, never deleted.
-        showLod: () => {}, hideLod: () => {},
+        unload: clearStems,
+        showLod: () => lodRoot.setEnabled(true),
+        hideLod: () => lodRoot.setEnabled(false),
       });
       root.onDisposeObservable.addOnce(unregister);
       return root;
@@ -416,4 +459,7 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
       return root;
     },
   };
+  // All factory methods take world x/z first, including procedural decorations.
+  return Object.fromEntries(Object.entries(factory).map(([name,build])=>[name,(x,z,...args)=>
+    beachWaterAt(x,z,3) ? null : build(x,z,...args)]));
 }

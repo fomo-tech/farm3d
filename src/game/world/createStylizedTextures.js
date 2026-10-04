@@ -24,7 +24,7 @@ export function createMeadowTexture(scene, size = 1024) {
   ctx.fillRect(0, 0, size, size);
 
   // 2. Các vệt loang màu nước tự nhiên (Watercolor organic patches)
-  const patchColors = ['#91C94B', '#AACF63', '#78B83D', '#B8D878'];
+  const patchColors = ['#7EB644', '#94CB58', '#6FA638', '#A2D466'];
   for (let i = 0; i < 54; i++) {
     const px = ((i * 137) % size);
     const py = ((i * 241) % size);

@@ -72,7 +72,7 @@ export function createToyMaterial(scene, name, hexColor, options = {}) {
   const cacheKey = JSON.stringify([name, hexColor, options.ambientScale ?? 0.42,
     options.specularLevel ?? 0.12, options.specularPower ?? 64,
     options.emissiveHex ?? null, options.emissiveScale ?? 0,
-    options.alpha ?? 1, options.backFaceCulling ?? true]);
+    options.alpha ?? 1, options.backFaceCulling ?? true, options.zOffset ?? 0]);
   if (cache.has(cacheKey)) return cache.get(cacheKey);
   // Never mutate another mesh's material merely because its display name matches.
   const mat = new StandardMaterial(name, scene);
@@ -104,6 +104,10 @@ export function createToyMaterial(scene, name, hexColor, options = {}) {
 
   if (options.backFaceCulling !== undefined) {
     mat.backFaceCulling = options.backFaceCulling;
+  }
+
+  if (options.zOffset !== undefined) {
+    mat.zOffset = options.zOffset;
   }
 
   cache.set(cacheKey, mat);

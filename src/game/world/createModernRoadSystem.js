@@ -3,11 +3,14 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
-import { WORLD_PALETTE } from './worldDesignSystem.js';
+import { WORLD_PALETTE, createLampGlowAndPool } from './worldDesignSystem.js';
 
 function freezeSubtree(node) {
   if (!node) return;
-  if (typeof node.freezeWorldMatrix === 'function') node.freezeWorldMatrix();
+  // Giữ nguyên billboard rotation cho các quầng sáng halo để tự động quay theo camera
+  if (typeof node.freezeWorldMatrix === 'function' && !node.billboardMode) {
+    node.freezeWorldMatrix();
+  }
   if (node.doNotSyncBoundingInfo !== undefined) node.doNotSyncBoundingInfo = true;
   if (node.isPickable !== undefined) node.isPickable = false;
   const children = node.getChildren ? node.getChildren() : [];
@@ -39,6 +42,13 @@ function getOrCreateMat(scene, name, hex, emissiveHex = null, specular = 0.15) {
  * - Đèn đường cột sắt rèn uốn lượn cổ điển (Victorian Wrought Iron Lanterns) ánh lửa vàng hổ phách ấm áp
  */
 export function createModernBoulevard(scene, options = {}) {
+  const steps = createModernBoulevardSteps(scene, options);
+  let result;
+  do { result = steps.next(); } while (!result.done);
+  return result.value;
+}
+
+export function* createModernBoulevardSteps(scene, options = {}) {
   const {
     id = 'boulevard',
     x = 0,
@@ -67,17 +77,17 @@ export function createModernBoulevard(scene, options = {}) {
 
   const mats = {
     // Mặt đường lát đá cuội sa thạch ấm áp
-    roadCobble: getOrCreateMat(scene, 'ghibli-road-cobble', WORLD_PALETTE.roadStone, null, 0.1),
+    roadCobble: getOrCreateMat(scene, 'ghibli-road-cobble', WORLD_PALETTE.roadStone, null, 0.08),
     // Gờ đá tự nhiên đẽo mộc mạc
-    curbStone: getOrCreateMat(scene, 'ghibli-road-curb', '#d4b8a8', null, 0.2),
-    // Vỉa hè lát đá phiến vàng mật ong
-    sidewalkStone: getOrCreateMat(scene, 'ghibli-road-sidewalk', WORLD_PALETTE.sidewalkCream, null, 0.18),
+    curbStone: getOrCreateMat(scene, 'ghibli-road-curb', '#bcb2a4', null, 0.15),
+    // Vỉa hè lát đá phiến kem ngà mềm mại
+    sidewalkStone: getOrCreateMat(scene, 'ghibli-road-sidewalk', WORLD_PALETTE.sidewalkCream, null, 0.12),
     // Tim đường hoa văn đá sa thạch màu cát ấm
-    centerInlay: getOrCreateMat(scene, 'ghibli-road-inlay', '#f6ddbd', null, 0.25),
+    centerInlay: getOrCreateMat(scene, 'ghibli-road-inlay', '#ded7ca', null, 0.15),
     // Viền mép đá sa thạch sáng
-    edgeInlay: getOrCreateMat(scene, 'ghibli-road-edge-stone', '#eed5be', null, 0.2),
-    // Cột đèn sắt rèn châu Âu cổ điển
-    wroughtIron: getOrCreateMat(scene, 'ghibli-lamp-iron', '#2b2621', null, 0.35),
+    edgeInlay: getOrCreateMat(scene, 'ghibli-road-edge-stone', '#d3c9bc', null, 0.15),
+    // Cột đèn sắt rèn graphite ấm (không đen kịt)
+    wroughtIron: getOrCreateMat(scene, 'ghibli-lamp-iron', WORLD_PALETTE.lampIronGraphite, null, 0.18),
     // Đèn khí ga vàng hổ phách ấm áp
     gaslightGlow: getOrCreateMat(scene, 'ghibli-lamp-glow', '#fef08a', '#f59e0b', 0.9),
   };
@@ -97,6 +107,7 @@ export function createModernBoulevard(scene, options = {}) {
   roadMesh.material = mats.roadCobble;
   roadMesh.receiveShadows = true;
   roadMesh.parent = root;
+  yield;
 
   // Chuẩn hóa danh sách các khoảng mở giao lộ (openings) trong hệ tọa độ Local Z
   const halfL = length / 2;
@@ -162,6 +173,7 @@ export function createModernBoulevard(scene, options = {}) {
       dash.position.set(0, 0.089, dz);
       dash.material = mats.centerInlay;
       dash.parent = root;
+      yield;
     }
   }
 
@@ -187,6 +199,7 @@ export function createModernBoulevard(scene, options = {}) {
     });
   }
 
+  yield;
   // 4. Vạch dừng xe trước giao lộ bằng đá sa thạch đẽo phẳng
   if (hasStopLines && openings.length > 0) {
     openings.forEach((op, opIdx) => {
@@ -204,6 +217,7 @@ export function createModernBoulevard(scene, options = {}) {
     });
   }
 
+  yield;
   // 5. Vỉa hè đá phiến vàng mật ong & Gờ đá tự nhiên ở CẢ 2 BÊN
   if (hasSidewalk) {
     [-1, 1].forEach(side => {
@@ -249,6 +263,7 @@ export function createModernBoulevard(scene, options = {}) {
     });
   }
 
+  yield;
   // 6. Cột đèn sắt rèn phong cách châu Âu cổ điển (Victorian Gas Streetlamps)
   if (hasStreetLamps && length >= 16) {
     const numLamps = Math.max(1, Math.floor(length / lampInterval));
@@ -259,7 +274,7 @@ export function createModernBoulevard(scene, options = {}) {
       const nearIntersection = openings.some(op => pz >= op.start - 2.5 && pz <= op.end + 2.5);
       if (nearIntersection) continue;
 
-      [-1, 1].forEach(side => {
+      for (const side of [-1, 1]) {
         const lx = side * (width / 2 + sidewalkWidth * 0.7);
 
         // Bệ chân cột đèn bát giác bằng gang đúc
@@ -314,7 +329,18 @@ export function createModernBoulevard(scene, options = {}) {
         lanternFlame.position.set(lx - side * 0.9, 4.8, pz);
         lanternFlame.material = mats.gaslightGlow;
         lanternFlame.parent = root;
-      });
+
+        // Quầng sáng sương mờ sưởi ấm & vệt sáng loang mặt đất
+        createLampGlowAndPool(
+          scene,
+          root,
+          new Vector3(lx - side * 0.9, 4.8, pz),
+          0.086,
+          0.85,
+          2.8
+        );
+        yield;
+      }
     }
   }
 
@@ -404,11 +430,11 @@ export function* createCountryRoadSteps(scene, options = {}) {
     yield;
 
   const mats = {
-    roadCobble: getOrCreateMat(scene, 'ghibli-road-cobble', WORLD_PALETTE.roadStone, null, 0.1),
-    curbStone: getOrCreateMat(scene, 'ghibli-road-curb', '#d4b8a8', null, 0.2),
-    sidewalkStone: getOrCreateMat(scene, 'ghibli-road-sidewalk', WORLD_PALETTE.sidewalkCream, null, 0.18),
-    centerInlay: getOrCreateMat(scene, 'ghibli-road-inlay', '#f6ddbd', null, 0.25),
-    wroughtIron: getOrCreateMat(scene, 'ghibli-lamp-iron', '#2b2621', null, 0.35),
+    roadCobble: getOrCreateMat(scene, 'ghibli-road-cobble', WORLD_PALETTE.roadStone, null, 0.08),
+    curbStone: getOrCreateMat(scene, 'ghibli-road-curb', '#bcb2a4', null, 0.15),
+    sidewalkStone: getOrCreateMat(scene, 'ghibli-road-sidewalk', WORLD_PALETTE.sidewalkCream, null, 0.12),
+    centerInlay: getOrCreateMat(scene, 'ghibli-road-inlay', '#ded7ca', null, 0.15),
+    wroughtIron: getOrCreateMat(scene, 'ghibli-lamp-iron', WORLD_PALETTE.lampIronGraphite, null, 0.18),
     gaslightGlow: getOrCreateMat(scene, 'ghibli-lamp-glow', '#fef08a', '#f59e0b', 0.9),
   };
     yield;
@@ -616,6 +642,16 @@ export function* createCountryRoadSteps(scene, options = {}) {
       flame.position.set(lx, 3.9, pz);
       flame.material = mats.gaslightGlow;
       flame.parent = root;
+
+      // Quầng sáng sương mờ & vệt sáng loang mặt đất cho đường liên làng
+      createLampGlowAndPool(
+        scene,
+        root,
+        new Vector3(lx, 3.9, pz),
+        0.046,
+        0.75,
+        2.4
+      );
 
       yield;
 }
