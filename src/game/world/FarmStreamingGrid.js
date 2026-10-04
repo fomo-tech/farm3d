@@ -1,6 +1,7 @@
 // Farm lookup is spatial data only; never index Babylon meshes or asset graphs.
 export class FarmStreamingGrid {
-  constructor(farms, cellSize = 64) {
+  constructor(farms, cellSize = 64, { mobile = false } = {}) {
+    this.mobile = mobile;
     this.cellSize = cellSize;
     this.cells = new Map();
     for (const farm of farms) {
@@ -10,8 +11,8 @@ export class FarmStreamingGrid {
     }
   }
 
-  select(position, chunks, ownerId = null, maxNeighbours = 6) {
-    const radius = 112;
+  select(position, chunks, ownerId = null, maxNeighbours = this.mobile ? 12 : 16) {
+    const radius = this.mobile ? 80 : 100;
     const candidates = [];
     for (let x = Math.floor((position.x - radius) / this.cellSize); x <= Math.floor((position.x + radius) / this.cellSize); x++) {
       for (let z = Math.floor((position.z - radius) / this.cellSize); z <= Math.floor((position.z + radius) / this.cellSize); z++) {
@@ -19,7 +20,7 @@ export class FarmStreamingGrid {
           if (farm.id === ownerId) continue;
           const distance = Math.hypot(farm.x - position.x, farm.z - position.z);
           const retained = chunks.get(farm.id)?.wantsDetail;
-          if (distance <= (retained ? radius : 96)) candidates.push({ farm, distance });
+          if (distance <= (retained ? radius : (this.mobile ? 60 : 80))) candidates.push({ farm, distance });
         }
       }
     }

@@ -86,11 +86,6 @@ export function createGlobalDenseFlora(scene, foliage, shadows, foliageInstancin
         // Tree in grove via GPU Instancing
         foliageInstancing.spawnOak(px, pz, 1.35);
         treeCount++;
-
-        // Bench near tree
-        if (rand4 > 0.5) {
-          foliage.createRusticBench(px + 1.8, pz, rand1 * Math.PI * 2);
-        }
         continue;
       }
 

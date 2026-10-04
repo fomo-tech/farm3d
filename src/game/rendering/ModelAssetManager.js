@@ -17,14 +17,19 @@ const cachesByScene = new WeakMap();
 let spawnCounter = 0;
 const spawnQueues = new WeakMap();
 
-function yieldModelSpawn(scene, priority, relevant) {
+function yieldModelSpawn(scene, priority, relevant, work, label) {
   let queue = spawnQueues.get(scene);
   if (!queue) {
     queue = new ModelSpawnQueue();
     spawnQueues.set(scene, queue);
     scene.onDisposeObservable.addOnce(() => { queue.dispose(); spawnQueues.delete(scene); });
   }
-  return queue.request(priority, relevant);
+  return queue.run(work, priority, relevant, label);
+}
+
+export function getModelWorkStats(scene) {
+  const cache = cachesByScene.get(scene);
+  return { spawn: spawnQueues.get(scene)?.getStats(), activeLoads: cache?.activeLoads || 0, pendingLoads: cache?.loadQueue.length || 0, maxLoadMs: cache?.maxLoadMs || 0 };
 }
 
 function getSceneCache(scene) {
@@ -45,12 +50,12 @@ function getSceneCache(scene) {
 }
 
 function pumpModelLoads(scene, cache) {
-  while (!scene.isDisposed && cache.activeLoads < 4 && cache.loadQueue.length) {
+  while (!scene.isDisposed && cache.activeLoads < 1 && cache.loadQueue.length) {
     const job = cache.loadQueue.shift();
     cache.activeLoads += 1;
     Promise.resolve().then(job.run).then(job.resolve, job.reject).finally(() => {
       cache.activeLoads -= 1;
-      pumpModelLoads(scene, cache);
+      setTimeout(() => pumpModelLoads(scene, cache), 16);
     });
   }
 }
@@ -118,7 +123,9 @@ export async function loadModelContainer(scene, idOrUrl, options = {}) {
     for (let attempt = 0; attempt <= retries; attempt += 1) {
       try {
         const { rootUrl, filename } = splitModelUrl(asset.url);
+        const loadStart = performance.now();
         const container = await withTimeout(SceneLoader.LoadAssetContainerAsync(rootUrl, filename, scene), timeoutMs, asset.url);
+        cache.maxLoadMs = Math.max(cache.maxLoadMs || 0, performance.now() - loadStart);
         if (scene.isDisposed) {
           container.dispose();
           return null;
@@ -129,6 +136,11 @@ export async function loadModelContainer(scene, idOrUrl, options = {}) {
           });
         }
         cache.containers.set(asset.url, container);
+        // glTF loader owns sRGB/linear decoding; never gamma-convert textures twice.
+        for (const material of container.materials || []) {
+          if ('environmentIntensity' in material) material.environmentIntensity = Math.min(material.environmentIntensity, .7);
+          if ('roughness' in material && Number.isFinite(material.roughness) && material.metallic < .5 && !material.subSurface?.isRefractionEnabled) material.roughness = Math.max(.3, material.roughness);
+        }
         cache.states.set(asset.url, { status: 'ready', error: null });
         return container;
       } catch (error) {
@@ -186,9 +198,8 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
   const materialize = () => {
     const epoch = loadEpoch;
     return loadModelContainer(scene, idOrUrl).then(async (container) => {
-    const canSpawn = await yieldModelSpawn(scene, selectNodeName ? 100 : (/house|barn|corral|manor/.test(name) ? 20 : 0),
-      () => !root.isDisposed() && !scene.isDisposed && epoch === loadEpoch);
-    if (!canSpawn) return false;
+    return yieldModelSpawn(scene, selectNodeName ? 100 : (/house|barn|corral|manor/.test(name) ? 20 : 0),
+      () => !root.isDisposed() && !scene.isDisposed && epoch === loadEpoch, () => {
     if (root.isDisposed() || scene.isDisposed || epoch !== loadEpoch) return false;
     if (!container) {
       root.metadata.assetStatus = 'failed';
@@ -245,6 +256,7 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
     } finally {
       window.__farmDebug?.endStage();
     }
+    }, `instantiate asset: ${idOrUrl}`);
   });
   };
   const shouldStream = streamable || /(?:rock|cliff)[^/]*\.glb$/i.test(String(resolveModelAsset(idOrUrl)?.url || ''));

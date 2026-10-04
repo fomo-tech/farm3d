@@ -6,9 +6,13 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 
 export function installWorldRenderIndex(scene) {
   const dynamic = mesh => {
+    // Tree batches grow as scenic generators append placements. Their bounding
+    // boxes are not immutable: an octree inserted before that growth can hide
+    // whole forests when the camera moves to the newly populated part.
+    if (mesh.metadata?.spatialBoundsMutable) return true;
     if (mesh.skeleton || mesh.animations?.length) return true;
     for (let node = mesh; node; node = node.parent) {
-      if (node.metadata?.playerId || /player|bus|vehicle|animal|cow|alpaca|npc|elder|cloud|marker|crop|boat/i.test(node.name || '')) return true;
+      if (node.metadata?.playerId || /player|bus|vehicle|animal|cow|alpaca|npc|elder|cloud|marker|crop|boat|river|water|lake|ocean|bridge|foliage|tree|bush|lod|flora/i.test(node.name || '')) return true;
     }
     return false;
   };

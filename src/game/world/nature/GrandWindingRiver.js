@@ -1,7 +1,7 @@
 /**
  * GrandWindingRiver.js
  * The Grand Animated Winding River & Highway Bridge Infrastructure.
- * 
+ *
  * Creates a continuous, beautiful, animated winding river across the entire 3D world:
  * - Starts at the North Mountain Waterfall (z = -580)
  * - Traverses the highlands, merges with Crystal Lake (z = 0)
@@ -354,23 +354,25 @@ function createBridges(scene, root, shadows) {
 /**
  * Creates the complete Grand Winding River System.
  */
-export function createGrandWindingRiver(scene, parent = null, shadows = null) {
+export function* createGrandWindingRiverSteps(scene, parent = null, shadows = null) {
   const root = new TransformNode('grand-winding-river-system', scene);
+    yield;
   if (parent) root.parent = parent;
+    yield;
 
   // 1. Evaluate Spline Ribbon Paths
   const sampledSpline = sampleRiverSpline(RIVER_CONTROL_POINTS, 110);
+    yield;
   const leftPath = [];
   const rightPath = [];
   const centerPath = [];
   const leftUvs = [];
   const rightUvs = [];
-
   let accumulatedDist = 0;
 
   for (let i = 0; i < sampledSpline.length; i++) {
     const cur = sampledSpline[i];
-    centerPath.push(new Vector3(cur.x, 0.03, cur.z));
+    centerPath.push(new Vector3(cur.x, 0.08, cur.z));
 
     if (i > 0) {
       const prev = sampledSpline[i - 1];
@@ -391,14 +393,15 @@ export function createGrandWindingRiver(scene, parent = null, shadows = null) {
     const nz = tx;
     const halfW = cur.w / 2;
 
-    leftPath.push(new Vector3(cur.x + nx * halfW, 0.03, cur.z + nz * halfW));
-    rightPath.push(new Vector3(cur.x - nx * halfW, 0.03, cur.z - nz * halfW));
+    leftPath.push(new Vector3(cur.x + nx * halfW, 0.08, cur.z + nz * halfW));
+    rightPath.push(new Vector3(cur.x - nx * halfW, 0.08, cur.z - nz * halfW));
 
     // UV coordinates: U across river, V along flow
     const vCoord = accumulatedDist / 14.0;
     leftUvs.push(new Vector2(0, vCoord));
     rightUvs.push(new Vector2(1, vCoord));
   }
+  yield;
 
   // 2. Animated River Water Material
   const riverTex = createRiverWaterTexture(scene, 512);
@@ -408,8 +411,10 @@ export function createGrandWindingRiver(scene, parent = null, shadows = null) {
   matWater.emissiveColor = Color3.FromHexString('#0891b2').scale(0.36);
   matWater.specularColor = new Color3(0.9, 0.98, 1.0);
   matWater.specularPower = 72;
-  matWater.alpha = 0.88;
+  matWater.alpha = 0.96;
+  matWater.zOffset = -3;
   matWater.backFaceCulling = false;
+  yield;
 
   // 3. Create Parametric Ribbon Mesh
   const riverMesh = MeshBuilder.CreateRibbon('grand-river-surface', {
@@ -419,14 +424,18 @@ export function createGrandWindingRiver(scene, parent = null, shadows = null) {
   }, scene);
   riverMesh.material = matWater;
   riverMesh.parent = root;
+  riverMesh.renderingGroupId = 1;
+  riverMesh.metadata = { ...riverMesh.metadata, spatialBoundsMutable: true };
   riverMesh.receiveShadows = false;
   riverMesh.isPickable = false;
+  yield;
 
   // 4. Stone Cobble Riverbanks along left and right borders (Warm Natural Sandstone)
   const matBank = new StandardMaterial('grand-river-bank-mat', scene);
   matBank.diffuseColor = Color3.FromHexString('#d4b896');
   matBank.ambientColor = matBank.diffuseColor.scale(0.5);
   matBank.specularColor = new Color3(0.04, 0.04, 0.04);
+  matBank.zOffset = -2;
 
   // Generate riverbank retaining curb ribbons
   const bankOffset = 0.8;
@@ -445,9 +454,10 @@ export function createGrandWindingRiver(scene, parent = null, shadows = null) {
     const nz = tx;
     const halfW = cur.w / 2;
 
-    leftBankOuter.push(new Vector3(cur.x + nx * (halfW + bankOffset), 0.16, cur.z + nz * (halfW + bankOffset)));
-    rightBankOuter.push(new Vector3(cur.x - nx * (halfW + bankOffset), 0.16, cur.z - nz * (halfW + bankOffset)));
+    leftBankOuter.push(new Vector3(cur.x + nx * (halfW + bankOffset), 0.18, cur.z + nz * (halfW + bankOffset)));
+    rightBankOuter.push(new Vector3(cur.x - nx * (halfW + bankOffset), 0.18, cur.z - nz * (halfW + bankOffset)));
   }
+  yield;
 
   const leftBankMesh = MeshBuilder.CreateRibbon('grand-river-bank-left', {
     pathArray: [leftPath, leftBankOuter],
@@ -455,6 +465,8 @@ export function createGrandWindingRiver(scene, parent = null, shadows = null) {
   }, scene);
   leftBankMesh.material = matBank;
   leftBankMesh.parent = root;
+  leftBankMesh.renderingGroupId = 1;
+  leftBankMesh.metadata = { ...leftBankMesh.metadata, spatialBoundsMutable: true };
   leftBankMesh.freezeWorldMatrix();
 
   const rightBankMesh = MeshBuilder.CreateRibbon('grand-river-bank-right', {
@@ -463,10 +475,14 @@ export function createGrandWindingRiver(scene, parent = null, shadows = null) {
   }, scene);
   rightBankMesh.material = matBank;
   rightBankMesh.parent = root;
+  rightBankMesh.renderingGroupId = 1;
+  rightBankMesh.metadata = { ...rightBankMesh.metadata, spatialBoundsMutable: true };
   rightBankMesh.freezeWorldMatrix();
+  yield;
 
   // 5. Build the 4 Solid Bridges
   createBridges(scene, root, shadows);
+  yield;
 
   // 6. Compute River Collision Boxes for WorldCollisionSystem (Excluding bridge corridors)
   const collisionBoxes = [];
@@ -495,6 +511,7 @@ export function createGrandWindingRiver(scene, parent = null, shadows = null) {
       });
     }
   }
+  yield;
 
   return {
     root,
@@ -510,4 +527,11 @@ export function createGrandWindingRiver(scene, parent = null, shadows = null) {
       root.dispose();
     },
   };
+}
+
+export function createGrandWindingRiver(scene, parent = null, shadows = null) {
+  const steps = createGrandWindingRiverSteps(scene, parent, shadows);
+  let result;
+  do { result = steps.next(); } while (!result.done);
+  return result.value;
 }

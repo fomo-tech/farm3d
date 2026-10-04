@@ -70,7 +70,7 @@ export function createToyMaterial(scene, name, hexColor, options = {}) {
     scene.onDisposeObservable.addOnce(() => cache.clear());
   }
   const cacheKey = JSON.stringify([name, hexColor, options.ambientScale ?? 0.42,
-    options.specularLevel ?? 0.18, options.specularPower ?? 64,
+    options.specularLevel ?? 0.12, options.specularPower ?? 64,
     options.emissiveHex ?? null, options.emissiveScale ?? 0,
     options.alpha ?? 1, options.backFaceCulling ?? true]);
   if (cache.has(cacheKey)) return cache.get(cacheKey);
@@ -86,7 +86,7 @@ export function createToyMaterial(scene, name, hexColor, options = {}) {
   mat.ambientColor = baseCol.scale(ambientScale);
 
   // Điểm sáng phản chiếu Specular bóng dẻo đồ chơi (Toy Sheen)
-  const specLevel = options.specularLevel ?? 0.18;
+  const specLevel = options.specularLevel ?? 0.12;
   mat.specularColor = new Color3(specLevel, specLevel, specLevel);
   mat.specularPower = options.specularPower ?? 64;
 

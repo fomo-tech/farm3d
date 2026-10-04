@@ -24,6 +24,8 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js'
 import { FARM_CONFIG } from '../config.js';
 import { createSoilTexture, createMeadowTexture } from '../world/createStylizedTextures.js';
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
+import { LANDSCAPE_ART as ART } from '../world/LandscapeArt.js';
+import { batchFarmDecorationSteps } from './batchFarmDecoration.js';
 
 export class FarmChunk {
   constructor(scene, farm, shadows = null, options = {}) {
@@ -78,7 +80,8 @@ export class FarmChunk {
     this.materials = this._initMaterials();
 
     // Build lightweight HLOD immediately (< 0.1ms)
-    this._buildHLOD();
+    // Far estates stay cached but invisible: never show symbolic houses/fields.
+    this.hlodRoot.setEnabled(false);
   }
 
   _initMaterials() {
@@ -113,7 +116,7 @@ export class FarmChunk {
       ambientScale: 0.52,
     });
 
-    const stonePathMat = createToyMaterial(scene, 'mat-toy-flagstone-road', '#ded3c2', {
+    const stonePathMat = createToyMaterial(scene, 'mat-toy-flagstone-road', ART.pathLight, {
       specularPower: 26,
       specularLevel: 0.12,
       ambientScale: 0.65,
@@ -121,7 +124,7 @@ export class FarmChunk {
 
     const fenceMat = createToyMaterial(scene, isOwner ? 'mat-toy-fence-owner' : 'mat-toy-fence-neighbor', isOwner ? PLAY_TOGETHER_PALETTE.farm.fenceWhite : '#f1f5f9', {
       specularPower: 80,
-      specularLevel: 0.45,
+      specularLevel: 0.05,
       ambientScale: 0.58,
     });
 
@@ -140,9 +143,9 @@ export class FarmChunk {
       specularPower: 28,
     });
 
-    const leafBright = createToyMaterial(scene, 'mat-tree-leaf-bright', '#79aa63', { ambientScale: 0.4 });
-    const leafMid = createToyMaterial(scene, 'mat-tree-leaf-mid', '#52864e', { ambientScale: 0.4 });
-    const appleRed = createToyMaterial(scene, 'mat-tree-apple-red', '#ef4444', { emissiveHex: '#dc2626', specularPower: 96 });
+    const leafBright = createToyMaterial(scene, 'mat-tree-leaf-bright', ART.leafLight, { ambientScale: 0.30, specularLevel: 0.03 });
+    const leafMid = createToyMaterial(scene, 'mat-tree-leaf-mid', ART.leaf, { ambientScale: 0.30, specularLevel: 0.03 });
+    const appleRed = createToyMaterial(scene, 'mat-tree-apple-red', '#D95660', { specularLevel: 0.03 });
 
     return { soilMat, grassMat, borderMat, stonePathMat, fenceMat, lanternMat, planterMat, flowerMat, leafBright, leafMid, appleRed };
   }
@@ -327,7 +330,7 @@ export class FarmChunk {
       { x: 0.7, y: 2.8, z: -0.3, s: 1.7, mat: this.materials.leafMid },
       { x: 0.2, y: 3.7, z: 0.2, s: 1.5, mat: this.materials.leafBright },
     ].forEach((clump, idx) => {
-      const leaf = MeshBuilder.CreateSphere(`detail-leaf-${this.farmId}-${idx}`, { diameter: clump.s, segments: 8 }, scene);
+      const leaf = MeshBuilder.CreateIcoSphere(`detail-leaf-${this.farmId}-${idx}`, { radius: clump.s / 2, subdivisions: 2, flat: true }, scene);
       leaf.position.set(clump.x, clump.y, clump.z);
       leaf.material = clump.mat;
       leaf.parent = treeRoot;
@@ -498,6 +501,7 @@ export class FarmChunk {
       }
     }
 
+    this.batchedDecorationSavings = yield* batchFarmDecorationSteps(this.detailRoot, this.farmId);
     this.detailReady = true;
     this.buildingInProgress = false;
     this.root.metadata.detailed = true;
@@ -566,7 +570,7 @@ export class FarmChunk {
     this.detailRoot.setEnabled(false);
     this.interactiveRoot.setEnabled(false);
     this.buildingRoot.setEnabled(false);
-    this.hlodRoot.setEnabled(true);
+    this.hlodRoot.setEnabled(false);
     this.state = 'hlod';
     this.root.metadata.detailed = false;
     this.root.metadata.lightweight = true;

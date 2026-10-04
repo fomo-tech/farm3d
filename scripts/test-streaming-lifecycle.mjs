@@ -18,9 +18,7 @@ const initMaterials = FarmChunk.prototype._initMaterials;
 FarmChunk.prototype._initMaterials = () => ({});
 const farm = new FarmChunk(scene, { id: 'farm_test', x: 125, z: -90, owner: 'Test' });
 const lodRoof = scene.getMeshByName('hlod-roof-farm_test');
-const roofNormals = lodRoof.getVerticesData('normal');
-assert.ok(roofNormals[7] > 0 && roofNormals[16] > 0,
-  'both ridge vertices must have outward/upward normals in Babylon left-handed coordinates');
+assert.equal(lodRoof, null, 'no symbolic house geometry is allocated for distant estates');
 FarmChunk.prototype._initMaterials = initMaterials;
 const scheduler = new FrameBudgetScheduler(0.001);
 const farming = Object.create(FarmingSystem.prototype);
@@ -30,7 +28,7 @@ farming.applyRemoteFarmAction({ farmId: 'farm_test', tileKey: '0:0', action: 'ti
 assert.equal(farming.state['0:0'].state, 'tilled', 'updates are retained before meshes load');
 let registrations = 0;
 farm.showDetail(scheduler, () => registrations++);
-assert.equal(farm.hlodRoot.isEnabled(), true, 'keep HLOD during construction');
+assert.equal(farm.hlodRoot.isEnabled(), false, 'never expose symbolic estates during construction');
 scheduler.update();
 farm.showHLOD();
 while (scheduler.getPendingCount()) scheduler.update(100);
@@ -83,7 +81,7 @@ farm.showHLOD();
 scheduler.enqueue(farm.evictDetail(), 0, 'evict');
 while (scheduler.getPendingCount()) scheduler.update(100);
 assert.equal(farm.detailReady, false);
-assert.equal(farm.hlodRoot.isEnabled(), true);
+assert.equal(farm.hlodRoot.isEnabled(), false);
 farm.showDetail(scheduler);
 while (scheduler.getPendingCount()) scheduler.update(100);
 assert.equal(farm.detailReady, true, 'evicted detail can rebuild');

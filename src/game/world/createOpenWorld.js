@@ -241,7 +241,7 @@ function worldLabel(scene, text, parent, color, posY = 3.5) {
   context.lineWidth = 24;
   context.stroke();
   texture.drawText(text, null, 304, 'bold 128px "Nunito", "Segoe UI", Arial, sans-serif', '#fffdf0', null, true, true);
-  
+
   const labelMaterial = new StandardMaterial(`label-material-${text}`, scene);
   labelMaterial.diffuseTexture = texture;
   labelMaterial.opacityTexture = texture;
@@ -265,12 +265,17 @@ function worldLabel(scene, text, parent, color, posY = 3.5) {
   });
 }
 
-export function createOpenWorld(scene, shadows) {
+export function* createOpenWorldSteps(scene, shadows) {
   const meadowTex = createMeadowTexture(scene);
+    yield;
   const honeyPathTex = createHoneyPathTexture(scene);
+    yield;
   const waterTex = createWaterTexture(scene);
+    yield;
   const cobbleTex = createCobblePathTexture(scene);
+    yield;
   const sandTex = createSandTexture(scene);
+    yield;
 
   const materials = {
     path: mat(scene, 'warm-path', '#eec784'),
@@ -290,42 +295,73 @@ export function createOpenWorld(scene, shadows) {
     hill: mat(scene, 'hill-ground', WORLD_PALETTE.grassShade),
     rock: mat(scene, 'cliff-rock', '#95a898'), // Vách đá tự nhiên phủ nhẹ rêu
   };
+    yield;
 
   materials.meadow.diffuseColor = Color3.White();
+    yield;
   materials.meadow.diffuseTexture = meadowTex;
+    yield;
   materials.road.diffuseTexture = honeyPathTex;
+    yield;
   materials.path.diffuseTexture = cobbleTex;
+    yield;
   materials.sidewalk.diffuseTexture = cobbleTex;
+    yield;
   materials.town.diffuseTexture = cobbleTex;
+    yield;
   materials.sand.diffuseTexture = sandTex;
+    yield;
   materials.water.diffuseTexture = waterTex;
+    yield;
   materials.water.alpha = 0.88;
+    yield;
   materials.sidewalk.diffuseColor = Color3.White();
+    yield;
   materials.sidewalk.diffuseTexture = honeyPathTex;
+    yield;
   materials.road.diffuseColor = Color3.White();
+    yield;
   materials.road.diffuseTexture = honeyPathTex;
+    yield;
   materials.sand.diffuseColor = Color3.White();
+    yield;
   materials.sand.diffuseTexture = sandTex;
+    yield;
   materials.coastGround.diffuseColor = Color3.White();
+    yield;
   materials.coastGround.diffuseTexture = sandTex;
+    yield;
 
   // Micro-specular depth cho bề mặt tự nhiên & vật liệu (Phase 3)
   materials.meadow.specularColor = new Color3(0.04, 0.045, 0.035);
+    yield;
   materials.meadow.specularPower = 48;
+    yield;
   materials.road.specularColor = new Color3(0.05, 0.05, 0.04);
+    yield;
   materials.road.specularPower = 48;
+    yield;
   materials.sidewalk.specularColor = new Color3(0.06, 0.06, 0.05);
+    yield;
   materials.sidewalk.specularPower = 64;
+    yield;
   materials.town.specularColor = new Color3(0.08, 0.08, 0.07);
+    yield;
   materials.town.specularPower = 64;
+    yield;
   materials.sand.specularColor = new Color3(0.05, 0.045, 0.035);
+    yield;
   materials.sand.specularPower = 32;
+    yield;
   materials.water.specularColor = new Color3(0.4, 0.45, 0.5);
+    yield;
   materials.water.specularPower = 128;
+    yield;
 
 
   // Nhà riêng và lô ruộng được FarmWorld dựng hoàn toàn từ dữ liệu server.
   const foliage = createFoliageFactory(scene, shadows);
+    yield;
 
 
   // === BIOME 3: HỒ PHA LÊ & CAO NGUYÊN (Rừng thông núi cao vút) ===
@@ -334,11 +370,17 @@ export function createOpenWorld(scene, shadows) {
     [211, -19, 1.25], [172, -37, 1.4], [145, -32, 1.2], [127, -17, 1.1],
     [165, 45, 1.5], [212, 35, 1.3], [124, 15, 1.2], [215, -3, 1.25],
   ];
+    yield;
   pineCoords.forEach(([px, pz, ps]) => foliage.createAlpinePine(px, pz, ps));
+    yield;
   foliage.createRusticBench(150, 31, -Math.PI / 4);
+    yield;
   foliage.createRusticBench(181, 31, 0);
+    yield;
   foliage.createFlowerPatch(159, 36, 12, 3.0);
+    yield;
   foliage.createFlowerPatch(148, -36, 10, 2.8);
+    yield;
 
   // === BIOME 2: CẢNH QUAN NGOẠI VI THỊ TRẤN (Bố trí hoàn toàn ngoài phạm vi đường và quảng trường) ===
   // Đã giải phóng 100% diện tích quảng trường 92m và đại lộ trục tâm để giữ tầm nhìn đô thị thoáng đãng
@@ -346,7 +388,9 @@ export function createOpenWorld(scene, shadows) {
     [-52, 18, 1.2], [-52, -18, 1.25], [52, 18, 1.2], [52, -18, 1.25],
     [-54, 42, 1.1], [54, 42, 1.1],
   ];
+    yield;
   mapleCoords.forEach(([mx, mz, ms]) => foliage.createGoldenMaple(mx, mz, ms));
+    yield;
 
   // === BIOME 4: BỜ BIỂN BÌNH MINH (Hàng dừa nghiêng nhiệt đới) ===
   const palmCoords = [
@@ -354,10 +398,13 @@ export function createOpenWorld(scene, shadows) {
     [15, 328, 1.25, -0.25], [45, 332, 1.2, 0.28], [65, 337, 1.1, -0.22],
     [82, 327, 1.35, 0.3], [-32, 331, 1.2, 0.18], [32, 329, 1.25, -0.2],
   ];
+    yield;
   palmCoords.forEach(([px, pz, ps, pt]) => foliage.createTropicalPalm(px, pz, ps, pt));
+    yield;
 
   // Danh sách 7 trục ngang Nông Trại
   const farmCrossroadZList = [98, 126, 154, 182, 210, 238, 266];
+    yield;
 
   // === ĐẠI LỘ HUYẾT MẠCH ĐÔ THỊ: HÀNG CÂY SỒI & PHONG RỢP BÓNG (NGOÀI VỈA HÈ, KHÔNG CHẮN LÒNG ĐƯỜNG) ===
   // 1. Hàng cây đại lộ Bắc - Nam (Chỉ trồng từ z = -90 đến z = 72 ngoài phạm vi quảng trường |z| > 50, dạt ra |px| = 11.0m)
@@ -365,8 +412,8 @@ export function createOpenWorld(scene, shadows) {
     if (Math.abs(z) < 52) continue; // Giữ quảng trường trung tâm 92m hoàn toàn thông thoáng
     if (Math.abs(z - 86) < 8.0) continue; // Tuyệt đối không chắn Quốc Lộ 86
 
-    [-11.0, 11.0].forEach((px, sideIdx) => {
-      if (isPointOnRoadCorridor(px, z, 3.0) || isPointInsideAnyFarmLot(px, z, 1.0)) return;
+    for (const [sideIdx, px] of ([-11.0, 11.0]).entries()) {
+      if (isPointOnRoadCorridor(px, z, 3.0) || isPointInsideAnyFarmLot(px, z, 1.0)) continue;
       if ((Math.abs(z) + sideIdx) % 2 === 0) {
         foliage.createCloudTree(px, z, 1.25);
       } else {
@@ -376,14 +423,19 @@ export function createOpenWorld(scene, shadows) {
         foliage.createHydrangeaBush(px + (px > 0 ? 1.4 : -1.4), z, 1.1, '#10b981');
         foliage.createFlowerPatch(px, z + 2.2, 6, 1.5);
       }
-    });
+
+      yield;
+    }
 
     // Ghế gỗ nghỉ chân dưới bóng mát ngoài lề vỉa hè
     if (Math.abs(z) % 36 === 18 && (z < -55 || (z > 55 && z < 72))) {
       if (!isPointOnRoadCorridor(-10.2, z, 2.0) && !isPointInsideAnyFarmLot(-10.2, z, 1.0)) foliage.createRusticBench(-10.2, z, Math.PI / 2);
       if (!isPointOnRoadCorridor(10.2, z, 2.0) && !isPointInsideAnyFarmLot(10.2, z, 1.0)) foliage.createRusticBench(10.2, z, -Math.PI / 2);
     }
-  }
+
+      yield;
+}
+    yield;
 
   // 2. Hàng cây đại lộ Đông - Tây (Ngoài phạm vi quảng trường |x| > 50, dạt ra |pz| = 9.8m)
   for (let x = -130; x <= 130; x += 22) {
@@ -391,7 +443,10 @@ export function createOpenWorld(scene, shadows) {
       if (!isPointOnRoadCorridor(x, -9.8, 3.0)) foliage.createAlpinePine(x, -9.8, 1.2);
       if (!isPointOnRoadCorridor(x, 9.8, 3.0)) foliage.createCloudTree(x, 9.8, 1.15);
     }
-  }
+
+      yield;
+}
+    yield;
 
   // 3. Hàng rào gỗ & Xe kéo nông sản cổ điển dọc đường làng Nông Trại (z: 35)
   for (let rx = -146; rx <= -74; rx += 14) {
@@ -401,7 +456,10 @@ export function createOpenWorld(scene, shadows) {
       shadows,
       name: `village-fence-${rx}`,
     });
-  }
+
+      yield;
+}
+    yield;
   // Xe kéo nông sản chở bí ngô & cà rốt đỗ cạnh lối rẽ vào làng
   spawnModelSync(scene, MODEL_PATHS.town.cart, {
     position: new Vector3(-68, 0, 31),
@@ -410,12 +468,15 @@ export function createOpenWorld(scene, shadows) {
     shadows,
     name: 'village-farm-cart',
   });
+    yield;
 
   // === HỆ THỐNG ĐƯỜNG ĐÔ THỊ & NÔNG TRẠI MXH ĐỒNG BỘ 100% CHUẨN PLAY TOGETHER ===
   const farmIntersections = farmCrossroadZList.map(pos => ({ pos, width: 7.5 }));
+    yield;
 
   // 1. Đại lộ Bắc - Nam (Nối Tòa Thị Chính qua Quảng trường xuống hết Thung Lũng Nông Trại)
   createModernBoulevard(scene, { id: 'blvd-north', x: 0, z: -68, length: 44, width: 8.5, sidewalkWidth: 2.6, isNorthSouth: true, shadows, lampInterval: 28 });
+    yield;
   createModernBoulevard(scene, {
     id: 'blvd-south',
     x: 0,
@@ -428,11 +489,15 @@ export function createOpenWorld(scene, shadows) {
     lampInterval: 32,
     intersections: farmIntersections,
   });
+    yield;
 
   // 2. Đại lộ Đông - Tây (Nối Ngoại Ô Bình Minh qua Quảng trường sang Hồ Pha Lê)
   createModernBoulevard(scene, { id: 'blvd-west', x: -84, z: 0, length: 76, width: 8.5, sidewalkWidth: 2.4, isNorthSouth: false, shadows, lampInterval: 28 });
+    yield;
   createModernBoulevard(scene, { id: 'blvd-east', x: 84, z: 0, length: 76, width: 8.5, sidewalkWidth: 2.4, isNorthSouth: false, shadows, lampInterval: 28 });
+    yield;
   createModernBoulevard(scene, { id: 'blvd-east-lake', x: 130, z: 0, length: 36, width: 7.5, sidewalkWidth: 2.2, isNorthSouth: false, shadows, lampInterval: 28 });
+    yield;
 
   // 3. Hai trục dọc Nông trại phía Tây & phía Đông (Bao bọc 24 lô nông trang)
   createModernBoulevard(scene, {
@@ -447,6 +512,7 @@ export function createOpenWorld(scene, shadows) {
     lampInterval: 32,
     intersections: farmIntersections,
   });
+    yield;
   createModernBoulevard(scene, {
     id: 'farm-spine-east',
     x: 60,
@@ -459,9 +525,10 @@ export function createOpenWorld(scene, shadows) {
     lampInterval: 32,
     intersections: farmIntersections,
   });
+    yield;
 
   // 4. Bảy trục ngang Nông trại phân ô 24 lô đất (Nối liền 100% không khe hở với Đại lộ Nam)
-  farmCrossroadZList.forEach((z, index) => {
+  for (const [index, z] of (farmCrossroadZList).entries()) {
     // Nhánh Tây (chạy chính xác từ x = -68 đến x = -4.25, chạm khít lòng Đại lộ Nam)
     createModernBoulevard(scene, {
       id: `farm-row-west-${index + 1}`,
@@ -503,22 +570,34 @@ export function createOpenWorld(scene, shadows) {
 
     // Vạch sang đường cho người đi bộ băng qua Đại lộ Nam tại ngã 4
     createZebraCrosswalk(scene, { id: `crosswalk-farm-blvd-${z}`, x: 0, z: z - 5.5, width: 8.5, depth: 2.4, isNorthSouth: true });
-  });
+
+      yield;
+    }
+    yield;
 
   // 5. Tuyến đường nối xuống Bãi Biển Bình Minh & Cảng Tàu Hơi Nước Steamboat Port
   createModernBoulevard(scene, { id: 'blvd-beach-connector', x: 0, z: 300, length: 44, width: 8.5, sidewalkWidth: 2.4, isNorthSouth: true, shadows, lampInterval: 28 });
+    yield;
   createModernBoulevard(scene, { id: 'blvd-steamboat-port', x: -22, z: 322, length: 40, width: 7.5, sidewalkWidth: 2.2, isNorthSouth: false, shadows, lampInterval: 28 });
+    yield;
 
   // 6. Hệ thống vạch sang đường đá ngà (Stone Crosswalks) tại 4 cửa ngõ Quảng trường
   createZebraCrosswalk(scene, { id: 'crosswalk-north', x: 0, z: -46, width: 8.5, isNorthSouth: true });
+    yield;
   createZebraCrosswalk(scene, { id: 'crosswalk-south', x: 0, z: 46, width: 8.5, isNorthSouth: true });
+    yield;
   createZebraCrosswalk(scene, { id: 'crosswalk-west', x: -46, z: 0, width: 8.5, isNorthSouth: false });
+    yield;
   createZebraCrosswalk(scene, { id: 'crosswalk-east', x: 46, z: 0, width: 8.5, isNorthSouth: false });
+    yield;
 
   // 7. Hệ thống Cột đá cản xe & Chậu hoa bảo vệ Phố Đi Bộ 100% tại 4 cửa ngõ (Xe buýt & cơ giới tuyệt đối không vào)
   const matBollardStone = materials.stone || materials.town;
+    yield;
   const matIronChain = materials.roof;
+    yield;
   const matFlowerPetal = materials.flower;
+    yield;
 
   const gatewayEntries = [
     { x: 0, z: -45.5, rotY: 0, label: 'CỬA BẮC' },
@@ -526,14 +605,15 @@ export function createOpenWorld(scene, shadows) {
     { x: -45.5, z: 0, rotY: -Math.PI / 2, label: 'CỬA TÂY' },
     { x: 45.5, z: 0, rotY: Math.PI / 2, label: 'CỬA ĐÔNG' },
   ];
+    yield;
 
-  gatewayEntries.forEach((gw, gidx) => {
+  for (const [gidx, gw] of (gatewayEntries).entries()) {
     const gwRoot = new TransformNode(`pedestrian-gate-${gidx}`, scene);
     gwRoot.position.set(gw.x, 0, gw.z);
     gwRoot.rotation.y = gw.rotY;
 
     // Cột trụ đá cản xe bố trí ở hai bên mép vỉa hè (|bx| > 4.2m), chừa thông thủy đại lộ chính 8.4m ở giữa
-    [-5.6, -4.4, 4.4, 5.6].forEach((bx, bidx) => {
+    for (const [bidx, bx] of ([-5.6, -4.4, 4.4, 5.6]).entries()) {
       const bollard = MeshBuilder.CreateCylinder(`gate-bollard-${gidx}-${bidx}`, {
         diameterTop: 0.38,
         diameterBottom: 0.52,
@@ -550,10 +630,12 @@ export function createOpenWorld(scene, shadows) {
       cap.position.set(bx, 1.05, 0);
       cap.material = matBollardStone;
       cap.parent = gwRoot;
-    });
+
+      yield;
+    }
 
     // Xích sắt rèn nối giữa các cặp cột đá ở hai bên vỉa hè, không chắn giữa lòng đường
-    [-5.0, 5.0].forEach((cx, cidx) => {
+    for (const [cidx, cx] of ([-5.0, 5.0]).entries()) {
       const chain = MeshBuilder.CreateTorus(`gate-chain-${gidx}-${cidx}`, {
         diameter: 1.4,
         thickness: 0.06,
@@ -564,10 +646,12 @@ export function createOpenWorld(scene, shadows) {
       chain.scaling.set(1.0, 0.35, 1.0);
       chain.material = matIronChain;
       chain.parent = gwRoot;
-    });
+
+      yield;
+    }
 
     // 2 Chậu hoa đá lớn uy nghiêm hai bên lề đường
-    [-6.8, 6.8].forEach((px, pidx) => {
+    for (const [pidx, px] of ([-6.8, 6.8]).entries()) {
       const planter = MeshBuilder.CreateCylinder(`gate-planter-${gidx}-${pidx}`, {
         diameterTop: 1.4,
         diameterBottom: 1.0,
@@ -584,52 +668,79 @@ export function createOpenWorld(scene, shadows) {
       bush.scaling.set(1.0, 0.7, 1.0);
       bush.material = matFlowerPetal;
       bush.parent = gwRoot;
-    });
-  });
+
+      yield;
+    }
+
+      yield;
+    }
+    yield;
 
   // 8. Trạm dừng cỗ xe ngựa & xe buýt gỗ cổ điển Ghibli NGOẠI VI (đặt bên ngoài quảng trường z = ±68)
   createSmartBusShelter(scene, shadows, { x: -9.2, y: 0, z: -68 }, 0);
+    yield;
   createSmartBusShelter(scene, shadows, { x: 9.2, y: 0, z: 68 }, Math.PI);
+    yield;
 
   // Cổng ranh giới — phân định các phân khu thế giới mở mạng xã hội
   zoneGate(scene, 0, 62, 0, 'ĐẠI LỘ NÔNG TRẠI 12 LÀNG', '#67a65b', materials, shadows);
+    yield;
   zoneGate(scene, -82, 3, Math.PI / 2, 'PHỐ CHỢ PHÍA TÂY', '#e28743', materials, shadows);
+    yield;
   zoneGate(scene, 105, 3, Math.PI / 2, 'HỒ PHA LÊ & BẾN CÂU CÁ', '#64c4df', materials, shadows);
+    yield;
   zoneGate(scene, 0, 292, 0, 'BIỂN BÌNH MINH', '#f0c05f', materials, shadows);
+    yield;
 
   // === TỔ HỢP ĐIỀN TRANG NÔNG TRẠI GHIBLI (GHIBLI SOCIAL FARMSTEAD) ===
   // Đặt lùi về z = 62 (cách tim đường QL 86 hơn 24m) để giải phóng 100% vỉa hè & lòng đường
   const modernFarmhouse = createModernFarmhouse(scene, shadows, { x: -38, y: 0, z: 62 });
+    yield;
   const classicRedBarn = createClassicRedBarn(scene, shadows, { x: 42, y: 0, z: 62 });
+    yield;
   const roadsideShop = createRoadsideShop(scene, shadows, { x: -9.8, y: 0, z: 58 }, Math.PI / 2);
+    yield;
   const deliveryTruckStation = createDeliveryTruckStation(scene, shadows, { x: 9.8, y: 0, z: 58 }, -Math.PI / 2);
+    yield;
   // Lối đá bước chân từ vỉa hè đại lộ vào quầy hàng & trạm xe tải
   createSteppingStoneTrail(scene, { x: -6.8, z: 58 }, { x: -9.2, z: 58 }, materials, 3);
+    yield;
   createSteppingStoneTrail(scene, { x: 6.8, z: 58 }, { x: 9.2, z: 58 }, materials, 3);
+    yield;
 
   // === TRUNG TÂM THỊ TRẤN ĐÔ THỊ PLAY TOGETHER (PLAY TOGETHER METAVERSE PLAZA) ===
   const playTogetherPlaza = createPlayTogetherPlaza(scene, shadows, foliage);
+    yield;
 
   // === TIỆN ÍCH & CẢNH QUAN MẠNG XÃ HỘI THEO QUY HOẠCH MỚI ===
   // Phía Đông: Sân khấu nghệ thuật chuyển sang cánh Đông (x: 38)
   const concertStage = createConcertStage(scene, shadows, { x: 38, y: 0, z: -6 }, -Math.PI / 2);
+    yield;
   // Phía Tây: Quán cà phê Airstream & sân vườn thư giãn (x: -34, z: 6)
   const coffeeVan = createVintageCoffeeVan(scene, shadows, { x: -34, y: 0, z: 6 }, Math.PI / 2);
+    yield;
   // Phía Tây: Vòng quay may mắn & Máy gắp thú dời vào khu giải trí Tây
   const luckyWheel = createLuckyWheel3D(scene, shadows, { x: -36, y: 0, z: -18 }, Math.PI / 4);
+    yield;
   const clawMachine = createClawMachine3D(scene, shadows, { x: -36, y: 0, z: -12 }, -Math.PI / 4);
+    yield;
   // Phía Tây: Sân trượt ván & giá ván trượt Downtown
   const skatePark = createDowntownSkatePark(scene, shadows, { x: -22, y: 0, z: -38 }, Math.PI / 4);
+    yield;
   const skateboardRack = createSkateboardRack(scene, shadows, { x: -28, y: 0, z: -36 }, -Math.PI / 4);
+    yield;
   // Kiosk thông tin định vị thị trấn đặt nép vỉa hè Tây, tuyệt đối không chắn trục tâm
   const directoryKiosk = createTownDirectoryKiosk(scene, shadows, { x: -12.5, y: 0, z: 24 });
+    yield;
 
   // 4. Tòa Thị Chính Đô Thị Hiện Đại & Tháp Đồng Hồ 28m (Metropolis Civic City Hall)
   // Di dời sang khuôn viên công quyền phía Tây x: -38 để giải phóng 100% trục đường Bắc x: 0
   const townHall = createTownHall(scene, shadows, { x: -38, y: 0, z: -98 });
+    yield;
 
   // 7. Chợ Phiên Nông Sản Phố Chợ Phía Tây (Bố trí tại quảng trường thương mại x: -62, z: 24 ngoài lòng Đại lộ Tây)
   const farmersMarket = createFarmersMarket(scene, shadows, foliage, { x: -62, z: 24 });
+    yield;
 
   // 7. Town Citizens (Cư dân 3D dạo phố, thưởng thức cà phê và mua sắm nông sản)
   const townCitizens = [
@@ -640,40 +751,53 @@ export function createOpenWorld(scene, shadows) {
     citizen(scene, -12, 326, '#ed7185', shadows), // Đi dạo bãi biển
     citizen(scene, 138, 4, '#db835e', shadows),   // Câu cá bến hồ Pha Lê
   ];
+    yield;
 
-  // 8. Lake & Mountain District (Fishing pier, sailboat, arched bridge, waterfall)
-  createRomanticLake(scene);
+  // 8. Lake & Mountain District (Cozy Farmy Teardrop Lagoon, sandy shore, rustic wooden pier)
+  createRomanticLake(scene, shadows);
+  yield;
 
-  const island = MeshBuilder.CreateCylinder('lake-island', { diameter: 7, height: 0.35, tessellation: 20 }, scene);
-  island.position.set(171, 0.19, 2);
-  island.material = materials.meadow;
 
   const lakeDistrict = createLakeDistrict(scene, shadows);
+    yield;
   // Tuyến đường dạo đá phiến ven hồ nối từ vỉa hè Đại lộ Đông sang Bến câu cá, Lều dã ngoại và Cầu vòm
   createSteppingStoneTrail(scene, { x: 132, z: 5.5 }, { x: 138, z: 18 }, materials, 7);
+    yield;
   createSteppingStoneTrail(scene, { x: 136, z: -5.5 }, { x: 152, z: -16 }, materials, 8);
+    yield;
   [[133, -34, 2.4], [151, -42, 3.2], [190, -35, 2.8], [206, 20, 3.6], [192, 42, 2.6]].forEach(([x, z, s]) =>
     hill(scene, x, z, s, materials.meadow, shadows)
   );
+    yield;
 
   // 9. Seaside Beach District (Boardwalk, coconut bar, loungers, palms)
   // Lối nối lát đá phiến từ đại lộ bờ biển xuống Cầu ván gỗ Boardwalk
   terrainPatch(scene, 'beach-boardwalk-connector', 0, 324, 8.5, 6, materials.sidewalk);
+    yield;
   createSeasideOcean(scene);
+    yield;
 
   const beachDistrict = createBeachDistrict(scene, shadows);
+    yield;
   beachDistrict.position.z = 142;
+    yield;
   const lighthouse = createLighthouse(scene, shadows, { x: 73, y: 0, z: 345 });
+    yield;
   const steamboatPort = createSteamboatPort(scene, shadows, { x: -38, y: 0, z: 358 });
+    yield;
 
   // 10. Farmsteads: Animated Dutch Windmill, Grain Silo, Artisan Workshop
   const windmill = createWindmill(scene, shadows, { x: -92, y: 0, z: 108 });
+    yield;
   createGrainSilo(scene, shadows, { x: 88, y: 0, z: 112 });
+    yield;
   createArtisanWorkshop(scene, shadows, { x: 88, y: 0, z: 136 });
+    yield;
 
   [[-181, -4, 2.1], [-190, 73, 2.8], [-150, 103, 2.4]].forEach(([x, z, s]) =>
     hill(scene, x, z, s, materials.meadow, shadows)
   );
+    yield;
 
   return {
     windmill,
@@ -714,4 +838,11 @@ export function createOpenWorld(scene, shadows) {
       }
     },
   };
+}
+
+export function createOpenWorld(scene, shadows) {
+  const steps = createOpenWorldSteps(scene, shadows);
+  let result;
+  do { result = steps.next(); } while (!result.done);
+  return result.value;
 }

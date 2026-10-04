@@ -35,6 +35,7 @@ export function GameStartScreen({
   bootPhase = 'loading',
   bootError = '',
   bootProgress = { phase: 'loading', percentage: 0, message: 'Đang khởi động…', current: 0, total: 40 },
+  onBeginExit,
   onStart,
   isMuted = false,
   onToggleMute,
@@ -78,6 +79,7 @@ export function GameStartScreen({
   const handleStartGame = () => {
     if (!isReady || isExiting) return;
     setIsExiting(true);
+    onBeginExit?.();
     setTimeout(() => {
       onStart?.();
     }, 420);

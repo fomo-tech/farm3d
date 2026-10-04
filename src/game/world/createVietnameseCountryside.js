@@ -148,8 +148,9 @@ function createGlampingPark(scene, parent, materials, shadows) {
  * KHU VỰC ĐIỀN TRANG NGOẠI Ô MẠNG XÃ HỘI (SUBURBAN SOCIAL FARMLAND)
  * Đã loại bỏ hoàn toàn các yếu tố dân dã cũ (cầu khỉ tre, thuyền thúng, trâu bùn, lúa nước đắp bùn).
  */
-export function createVietnameseCountryside(scene, shadows) {
+export function* createVietnameseCountrysideSteps(scene, shadows) {
   const root = new TransformNode('suburban-social-countryside', scene);
+    yield;
   const materials = {
     straw: mat(scene, 'suburban-hay-bale', '#fbbf24', '#f59e0b'),
     rope: mat(scene, 'bale-rope-white', '#f8fafc'),
@@ -161,7 +162,9 @@ export function createVietnameseCountryside(scene, shadows) {
     fire: mat(scene, 'suburban-fire-glow', '#f97316', '#fbbf24'),
     grassPasture: mat(scene, 'pasture-green-grass', '#86efac'),
   };
+    yield;
   materials.grassPasture.zOffset = -1;
+    yield;
 
   // 1. HÀNG RÀO GỖ TRẮNG NÔNG TRANG NGOẠI Ô (WHITE PICKET FENCES)
   // Đã giải phóng hoàn toàn hành lang Quốc Lộ 86 (z = 86) để các tuyến xe buýt và phương tiện thông suốt 100%
@@ -169,27 +172,44 @@ export function createVietnameseCountryside(scene, shadows) {
   // 2. KHU ĐỒNG CỎ CHĂN THẢ BÒ SỮA SẠCH ĐẸP (DAIRY COW PASTURE)
   // Bố trí tại khuôn viên đồng quê (x: 88, z: 112) - Hoàn toàn nằm ngoài hành lang an toàn của mọi trục đường
   const pastureGrass = MeshBuilder.CreateDisc('dairy-pasture-green', { radius: 10, tessellation: 36 }, scene);
+    yield;
   pastureGrass.rotation.x = Math.PI / 2;
+    yield;
   pastureGrass.position.set(88, 0.05, 112);
+    yield;
   pastureGrass.material = materials.grassPasture;
+    yield;
   pastureGrass.parent = root;
+    yield;
 
   // Hàng rào gỗ trắng bao quanh bãi chăn thả an toàn
   createWhitePicketFence(scene, shadows, 20, { x: 88, y: 0, z: 102 }, 0, root);
+    yield;
   createWhitePicketFence(scene, shadows, 20, { x: 88, y: 0, z: 122 }, 0, root);
+    yield;
   createWhitePicketFence(scene, shadows, 20, { x: 78, y: 0, z: 112 }, Math.PI / 2, root);
+    yield;
   createWhitePicketFence(scene, shadows, 20, { x: 98, y: 0, z: 112 }, Math.PI / 2, root);
+    yield;
 
   // Máng cỏ gỗ sạch sẽ cho bò sữa
   const feedTrough = MeshBuilder.CreateBox('cow-feed-trough', { width: 3.8, height: 0.6, depth: 1.1 }, scene);
+    yield;
   feedTrough.position.set(88, 0.3, 104);
+    yield;
   feedTrough.material = materials.timber;
+    yield;
   feedTrough.parent = root;
+    yield;
 
   const troughHay = MeshBuilder.CreateBox('cow-trough-hay', { width: 3.5, height: 0.3, depth: 0.9 }, scene);
+    yield;
   troughHay.position.set(88, 0.5, 104);
+    yield;
   troughHay.material = materials.straw;
+    yield;
   troughHay.parent = root;
+    yield;
 
   // Đàn bò sữa Holstein 3D thảnh thơi nhai cỏ
   const cow1 = spawnModelSync(scene, MODEL_PATHS.animals.cow, {
@@ -199,7 +219,9 @@ export function createVietnameseCountryside(scene, shadows) {
     shadows,
     name: 'pasture-cow-1',
   });
+    yield;
   if (cow1) cow1.parent = root;
+    yield;
 
   const cow2 = spawnModelSync(scene, MODEL_PATHS.animals.cow, {
     position: new Vector3(91, 0, 115),
@@ -208,10 +230,12 @@ export function createVietnameseCountryside(scene, shadows) {
     shadows,
     name: 'pasture-cow-2',
   });
+    yield;
   if (cow2) cow2.parent = root;
+    yield;
 
   // 3. CÁC KIỆN RƠM VÀNG ĐÓNG KHỐI (HAY BALES) XẾP TẦNG CẠNH TRANG TRẠI (TUYỆT ĐỐI KHÔNG CHẮN ĐƯỜNG)
-  [
+  for (const [_index, b] of ([
     // Cụm kiện rơm phía Tây (sân trang trại)
     { x: -72, y: 0, z: 102, r: 0 },
     { x: -70.3, y: 0, z: 102, r: 0 },
@@ -223,13 +247,16 @@ export function createVietnameseCountryside(scene, shadows) {
     // Cụm kiện rơm ven ngoại ô
     { x: -72, y: 0, z: 254, r: 0.2 },
     { x: 72, y: 0, z: 254, r: -0.2 },
-  ].forEach(b => createHayBale(scene, b.x, b.y, b.z, root, materials, b.r));
+  ]).entries()) { createHayBale(scene, b.x, b.y, b.z, root, materials, b.r); yield; }
+    yield;
 
   // 4. BẾN THUYỀN BUỒM & CANO THỂ THAO VEN HỒ
   createLakePier(scene, root, materials, shadows);
+    yield;
 
   // 5. CÔNG VIÊN GLAMPING & NGHỈ DƯỠNG BỜ BIỂN
   createGlampingPark(scene, root, materials, shadows);
+    yield;
 
   return {
     root,
@@ -237,4 +264,11 @@ export function createVietnameseCountryside(scene, shadows) {
       root.dispose(false, true);
     },
   };
+}
+
+export function createVietnameseCountryside(scene, shadows) {
+  const steps = createVietnameseCountrysideSteps(scene, shadows);
+  let result;
+  do { result = steps.next(); } while (!result.done);
+  return result.value;
 }

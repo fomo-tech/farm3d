@@ -7,6 +7,7 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js'
 import { FARM_CONFIG } from '../config.js';
 import { createSoilTexture, createMeadowTexture } from '../world/createStylizedTextures.js';
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
+import { LANDSCAPE_ART as ART } from '../world/LandscapeArt.js';
 
 /**
  * Tạo khuôn viên nông trại người chơi chuẩn Ghibli x Play Together:
@@ -52,7 +53,7 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     ambientScale: 0.52,
   });
 
-  const stonePathMat = createToyMaterial(scene, 'mat-toy-flagstone-road', '#ded3c2', {
+  const stonePathMat = createToyMaterial(scene, 'mat-toy-flagstone-road', ART.pathLight, {
     specularPower: 26,
     specularLevel: 0.12,
     ambientScale: 0.65,
@@ -258,9 +259,9 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
   shadows?.addShadowCaster(trunk);
 
   const foliageMats = [
-    createToyMaterial(scene, 'mat-tree-leaf-bright', '#4ade80', { ambientScale: 0.6 }),
-    createToyMaterial(scene, 'mat-tree-leaf-mid', '#22c55e', { ambientScale: 0.55 }),
-    createToyMaterial(scene, 'mat-tree-apple-red', '#ef4444', { emissiveHex: '#dc2626', specularPower: 96 }),
+    createToyMaterial(scene, 'mat-tree-leaf-bright', ART.leafLight, { ambientScale: 0.3, specularLevel: 0.03 }),
+    createToyMaterial(scene, 'mat-tree-leaf-mid', ART.leaf, { ambientScale: 0.3, specularLevel: 0.03 }),
+    createToyMaterial(scene, 'mat-tree-apple-red', '#D95660', { specularLevel: 0.03 }),
   ];
 
   // Các tán lá tròn mập bồng bềnh
@@ -270,7 +271,7 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     { x: 0.7, y: 2.8, z: -0.3, s: 1.7, mat: foliageMats[1] },
     { x: 0.2, y: 3.7, z: 0.2, s: 1.5, mat: foliageMats[0] },
   ].forEach((clump, idx) => {
-    const leaf = MeshBuilder.CreateSphere(`tree-foliage-${idx}`, { diameter: clump.s, segments: 10 }, scene);
+    const leaf = MeshBuilder.CreateIcoSphere(`tree-foliage-${idx}`, { radius: clump.s / 2, subdivisions: 2, flat: true }, scene);
     leaf.position.set(clump.x, clump.y, clump.z);
     leaf.material = clump.mat;
     leaf.parent = treeRoot;

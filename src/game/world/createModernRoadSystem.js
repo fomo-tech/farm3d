@@ -374,7 +374,7 @@ export function createZebraCrosswalk(scene, options = {}) {
  * - Vạch tim đường đá sa thạch vàng nhẹ (centerInlay) phân làn
  * - Đèn lồng sắt rèn Victorian chiếu sáng ấm cúng
  */
-export function createCountryRoad(scene, options = {}) {
+export function* createCountryRoadSteps(scene, options = {}) {
   const {
     id = 'country-road',
     x = 0,
@@ -392,12 +392,16 @@ export function createCountryRoad(scene, options = {}) {
     lampInterval = 48,
     intersections = [],
   } = options;
+    yield;
 
   const root = new TransformNode(`ghibli-country-road-${id}`, scene);
+    yield;
   root.position.set(x, 0, z);
+    yield;
   if (!isNorthSouth) {
     root.rotation.y = Math.PI / 2;
   }
+    yield;
 
   const mats = {
     roadCobble: getOrCreateMat(scene, 'ghibli-road-cobble', WORLD_PALETTE.roadStone, null, 0.1),
@@ -407,10 +411,15 @@ export function createCountryRoad(scene, options = {}) {
     wroughtIron: getOrCreateMat(scene, 'ghibli-lamp-iron', '#2b2621', null, 0.35),
     gaslightGlow: getOrCreateMat(scene, 'ghibli-lamp-glow', '#fef08a', '#f59e0b', 0.9),
   };
+    yield;
   mats.roadCobble.zOffset = -1;
+    yield;
   mats.curbStone.zOffset = -1;
+    yield;
   mats.sidewalkStone.zOffset = -2;
+    yield;
   mats.centerInlay.zOffset = -4;
+    yield;
 
   // 1. Mặt đường đá cuội sa thạch nổi khối 3D (dày 8cm, đỉnh ở y = 0.08m)
   const roadMesh = MeshBuilder.CreateBox(`road-bed-${id}`, {
@@ -418,16 +427,23 @@ export function createCountryRoad(scene, options = {}) {
     height: 0.08,
     depth: length,
   }, scene);
+    yield;
   roadMesh.position.y = 0.04;
+    yield;
   roadMesh.material = mats.roadCobble;
+    yield;
   roadMesh.receiveShadows = true;
+    yield;
   roadMesh.parent = root;
+    yield;
 
   // Tính toán các khoảng mở giao lộ (openings) để ngắt gờ đá & vỉa hè
   const halfL = length / 2;
+    yield;
   const openings = [];
+    yield;
 
-  intersections.forEach(item => {
+  for (const [_index, item] of (intersections).entries()) {
     const worldPos = typeof item === 'object' ? item.pos : item;
     const openWidth = (typeof item === 'object' && item.width) ? item.width : (width + 1.2);
     const localPos = isNorthSouth ? (worldPos - z) : (worldPos - x);
@@ -442,31 +458,42 @@ export function createCountryRoad(scene, options = {}) {
         width: openWidth,
       });
     }
-  });
+
+      yield;
+    }
+    yield;
 
   openings.sort((a, b) => a.start - b.start);
+    yield;
 
   const segments = [];
+    yield;
   let curZ = -halfL;
+    yield;
   for (const op of openings) {
     if (op.start > curZ + 0.3) {
       segments.push({ start: curZ, end: Math.min(halfL, op.start) });
     }
     curZ = Math.max(curZ, op.end);
-  }
+
+      yield;
+}
+    yield;
   if (curZ < halfL - 0.3) {
     segments.push({ start: curZ, end: halfL });
   }
+    yield;
   if (openings.length === 0) {
     segments.push({ start: -halfL, end: halfL });
   }
+    yield;
 
   // 2. Gờ đá tự nhiên bo viền 2 bên tiếp giáp thảm cỏ (được ngắt tại ngã tư)
   if (hasEdgeCurbs) {
-    [-1, 1].forEach(side => {
-      segments.forEach((seg, sidx) => {
+    for (const [_index, side] of ([-1, 1]).entries()) {
+      for (const [sidx, seg] of (segments).entries()) {
         const segLen = seg.end - seg.start;
-        if (segLen <= 0.3) return;
+        if (segLen <= 0.3) continue;
         const segMid = (seg.start + seg.end) / 2;
         const curb = MeshBuilder.CreateBox(`curb-${id}-${side}-${sidx}`, {
           width: curbWidth,
@@ -477,16 +504,21 @@ export function createCountryRoad(scene, options = {}) {
         curb.material = mats.curbStone;
         curb.receiveShadows = true;
         curb.parent = root;
-      });
-    });
+
+      yield;
+    }
+
+      yield;
+    }
   }
+    yield;
 
   // 3. Vỉa hè đi bộ đá phiến mật ong (tùy chọn cho trục chính làng)
   if (hasSidewalk) {
-    [-1, 1].forEach(side => {
-      segments.forEach((seg, sidx) => {
+    for (const [_index, side] of ([-1, 1]).entries()) {
+      for (const [sidx, seg] of (segments).entries()) {
         const segLen = seg.end - seg.start;
-        if (segLen <= 0.3) return;
+        if (segLen <= 0.3) continue;
         const segMid = (seg.start + seg.end) / 2;
         const walkX = side * (width / 2 + curbWidth + sidewalkWidth / 2);
         const sidewalk = MeshBuilder.CreateBox(`sidewalk-${id}-${side}-${sidx}`, {
@@ -498,9 +530,14 @@ export function createCountryRoad(scene, options = {}) {
         sidewalk.material = mats.sidewalkStone;
         sidewalk.receiveShadows = true;
         sidewalk.parent = root;
-      });
-    });
+
+      yield;
+    }
+
+      yield;
+    }
   }
+    yield;
 
   // 4. Tim đường phân làn đá sa thạch
   if (hasCenterDashes && length >= 12) {
@@ -523,8 +560,11 @@ export function createCountryRoad(scene, options = {}) {
       dash.position.set(0, 0.089, dz);
       dash.material = mats.centerInlay;
       dash.parent = root;
-    }
+
+      yield;
+}
   }
+    yield;
 
   // 5. Cột đèn lồng sắt rèn Victorian
   if (hasStreetLamps && length >= 32) {
@@ -576,11 +616,22 @@ export function createCountryRoad(scene, options = {}) {
       flame.position.set(lx, 3.9, pz);
       flame.material = mats.gaslightGlow;
       flame.parent = root;
-    }
+
+      yield;
+}
   }
+    yield;
 
   freezeSubtree(root);
+    yield;
   return root;
+}
+
+export function createCountryRoad(scene, options = {}) {
+  const steps = createCountryRoadSteps(scene, options);
+  let result;
+  do { result = steps.next(); } while (!result.done);
+  return result.value;
 }
 
 /**
@@ -688,4 +739,3 @@ export function createCulDeSac(scene, options = {}) {
   freezeSubtree(root);
   return root;
 }
-

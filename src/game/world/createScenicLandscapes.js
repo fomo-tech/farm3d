@@ -205,9 +205,11 @@ function createBeachLoungeSpot(scene, parent, x, z, angle, shadows, materials) {
 /**
  * Creates the complete Scenic Landscape infrastructure.
  */
-export function createScenicLandscapes(scene, foliage, shadows, foliageInstancing = null) {
+export function* createScenicLandscapesSteps(scene, foliage, shadows, foliageInstancing = null) {
   if (!foliageInstancing) foliageInstancing = new FoliageInstancingEngine(scene, shadows);
+    yield;
   const root = new TransformNode('world-scenic-landscapes', scene);
+    yield;
 
   const materials = {
     straw: makeMat(scene, 'scenic-straw', '#fbbf24', '#f59e0b', 0.05),
@@ -218,6 +220,7 @@ export function createScenicLandscapes(scene, foliage, shadows, foliageInstancin
     lavenderPetal: makeMat(scene, 'scenic-lavender', '#a855f7', '#c084fc', 0.1),
     whiteFence: makeMat(scene, 'scenic-white-fence', '#f8fafc', null, 0.12),
   };
+    yield;
 
   // =========================================================================
   // BIOME 1: ĐẠI LỘ HOA ANH ĐÀO & NÔNG TRẠI GHIBLI (HIGHWAY 86 · TUYẾN 01)
@@ -236,22 +239,13 @@ export function createScenicLandscapes(scene, foliage, shadows, foliageInstancin
         foliage.createFlowerPatch(x + (side > 0 ? 1.5 : -1.5), z, 7, 1.8);
       }
     }
-  }
 
-  // Điểm nhấn Nông Trại Ghibli dọc Highway 86 (Kiện rơm + bí ngô + xe kéo hoa)
-  const hwy86ArtisanSpots = [
-    { x: -480, z: 75.5 },
-    { x: -225, z: 97.0 },
-    { x: 215, z: 97.0 },
-    { x: 480, z: 75.5 },
-  ];
-  hwy86ArtisanSpots.forEach(s => {
-    if (!isPointOnRoadCorridor(s.x, s.z, 4.0) && !isPointInsideAnyFarmLot(s.x, s.z, 1.5) && Math.abs(s.x - 244) > 14) {
-      createHayBaleStack(scene, root, s.x, s.z, shadows, materials);
-      foliage.createScarecrow(s.x + 3.2, s.z);
-      foliage.createFlowerPatch(s.x - 3.2, s.z, 8, 2.2);
-    }
-  });
+      yield;
+}
+    yield;
+
+  // Hành lang QL 86 thông thoáng, sạch sẽ, không có đồ vật bừa bãi
+  yield;
 
   // =========================================================================
   // BIOME 2: BỜ BIỂN NHIỆT ĐỚI & LỄ HỘI MÙA HÈ (SOUTH AVE & QL 406 · TUYẾN 02)
@@ -259,12 +253,17 @@ export function createScenicLandscapes(scene, foliage, shadows, foliageInstancin
   // QL Nam 406: z = 406, x từ -270 đến +270. Trồng đều đặn nhịp 16m/cây
   // =========================================================================
   for (let z = 290; z <= 350; z += 12) {
-    [-11.5, 11.5].forEach(x => {
+    for (const [_index, x] of ([-11.5, 11.5]).entries()) {
       if (!isPointOnRoadCorridor(x, z, 4.0) && !isPointInsideAnyFarmLot(x, z, 1.5)) {
         foliage.createTropicalPalm(x, z, 1.0, (x > 0 ? -0.22 : 0.22), true);
       }
-    });
-  }
+
+      yield;
+    }
+
+      yield;
+}
+    yield;
 
   for (let x = -270; x <= 270; x += 16) {
     const side = (Math.floor((x + 300) / 16) % 2 === 0) ? -1 : 1;
@@ -275,7 +274,10 @@ export function createScenicLandscapes(scene, foliage, shadows, foliageInstancin
         foliage.createHydrangeaBush(x + 2.0, z, '#f43f5e', 0.9);
       }
     }
-  }
+
+      yield;
+}
+    yield;
 
   // Các điểm nghỉ dưỡng ven biển có dù che nắng và ghế phơi nắng (tại bãi cát z >= 305 và QL 406)
   const beachLounges = [
@@ -286,11 +288,15 @@ export function createScenicLandscapes(scene, foliage, shadows, foliageInstancin
     { x: -140, z: 418.0, rot: 0 },
     { x: 140, z: 418.0, rot: Math.PI },
   ];
-  beachLounges.forEach(b => {
+    yield;
+  for (const [_index, b] of (beachLounges).entries()) {
     if (!isPointOnRoadCorridor(b.x, b.z, 4.0) && !isPointInsideAnyFarmLot(b.x, b.z, 1.5)) {
       createBeachLoungeSpot(scene, root, b.x, b.z, b.rot, shadows, materials);
     }
-  });
+
+      yield;
+    }
+    yield;
 
   // =========================================================================
   // BIOME 3: RỪNG THÔNG CAO NGUYÊN & CỐI XAY GIÓ (HIGHWAY -234 · TUYẾN 03)
@@ -305,16 +311,24 @@ export function createScenicLandscapes(scene, foliage, shadows, foliageInstancin
         foliage.createFlowerPatch(x + 1.8, z, 8, 2.0);
       }
     }
-  }
+
+      yield;
+}
+    yield;
 
   // Nhánh Đại Lộ dẫn về Làng Phú Điền (z = -260 -> -385 nhịp 14m)
   for (let z = -260; z >= -385; z -= 14) {
-    [-11.5, 11.5].forEach(x => {
+    for (const [_index, x] of ([-11.5, 11.5]).entries()) {
       if (!isPointOnRoadCorridor(x, z, 3.8) && !isPointInsideAnyFarmLot(x, z, 1.5)) {
         foliage.createAlpinePine(x, z, 1.0, true);
       }
-    });
-  }
+
+      yield;
+    }
+
+      yield;
+}
+    yield;
 
   // Tảng đá núi và bãi cỏ động vật chăn thả ven đường cao nguyên
   const highlandPastures = [
@@ -323,7 +337,8 @@ export function createScenicLandscapes(scene, foliage, shadows, foliageInstancin
     { x: 170, z: -248.0, animal: 'cow' },
     { x: 370, z: -220.0, animal: 'alpaca' },
   ];
-  highlandPastures.forEach(pasture => {
+    yield;
+  for (const [_index, pasture] of (highlandPastures).entries()) {
     if (!isPointOnRoadCorridor(pasture.x, pasture.z, 3.5)) {
       spawnModelSync(scene, pasture.animal === 'cow' ? MODEL_PATHS.animals.cow : MODEL_PATHS.animals.alpaca, {
         position: new Vector3(pasture.x, 0, pasture.z),
@@ -339,7 +354,10 @@ export function createScenicLandscapes(scene, foliage, shadows, foliageInstancin
         name: `scenic-rock-${pasture.x}`,
       });
     }
-  });
+
+      yield;
+    }
+    yield;
 
   // =========================================================================
   // BIOME 4: TRIỀN HỒ PHA LÊ & VƯỜN HOA OẢI HƯƠNG (LAKE PROMENADE · TUYẾN 04)
@@ -355,8 +373,9 @@ export function createScenicLandscapes(scene, foliage, shadows, foliageInstancin
     { x: 112, z: 24 },
     { x: 128, z: 26 },
   ];
+    yield;
 
-  lakePromenadeSpots.forEach((s, idx) => {
+  for (const [idx, s] of (lakePromenadeSpots).entries()) {
     if (!isPointOnRoadCorridor(s.x, s.z, 3.5)) {
       // Vạt hoa Oải Hương tím thơm ngát
       foliage.createFlowerPatch(s.x, s.z, 10, 2.5);
@@ -367,14 +386,17 @@ export function createScenicLandscapes(scene, foliage, shadows, foliageInstancin
         foliage.createCloudTree(s.x - 3.5, s.z + 1.5, 1.2, true);
       }
     }
-  });
+
+      yield;
+    }
+    yield;
 
   // Đàn vịt trời tung tăng ven bờ cỏ hồ Pha Lê
-  [
+  for (const [i, duckPos] of ([
     { x: 142, z: -12 },
     { x: 145, z: -10 },
     { x: 140, z: -8 },
-  ].forEach((duckPos, i) => {
+  ]).entries()) {
     spawnModelSync(scene, MODEL_PATHS.animals.duck, {
       position: new Vector3(duckPos.x, 0.1, duckPos.y || duckPos.z),
       rotation: new Vector3(0, 0.8 + i * 0.4, 0),
@@ -382,54 +404,72 @@ export function createScenicLandscapes(scene, foliage, shadows, foliageInstancin
       parent: root,
       name: `lake-duck-${i}`,
     });
-  });
+
+      yield;
+    }
+    yield;
 
   // =========================================================================
   // 5. VÀNH ĐAI DÃY NÚI HÙNG VĨ & ĐỒI XANH BAO QUANH CHÂN TRỜI (WORLD BORDER PANORAMA)
   // Continuous Procedural Mountain Range + 3D Cliff Formations + Horizon Treelines
   // =========================================================================
   createWorldBorderMountains(scene, root, foliageInstancing);
+    yield;
 
   // =========================================================================
   // 6. DÒNG SÔNG NƯỚC NGỌC BÍCH LÃNG MẠN CỦA LÀNG VEN SÔNG (RIVER OF LÀNG VEN SÔNG)
   // Chạy dài 300m song song trục làng với 2 cây cầu gỗ vòm, bến thuyền câu cá và đàn vịt
   // =========================================================================
   createVenSongRiver(scene, root, foliage, shadows);
+    yield;
 
   // =========================================================================
   // 7. ĐẠI LỘ CÂY XANH & HOA TƯƠI DỌC TRỤC CHÍNH TẤT CẢ 12 LÀNG (ALL VILLAGE TREE AVENUES)
   // Trồng cây hai bên vỉa hè, khóm hoa cẩm tú cầu và ghế đá ngắm cảnh cho 100% 12 làng
   // =========================================================================
   createVillageRoadsideAvenues(scene, root, foliage, shadows);
+    yield;
 
   // =========================================================================
   // 8. ĐIỂM NHẤN CẢNH QUAN CHỦ ĐỀ ĐẶC TRƯNG CHO TỪNG LÀNG TRONG 12 LÀNG
   // =========================================================================
   createAllVillageThematicLandmarks(scene, root, foliage, shadows);
+    yield;
 
   // =========================================================================
   // 9. ĐẠI CÔNG VIÊN HOA & THUNG LŨNG TRUNG TÂM BÌNH MINH (CENTRAL GRAND BOTANICAL PARK)
   // Phủ kín 100% khoảng đất trống 360m x 55m giữa Vòng Xuyến Trung Tâm và Quốc Lộ 86
   // =========================================================================
   createCentralBotanicalPark(scene, root, foliage, shadows);
+    yield;
 
   // =========================================================================
   // 10. KHU DU LỊCH SINH THÁI HỒ PHA LÊ & BẾN THUYỀN THIÊN NGA PLAY TOGETHER
   // =========================================================================
   createCrystalLakeScenicFeatures(scene, root, foliage, shadows);
+    yield;
 
   // =========================================================================
   // 11. GIÀN HOA LEO PERGOLA UỐN VÒM TẠI CỔNG LÀNG & LỐI DẠO CÔNG VIÊN
   // =========================================================================
   createScenicPergolas(scene, root, foliage, shadows);
+    yield;
 
   // =========================================================================
   // 12. HỆ THỐNG PHỦ CÂY & HOA TOÀN CẦU DÀY ĐẶC (GLOBAL DENSE FLORA ENGINE)
   // Phủ 1,400+ cây xanh qua GPU Instancing, 2,800+ khóm hoa & 48 đồi cỏ không lag
   // =========================================================================
   createGlobalDenseFlora(scene, foliage, shadows, foliageInstancing);
+    yield;
 
   return root;
+}
+
+export function createScenicLandscapes(scene, foliage, shadows, foliageInstancing = null) {
+  const steps = createScenicLandscapesSteps(scene, foliage, shadows, foliageInstancing);
+  let result;
+  do { result = steps.next(); } while (!result.done);
+  return result.value;
 }
 
 /**

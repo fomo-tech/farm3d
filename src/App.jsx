@@ -828,10 +828,12 @@ export default function App() {
           bootPhase={boot.phase}
           bootError={boot.error}
           bootProgress={bootProgress}
+          onBeginExit={() => {
+            worldRef.current?.playStartCinematic?.();
+          }}
           onStart={() => {
             if (boot.phase !== 'ready' || bootProgress.percentage < 100) return;
             setGameStarted(true);
-            worldRef.current?.playStartCinematic?.();
             farmAudio.playFanfare();
           }}
           isMuted={isMuted}
@@ -842,10 +844,10 @@ export default function App() {
           }}
           graphicsQuality={graphicsQuality}
           onToggleGraphics={() => {
-            const nextPreset = graphicsQuality === 'ultra' ? 'balanced' : graphicsQuality === 'balanced' ? 'eco' : 'ultra';
+            const nextPreset = ({ auto: 'ultra', ultra: 'balanced', balanced: 'eco', eco: 'auto' })[graphicsQuality] || 'auto';
             setGraphicsQuality(nextPreset);
             worldRef.current?.setGraphicsQuality(nextPreset);
-            setStatus(nextPreset === 'ultra' ? 'Đồ họa Siêu Nét (Ultra Retina HD)' : nextPreset === 'balanced' ? 'Đồ họa Cân Bằng (Balanced HD)' : 'Đồ họa Tiết Kiệm Pin (Eco)');
+            setStatus(nextPreset === 'auto' ? 'Auto: ưu tiên hình nét, tự giảm hiệu ứng khi máy chậm' : nextPreset === 'ultra' ? 'Ultra: độ phân giải cố định, hiệu ứng cao — có thể giảm FPS' : nextPreset === 'balanced' ? 'Cân bằng' : 'Tiết kiệm pin');
           }}
         />
       )}
@@ -1196,12 +1198,12 @@ export default function App() {
                 <span>Âm thanh: {isMuted ? 'Tắt' : 'Bật'}</span>
               </button>
               <button type="button" onClick={() => {
-                const nextPreset = graphicsQuality === 'ultra' ? 'balanced' : graphicsQuality === 'balanced' ? 'eco' : 'ultra';
+                const nextPreset = ({ auto: 'ultra', ultra: 'balanced', balanced: 'eco', eco: 'auto' })[graphicsQuality] || 'auto';
                 setGraphicsQuality(nextPreset);
                 worldRef.current?.setGraphicsQuality(nextPreset);
               }}>
                 <Icon3dSparkleStar size={20} />
-                <span>Đồ họa: {{ ultra: 'Siêu nét', balanced: 'Cân bằng', eco: 'Tiết kiệm' }[graphicsQuality]}</span>
+                <span>Đồ họa: {{ auto: 'Tự động · nét trước', ultra: 'Siêu nét cố định', balanced: 'Cân bằng', eco: 'Tiết kiệm' }[graphicsQuality]}</span>
               </button>
             </div>
 

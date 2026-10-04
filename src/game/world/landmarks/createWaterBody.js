@@ -43,50 +43,9 @@ export function createLakeDistrict(scene, shadows) {
 
   const root = new TransformNode('landmark-lake-district', scene);
 
-  // === 1. CẦU TÀU GỖ CÂU CÁ (LONG WOODEN FISHING PIER) ===
-  const pierDeck = MeshBuilder.CreateBox('lake-pier-deck', {
-    width: 32,
-    height: 0.35,
-    depth: 4.4,
-  }, scene);
-  pierDeck.position.set(126, 0.35, 2);
-  pierDeck.material = materials.weatheredWood;
-  pierDeck.parent = root;
-  shadows?.addShadowCaster(pierDeck);
+  // === 1. PHỤ KIỆN BẾN CÂU CÁ TRÊN CẦU TÀU GỖ COZY FARMY ===
+  // Cầu tàu chính đã được dựng chuẩn theo phong cách Cozy Farmy trong createRomanticLake.js
 
-  // Cọc gỗ đóng đáy hồ quấn dây thừng
-  for (let px = 112; px <= 140; px += 5.5) {
-    [-2.0, 2.0].forEach((pz, i) => {
-      const pile = MeshBuilder.CreateCylinder(`lake-pile-${px}-${i}`, {
-        height: 2.8,
-        diameter: 0.32,
-        tessellation: 8,
-      }, scene);
-      pile.position.set(px, 0.2, 2 + pz);
-      pile.material = materials.timber;
-      pile.parent = root;
-      shadows?.addShadowCaster(pile);
-
-      // Cọc thừng nhô lên trên sàn cầu tàu (Mooring Bollards)
-      const bollardTop = MeshBuilder.CreateCylinder(`lake-bollard-top-${px}-${i}`, {
-        height: 0.5,
-        diameter: 0.24,
-      }, scene);
-      bollardTop.position.set(px, 0.7, 2 + pz);
-      bollardTop.material = materials.timber;
-      bollardTop.parent = root;
-
-      // Vòng dây thừng quấn quanh cọc
-      const ropeRing = MeshBuilder.CreateTorus(`lake-rope-${px}-${i}`, {
-        diameter: 0.28,
-        thickness: 0.06,
-        tessellation: 12,
-      }, scene);
-      ropeRing.position.set(px, 0.65, 2 + pz);
-      ropeRing.material = materials.rope;
-      ropeRing.parent = root;
-    });
-  }
 
   // Đèn lồng bão cổ điển đầu cầu tàu (Fisherman's Storm Lantern)
   const lanternPost = MeshBuilder.CreateCylinder('lake-lantern-post', { height: 2.4, diameter: 0.14 }, scene);

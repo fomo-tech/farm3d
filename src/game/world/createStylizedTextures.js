@@ -18,30 +18,29 @@ export function createMeadowTexture(scene, size = 1024) {
   dynamic.anisotropicFilteringLevel = 16;
   const ctx = dynamic.getContext();
 
-  // 1. Nền cỏ xanh tươi mát mọng nước ngập tràn ánh nắng (Ghibli Radiant Sunny Meadow)
-  const baseGrad = ctx.createLinearGradient(0, 0, size, size);
-  baseGrad.addColorStop(0.0, '#80ae61');
-  baseGrad.addColorStop(0.35, '#759f59');
-  baseGrad.addColorStop(0.7, '#69954f');
-  baseGrad.addColorStop(1.0, '#80ae61');
-  ctx.fillStyle = baseGrad;
+  // 1. Nền cỏ vàng xanh tươi mát ngập tràn ánh nắng (Cozy Farmy Sunny Meadow)
+  // A directional gradient makes every repeated tile read as a checkerboard.
+  ctx.fillStyle = WORLD_PALETTE.grassMid;
   ctx.fillRect(0, 0, size, size);
 
   // 2. Các vệt loang màu nước tự nhiên (Watercolor organic patches)
-  const patchColors = ['#a3bb7d', '#b5c791', '#91af70', '#b7bf82'];
+  const patchColors = ['#91C94B', '#AACF63', '#78B83D', '#B8D878'];
   for (let i = 0; i < 54; i++) {
     const px = ((i * 137) % size);
     const py = ((i * 241) % size);
     const rad = 45 + (i % 5) * 25;
-    const pGrad = ctx.createRadialGradient(px, py, 0, px, py, rad);
+    for (const ox of [-size, 0, size]) for (const oy of [-size, 0, size]) {
+    if (px + ox + rad < 0 || px + ox - rad > size || py + oy + rad < 0 || py + oy - rad > size) continue;
+    const pGrad = ctx.createRadialGradient(px + ox, py + oy, 0, px + ox, py + oy, rad);
     const c = patchColors[i % patchColors.length];
     pGrad.addColorStop(0, c + '3a');
     pGrad.addColorStop(0.7, c + '20');
     pGrad.addColorStop(1, c + '00');
     ctx.fillStyle = pGrad;
     ctx.beginPath();
-    ctx.arc(px, py, rad, 0, Math.PI * 2);
+    ctx.arc(px + ox, py + oy, rad, 0, Math.PI * 2);
     ctx.fill();
+    }
   }
 
   // 3. Khóm cỏ ba lá & hoa cúc li ti điểm xuyết
@@ -128,15 +127,15 @@ export function createHoneyPathTexture(scene, size = 1024) {
   dynamic.anisotropicFilteringLevel = 16;
   const ctx = dynamic.getContext();
 
-  // Nền đất vàng mật ong ấm áp
-  ctx.fillStyle = WORLD_PALETTE.roadWarm;
+  // Nền đất vàng mật ong cát mịn ấm áp (Cozy Farmy Sandy Peach Dirt Path)
+  ctx.fillStyle = '#f5cb8a';
   ctx.fillRect(0, 0, size, size);
 
   // Vệt chuyển sắc đất nện tự nhiên
   const grad = ctx.createLinearGradient(0, 0, size, size);
-  grad.addColorStop(0, 'rgba(250, 220, 199, 0.36)');
-  grad.addColorStop(0.5, 'rgba(214, 166, 146, 0.22)');
-  grad.addColorStop(1, 'rgba(188, 134, 116, 0.28)');
+  grad.addColorStop(0, 'rgba(254, 237, 213, 0.45)');
+  grad.addColorStop(0.5, 'rgba(246, 203, 138, 0.35)');
+  grad.addColorStop(1, 'rgba(234, 179, 108, 0.40)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, size, size);
 

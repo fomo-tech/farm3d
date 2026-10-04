@@ -21,6 +21,7 @@ import {
   createCandyPebbleRock,
 } from './createPlayTogetherProps.js';
 import { ROAD_SAFETY_CONFIG, isRoadResourceBlocked, recordBlockedRoadResource } from './RoadSafetyZone.js';
+import { LANDSCAPE_ART as ART } from './LandscapeArt.js';
 
 function harmonizeGreenTree({ childMeshes }) {
   const updated = new Set();
@@ -29,13 +30,13 @@ function harmonizeGreenTree({ childMeshes }) {
     if (!material || updated.has(material)) return;
     updated.add(material);
     if (/leaf|foliage|canopy/i.test(material.name)) {
-      const green = Color3.FromHexString('#22c55e');
+      const green = Color3.FromHexString(ART.leaf);
       if (material.albedoColor) material.albedoColor = green;
       if (material.diffuseColor) material.diffuseColor = green;
       material.metallic = 0;
       material.roughness = 0.78;
     } else if (/bark|trunk/i.test(material.name)) {
-      const bark = Color3.FromHexString('#78350f');
+      const bark = Color3.FromHexString(ART.trunk);
       if (material.albedoColor) material.albedoColor = bark;
       if (material.diffuseColor) material.diffuseColor = bark;
       material.metallic = 0;
@@ -46,11 +47,11 @@ function harmonizeGreenTree({ childMeshes }) {
 
 export function createFoliageFactory(scene, shadows, instancing = null) {
   const materials = {
-    trunk: mat(scene, 'tree-trunk-mat', '#78350f'),
-    leafTop: mat(scene, 'tree-leaf-top', '#86efac'),
-    leafMid: mat(scene, 'tree-leaf-mid', '#22c55e'),
-    leafBot: mat(scene, 'tree-leaf-bot', '#16a34a'),
-    apple: mat(scene, 'tree-apple-mat', '#f43f5e', '#be123c'),
+    trunk: mat(scene, 'tree-trunk-mat', ART.trunk),
+    leafTop: mat(scene, 'tree-leaf-top', ART.leafLight),
+    leafMid: mat(scene, 'tree-leaf-mid', ART.leaf),
+    leafBot: mat(scene, 'tree-leaf-bot', ART.leafShade),
+    apple: mat(scene, 'tree-apple-mat', '#D95660'),
     wood: mat(scene, 'foliage-wood-mat', '#78350f'),
     stone: mat(scene, 'well-stone-mat', '#9ca3af'),
     roof: mat(scene, 'well-roof-mat', '#e11d48'),
@@ -144,6 +145,16 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
         shadows: withShadows ? shadows : null,
         name: 'golden-maple',
       });
+    },
+
+    createWhiteBirch(x, z, scale = 1.0, withShadows = true) {
+      if (instancing) return instancing.spawnBirch(x, z, scale * 1.05, withShadows);
+      return null;
+    },
+
+    createFruitTree(x, z, scale = 1.0, withShadows = true) {
+      if (instancing) return instancing.spawnFruit(x, z, scale * 1.05, withShadows);
+      return null;
     },
 
     createHydrangeaBush(x, z, colorHex = '#a78bfa', scale = 1.0) {

@@ -10,6 +10,8 @@ import { isolateColorGrading, applyColorPreset } from './IsolatedColorGrading.js
 export function createCinematicRenderingPipeline(scene, camera, options = {}) {
   let pipeline = null;
   let currentPreset = 'day';
+  let currentQuality = options.quality || (options.lightweight ? 'balanced' : 'ultra');
+  let stableSamples = !!options.stableSamples;
 
   try {
     pipeline = new DefaultRenderingPipeline('cinematic-pipeline', true, scene, [camera]);
@@ -18,14 +20,14 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     const isUltra = quality === 'ultra';
     const isEco = quality === 'eco';
 
-    // 1. Khử răng cưa phần cứng siêu sắc nét (4x/2x Hardware MSAA)
-    pipeline.samples = isEco ? 1 : (isUltra && !options.lightweight ? 4 : 2);
-    pipeline.fxaaEnabled = false;
+    // 1. Khử răng cưa phần cứng siêu sắc nét (4x/2x Hardware MSAA) kết hợp FXAA hậu kỳ
+    pipeline.samples = stableSamples ? 1 : (isEco ? 1 : (isUltra && !options.lightweight ? 4 : 2));
+    pipeline.fxaaEnabled = true;
 
     // Contrast Adaptive Sharpening (CAS): Micro-contrast that makes leaves, textures, and edges pop.
-    pipeline.sharpenEnabled = !isEco;
+    pipeline.sharpenEnabled = true;
     if (pipeline.sharpen) {
-      pipeline.sharpen.edgeAmount = isUltra ? 0.10 : 0.06;
+      pipeline.sharpen.edgeAmount = isEco ? 0.03 : (isUltra ? 0.08 : 0.05);
       pipeline.sharpen.colorAmount = 1.0;
     }
 
@@ -61,30 +63,34 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     pipeline,
     ssao: null,
     updateFocus: () => {},
-    setQuality: (quality = 'ultra') => {
-      if (!pipeline) return;
+    setQuality: (quality = 'ultra', keepSamplesStable = false) => {
+      // Auto also calls this when only resolution changes. Rebuilding an unchanged
+      // pipeline dirties shaders and can expose the clear color during compilation.
+      if (!pipeline || (quality === currentQuality && stableSamples === keepSamplesStable)) return;
+      currentQuality = quality;
+      stableSamples = keepSamplesStable;
+      const samples = stableSamples || quality === 'eco' ? 1 : (quality === 'ultra' && !options.lightweight ? 4 : 2);
+      if (pipeline.samples !== samples) pipeline.samples = samples;
       if (quality === 'ultra') {
-        pipeline.samples = options.lightweight ? 2 : 4;
-        pipeline.fxaaEnabled = false;
+        pipeline.fxaaEnabled = true;
         pipeline.sharpenEnabled = true;
         if (pipeline.sharpen) {
-          pipeline.sharpen.edgeAmount = 0.10;
+          pipeline.sharpen.edgeAmount = 0.08;
           pipeline.sharpen.colorAmount = 1.0;
         }
         pipeline.bloomEnabled = false;
       } else if (quality === 'balanced') {
-        pipeline.samples = 2;
-        pipeline.fxaaEnabled = false;
+        pipeline.fxaaEnabled = true;
         pipeline.sharpenEnabled = true;
         if (pipeline.sharpen) {
-          pipeline.sharpen.edgeAmount = 0.06;
+          pipeline.sharpen.edgeAmount = 0.05;
           pipeline.sharpen.colorAmount = 1.0;
         }
         pipeline.bloomEnabled = false;
       } else if (quality === 'eco') {
-        pipeline.samples = 1;
-        pipeline.fxaaEnabled = false;
-        pipeline.sharpenEnabled = false;
+        pipeline.fxaaEnabled = true;
+        pipeline.sharpenEnabled = true;
+        if (pipeline.sharpen) pipeline.sharpen.edgeAmount = 0.03;
         pipeline.bloomEnabled = false;
       }
       // Quality changes recreate the postprocess: detach its shared config again.
@@ -98,4 +104,3 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     }
   };
 }
-

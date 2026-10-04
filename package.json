@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "test:landscape": "node scripts/test-landscape-art.mjs && node scripts/test-living-meadow.mjs && node scripts/test-farm-decoration-batch.mjs && node scripts/test-pipeline-stability.mjs",
     "test:rendering": "node scripts/test-color-grading.mjs && node scripts/test-hud-runtime.mjs && node scripts/test-graphics-settings.mjs && node scripts/test-farm-streaming-grid.mjs && node scripts/test-texture-grain.mjs && node scripts/test-model-placement.mjs && node scripts/test-model-spawn-queue.mjs",
     "dev": "vite --host 0.0.0.0",
     "dev:server": "node --watch server/index.js",

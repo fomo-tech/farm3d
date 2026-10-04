@@ -264,11 +264,13 @@ export function createVillageNoticeBoard(scene, x, z, villageName = 'LÀNG HOA M
 /**
  * Creates the complete Village Greenbelt Windbreaks and Common Greens for all 12 Villages.
  */
-export function createVillageAmenitiesAndGreenbelts(scene, foliage, shadows, foliageInstancing = null) {
+export function* createVillageAmenitiesAndGreenbeltsSteps(scene, foliage, shadows, foliageInstancing = null) {
   if (!foliageInstancing) foliageInstancing = new FoliageInstancingEngine(scene, shadows);
+    yield;
   const root = new TransformNode('world-village-amenities-and-greenbelts', scene);
+    yield;
 
-  WORLD_VILLAGES.forEach((village) => {
+  for (const [_index, village] of (WORLD_VILLAGES).entries()) {
     const { offsetX, offsetZ, name, id } = village;
     const theme = VILLAGE_THEME_GROUPS[id] || {
       treeType: 'oak',
@@ -332,14 +334,18 @@ export function createVillageAmenitiesAndGreenbelts(scene, foliage, shadows, fol
     // 2. HÀNG CÂY BÓNG MÁT DỌC ĐƯỜNG DẪN VÀO CỔNG LÀNG
     // (x = offsetX ± 9.5m, z: offsetZ + 20 -> offsetZ + 60)
     // =========================================================================
-    [offsetZ + 28, offsetZ + 48].forEach(pz => {
-      [-9.5, 9.5].forEach(dx => {
+    for (const [_index, pz] of ([offsetZ + 28, offsetZ + 48]).entries()) {
+      for (const [_index, dx] of ([-9.5, 9.5]).entries()) {
         const tx = offsetX + dx;
         if (!isPointOnRoadCorridor(tx, pz, 3.8) && !isPointInsideAnyFarmLot(tx, pz, 1.5)) {
           foliageInstancing.spawnTree(theme.treeType, tx, pz, { scale: 1.35, withShadow: false });
         }
-      });
-    });
+
+      yield;
+    }
+
+      yield;
+    }
 
     // =========================================================================
     // 3. VÀNH ĐAI XANH CHẮN GIÓ 3 TẦNG BAO QUANH LƯNG VÀ HAI BÊN HÔNG LÀNG
@@ -351,28 +357,46 @@ export function createVillageAmenitiesAndGreenbelts(scene, foliage, shadows, fol
     for (let r = 0; r < 8; r++) {
       const pz = offsetZ + 95 + r * 22;
       perimeterTrees.push({ x: offsetX - 69, z: pz, scale: 1.35 + (r % 3) * 0.1 });
-    }
+
+      yield;
+}
 
     // Hàng cây phía Đông (x = offsetX + 69m): 8 cây dọc theo hông làng
     for (let r = 0; r < 8; r++) {
       const pz = offsetZ + 95 + r * 22;
       perimeterTrees.push({ x: offsetX + 69, z: pz, scale: 1.35 + (r % 3) * 0.1 });
-    }
+
+      yield;
+}
 
     // Hàng cây phía Sau làng (z = offsetZ + 276m): ngang qua lưng làng (chừa bùng binh quay đầu c = 2)
     for (let c = 0; c < 5; c++) {
       if (c === 2) continue; // Tránh trục quay đầu bùng binh
       const px = offsetX - 52 + c * 26;
       perimeterTrees.push({ x: px, z: offsetZ + 276, scale: 1.40 + (c % 3) * 0.1 });
-    }
+
+      yield;
+}
 
     // Trồng toàn bộ vành đai qua GPU Instancing
-    perimeterTrees.forEach((t) => {
+    for (const [_index, t] of (perimeterTrees).entries()) {
       if (!isPointOnRoadCorridor(t.x, t.z, 3.8) && !isPointInsideAnyFarmLot(t.x, t.z, 1.5)) {
         foliageInstancing.spawnTree(theme.treeType, t.x, t.z, { scale: t.scale, withShadow: false });
       }
-    });
-  });
+
+      yield;
+    }
+
+      yield;
+    }
+    yield;
 
   return root;
+}
+
+export function createVillageAmenitiesAndGreenbelts(scene, foliage, shadows, foliageInstancing = null) {
+  const steps = createVillageAmenitiesAndGreenbeltsSteps(scene, foliage, shadows, foliageInstancing);
+  let result;
+  do { result = steps.next(); } while (!result.done);
+  return result.value;
 }

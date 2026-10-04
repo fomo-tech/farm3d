@@ -5,6 +5,7 @@ import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
+import { LANDSCAPE_ART as ART } from './LandscapeArt.js';
 
 /**
  * WORLD ART BIBLE & DESIGN SYSTEM
@@ -16,14 +17,14 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 export const WORLD_PALETTE = Object.freeze({
   // Shared outdoor colors: bright toy-town surfaces with warm farm accents.
   skyDay: '#7bcdf1',
-  grassLight: '#78c658',
-  grassMid: '#5a9942',
-  grassShade: '#427830',
-  roadWarm: '#d4a48c',
-  roadStone: '#bd927d',
-  sidewalkCream: '#e7d4bd',
-  waterShallow: '#61d5e8',
-  waterDeep: '#258fc6',
+  grassLight: ART.grassLight,
+  grassMid: ART.grass,
+  grassShade: ART.grassMid,
+  roadWarm: ART.pathLight,
+  roadStone: ART.path,
+  sidewalkCream: '#C9B58B',
+  waterShallow: ART.shallows,
+  waterDeep: ART.water,
   // 1. Tường & Bệ móng
   wallPlaster: '#f1e8d8',       // Vôi kem vẫn rõ chi tiết dưới nắng mạnh
   wallPlasterWarm: '#f7ebd2',   // Vôi vàng nhạt nắng sớm

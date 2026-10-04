@@ -33,8 +33,9 @@ function mat(scene, name, hex, emissiveHex = null, specular = 0.08) {
 /**
  * Creates the 6 Major Inter-Village Landscapes.
  */
-export function createInterVillagePlains(scene, foliage, shadows) {
+export function* createInterVillagePlainsSteps(scene, foliage, shadows) {
   const root = new TransformNode('world-inter-village-plains', scene);
+    yield;
 
   const materials = {
     timber: createCozyMaterial(scene, 'plains-timber', WORLD_PALETTE.woodOakDark),
@@ -42,15 +43,17 @@ export function createInterVillagePlains(scene, foliage, shadows) {
     straw: mat(scene, 'plains-straw', '#fde047', null, 0.05),
     water: mat(scene, 'plains-water', WORLD_PALETTE.waterDeepBlue, WORLD_PALETTE.waterCrystalBlue, 0.5),
   };
+    yield;
 
   // =========================================================================
   // 1. THẢO NGUYÊN CỐI XAY GIÓ & ĐÀN CỪU (WEST WINDMILL & SHEEP PASTURE)
   // Giữa Hoa Mai (x = -300) và Đồi Gió (x = -600): x = -520 -> -380, z = 125 -> 235
   // =========================================================================
   const westCenter = { x: -450, z: 180 };
+    yield;
 
   // 2 Cối xay gió gỗ Hà Lan khổng lồ trên đồi cỏ cao (Scale 2.2x uy nghi)
-  [-32, 32].forEach((dx, i) => {
+  for (const [i, dx] of ([-32, 32]).entries()) {
     const wx = westCenter.x + dx;
     const wz = westCenter.z + (i === 0 ? -28 : 28);
     if (!isPointOnRoadCorridor(wx, wz, 4.0) && !isPointInsideAnyFarmLot(wx, wz, 2.0)) {
@@ -63,37 +66,13 @@ export function createInterVillagePlains(scene, foliage, shadows) {
         name: `west-windmill-${i}`,
       });
     }
-  });
 
-  // Hàng rào gỗ bao quanh ô đồng cỏ tự nhiên: đàn cừu & bò sữa gặm cỏ
-  const westAnimals = [
-    { x: westCenter.x - 22, z: westCenter.z - 12, type: 'alpaca' },
-    { x: westCenter.x + 18, z: westCenter.z - 10, type: 'cow' },
-    { x: westCenter.x - 12, z: westCenter.z + 22, type: 'alpaca' },
-    { x: westCenter.x + 24, z: westCenter.z + 24, type: 'cow' },
-  ];
-  westAnimals.forEach((a, idx) => {
-    if (!isPointOnRoadCorridor(a.x, a.z, 4.0) && !isPointInsideAnyFarmLot(a.x, a.z, 2.0)) {
-      spawnModelSync(scene, a.type === 'cow' ? MODEL_PATHS.animals.cow : MODEL_PATHS.animals.alpaca, {
-        position: new Vector3(a.x, 0, a.z),
-        rotation: new Vector3(0, Math.random() * Math.PI * 2, 0),
-        scaling: new Vector3(1.4, 1.4, 1.4),
-        parent: root,
-        name: `west-animal-${idx}`,
-      });
+      yield;
     }
-  });
+    yield;
 
-  // Xe kéo nông sản cổ & cuộn rơm vàng
-  if (!isPointOnRoadCorridor(westCenter.x, westCenter.z, 4.0) && !isPointInsideAnyFarmLot(westCenter.x, westCenter.z, 2.0)) {
-    spawnModelSync(scene, MODEL_PATHS.town.cartHigh, {
-      position: new Vector3(westCenter.x, 0, westCenter.z),
-      rotation: new Vector3(0, 0.6, 0),
-      scaling: new Vector3(1.4, 1.4, 1.4),
-      parent: root,
-      name: 'west-cart',
-    });
-  }
+  // Đồng cỏ tự nhiên thoáng đãng, không có đạo cụ rải bừa bãi
+  yield;
 
   // Lưới rừng cây phong vàng & sồi đại thụ bao bọc thảo nguyên (Lưới đều đặn 26m)
   for (let gx = -520; gx <= -380; gx += 26) {
@@ -109,14 +88,20 @@ export function createInterVillagePlains(scene, foliage, shadows) {
         foliage.createFlowerPatch(px + 2.5, pz, 8, 2.2);
         if ((gx + gz) % 52 === 0) foliage.createHydrangeaBush(px - 3.2, pz, 1.0, '#fde047');
       }
-    }
-  }
+
+      yield;
+}
+
+      yield;
+}
+    yield;
 
   // =========================================================================
   // 2. THUNG LŨNG CÂY LÁ VÀNG & VƯỜN TÁO (GOLDEN MAPLE & APPLE VALLEY)
   // Giữa Bình Minh (x = 0) và Ven Sông (x = 300): x = 90 -> 210, z = 125 -> 235
   // =========================================================================
   const valleyCenter = { x: 150, z: 180 };
+    yield;
 
   // Suối đá cuội tự nhiên có cầu gỗ uốn cong
   if (!isPointOnRoadCorridor(valleyCenter.x, valleyCenter.z, 4.0) && !isPointInsideAnyFarmLot(valleyCenter.x, valleyCenter.z, 2.0)) {
@@ -129,6 +114,7 @@ export function createInterVillagePlains(scene, foliage, shadows) {
     });
     foliage.createRusticBench(valleyCenter.x - 5.5, valleyCenter.z - 3.8, 0.8);
   }
+    yield;
 
   // Lưới rừng cây phong lá vàng & sồi đại thụ (Lưới đều đặn 24m)
   for (let gx = 90; gx <= 210; gx += 24) {
@@ -144,14 +130,20 @@ export function createInterVillagePlains(scene, foliage, shadows) {
         foliage.createHydrangeaBush(px + 3.0, pz, 1.0, '#f59e0b');
         foliage.createFlowerPatch(px - 2.5, pz, 8, 2.2);
       }
-    }
-  }
+
+      yield;
+}
+
+      yield;
+}
+    yield;
 
   // =========================================================================
   // 3. THẢO NGUYÊN HOA HƯỚNG DƯƠNG & VƯỜN CAM (SUNNY SUNFLOWER PRAIRIE)
   // Giữa Ven Sông (x = 300) và An Nhiên (x = 600): x = 390 -> 510, z = 125 -> 235
   // =========================================================================
   const eastCenter = { x: 450, z: 180 };
+    yield;
 
   // Cối xay nước cổ truyền ven đồi cỏ (Scale 1.85x)
   if (!isPointOnRoadCorridor(eastCenter.x - 22, eastCenter.z, 4.0) && !isPointInsideAnyFarmLot(eastCenter.x - 22, eastCenter.z, 2.0)) {
@@ -164,6 +156,7 @@ export function createInterVillagePlains(scene, foliage, shadows) {
       name: 'east-watermill',
     });
   }
+    yield;
 
   // Rừng cây & vạt hoa hướng dương vàng rực rỡ + bù nhìn rơm (Lưới đều đặn 24m)
   for (let gx = 390; gx <= 510; gx += 24) {
@@ -178,8 +171,13 @@ export function createInterVillagePlains(scene, foliage, shadows) {
         foliage.createCloudTree(px - 3.5, pz, 1.0, true);
         foliage.createGoldenMaple(px + 3.0, pz + 3.0, 0.95, true);
       }
-    }
-  }
+
+      yield;
+}
+
+      yield;
+}
+    yield;
 
   // =========================================================================
   // 4. CAO NGUYÊN ĐỒI THÔNG & THUNG LŨNG ĐÁ (HIGHLAND PINE FOREST & ROCKS)
@@ -203,7 +201,10 @@ export function createInterVillagePlains(scene, foliage, shadows) {
 
 
     }
-  }
+
+      yield;
+}
+    yield;
 
   // =========================================================================
   // 5. THUNG LŨNG ĐỒI CHÈ & LÀNG PHÚ ĐIỀN (NORTH TEA HILLS & RETREAT)
@@ -218,8 +219,13 @@ export function createInterVillagePlains(scene, foliage, shadows) {
           foliage.createRusticBench(tx - 3.0, tz, 0.4);
         }
       }
-    }
-  }
+
+      yield;
+}
+
+      yield;
+}
+    yield;
 
   // =========================================================================
   // 6. BÌNH NGUYÊN DÃ NGOẠI MÙA HÈ PHƯƠNG NAM (SOUTHERN SUMMER PLAINS)
@@ -230,20 +236,19 @@ export function createInterVillagePlains(scene, foliage, shadows) {
     if (!isPointOnRoadCorridor(sx, sz, 4.0) && !isPointInsideAnyFarmLot(sx, sz, 2.0)) {
       foliage.createTropicalPalm(sx, sz, 1.0, 0.2, true);
       foliage.createFlowerPatch(sx + 3.0, sz, 8, 2.4);
-      if (Math.abs(sx) % 78 === 0) {
-        spawnModelSync(scene, MODEL_PATHS.animals.alpaca, {
-          position: new Vector3(sx - 4.5, 0, sz),
-          rotation: new Vector3(0, Math.random() * Math.PI * 2, 0),
-          scaling: new Vector3(1.4, 1.4, 1.4),
-          parent: root,
-          name: `south-alpaca-${sx}`,
-        });
-      }
-      if (Math.abs(sx) % 52 === 0) {
-        foliage.createRusticBench(sx, sz - 3.5, 0.3);
-      }
+
     }
-  }
+
+      yield;
+}
+    yield;
 
   return root;
+}
+
+export function createInterVillagePlains(scene, foliage, shadows) {
+  const steps = createInterVillagePlainsSteps(scene, foliage, shadows);
+  let result;
+  do { result = steps.next(); } while (!result.done);
+  return result.value;
 }
