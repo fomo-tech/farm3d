@@ -2840,7 +2840,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
       updateHairGlintColor(color);
     }
     const showHairDetails = activeLod < 2;
-    hairGlintRing.setEnabled(showHairDetails);
+    hairGlintRing.setEnabled(false);
     hairGlintDashes.forEach(dash => dash.setEnabled(showHairDetails));
     quiffNode.setEnabled(showHairDetails && (resolvedStyle === 'classic' || resolvedStyle === 'anime_bangs'));
     fringe.setEnabled(activeLod < 1);
@@ -2849,6 +2849,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     wavyNode.setEnabled(showHairDetails && resolvedStyle === 'wavy');
     slickNode.setEnabled(showHairDetails && resolvedStyle === 'slick');
     ponytailNode.setEnabled(resolvedStyle === 'ponytail');
+    celestialNode.setEnabled(showHairDetails && resolvedStyle === 'celestial_flow');
     sproutNode.setEnabled(showHairDetails && (resolvedStyle === 'anime_bangs' || resolvedStyle === 'classic_sprout'));
     root.metadata = { ...(root.metadata || {}), hairStyle: style };
   }
@@ -2906,26 +2907,34 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     const isLongSleeve = isHoodie || resolvedTop === 'bomber' || resolvedTop === 'knit' || resolvedTop === 'vest' || resolvedTop === 'techwear' || resolvedTop === 'prince' || resolvedTop === 'vampire' || resolvedTop === 'kimono' || resolvedTop === 'aodai_nu' || resolvedTop === 'aodai_nam' || resolvedTop === 'blazer_luxury' || resolvedTop === 'kpop_streetwear';
     longSleeves.forEach(mesh => mesh.setEnabled(isLongSleeve));
     const sleeveMaterial = resolvedTop === 'bomber' ? materials.topDark : (resolvedTop === 'vest' || resolvedTop === 'blazer_luxury') ? materials.vestNavy : (resolvedTop === 'techwear' || resolvedTop === 'kpop_streetwear') ? materials.cyberDark : (resolvedTop === 'prince' || resolvedTop === 'aodai_nam') ? materials.vestWhite : resolvedTop === 'vampire' ? materials.royalRed : (resolvedTop === 'kimono' || resolvedTop === 'aodai_nu') ? materials.shirt : resolvedTop === 'knit' ? materials.knit : materials.shirt;
+    const isBareShoulders = resolvedTop === 'tank' || resolvedTop === 'corset_ballgown';
     [...longSleeves, ...shortSleeves].forEach(mesh => { mesh.material = sleeveMaterial; });
-    shoulderSurfaces.forEach(mesh => { mesh.material = resolvedTop === 'tank' ? materials.skin : sleeveMaterial; });
+    shoulderSurfaces.forEach(mesh => { mesh.material = isBareShoulders ? materials.skin : sleeveMaterial; });
     shoulderSurfaces.forEach(mesh => {
-      mesh.metadata.sleeveLength = isLongSleeve || resolvedTop === 'tank' ? 0.63 : 0.24;
-      mesh.metadata.radius = resolvedTop === 'tank' ? 0.070 : 0.098;
+      mesh.metadata.sleeveLength = isLongSleeve || isBareShoulders ? 0.63 : 0.24;
+      mesh.metadata.radius = isBareShoulders ? 0.070 : 0.098;
     });
-    shortSleeves.forEach(mesh => mesh.setEnabled(resolvedTop !== 'tank' && !isLongSleeve));
+    shortSleeves.forEach(mesh => mesh.setEnabled(!isBareShoulders && !isLongSleeve));
     Object.entries(topVariants).forEach(([variant, node]) => {
       node.setEnabled(activeLod < 2 && variant === resolvedTop);
     });
     teeHem.setEnabled(false);
-    if (resolvedTop === 'croptop_summer') {
-      shirtBody.scaling.set(1.0, 0.72 * (clothingScaled ? proportions.torsoHeightScale : 1), 1.0);
-      shirtBody.position.y = 0.28 * (clothingScaled ? proportions.torsoHeightScale : 1);
-    } else if (resolvedTop === 'hoodie_oversized') {
-      shirtBody.scaling.set(1.08, 1.03 * (clothingScaled ? proportions.torsoHeightScale : 1), 1.08);
-      shirtBody.position.y = 0.22 * (clothingScaled ? proportions.torsoHeightScale : 1);
+    if (resolvedTop === 'corset_ballgown') {
+      shirtBody.setEnabled(false);
+      collar.setEnabled(false);
     } else {
-      shirtBody.scaling.set(1.0, clothingScaled ? proportions.torsoHeightScale : 1, 1.0);
-      shirtBody.position.y = 0.22 * (clothingScaled ? proportions.torsoHeightScale : 1);
+      shirtBody.setEnabled(true);
+      collar.setEnabled(resolvedTop !== 'tank');
+      if (resolvedTop === 'croptop_summer') {
+        shirtBody.scaling.set(1.0, 0.72 * (clothingScaled ? proportions.torsoHeightScale : 1), 1.0);
+        shirtBody.position.y = 0.28 * (clothingScaled ? proportions.torsoHeightScale : 1);
+      } else if (resolvedTop === 'hoodie_oversized') {
+        shirtBody.scaling.set(1.08, 1.03 * (clothingScaled ? proportions.torsoHeightScale : 1), 1.08);
+        shirtBody.position.y = 0.22 * (clothingScaled ? proportions.torsoHeightScale : 1);
+      } else {
+        shirtBody.scaling.set(1.0, clothingScaled ? proportions.torsoHeightScale : 1, 1.0);
+        shirtBody.position.y = 0.22 * (clothingScaled ? proportions.torsoHeightScale : 1);
+      }
     }
     root.metadata = { ...(root.metadata || {}), topId };
   }
@@ -3082,9 +3091,9 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     node.scaling.y *= proportions.torsoHeightScale;
   });
   clothingScaled = true;
-  const neck = MeshBuilder.CreateCapsule(`${idPrefix}-neck`, { height: 0.20, radius: 0.08, tessellation: 12 }, scene);
+  const neck = MeshBuilder.CreateCylinder(`${idPrefix}-neck`, { height: 0.09, diameter: 0.13, tessellation: 16 }, scene);
   neck.parent = torsoNode;
-  neck.position.y = 0.65;
+  neck.position.y = 0.51;
   neck.material = materials.skin;
 
   // ========================================================
