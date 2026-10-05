@@ -1,9 +1,20 @@
 import { WorldCollisionSystem } from '../src/game/physics/WorldCollisionSystem.js';
 import { WORLD_LAYOUT } from '../src/game/world/worldLayout.js';
+import assert from 'node:assert/strict';
+import { TOWN_SPAWN, recoverTownSpawn } from '../shared/playerSpawn.js';
 
 console.log('--- TESTING WORLD COLLISION SYSTEM ---');
 
 const collision = new WorldCollisionSystem();
+for (let dx = -2; dx <= 2; dx++) for (let dz = -2; dz <= 2; dz++) {
+  assert.equal(collision.isColliding(TOWN_SPAWN.x + dx, TOWN_SPAWN.z + dz), false, 'spawn needs room to walk out');
+}
+assert.equal(recoverTownSpawn({x:0,y:0,z:0}).z, TOWN_SPAWN.z);
+assert.equal(recoverTownSpawn({x:0,y:0,z:18}).z, TOWN_SPAWN.z);
+const saved = {x:65,y:0,z:110};
+assert.equal(recoverTownSpawn(saved), saved);
+const indoor = {x:0,y:32,z:0,venue:'casino'};
+assert.equal(recoverTownSpawn(indoor), indoor);
 
 // Southern villages extend beyond z=450; the ocean boundary must not form
 // an invisible wall across their roads or any of the 288 farm entrances.

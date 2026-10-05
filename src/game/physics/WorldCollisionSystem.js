@@ -9,6 +9,8 @@ import { WORLD_LAYOUT } from '../world/worldLayout.js';
 import { BEACH_CONFIG, beachDeepWaterAt } from '../../../shared/beachConfig.js';
 import { VENUE_LAYOUT } from '../../../shared/venueLayout.js';
 import { farmBoundaryBlocked } from '../../../shared/farmSecurity.js';
+import { lakeDeepWaterAt } from '../../../shared/lakeConfig.js';
+import { TOWN_FOUNTAIN, TOWN_SPAWN, insideTownFountain } from '../../../shared/playerSpawn.js';
 
 export class WorldCollisionSystem {
   constructor() {
@@ -84,7 +86,7 @@ export class WorldCollisionSystem {
   initStaticColliders() {
     // 0. Đài phun nước trung tâm (Central Fountain) tại (0, 0)
     // Đường kính hồ 18m, vành đá torus dày 0.7m => bán kính r = 9.35m
-    this.addCircle('plaza-central-fountain', 0, 0, 9.35);
+    this.addCircle('plaza-central-fountain', TOWN_FOUNTAIN.x, TOWN_FOUNTAIN.z, TOWN_FOUNTAIN.radius);
 
     // Four low flower islands in the town plaza; keep the cardinal walkways open.
     [[-14, -14], [14, -14], [-14, 14], [14, 14]].forEach(([x, z], index) => {
@@ -114,8 +116,7 @@ export class WorldCollisionSystem {
     // 5. Cối Xay Gió Hà Lan (Windmill) tại (-92, 108)
     this.addCircle('windmill-base', -92, 108, 5.0);
 
-    // 6. Tháp Nông Sản Silo & Xưởng Thủ Công tại (88, 112) và (88, 136)
-    this.addCircle('grain-silo', 88, 112, 3.4);
+    // 6. Xưởng Thủ Công tại (88, 136)
     this.addBox('artisan-workshop', 83.5, 92.5, 132.5, 139.5);
 
     // 7. Bãi Cỏ Bò Sữa - 4 hàng rào gỗ trắng bao quanh (88, 112)
@@ -143,8 +144,7 @@ export class WorldCollisionSystem {
     for (const item of BEACH_CONFIG.colliders) this.addBox(item.id, item.minX, item.maxX, item.minZ, item.maxZ);
     BEACH_CONFIG.palms.forEach(([x,z],i)=>this.addCircle(`beach-palm-${i}`,x,z,.22));
 
-    // 14. Vùng nước sâu Hồ Pha Lê (tâm 165, 2 - bán kính 22m, chừa lối bến câu cá x: 132..138)
-    this.addCircle('crystal-lake-deep', 168, 2, 19.5);
+    // Lake water and the clear pier corridor use shared/lakeConfig.js.
   }
 
   /**
@@ -313,6 +313,7 @@ export class WorldCollisionSystem {
    * @returns {boolean} True if point collides with any solid obstacle.
    */
   isColliding(cx, cz, r = this.playerRadius, venue = null) {
+    if (!venue && lakeDeepWaterAt(cx, cz, r)) return true;
     if(!venue && beachDeepWaterAt(cx,cz)) return true;
     if (venue && this.interiorBoxes.has(venue)) {
       const room = VENUE_LAYOUT[venue]?.interior;
@@ -435,6 +436,9 @@ export class WorldCollisionSystem {
     }
     if (Math.hypot(dx, dz) > 8) {
       throw new Error('Collision: bước di chuyển vượt 8m/khung hình; chặn vòng lặp quá tải.');
+    }
+    if (!venue && insideTownFountain(curX,curZ,this.playerRadius)) {
+      return {x:TOWN_SPAWN.x,z:TOWN_SPAWN.z,collided:false,recovered:true};
     }
     if (dx === 0 && dz === 0) {
       return { x: curX, z: curZ, collided: false };

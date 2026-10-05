@@ -1,0 +1,48 @@
+import assert from 'node:assert/strict';
+import { NullEngine } from '@babylonjs/core/Engines/nullEngine.js';
+import { Scene } from '@babylonjs/core/scene.js';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import { MaterialDefines } from '@babylonjs/core/Materials/materialDefines.js';
+import { MultiMaterial } from '@babylonjs/core/Materials/multiMaterial.js';
+import { installMaterialDirtyIndex } from '../src/game/rendering/MaterialDirtyIndex.js';
+const engine = new NullEngine();
+const scene = new Scene(engine);
+installMaterialDirtyIndex(scene);
+const a = new StandardMaterial('a', scene), b = new StandardMaterial('b', scene);
+const mesh = MeshBuilder.CreateBox('a-mesh', {}, scene);
+mesh.material = a;
+for (let i = 0; i < 1000; i++) { const other = MeshBuilder.CreateBox(`other-${i}`, {}, scene); other.material = b; }
+let calls = 0;
+const wrapper = { materialContext: a._materialContext, defines: new MaterialDefines(), dispose() {} };
+mesh.subMeshes[0]._drawWrappers = [wrapper];
+a._markAllSubMeshesAsDirty(() => calls++);
+assert.equal(calls, 1);
+scene.blockMaterialDirtyMechanism = true;
+a._markAllSubMeshesAsDirty(() => calls++);
+assert.equal(calls, 1);
+scene.blockMaterialDirtyMechanism = false;
+a.markDirty();
+assert.equal(wrapper._wasPreviouslyReady, false);
+assert.equal(wrapper._forceRebindOnNextCall, false);
+mesh.material = b;
+a._markAllSubMeshesAsDirty(() => calls++);
+assert.equal(calls, 1, 'reassigned meshes are removed from the index');
+const multi = new MultiMaterial('multi', scene);
+multi.subMaterials = [a];
+mesh.material = multi;
+mesh.subMeshes[0].getMaterial();
+mesh.subMeshes[0]._drawWrappers = [wrapper];
+a._markAllSubMeshesAsDirty(() => calls++);
+assert.equal(calls, 2, 'sub-materials must still invalidate their parent mesh');
+let unrelatedReads = 0;
+for (const other of scene.meshes.slice(1)) {
+  const sub = other.subMeshes[0];
+  const original = sub.getMaterial.bind(sub);
+  sub.getMaterial = () => { unrelatedReads++; return original(); };
+}
+a.markDirty();
+assert.equal(unrelatedReads, 0, 'dirtying a glTF material must not scan unrelated world meshes');
+mesh.subMeshes[0]._drawWrappers = [];
+scene.dispose(); engine.dispose();
+console.log('PASS: indexed material dirty callbacks, blocking and mesh reassignment');

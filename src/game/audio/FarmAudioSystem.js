@@ -263,6 +263,27 @@ class FarmAudioSystem {
       osc.stop(now + d + 0.5);
     });
   }
+
+  // Tiếng còi xe buýt tốc hành vui nhộn Play Together (Bus Horn)
+  playBusHorn() {
+    this.ensureContext();
+    if (this.isMuted || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    [349.23, 440].forEach((freq) => {
+      [0, 0.16].forEach((offset) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, now + offset);
+        gain.gain.setValueAtTime(0.16, now + offset);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.13);
+        osc.connect(gain);
+        gain.connect(this.sfxGain);
+        osc.start(now + offset);
+        osc.stop(now + offset + 0.13);
+      });
+    });
+  }
 }
 
 export const farmAudio = new FarmAudioSystem();

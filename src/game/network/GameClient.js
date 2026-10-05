@@ -130,6 +130,7 @@ export class GameClient {
         } else if (message.type === 'social_state') {
           this.onSocialState(message);
         } else if (message.type === 'casino_state') {
+          this.acknowledge(message.requestId);
           this.onCasinoState(message);
         }
       } catch (error) {

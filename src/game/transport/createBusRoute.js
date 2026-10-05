@@ -9,6 +9,7 @@ import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 import { getScenicPoiDescriptor } from '../world/createScenicLandscapes.js';
 import { COASTAL_BUS_CONFIG } from '../../../shared/beachConfig.js';
 import { getTerrainHeight } from '../world/TerrainHeightSystem.js';
+import { LAKE_CONFIG } from '../../../shared/lakeConfig.js';
 
 function makeMat(scene, name, hex, emissiveHex = null) {
   return createToyMaterial(scene, name, hex, { emissiveHex });
@@ -525,7 +526,7 @@ export function* createBusRouteSteps(scene, shadows) {
 
     // 6. Trục Phố Chợ & Vùng Hồ:
     { x: -118, z: 5.4, name: 'Phố Chợ Phía Tây', badge: 'Tuyến 04A', rot: 0 },
-    { x: 132, z: 5.4, name: 'Hồ Pha Lê', badge: 'Tuyến 04B', rot: 0 },
+    { x: LAKE_CONFIG.busStop.x, z: LAKE_CONFIG.busStop.z, name: 'Hồ Pha Lê', badge: 'Tuyến 04B', rot: 0 },
   ];
 
   for (const s of shelters) {
@@ -624,9 +625,9 @@ export function* createBusRouteSteps(scene, shadows) {
     new Vector3(54, 0, 0),     // 0: Trạm Cửa Đông - Hồ Pha Lê
     new Vector3(50, 0, 0),     // 1: Quay đầu Cửa Đông
     new Vector3(84, 0, 0),     // 2: Đại lộ Đông
-    new Vector3(132, 0, 0),    // 3: Trạm Hồ Pha Lê
-    new Vector3(145, 0, 0),    // 4: Turnaround Hồ
-    new Vector3(132, 0, 0),    // 5: Trạm Hồ Pha Lê
+    new Vector3(LAKE_CONFIG.busStop.x, 0, 0), // 3: Trạm trên đất liền
+    new Vector3(LAKE_CONFIG.busStop.turnX, 0, 0), // 4: Quay đầu trước lối bộ hành
+    new Vector3(LAKE_CONFIG.busStop.x, 0, 0), // 5: Trạm Hồ Pha Lê
     new Vector3(84, 0, 0),     // 6: Đại lộ Đông
   ];
   const route04BStops = [

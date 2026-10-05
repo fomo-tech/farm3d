@@ -12,6 +12,12 @@ const deepFreeze = value => {
 
 export const FISHING_CONFIG = deepFreeze({
   version: 2,
+  missions: {
+    first_fish: {name:'Mẻ cá đầu tiên',kind:'caught',goal:1,coins:20,xp:10},
+    lake_angler: {name:'Tay câu chăm chỉ',kind:'caught',goal:10,coins:60,xp:30},
+    collector: {name:'Khám phá ba loài cá',kind:'species',goal:3,coins:80,xp:40},
+  },
+  timePreferences: { carp:['dawn','day'], perch:['day','dusk'], golden_carp:['dawn','dusk'], river_catfish:['night'], river_barb:['day'], sea_mackerel:['dawn'], sea_snapper:['dusk'] },
   defaults: {
     coolerCapacity: 10,
     biteMinMs: 2500,
@@ -169,7 +175,9 @@ export function normalizeFishingState(fishing = {}) {
     coolerCapacity,
     fish,
     catchLog: Array.isArray(fishing.catchLog) ? fishing.catchLog.slice(-FISHING_CONFIG.defaults.maxCatchLog) : [],
-    pending: fishing.pending || null,
+    collection: { ...(fishing.collection || {}) },
+    claimedMissions: Array.isArray(fishing.claimedMissions) ? [...new Set(fishing.claimedMissions)] : [],
+    pending: fishing.pending?.id ? fishing.pending : null,
     stats: { totalCaught: 0, rareCaught: 0, largestFish: 0, ...(fishing.stats || {}) },
     lastSale: fishing.lastSale || null,
   };

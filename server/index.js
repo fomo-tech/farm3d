@@ -4,10 +4,15 @@ import { purchaseFarm, listLandMarket, getAssignment, initVillageRegistry, isAss
 import { authenticate, casinoRefundStale, farmAction, initGameStore, initFarmSecurity, farmSecurity, loadFarmAssignment, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
 import { decodeFarmId } from '../shared/villageLayout.js';
 import { farmGateOpen } from '../shared/farmSecurity.js';
-import { casinoState, placeCasinoBet, tickCasino } from './CasinoRooms.js';
+import { CasinoActionError } from './casino/CasinoActionError.js';
+import { publicFishingProgress } from '../shared/fishingSession.js';
+import { getGameStoreDatabase } from './GameStore.js';
+import { CasinoRoomManager } from './casino/CasinoRoomManager.js';
 import { FARM_ACTIVE_PLOTS, FARM_LOT_SPEC, FARM_TILE_KEY_PATTERN, farmTilePosition as sharedFarmTilePosition } from '../shared/farmLayout.js';
 import { WORLD_VILLAGES, villageGeometry } from '../shared/villageLayout.js';
 import { VENUE_LAYOUT } from '../shared/venueLayout.js';
+import { TOWN_SPAWN, recoverTownSpawn, insideTownFountain } from '../shared/playerSpawn.js';
+import { lakeMovementBlocked, recoverLakePosition } from '../shared/lakeConfig.js';
 
 const PORT = Number(process.env.MULTIPLAYER_PORT || 8787);
 const TICK_MS = 100;
@@ -28,9 +33,12 @@ const MAX_PLAYER_SPEED = 32;
 const VALID_VENUES = new Set(['casino', 'fashion', 'vehicles', 'supplies', 'fishing']);
 const ROOM_LAYOUT = VENUE_LAYOUT;
 const clients = new Map();
+let casinoManager;
 function broadcastCasinoState() {
-  const payload = { type: 'casino_state', games: casinoState(), serverTime: Date.now() };
-  clients.forEach(client => safeSend(client.socket, payload));
+  if (!casinoManager) return;
+  clients.forEach(client => {
+    if (client.venue === 'casino' || casinoManager.members.has(client.playerId)) safeSend(client.socket, casinoManager.view(client.playerId));
+  });
 }
 const recentActions = new Map();
 const ACTION_CACHE_TTL = 5 * 60_000;
@@ -52,7 +60,8 @@ const httpServer = createServer((request, response) => {
 const wss = new WebSocketServer({ server: httpServer });
 
 function safeSend(socket, payload) {
-  if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(payload));
+  const visible = payload.progress ? { ...payload, progress: publicFishingProgress(payload.progress), serverNow: Date.now() } : payload;
+  if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(visible));
 }
 
 function clientAddress(socket) {
@@ -125,9 +134,13 @@ function broadcastPresence(channelId) {
   channel.forEach(client => {
     const players = channel
       .filter(other => other.roomId === client.roomId && (other === client || Math.hypot(other.x - client.x, other.z - client.z) <= PLAYER_VIEW_RADIUS))
-      .map(({ socket, lastSeen, lastPersisted, messages, visibleFarmIds, lastFarmScopeAt, ...player }) => player);
+      .map(({ socket, lastSeen, lastPersisted, messages, visibleFarmIds, lastFarmScopeAt, ...player }) => ({...player,fishing:player.fishing?.expiresAt>Date.now()?player.fishing:null}));
     safeSend(client.socket, { type: 'world_state', serverTime: Date.now(), players });
   });
+}
+
+function fishingPresence(pending) {
+  return pending ? { id:pending.id, phase:pending.phase, target:pending.target, castDistance:pending.castDistance, biteAt:pending.biteAt, expiresAt:pending.expiresAt } : null;
 }
 
 async function publicFarmScope(client, force = false) {
@@ -212,14 +225,20 @@ wss.on('connection', socket => {
       }
       const account = await authenticate(client.playerId, String(message.sessionToken || ''), message.name);
       if (account.error) { safeSend(socket, { type: 'auth_error', message: account.error }); return socket.close(1008, 'Invalid session'); }
-      const recovered = await casinoRefundStale(client.playerId, Object.values(casinoState()).map(round => round.id));
+      const recovered = await casinoRefundStale(client.playerId, []);
       if (recovered) account.progress = recovered.progress;
       client.name = account.name;
+      client.fishing = fishingPresence(account.progress.fishing?.pending);
+      const recoveredPosition = recoverLakePosition(recoverTownSpawn(account.position));
+      if (recoveredPosition !== account.position) {
+        account.position = recoveredPosition;
+        await savePosition(client.playerId, recoveredPosition);
+      }
       client.vehicle = account.progress?.vehicle || 'walk';
       safeSend(socket, { type: 'account_state', sessionToken: account.token, progress: account.progress, livestock: account.livestock, position: account.position?.layoutVersion === MAP_LAYOUT_VERSION ? account.position : null });
       safeSend(socket, { type: 'village_list', villages: await listVillages() });
       const existing = await getAssignment(client.playerId);
-      const assignedLot = existing || { farmId: null, villageId: 'town', villageName: 'Thị trấn', lot: null, spawn: { x: 0, y: 0, z: 18 }, farmConfig: null };
+      const assignedLot = existing || { farmId: null, villageId: 'town', villageName: 'Thị trấn', lot: null, spawn: TOWN_SPAWN, farmConfig: null };
 
       client.farmId = assignedLot.farmId;
       client.villageId = assignedLot.villageId;
@@ -229,7 +248,8 @@ wss.on('connection', socket => {
       client.y = assignedLot.spawn.y;
       client.z = assignedLot.spawn.z;
       clients.set(socket, client);
-      safeSend(socket, { type: 'casino_state', games: casinoState(), serverTime: Date.now() });
+      await casinoManager.reconnect(client.playerId);
+      safeSend(socket, casinoManager.view(client.playerId));
 
       if (existing && account.position?.layoutVersion === 6 && account.position.villageId === assignedLot.villageId) {
         const origin = villageGeometry(assignedLot.village.order);
@@ -243,9 +263,9 @@ wss.on('connection', socket => {
         await savePosition(client.playerId, account.position);
       }
       if (account.position && account.position.villageId === assignedLot.villageId && account.position.layoutVersion === MAP_LAYOUT_VERSION) {
-        client.x = Number(account.position.x) || client.x;
+        client.x = Number.isFinite(Number(account.position.x)) ? Number(account.position.x) : client.x;
         client.y = Number(account.position.y) || 0;
-        client.z = Number(account.position.z) || client.z;
+        client.z = Number.isFinite(Number(account.position.z)) ? Number(account.position.z) : client.z;
         client.rotation = Number(account.position.rotation) || 0;
         client.venue = VALID_VENUES.has(account.position.venue) ? account.position.venue : null;
         client.roomId = roomKey(client.villageId, client.venue);
@@ -286,6 +306,8 @@ wss.on('connection', socket => {
       return;
     }
     if (message.type === 'move') {
+      const safePosition = recoverTownSpawn(client,{legacyDefault:false,clearance:.45});
+      if(safePosition !== client){client.x=safePosition.x;client.y=safePosition.y;client.z=safePosition.z;client.rotation=safePosition.rotation;}
       const x = Number(message.x); const y = Number(message.y || 0); const z = Number(message.z); const rotation = Number(message.rotation);
       if (![x, y, z, rotation].every(Number.isFinite) || Math.abs(x) > 10_000_000 || Math.abs(z) > 10_000_000 || y < 0 || y > 40) return;
       const elapsed = Math.max(.1, (Date.now() - client.lastSeen) / 1000);
@@ -298,11 +320,14 @@ wss.on('connection', socket => {
         return;
       }
       const previousRoom = client.roomId;
-      if (!requestedVenue && farmSecurity.blocksMovement(client, { x, z })) {
+      if (!requestedVenue && (insideTownFountain(x,z) || farmSecurity.blocksMovement(client, { x, z }) || lakeMovementBlocked(client, { x, z }))) {
         safeSend(socket, { type: 'move_ack', accepted: false, x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, serverTime: Date.now() });
         return;
       }
+      const previousVenue = client.venue;
       client.x = x; client.y = y; client.z = z; client.rotation = rotation; client.venue = requestedVenue; client.roomId = roomKey(client.villageId, client.venue); client.lastSeen = Date.now();
+      if (previousVenue === 'casino' && requestedVenue !== 'casino' && ![...clients.values()].some(other => other !== client && other.playerId === client.playerId && other.venue === 'casino')) await casinoManager.disconnect(client.playerId);
+      if (previousVenue !== 'casino' && requestedVenue === 'casino') { await casinoManager.reconnect(client.playerId); broadcastCasinoState(); }
       farmSecurity.observeMovement(client.playerId, client, farmTilePosition);
       safeSend(socket, { type: 'move_ack', accepted: true, x, y, z, rotation, venue: client.venue, roomId: client.roomId, serverTime: Date.now() });
       if (Date.now() - client.lastPersisted > 2000) {
@@ -317,11 +342,12 @@ wss.on('connection', socket => {
       if (Number.isFinite(x) && Number.isFinite(z) && Math.abs(x) <= 10_000_000 && Math.abs(z) <= 10_000_000) {
         const previousRoom = client.roomId;
         const ownFarm = client.farmId ? positionForLot(Number(client.farmId.slice(-6))) : null;
-        const allowed = [...(ownFarm ? [{ x: ownFarm.x + 6, z: ownFarm.z - 4 }] : []), { x: 0, z: 18 }, { x: 126, z: 2 }, { x: 0, z: 320 }, ...WORLD_VILLAGES.map(v => v.gate)].some(point => Math.hypot(x - point.x, z - point.z) < 12);
+        const townTravel = Math.hypot(x-TOWN_SPAWN.x,z-TOWN_SPAWN.z)<12 || Math.hypot(x,z-18)<12;
+        const allowed = townTravel || [...(ownFarm ? [{ x: ownFarm.x + 6, z: ownFarm.z - 4 }] : []), { x: 126, z: 2 }, { x: 0, z: 320 }, ...WORLD_VILLAGES.map(v => v.gate)].some(point => Math.hypot(x - point.x, z - point.z) < 12);
         if (!allowed) return;
         // Fast travel always lands outdoors; a client must cross a validated
         // venue doorway before it may join an interior room or place bets.
-        client.x = x; client.y = 0; client.z = z; client.venue = null; client.lastSeen = Date.now();
+        client.x = townTravel ? TOWN_SPAWN.x : x; client.y = 0; client.z = townTravel ? TOWN_SPAWN.z : z; client.venue = null; client.lastSeen = Date.now();
         client.roomId = roomKey(client.villageId, client.venue);
         safeSend(socket, { type: 'move_ack', x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, serverTime: Date.now() });
         savePosition(client.playerId, { x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION });
@@ -399,19 +425,13 @@ wss.on('connection', socket => {
         if (!result.error) channelPlayers(client.channelId).filter(other => other !== client).forEach(other => safeSend(other.socket, { type: 'farm_gate', ...result }));
         return;
       }
-      if (message.action === 'casino_bet') {
+      if (message.action === 'casino' || message.action === 'casino_bet') {
         if (client.venue !== 'casino') {
           const response = { type: 'action_error', requestId: message.requestId, message: 'Hãy vào hội quán trò chơi để đặt cược.' };
           safeSend(socket, response); finishAction(tracked.key, [response]); return;
         }
-        const { game, choice, roundId } = message.payload || {};
-        const amount = Number(message.payload?.amount);
-        const placed = await placeCasinoBet(client.playerId, game, choice, amount, roundId);
-        if (placed.error) {
-          const response = { type: 'action_error', requestId: message.requestId, message: placed.error };
-          safeSend(socket, response); finishAction(tracked.key, [response]); return;
-        }
-        const response = { type: 'account_state', requestId: message.requestId, progress: placed.player.progress, result: { casinoBet: { game, roundId: placed.roundId, choice, amount } } };
+        if (message.action === 'casino_bet') throw new Error('Client casino cũ: tải lại game để vào hệ thống bàn mới.');
+        const response = { ...(await casinoManager.action(client, message.payload || {}, message.requestId)), requestId: message.requestId };
         safeSend(socket, response); finishAction(tracked.key, [response]);
         broadcastCasinoState(); return;
       }
@@ -437,6 +457,7 @@ wss.on('connection', socket => {
       const result = await performAction(client.playerId, String(message.action || ''), message.payload || {}, { x: client.x, z: client.z, venue: client.venue, farmId: client.farmId, villageId: client.villageId });
       if (result.error) { const response = { type: 'action_error', requestId: message.requestId, message: result.error }; safeSend(socket, response); finishAction(tracked.key, [response]); return; }
       client.name = result.player.name;
+      client.fishing = fishingPresence(result.player.progress.fishing?.pending);
       client.outfit = result.player.progress.outfit;
       client.vehicle = result.player.progress.vehicle;
       client.homeTier = result.player.progress.homeTier;
@@ -449,6 +470,10 @@ wss.on('connection', socket => {
       if (['character_create', 'build_pen', 'buy_animal', 'sell_animal', 'feed_animals', 'collect_animals', 'upgrade_barn', 'upgrade_home', 'buy_outfit', 'fashion_save_customization'].includes(message.action)) {
         await refreshPublicFarms(client.channelId);
       }
+    }
+    if (message.type === 'get_social_state') {
+      safeSend(socket, { type: 'social_state', ...(await loadSocialState(client.playerId)) });
+      return;
     }
     if (message.type === 'social_action') {
       const result = await updateFriend(client.playerId, message.friendId, message.action !== 'remove_friend');
@@ -483,10 +508,11 @@ wss.on('connection', socket => {
     } catch (error) {
       recentActions.delete(actionCacheKey(client, message?.requestId));
       console.error('WebSocket action failed:', error);
-      safeSend(socket, { type: 'action_error', requestId: message?.requestId, message: 'Server không thể xử lý yêu cầu.' });
+      safeSend(socket, { type: 'action_error', requestId: message?.requestId, message: error instanceof CasinoActionError ? error.message : 'Server không thể xử lý yêu cầu.' });
     }
   });
   socket.on('close', () => {
+    if (![...clients.values()].some(other => other !== client && other.playerId === client.playerId && other.venue === 'casino')) casinoManager?.disconnect(client.playerId).then(broadcastCasinoState).catch(console.error);
     const channelId = client.channelId;
     if (clients.has(socket)) savePosition(client.playerId, { x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION }).catch(console.error);
     clients.delete(socket);
@@ -504,11 +530,7 @@ setInterval(async () => {
   if (casinoTickRunning) return;
   casinoTickRunning = true;
   try {
-    const changed = await tickCasino(({ playerId, game, roundId, choice, amount, reward, result, player }) => {
-      for (const client of clients.values()) if (client.playerId === playerId) {
-        safeSend(client.socket, { type: 'account_state', progress: player.progress, result: { casinoSettlement: { game, roundId, choice, amount, reward, result } } });
-      }
-    });
+    const changed = casinoManager ? await casinoManager.tick() : false;
     if (changed) broadcastCasinoState();
   } catch (error) { console.error('Casino round settlement failed:', error); }
   finally { casinoTickRunning = false; }
@@ -530,6 +552,14 @@ setInterval(() => {
 }, 60_000).unref();
 
 await initGameStore();
+casinoManager = new CasinoRoomManager(getGameStoreDatabase(), { onWallet: async (playerId, receipt) => {
+  const player = await loadPlayer(playerId);
+  for (const client of clients.values()) if (client.playerId === playerId && player) safeSend(client.socket, {
+    type: 'account_state', progress: player.progress,
+    result: receipt.mode === 'settle' ? { casinoSettlement: { reward: receipt.reward, amount: receipt.stake, roundId: receipt.roundId } } : { casinoBet: { amount: receipt.stake } },
+  });
+} });
+await casinoManager.init();
 await initVillageRegistry();
 await initFarmSecurity();
 httpServer.listen(PORT, '0.0.0.0', () => console.log(`Farm multiplayer listening on http://localhost:${PORT} · MongoDB connected`));

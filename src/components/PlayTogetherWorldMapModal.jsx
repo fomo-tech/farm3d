@@ -1,0 +1,460 @@
+import React, { useState, useMemo } from 'react';
+import './PlayTogetherWorldMapModal.css';
+import { farmAudio } from '../game/audio/FarmAudioSystem.js';
+import { WORLD_LAYOUT } from '../game/world/worldLayout.js';
+import { WORLD_VILLAGES } from '../../shared/villageLayout.js';
+import { TOWN_SPAWN } from '../../shared/playerSpawn.js';
+
+const VILLAGE_THEMES = {
+  'binh-minh': {
+    badge: '👑 Thủ Phủ',
+    color: '#f59e0b',
+    gradient: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+    highway: 'Quốc Lộ 86 · Trục Nam',
+    sub: 'Đại lộ 8.5m & 24 lô nông trại trung tâm',
+    emoji: '🌾',
+  },
+  'hoa-mai': {
+    badge: '🌸 Hoa Mai',
+    color: '#ec4899',
+    gradient: 'linear-gradient(135deg, #fce7f3, #fbcfe8)',
+    highway: 'Quốc Lộ 86 · Phía Tây',
+    sub: 'Vườn mai rực rỡ, đất bãi bồi trù phú',
+    emoji: '🏡',
+  },
+  'ven-song': {
+    badge: '🌊 Ven Sông',
+    color: '#06b6d4',
+    gradient: 'linear-gradient(135deg, #cffafe, #a5f3fc)',
+    highway: 'Quốc Lộ 86 · Phía Đông',
+    sub: 'Sát bờ đại thấu sông, gió mát thanh bình',
+    emoji: '⛵',
+  },
+  'doi-gio': {
+    badge: '🍃 Đồi Gió',
+    color: '#8b5cf6',
+    gradient: 'linear-gradient(135deg, #ede9fe, #ddd6fe)',
+    highway: 'Quốc Lộ 86 · Cực Tây',
+    sub: 'Đồi cỏ thảo nguyên, cối xay gió thanh bình',
+    emoji: '🪁',
+  },
+  'an-nhien': {
+    badge: '🍀 An Nhiên',
+    color: '#10b981',
+    gradient: 'linear-gradient(135deg, #d1fae5, #a7f3d0)',
+    highway: 'Quốc Lộ 86 · Cực Đông',
+    sub: 'Thung lũng sinh thái, cỏ xanh rợp bóng',
+    emoji: '🌿',
+  },
+  'moc-lan': {
+    badge: '🌺 Mộc Lan',
+    color: '#f97316',
+    gradient: 'linear-gradient(135deg, #ffedd5, #fed7aa)',
+    highway: 'Quốc Lộ Bắc · Phía Tây',
+    sub: 'Cổng làng trang nhã, hoa mộc lan ngát hương',
+    emoji: '🏮',
+  },
+  'thanh-ha': {
+    badge: '🌾 Thanh Hà',
+    color: '#eab308',
+    gradient: 'linear-gradient(135deg, #fef9c3, #fef08a)',
+    highway: 'Quốc Lộ Bắc · Trung Tây',
+    sub: 'Làng gốm cổ truyền, đồng vàng trĩu hạt',
+    emoji: '🛖',
+  },
+  'phu-dien': {
+    badge: '🌱 Phú Điền',
+    color: '#16a34a',
+    gradient: 'linear-gradient(135deg, #dcfce7, #bbf7d0)',
+    highway: 'Trục Đô Thị - Cực Bắc',
+    sub: 'Vựa lúa màu mỡ, đất đai phì nhiêu',
+    emoji: '🚜',
+  },
+  'tan-loc': {
+    badge: '💎 Tân Lộc',
+    color: '#0284c7',
+    gradient: 'linear-gradient(135deg, #e0f2fe, #bae6fd)',
+    highway: 'Quốc Lộ Bắc · Trung Đông',
+    sub: 'Miền đất trù phú, đón vượng khí tài lộc',
+    emoji: '🏰',
+  },
+  'hai-van': {
+    badge: '☁️ Hải Vân',
+    color: '#6366f1',
+    gradient: 'linear-gradient(135deg, #e0e7ff, #c7d2fe)',
+    highway: 'Quốc Lộ Bắc · Cực Đông',
+    sub: 'Mây vờn đỉnh núi, phong cảnh hùng vĩ',
+    emoji: '🏔️',
+  },
+  'thu-phong': {
+    badge: '🍂 Thu Phong',
+    color: '#ea580c',
+    gradient: 'linear-gradient(135deg, #ffedd5, #fed7aa)',
+    highway: 'Quốc Lộ Nam Ven Biển',
+    sub: 'Lá phong nhuộm đỏ, làn gió biển dịu êm',
+    emoji: '🍁',
+  },
+  'huong-duong': {
+    badge: '🌻 Hướng Dương',
+    color: '#f59e0b',
+    gradient: 'linear-gradient(135deg, #fef3c7, #fde68a)',
+    highway: 'Quốc Lộ Nam Ven Biển',
+    sub: 'Vườn hoa hướng dương rực rỡ đón bình minh',
+    emoji: '🌞',
+  },
+};
+
+const SPECIAL_DESTINATIONS = [
+  {
+    id: 'town',
+    label: 'Quảng Trường Trung Tâm',
+    category: 'city',
+    badge: '🎪 Phố Thị',
+    color: '#ec4899',
+    gradient: 'linear-gradient(135deg, #fdf2f8, #fce7f3)',
+    highway: 'Tâm Điểm Bản Đồ (x: 0, z: 0)',
+    sub: 'Đài phun nước, tiệm bánh, rạp phim & hội quán',
+    emoji: '⛲',
+    ...TOWN_SPAWN,
+  },
+  {
+    id: 'lake',
+    label: 'Hồ Pha Lê & Bến Câu Cá',
+    category: 'nature',
+    badge: '🎣 Bến Thuyền',
+    color: '#0284c7',
+    gradient: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+    highway: 'Đại Lộ Phía Đông (x: 128, z: 2)',
+    sub: 'Tiệm đồ câu Lão Ngư, chòi dã ngoại & bến thuyền',
+    emoji: '🐟',
+    x: 128,
+    z: -2,
+  },
+  {
+    id: 'beach',
+    label: 'Bãi Biển & Cảng Steamboat',
+    category: 'nature',
+    badge: '🏖️ Bờ Cát',
+    color: '#0d9488',
+    gradient: 'linear-gradient(135deg, #f0fdfa, #ccfbf1)',
+    highway: 'Quốc Lộ Nam (x: 0, z: 300)',
+    sub: 'Ngọn hải đăng, ghế tắm nắng & bến tàu viễn dương',
+    emoji: '🌴',
+    x: 0,
+    z: 300,
+  },
+];
+
+export default function PlayTogetherWorldMapModal({
+  isOpen,
+  onClose,
+  onTravel,
+  session,
+  playerCoord = { x: 0, z: 0 },
+  currentZone,
+}) {
+  const [activeTab, setActiveTab] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // 1. Determine player's owned farm
+  const myFarm = useMemo(() => {
+    if (!session?.farmId) return null;
+    const farm = WORLD_LAYOUT.farms.find(f => f.id === session.farmId);
+    if (!farm) return null;
+    const village = WORLD_VILLAGES.find(v => v.id === farm.villageId);
+    return {
+      ...farm,
+      villageName: village?.name || farm.villageId,
+      villageGate: village?.gate,
+      lotNumber: farm.lotNumber || (parseInt(farm.id.replace('farm_', ''), 10) % 24 || 24),
+    };
+  }, [session?.farmId]);
+
+  // 2. Build full destination list
+  const allDestinations = useMemo(() => {
+    const list = [];
+
+    // 12 Villages
+    WORLD_VILLAGES.forEach(v => {
+      const theme = VILLAGE_THEMES[v.id] || {
+        badge: '🏘️ Làng Nông Trại',
+        color: '#10b981',
+        gradient: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+        highway: 'Tuyến Giao Thông Liên Làng',
+        sub: '24 lô đất nông trại khép kín',
+        emoji: '🏡',
+      };
+
+      const isMyVillage = myFarm && myFarm.villageId === v.id;
+      const isHere = currentZone?.id === v.id;
+      const dist = Math.round(Math.hypot(v.gate.x - playerCoord.x, v.gate.z - playerCoord.z));
+
+      list.push({
+        id: v.id,
+        label: v.name,
+        category: 'village',
+        badge: isMyVillage ? `⭐ Lô ${myFarm.lotNumber} Của Bạn` : theme.badge,
+        color: theme.color,
+        gradient: theme.gradient,
+        highway: theme.highway,
+        sub: theme.sub,
+        emoji: theme.emoji,
+        x: v.gate.x,
+        z: v.gate.z - 4,
+        isMyVillage,
+        isHere,
+        distance: dist,
+      });
+    });
+
+    // Special landmarks
+    SPECIAL_DESTINATIONS.forEach(s => {
+      const isHere = currentZone?.id === s.id;
+      const dist = Math.round(Math.hypot(s.x - playerCoord.x, s.z - playerCoord.z));
+      list.push({
+        ...s,
+        isHere,
+        distance: dist,
+      });
+    });
+
+    return list;
+  }, [myFarm, currentZone, playerCoord]);
+
+  // 3. Filter destinations by tab and search
+  const filteredDestinations = useMemo(() => {
+    let result = allDestinations;
+
+    if (activeTab === 'villages') {
+      result = result.filter(d => d.category === 'village');
+    } else if (activeTab === 'city') {
+      result = result.filter(d => d.category === 'city');
+    } else if (activeTab === 'nature') {
+      result = result.filter(d => d.category === 'nature');
+    } else if (activeTab === 'my_farm') {
+      result = result.filter(d => d.isMyVillage);
+    }
+
+    if (searchTerm.trim()) {
+      const q = searchTerm.trim().toLowerCase();
+      result = result.filter(
+        d => d.label.toLowerCase().includes(q) || d.badge.toLowerCase().includes(q) || d.sub.toLowerCase().includes(q)
+      );
+    }
+
+    return result;
+  }, [allDestinations, activeTab, searchTerm]);
+
+  if (!isOpen) return null;
+
+  const handleTravelClick = dest => {
+    farmAudio?.playBusHorn?.();
+    onTravel?.(dest);
+    onClose?.();
+  };
+
+  const handleWarpHome = () => {
+    if (!myFarm) return;
+    farmAudio?.playBusHorn?.();
+    onTravel?.({
+      id: 'farm',
+      label: `Nông Trại Của Bạn (${myFarm.villageName} - Lô ${myFarm.lotNumber})`,
+      x: myFarm.x,
+      z: myFarm.z - 6,
+    });
+    onClose?.();
+  };
+
+  return (
+    <div className="pt-map-backdrop" onClick={onClose}>
+      <div className="pt-map-modal" onClick={e => e.stopPropagation()}>
+        {/* Play Together Top Candy Header */}
+        <header className="pt-map-header">
+          <div>
+            <div className="pt-map-header-ribbon">
+              <span>🚌 HỆ THỐNG XE BUÝT THUNG LŨNG 12 LÀNG</span>
+            </div>
+            <div className="pt-map-title-row">
+              <h2 className="pt-map-title">BẢN ĐỒ THẾ GIỚI 3D</h2>
+            </div>
+            <p className="pt-map-subtitle">
+              Xe buýt đưa đón tức thì · Kết nối 100% đường giao thông không góc cụt
+            </p>
+          </div>
+          <button
+            type="button"
+            className="pt-map-close-btn"
+            onClick={() => {
+              farmAudio?.playPop?.();
+              onClose?.();
+            }}
+            aria-label="Đóng bản đồ"
+            title="Đóng bản đồ"
+          >
+            ×
+          </button>
+        </header>
+
+        {/* Home Farm Quick-Warp Banner (Play Together Recall VIP Card) */}
+        {myFarm && (
+          <div className="pt-map-home-banner">
+            <div className="pt-map-home-info">
+              <div className="pt-map-home-icon">🏠</div>
+              <div>
+                <div className="pt-map-home-title">
+                  <span>Trang Trại Của Bạn</span>
+                  <span className="pt-map-home-badge">Lô {myFarm.lotNumber}</span>
+                </div>
+                <div className="pt-map-home-sub">
+                  Thuộc {myFarm.villageName} · Sân nhà khép kín hướng thẳng ra Quốc Lộ
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="pt-map-home-warp-btn"
+              onClick={handleWarpHome}
+              title="Về ngay trước cổng nông trại của bạn"
+            >
+              <span>⚡ VỀ NHÀ NGAY</span>
+            </button>
+          </div>
+        )}
+
+        {/* Radar Location Summary */}
+        <div className="pt-map-radar-strip">
+          <div className="pt-map-radar-title">
+            <span className="pt-map-radar-dot" />
+            <span>Vị trí hiện tại: <strong>{currentZone?.label || 'Quảng Trường Trung Tâm'}</strong></span>
+          </div>
+          <div className="pt-map-radar-summary">
+            <span>Tọa độ: ({Math.round(playerCoord.x)}, {Math.round(playerCoord.z)})</span>
+            <span>15 trạm xe buýt sẵn sàng</span>
+          </div>
+        </div>
+
+        {/* Filter Navigation Tabs */}
+        <nav className="pt-map-tabs">
+          <button
+            type="button"
+            className={`pt-map-tab ${activeTab === 'all' ? 'active' : ''}`}
+            onClick={() => {
+              farmAudio?.playPop?.();
+              setActiveTab('all');
+            }}
+          >
+            🗺️ Tất Cả ({allDestinations.length})
+          </button>
+          <button
+            type="button"
+            className={`pt-map-tab ${activeTab === 'villages' ? 'active' : ''}`}
+            onClick={() => {
+              farmAudio?.playPop?.();
+              setActiveTab('villages');
+            }}
+          >
+            🏘️ 12 Làng Nông Trại (12)
+          </button>
+          <button
+            type="button"
+            className={`pt-map-tab ${activeTab === 'city' ? 'active' : ''}`}
+            onClick={() => {
+              farmAudio?.playPop?.();
+              setActiveTab('city');
+            }}
+          >
+            🎪 Đô Thị Phồn Hoa
+          </button>
+          <button
+            type="button"
+            className={`pt-map-tab ${activeTab === 'nature' ? 'active' : ''}`}
+            onClick={() => {
+              farmAudio?.playPop?.();
+              setActiveTab('nature');
+            }}
+          >
+            🏖️ Biển & Hồ Câu Cá
+          </button>
+          {myFarm && (
+            <button
+              type="button"
+              className={`pt-map-tab ${activeTab === 'my_farm' ? 'active' : ''}`}
+              onClick={() => {
+                farmAudio?.playPop?.();
+                setActiveTab('my_farm');
+              }}
+            >
+              ⭐ Nông Trại Của Bạn
+            </button>
+          )}
+        </nav>
+
+        {/* Destination Cards Grid */}
+        <div className="pt-map-body">
+          <div className="pt-map-grid">
+            {filteredDestinations.map(dest => {
+              const isHere = dest.isHere || dest.distance <= 18;
+
+              return (
+                <div
+                  key={dest.id}
+                  className={`pt-dest-card ${dest.isMyVillage ? 'is-my-farm' : ''} ${isHere ? 'is-current-pos' : ''}`}
+                  style={{
+                    borderTop: `4px solid ${dest.color || '#3b82f6'}`,
+                  }}
+                >
+                  <div className="pt-dest-top">
+                    <div
+                      className="pt-dest-icon-frame"
+                      style={{
+                        background: dest.gradient || 'linear-gradient(135deg, #f1f5f9, #e2e8f0)',
+                        border: `2px solid ${dest.color || '#cbd5e1'}`,
+                      }}
+                    >
+                      <span>{dest.emoji || '🏡'}</span>
+                    </div>
+
+                    <div className="pt-dest-meta">
+                      <div className="pt-dest-tag-row">
+                        <span
+                          className={`pt-dest-tag ${dest.isMyVillage ? 'badge-owner' : ''} ${isHere ? 'badge-here' : ''}`}
+                          style={
+                            !dest.isMyVillage && !isHere
+                              ? { backgroundColor: `${dest.color}22`, color: dest.color }
+                              : {}
+                          }
+                        >
+                          {dest.badge}
+                        </span>
+                        {isHere && <span className="pt-dest-tag badge-here">📍 Đang Ở Đây</span>}
+                      </div>
+
+                      <h3 className="pt-dest-name">{dest.label}</h3>
+                      <p className="pt-dest-desc">{dest.sub}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-dest-bottom">
+                    <div className="pt-dest-distance">
+                      <span>🚌 {dest.highway}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className={`pt-dest-bus-btn ${isHere ? 'is-here' : ''}`}
+                      disabled={isHere}
+                      onClick={() => handleTravelClick(dest)}
+                      title={isHere ? 'Bạn đang ở ngay đây' : `Đi xe buýt tới ${dest.label}`}
+                    >
+                      <span>{isHere ? '📍 ĐANG Ở ĐÂY' : '🚌 LÊN XE BUÝT'}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

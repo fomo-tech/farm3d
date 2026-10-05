@@ -36,57 +36,6 @@ function createHayBale(scene, x, y, z, parent, materials, rotationY = 0) {
   return bale;
 }
 
-/**
- * Bến Thuyền & Cano Thể Thao Ven Hồ (Suburban Lake Pier & Boat Dock)
- * Thay thế cho cầu khỉ tre và thuyền thúng cũ
- */
-function createLakePier(scene, parent, materials, shadows) {
-  const pierRoot = new TransformNode('suburban-lake-pier', scene);
-  pierRoot.position.set(164, 0.1, -8);
-  pierRoot.rotation.y = 0.1;
-  pierRoot.parent = parent;
-
-  // Cầu tàu sàn gỗ sạch sẽ vươn ra lòng hồ
-  const deck = MeshBuilder.CreateBox('pier-wood-deck', { width: 4.2, height: 0.25, depth: 12.0 }, scene);
-  deck.position.set(0, 0.8, 6.0);
-  deck.material = materials.timber;
-  deck.parent = pierRoot;
-  deck.receiveShadows = true;
-
-  // Các cọc trụ bê tông / gỗ chịu lực cắm dưới nước
-  [-1.8, 1.8].forEach(px => {
-    [1.5, 5.5, 9.5].forEach(pz => {
-      const pylon = MeshBuilder.CreateCylinder(`pier-pylon-${px}-${pz}`, { height: 2.2, diameter: 0.35, tessellation: 12 }, scene);
-      pylon.position.set(px, 0.2, pz);
-      pylon.material = materials.woodDark;
-      pylon.parent = pierRoot;
-      shadows?.addShadowCaster(pylon);
-    });
-  });
-
-  // Chiếc Thuyền Buồm Dã Ngoại (Pleasure Sailboat) neo đậu cạnh cầu tàu
-  const boat = MeshBuilder.CreateBox('docked-boat-hull', { width: 2.4, height: 1.2, depth: 5.6 }, scene);
-  boat.position.set(4.2, 0.5, 6.5);
-  boat.material = materials.whiteHull;
-  boat.parent = pierRoot;
-
-  // Cột buồm và cánh buồm trắng
-  const mast = MeshBuilder.CreateCylinder('boat-mast', { height: 5.4, diameter: 0.14, tessellation: 10 }, scene);
-  mast.position.set(4.2, 3.4, 6.5);
-  mast.material = materials.woodDark;
-  mast.parent = pierRoot;
-
-  const sail = MeshBuilder.CreateCylinder('boat-sail', {
-    diameter: 3.4,
-    height: 3.8,
-    tessellation: 3,
-  }, scene);
-  sail.rotation.z = Math.PI / 2;
-  sail.scaling.set(0.08, 1.0, 0.9);
-  sail.position.set(4.2, 3.2, 7.4);
-  sail.material = materials.canvas;
-  sail.parent = pierRoot;
-}
 
 /**
  * Khu Lều Cắm Trại Glamping & Nghỉ Dưỡng Bờ Biển (Glamping Beach Park)
@@ -157,7 +106,6 @@ export function* createVietnameseCountrysideSteps(scene, shadows) {
     timber: mat(scene, 'suburban-timber', '#b45309'),
     woodDark: mat(scene, 'suburban-wood-dark', '#451a03'),
     canvas: mat(scene, 'glamping-canvas', '#f8fafc'),
-    whiteHull: mat(scene, 'sailboat-white', '#ffffff'),
     stoneRing: mat(scene, 'firepit-stone', '#94a3b8'),
     fire: mat(scene, 'suburban-fire-glow', '#f97316', '#fbbf24'),
     grassPasture: mat(scene, 'pasture-green-grass', '#86efac'),
@@ -251,7 +199,6 @@ export function* createVietnameseCountrysideSteps(scene, shadows) {
     yield;
 
   // 4. BẾN THUYỀN BUỒM & CANO THỂ THAO VEN HỒ
-  createLakePier(scene, root, materials, shadows);
     yield;
 
   // 5. CÔNG VIÊN GLAMPING & NGHỈ DƯỠNG BỜ BIỂN

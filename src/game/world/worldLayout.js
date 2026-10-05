@@ -1,5 +1,6 @@
 import { FARM_LOT_SPEC, farmLotPosition } from '../../../shared/farmLayout.js';
 import { WORLD_VILLAGES } from '../../../shared/villageLayout.js';
+import { TOWN_SPAWN } from '../../../shared/playerSpawn.js';
 
 const FARM_COLORS = ['#e6ad45', '#e87994', '#5f91c8', '#8a72b8', '#58a66f', '#d97745'];
 
@@ -21,7 +22,7 @@ export const VILLAGE_FARMS = Object.freeze(Array.from({ length: VILLAGE_LOT_COUN
 export const WORLD_LAYOUT = Object.freeze({
   id: 'binh-minh-003',
   version: MAP_LAYOUT_VERSION,
-  spawn: { x: 0, z: 18 },
+  spawn: TOWN_SPAWN,
   zones: {
     city: { id: 'city-center', label: 'Thành phố Bình Minh', x: 0, z: 0, radius: 58 },
     countryside: { id: 'rural-hoa-mai', label: 'Đồng quê Hoa Mai', x: 0, z: 182, radius: 102 },

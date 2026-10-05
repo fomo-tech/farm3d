@@ -8,9 +8,17 @@ import { addTextureGrain } from './TextureWorkerPool.js';
  * Nền cỏ chuyển sắc màu nước mọng mượt, khóm cỏ ba lá uốn lượn, ngọn cỏ non và hoa cúc dại li ti
  */
 export function createMeadowTexture(scene, size = 1024) {
+  // Grain generation reads every pixel. Request a CPU-backed canvas before
+  // Babylon opens its context to avoid a synchronous GPU readback at boot.
+  const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
+  if (canvas) {
+    canvas.width = size;
+    canvas.height = size;
+    canvas.getContext('2d', { willReadFrequently: true });
+  }
   const dynamic = new DynamicTexture(
     'meadow-stylized-texture',
-    { width: size, height: size },
+    canvas || { width: size, height: size },
     scene,
     true,
     Texture.TRILINEAR_SAMPLINGMODE

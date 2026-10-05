@@ -12,7 +12,7 @@ const facades = {
   fashion: [29, -25, -Math.PI * .25 - .1],
   vehicles: [-29, 25, Math.PI * .75 - .1],
   supplies: [29, 25, -Math.PI * .75 + .1],
-  fishing: [135, 6, -Math.PI / 2],
+  fishing: [VENUE_LAYOUT.fishing.exterior.x, VENUE_LAYOUT.fishing.exterior.z, VENUE_LAYOUT.fishing.exterior.yaw],
 };
 for (const [name, [x, z, rotation]] of Object.entries(facades)) {
   const expected = { x: x + Math.sin(rotation) * 6.5, z: z + Math.cos(rotation) * 6.5 };

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { ArrivalAvatar } from './ArrivalAvatar.jsx';
+import './CharacterArrival.css';
 import {
   Icon3dNonLa,
   Icon3dShirt,
@@ -70,12 +72,12 @@ const COLOR_SWATCHES = [
   { hex: '#f8fafc', name: 'Trắng Mây' },
 ];
 
-export function CharacterCreationModal({ defaultName = '', onSubmit }) {
+export function CharacterCreationModal({ defaultName = '', onSubmit, pending = false, error = '' }) {
   const [step, setStep] = useState('studio'); // 'studio' | 'ticket'
   const [name, setName] = useState(defaultName || 'Bắp Non');
-  const [selectedOutfit, setSelectedOutfit] = useState('farmer');
-  const [selectedColor, setSelectedColor] = useState('#f1b445');
-  const [selectedHeadwear, setSelectedHeadwear] = useState('nonla');
+  const [selectedOutfit, setSelectedOutfit] = useState('starter');
+  const [selectedColor, setSelectedColor] = useState('#f8fafc');
+  const [selectedHeadwear, setSelectedHeadwear] = useState('none');
   const [activeTab, setActiveTab] = useState('outfit'); // 'outfit' | 'headwear' | 'color'
   const [diceRolling, setDiceRolling] = useState(false);
 
@@ -110,24 +112,25 @@ export function CharacterCreationModal({ defaultName = '', onSubmit }) {
   };
 
   return (
-    <div className="pt-onboarding-backdrop">
+    <div className="pt-onboarding-backdrop arrival-screen arrival-starter-only">
       {step === 'studio' && (
         <section className="pt-studio-card" role="dialog" aria-modal="true" aria-label="Studio thiết kế nhân vật">
           {/* Header */}
           <div className="pt-studio-header">
             <div className="pt-studio-badge">
               <Icon3dSparkleStar size={20} />
-              <span>STUDIO THIẾT KẾ NHÂN VẬT</span>
+              <span>VIBE CITY · CƯ DÂN MỚI</span>
               <Icon3dPartyPopper size={20} />
             </div>
-            <h2>Chào Mừng Đến Với Thung Lũng Kaia!</h2>
-            <p>Hãy tạo phong cách Chibi đáng yêu cho nhân vật của bạn trước khi bước vào thị trấn.</p>
+            <h2>Xin chào, bạn mới!</h2>
+            <p>Đặt tên và bắt đầu với trang phục cơ bản. Bạn có thể mua đồ mới sau này.</p>
           </div>
 
           <div className="pt-studio-body">
             {/* Left: 3D Character Preview Podium */}
             <div className="pt-studio-podium-wrap">
-              <div className="pt-podium-stage">
+              <ArrivalAvatar outfit={selectedOutfit} color={selectedColor} />
+              <div className="pt-podium-stage" hidden style={{display:'none'}}>
                 <div
                   className="pt-podium-chibi-avatar"
                   style={{
@@ -152,6 +155,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit }) {
                 {/* 3D Circular Pedestal */}
                 <div className="pt-podium-base" />
               </div>
+              <p className="arrival-rotate-hint">↔ Kéo nhân vật để xoay</p>
 
               {/* Character Identity Strip */}
               <div className="pt-podium-name-tag">
@@ -188,7 +192,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit }) {
               </div>
 
               {/* Tabs Switcher */}
-              <div className="pt-studio-tabs">
+              <div className="pt-studio-tabs" hidden style={{display:'none'}}>
                 <button
                   type="button"
                   className={`pt-tab-btn ${activeTab === 'outfit' ? 'active' : ''}`}
@@ -197,14 +201,14 @@ export function CharacterCreationModal({ defaultName = '', onSubmit }) {
                   <Icon3dShirt size={18} />
                   <span>Trang Phục</span>
                 </button>
-                <button
+                {false && <button
                   type="button"
                   className={`pt-tab-btn ${activeTab === 'headwear' ? 'active' : ''}`}
                   onClick={() => setActiveTab('headwear')}
                 >
                   <Icon3dNonLa size={18} />
                   <span>Nón Mũ</span>
-                </button>
+                </button>}
                 <button
                   type="button"
                   className={`pt-tab-btn ${activeTab === 'color' ? 'active' : ''}`}
@@ -219,7 +223,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit }) {
               <div className="pt-studio-tab-content">
                 {activeTab === 'outfit' && (
                   <div className="pt-options-grid">
-                    {OUTFITS_LIST.map(item => (
+                    {OUTFITS_LIST.filter(item => item.id === 'starter').map(item => (
                       <button
                         key={item.id}
                         type="button"
@@ -271,13 +275,14 @@ export function CharacterCreationModal({ defaultName = '', onSubmit }) {
               </div>
 
               {/* Submit Button */}
+              <p>Bạn chưa có đất hoặc nhà. Sau khi vào thị trấn, khám phá các làng và dùng xu mua lô đất phù hợp. Đất gần trung tâm có giá cao hơn.</p>
               <button
                 type="button"
                 className="pt-studio-submit-btn"
                 disabled={!name.trim()}
                 onClick={handleCompleteStudio}
               >
-                Tiếp Tục: Nhận Thẻ Cư Dân Kaia →
+                Tiếp tục →
               </button>
             </div>
           </div>
@@ -287,7 +292,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit }) {
       {/* Step 2: Kaia Resident ID & Bus Arrival Ticket */}
       {step === 'ticket' && (
         <section className="pt-ticket-card" role="dialog" aria-modal="true" aria-label="Thẻ cư dân Kaia">
-          <div className="pt-ticket-stamp">KAIA VIP PASS</div>
+          <div className="pt-ticket-stamp">CƯ DÂN MỚI</div>
 
           <div className="pt-ticket-inner">
             {/* Header */}
@@ -296,7 +301,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit }) {
                 <Icon3dVillageGate size={28} />
                 <div>
                   <h3>THẺ CƯ DÂN THUNG LŨNG KAIA</h3>
-                  <small>HỘ CHIẾU NHẬP CƯ DANH DỰ · MÃ SỐ #KAIA-2026</small>
+                  <small>XÁC NHẬN THÔNG TIN NHÂN VẬT</small>
                 </div>
               </div>
             </div>
@@ -329,7 +334,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit }) {
             </div>
 
             {/* Welcome Starter Gifts */}
-            <div className="pt-starter-gift-box">
+            <div className="pt-starter-gift-box" hidden style={{display:'none'}}>
               <span className="pt-gift-label">QUÀ TÂN THỦ CHÀO MỪNG:</span>
               <div className="pt-gift-items">
                 <div className="pt-gift-pill coins">
@@ -345,14 +350,16 @@ export function CharacterCreationModal({ defaultName = '', onSubmit }) {
 
             {/* Quick Tip from Elder Oliver */}
             <div className="pt-ticket-elder-note">
-              <span>💡 Gặp Quản Gia Oliver tại đài phun nước để nhận đất & khởi nghiệp!</span>
+              <span>Gặp Oliver tại quảng trường để bắt đầu hướng dẫn. Bạn cần tự mua đất; lô đất mua thành công sẽ đứng tên bạn, gồm 12 ô trồng, một chuồng và một nhà nhỏ cấp 1.</span>
             </div>
 
             {/* Actions */}
+            {error && <p role="alert" style={{color:'#b42318'}}>{error}</p>}
             <div className="pt-ticket-actions">
               <button
                 type="button"
                 className="pt-ticket-back-btn"
+                disabled={pending}
                 onClick={() => setStep('studio')}
               >
                 ← Chỉnh sửa lại
@@ -360,10 +367,11 @@ export function CharacterCreationModal({ defaultName = '', onSubmit }) {
               <button
                 type="button"
                 className="pt-ticket-enter-btn"
+                disabled={pending}
                 onClick={handleFinalSubmit}
               >
                 <Icon3dPartyPopper size={24} />
-                <span>BƯỚC VÀO THUNG LŨNG!</span>
+                <span>{pending ? 'ĐANG TẠO NHÂN VẬT…' : 'TẠO NHÂN VẬT & VÀO THỊ TRẤN'}</span>
               </button>
             </div>
           </div>

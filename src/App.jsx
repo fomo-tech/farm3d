@@ -11,7 +11,11 @@ import {
   fishingCapacity,
 } from '../shared/fishing.js';
 import { FarmWorld } from './game/world/FarmWorld.js';
+import { zoneAtPosition } from './game/world/worldLayout.js';
+import { TOWN_SPAWN } from '../shared/playerSpawn.js';
 import { LivestockRefresh } from './components/LivestockRefresh.jsx';
+import { FishingHUD } from './components/FishingHUD.jsx';
+import { fishingMissionProgress } from '../shared/fishingSession.js';
 import { readGraphicsQuality } from './game/rendering/GraphicsSettings.js';
 import { loadWorldSession, saveWorldSession } from './game/network/WorldSession.js';
 import { GameClient } from './game/network/GameClient.js';
@@ -47,6 +51,9 @@ import { FarmGuideModal } from './components/FarmGuideModal.jsx';
 import { GraduationModal } from './components/GraduationModal.jsx';
 import { RoadsideShopModal } from './components/RoadsideShopModal.jsx';
 import { FashionBoutiqueModal } from './components/FashionBoutiqueModal.jsx';
+import { LeaderboardModal } from './components/LeaderboardModal.jsx';
+import { PlazaEventNoticeModal } from './components/PlazaEventNoticeModal.jsx';
+import PlayTogetherWorldMapModal from './components/PlayTogetherWorldMapModal.jsx';
 import { getDefaultCustomization } from './game/data/fashionCatalog.js';
 import { FloatingPlotBubble } from './components/FloatingPlotBubble.jsx';
 import { OrderBulletinBoard } from './components/OrderBulletinBoard.jsx';
@@ -181,6 +188,19 @@ const cropIcons = {
 };
 const recipeIcons = { flour: <Icon3dFlourBowl size={24} />, cheese: <Icon3dCheese size={24} />, jam: <Icon3dJamJar size={24} /> };
 
+const PANEL_INFO = {
+  land: { badge: '🏡 Bất Động Sản', title: 'Mua Đất & Quyền Sở Hữu' },
+  livestock: { badge: '🐮 Nông Trại Vui Vẻ', title: 'Chuồng Trại & Thú Nuôi' },
+  shop: { badge: '🛒 Nông Cụ & Hạt Giống', title: 'Cửa Hàng Nông Nghiệp' },
+  inventory: { badge: '🎒 Ba Lô & Kho Chứa', title: 'Kho Nông Sản' },
+  quests: { badge: '🏆 Thành Tích Mỗi Ngày', title: 'Bảng Nhiệm Vụ' },
+  factory: { badge: '⚙️ Xưởng Chế Biến', title: 'Chế Biến Nông Sản' },
+  upgrade: { badge: '🚜 Mở Rộng & Nâng Cấp', title: 'Nâng Cấp Nông Trại' },
+  city: { badge: '🏛️ Khu Trung Tâm', title: 'Thị Trấn Thung Lũng' },
+  vehicles: { badge: '🛵 Phương Tiện & Di Chuyển', title: 'Đại Lý Xe & Chổi Bay' },
+  fishing: { badge: '🎣 Câu Cá Ven Hồ', title: 'Cửa Hàng Lão Ngư' },
+};
+
 function HudImageIcon({ asset, className = '', alt = '' }) {
   return (
     <img
@@ -212,6 +232,9 @@ export default function App() {
   const progressRef = useRef(null);
   const gameClientRef = useRef(null);
   const pendingCharacterRef = useRef(null);
+  const characterCreationRef = useRef(null);
+  const [characterCreationPending, setCharacterCreationPending] = useState(false);
+  const [characterCreationError, setCharacterCreationError] = useState('');
   const [status, setStatus] = useState('Đang khởi tạo thế giới…');
   const [session, setSession] = useState(loadWorldSession);
   const sessionRef = useRef(session);
@@ -221,17 +244,23 @@ export default function App() {
   const [progress, setProgress] = useState(loadProgress);
   const [panel, setPanel] = useState(null);
   const [activeTool, setActiveTool] = useState('hand');
-  const [boot, setBoot] = useState({ phase: 'loading', error: '' });
+  const [boot, setBoot] = useState({ phase: 'idle', error: '' });
+  const [startRequested, setStartRequested] = useState(false);
   const [bootProgress, setBootProgress] = useState({ phase: 'init', percentage: 0, message: 'Đang khởi động thế giới 3D…', current: 0, total: 40 });
   const [debugEnabled, setDebugEnabled] = useState(() => new URLSearchParams(window.location.search).get('debug') === '1');
   const clockRef = useRef(Math.floor(Date.now() / 1000));
   const [timeMode, setTimeMode] = useState('auto');
   const [fishingWater, setFishingWater] = useState(null);
   const [fishingTick, setFishingTick] = useState(0);
+  const [caughtFish, setCaughtFish] = useState(null);
+  const fishingServerOffset = useRef(0);
+  const fishingSessionId = useRef(null);
   const [network, setNetwork] = useState({ connected: false, phase: 'connecting', online: 1, queued: 0, attempt: 0 });
   const [casinoResult, setCasinoResult] = useState('Chọn bàn và chờ ván online.');
   const [casinoState, setCasinoState] = useState(null);
   const [venueMode, setVenueMode] = useState(null);
+  const [nearbyCasinoTable, setNearbyCasinoTable] = useState(null);
+  const [chosenCasinoGame, setChosenCasinoGame] = useState('tai-xiu');
   const [worldRegion, setWorldRegion] = useState(null);
   const [villages, setVillages] = useState(DEFAULT_VILLAGES);
   const [villageRequired, setVillageRequired] = useState(false);
@@ -245,6 +274,9 @@ export default function App() {
   const [celebrationOpen, setCelebrationOpen] = useState(false);
   const [roadsideOpen, setRoadsideOpen] = useState(false);
   const [phoneOpen, setPhoneOpen] = useState(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [plazaNoticeOpen, setPlazaNoticeOpen] = useState(false);
+  const [socialState, setSocialState] = useState({ friends: [], leaderboard: [] });
   const [gameStarted, setGameStarted] = useState(false);
   const [graphicsQuality, setGraphicsQuality] = useState(readGraphicsQuality);
   const [cameraViewMode, setCameraViewMode] = useState('explore');
@@ -263,7 +295,12 @@ export default function App() {
   progressRef.current = progress;
 
   useEffect(() => {
-    if (!canvasRef.current) return undefined;
+    worldRef.current?.setCasinoScreenActive?.(panel === 'casino');
+    return () => worldRef.current?.setCasinoScreenActive?.(false);
+  }, [panel]);
+
+  useEffect(() => {
+    if (!startRequested || !canvasRef.current) return undefined;
     let world;
     try {
       window.__farmDebug?.mark('Creating Babylon world');
@@ -323,7 +360,22 @@ export default function App() {
         getVehicle: () => progressRef.current?.vehicle || 'walk',
         getPlayerSpeed: () => vehicles.find(vehicle => vehicle.id === progressRef.current?.vehicle)?.speed || 7,
         onVenue: venue => setPanel(venue === 'supplies' ? 'shop' : venue),
-        onVenueState: (venue, label) => setVenueMode(venue ? { venue, label } : null),
+        onLeaderboard: () => {
+          gameClientRef.current?.send({ type: 'get_social_state' });
+          setLeaderboardOpen(true);
+        },
+        onPlazaNotice: () => setPlazaNoticeOpen(true),
+        onVenueState: (venue, label) => {
+          setVenueMode(venue ? { venue, label } : null);
+          if (venue !== 'casino') setNearbyCasinoTable(null);
+        },
+        onCasinoTable: tableGame => {
+          setChosenCasinoGame(tableGame);
+          setPanel('casino');
+        },
+        onNearbyCasinoTable: (tableGame, label) => {
+          setNearbyCasinoTable(tableGame ? { game: tableGame, label } : null);
+        },
         onRegionChange: setWorldRegion,
         onQualityChange: setGraphicsQuality,
         onBusTransitChange: status => { busTransitRef.current = transitHudSnapshot(status); },
@@ -352,7 +404,7 @@ export default function App() {
       world?.dispose();
       worldRef.current = null;
     };
-  }, []);
+  }, [startRequested]);
 
   useEffect(() => {
     worldRef.current?.setLocalPlayerName(session.name);
@@ -377,7 +429,12 @@ export default function App() {
         worldRef.current?.syncRemotePlayers(players, serverTime);
       },
       onMoveAck: state => worldRef.current?.correctPlayerPosition(state),
-      onCasinoState: state => setCasinoState(state.games),
+      onCasinoState: state => {
+        setCasinoState(state);
+      },
+      onSocialState: state => {
+        setSocialState(state);
+      },
       onFarmSync: farms => {
         worldRef.current?.applyRemoteFarmSync(farms);
       },
@@ -418,12 +475,26 @@ export default function App() {
         setStatus(`Lỗi: ${message}`);
       },
       onActionError: message => {
+        if (characterCreationRef.current) {
+          characterCreationRef.current = null;
+          setCharacterCreationPending(false);
+          setCharacterCreationError(message);
+        }
         setLandPending(false);
         worldRef.current?.farming?.clearPendingActions?.();
         setStatus(`Lỗi: ${message}`);
         setCasinoResult(message);
       },
       onAccountState: state => {
+        if (state.serverNow) fishingServerOffset.current = state.serverNow - Date.now();
+        if (characterCreationRef.current && state.progress?.onboarding?.characterCreated) {
+          const created = characterCreationRef.current;
+          characterCreationRef.current = null;
+          setCharacterCreationPending(false);
+          setSession(prev => { const next = { ...prev, name: created.name, avatarIcon: 'starter' }; saveWorldSession(next); return next; });
+          setVillageRequired(false);
+          setStatus(`Chào mừng ${created.name}! Hãy gặp Oliver tại quảng trường.`);
+        }
         if (state.result?.landPurchase) {
           const land = state.result.landPurchase;
           setLandPending(false);
@@ -434,17 +505,18 @@ export default function App() {
         }
         if (state.progress) {
           const previousStep = progressRef.current?.onboarding?.step;
+          const fishingOnly = state.result?.fishingUpdated;
           setProgress(state.progress);
           progressRef.current = state.progress;
-          worldRef.current?.setPlayerVehicle(state.progress.vehicle || 'walk');
-          worldRef.current?.setPlayerHomeTier(state.progress.homeTier || 1);
-          if (state.progress.customization) {
+          if (!fishingOnly) worldRef.current?.setPlayerVehicle(state.progress.vehicle || 'walk');
+          if (!fishingOnly) worldRef.current?.setPlayerHomeTier(state.progress.homeTier || 1);
+          if (!fishingOnly && state.progress.customization) {
             worldRef.current?.setPlayerCustomization(state.progress.customization);
-          } else {
+          } else if (!fishingOnly) {
             const serverOutfit = outfits.find(item => item.id === state.progress.outfit) || outfits[0];
             worldRef.current?.setPlayerOutfit(serverOutfit.id, serverOutfit.color);
           }
-          worldRef.current?.refreshFarm?.();
+          if (!fishingOnly) worldRef.current?.refreshFarm?.();
           if ([ONBOARDING_STEPS.EXPLAIN_SYSTEMS, ONBOARDING_STEPS.CLAIM_REWARD].includes(state.progress.onboarding?.step) && state.progress.onboarding.step !== previousStep) {
             window.setTimeout(() => setDialogueOpen(true), 250);
           }
@@ -459,18 +531,28 @@ export default function App() {
           });
         }
         if (state.progress?.fishing?.pending) {
-          worldRef.current?.setFishingPhase?.(Date.now() >= state.progress.fishing.pending.biteAt ? 'bite' : 'waiting');
+          setPanel(null);
+          const pending = state.progress.fishing.pending;
+          if (fishingSessionId.current !== pending.id) {
+            fishingSessionId.current = pending.id;
+            worldRef.current?.startFishingCast({distance:pending.castDistance,animation:FISHING_CONFIG.rods[pending.rodId]?.animation,target:pending.target});
+          }
+          worldRef.current?.setFishingPhase?.(pending.phase === 'fighting' ? 'reel' : Date.now()+fishingServerOffset.current >= pending.biteAt ? 'bite' : 'waiting');
         } else if (state.result?.fishCaught) {
-          worldRef.current?.finishFishingCatch?.(true);
+          fishingSessionId.current = null;
+          setCaughtFish(state.result);
+          worldRef.current?.finishFishingCatch?.(true, LAKE_FISH[state.result.fishCaught]);
           const fish = LAKE_FISH[state.result.fishCaught];
           const weight = Number(state.result.weight || 0).toFixed(2);
           setStatus(`Câu được ${fish?.name || 'một con cá'} · ${weight} kg · +${state.result.value || fish?.price || 0} xu giá trị`);
         }
+        if (!state.progress?.fishing?.pending && !state.result?.fishCaught) { fishingSessionId.current=null;worldRef.current?.clearFishing?.(); }
+        if (state.result?.fishEscaped) setStatus(state.result.fishEscaped);
         if (state.result?.fishSold) setStatus(`Đã bán ${state.result.fishSold.count} con cá · +${state.result.fishSold.coins} xu.`);
-        if (state.result?.casinoBet) setCasinoResult('Đã nhận cược. Đang chờ kết quả chung của bàn.');
+        if (state.result?.casinoBet) setCasinoResult(state.result.casinoBet.amount ? `Đã giữ ${state.result.casinoBet.amount} xu cho ván.` : 'Đã hủy cược và hoàn xu.');
         if (state.result?.casinoSettlement) {
           const { reward, amount } = state.result.casinoSettlement;
-          setCasinoResult(reward > 0 ? `Trúng thưởng ${reward} xu · lãi ${reward - amount} xu` : `Chưa trúng · mất ${amount} xu`);
+          setCasinoResult(reward === amount ? `Hoàn lại ${reward} xu` : reward > amount ? `Nhận ${reward} xu · lãi ${reward - amount} xu` : `Nhận ${reward} xu · giảm ${amount - reward} xu`);
         }
       },
       onWelcome: welcome => {
@@ -575,11 +657,24 @@ export default function App() {
       const pending = progressRef.current?.fishing?.pending;
       if (pending) {
         setFishingTick(tick => tick + 1);
-        worldRef.current?.setFishingPhase?.(Date.now() >= pending.biteAt ? 'bite' : 'waiting');
+        worldRef.current?.setFishingPhase?.(pending.phase === 'fighting' ? 'reel' : Date.now()+fishingServerOffset.current >= pending.biteAt ? 'bite' : 'waiting');
       }
     }, 1000);
     return () => window.clearInterval(timer);
   }, [timeMode]);
+
+  // Đồng bộ camera và vị trí ngồi 3D khi vào bàn chơi Casino
+  useEffect(() => {
+    if (venueMode?.venue === 'casino') {
+      if (panel === 'casino' && casinoState?.mine?.game) {
+        worldRef.current?.focusCasinoTable(casinoState.mine.game);
+      } else if (panel === 'casino' && chosenCasinoGame) {
+        worldRef.current?.focusCasinoTable(chosenCasinoGame);
+      } else if (!panel) {
+        worldRef.current?.focusCasinoTable(null);
+      }
+    }
+  }, [panel, casinoState?.mine?.game, chosenCasinoGame, venueMode?.venue]);
 
   // Synchronize 3D Objective Marker & Live Distance Counter
   useEffect(() => {
@@ -658,15 +753,18 @@ export default function App() {
   const cowCount = animals.filter(animal => animal.species === 'cow').length;
   const sheepCount = animals.filter(animal => animal.species === 'sheep').length;
   const feedAnimals = () => {
+    farmAudio.playPop();
     gameClientRef.current?.sendGameAction('feed_animals');
     setStatus('Server đang xử lý thức ăn vật nuôi…');
   };
   const collectAnimals = () => {
+    farmAudio.playCoins();
     gameClientRef.current?.sendGameAction('collect_animals');
     setStatus('Server đang thu sản phẩm vật nuôi…');
   };
   const chooseCrop = crop => {
     if (progress.level < crop.level) { setStatus(`${crop.name} mở khóa ở cấp ${crop.level}`); return; }
+    farmAudio.playPop();
     gameClientRef.current?.sendGameAction('select_crop', { crop: crop.id });
     if (worldRef.current?.canUseFarmTools()) selectTool('seed');
     setPanel(null);
@@ -677,16 +775,19 @@ export default function App() {
   const sellItem = (id, amount = 1) => {
     const crop = CROPS[id];
     if (!crop || progress.inventory[id] < amount) return;
+    farmAudio.playCoins();
     gameClientRef.current?.sendGameAction('sell_item', { id, amount });
     setStatus(`Server đang bán ${amount} ${crop.name}…`);
   };
   const deliverOrder = order => {
     if (!canFillOrder(progress, order) || progress.completedOrders.includes(order.id)) return;
+    farmAudio.playFanfare();
     gameClientRef.current?.sendGameAction('deliver_order', { id: order.id });
     setStatus(`Server đang giao đơn “${order.title}”…`);
   };
   const claimQuest = quest => {
     if (progress.stats[quest.stat] < quest.goal || progress.claimedQuests.includes(quest.id)) return;
+    farmAudio.playFanfare();
     gameClientRef.current?.sendGameAction('claim_quest', { id: quest.id });
     setStatus('Server đang kiểm tra nhiệm vụ…');
   };
@@ -701,11 +802,13 @@ export default function App() {
   const craft = recipe => {
     const ready = Object.entries(recipe.inputs).every(([id, count]) => progress.inventory[id] >= count);
     if (!ready) { setStatus(`Chưa đủ nguyên liệu làm ${recipe.name}`); return; }
+    farmAudio.playPop();
     gameClientRef.current?.sendGameAction('craft', { id: recipe.id });
     setStatus(`Server đang chế biến ${recipe.name}…`);
   };
   const sellProduct = (id, price, name) => {
     if (!progress.inventory[id]) return;
+    farmAudio.playCoins();
     gameClientRef.current?.sendGameAction('sell_product', { id });
     setStatus(`Server đang bán ${name}…`);
   };
@@ -713,12 +816,14 @@ export default function App() {
     const expansion = EXPANSIONS.find(item => item.plots > progress.unlockedPlots);
     if (!expansion) { setStatus('Nông trại đã đạt tối đa 48 ô'); return; }
     if (progress.level < expansion.level || progress.coins < expansion.cost) { setStatus(`Cần cấp ${expansion.level} và ${expansion.cost} xu để mở rộng`); return; }
+    farmAudio.playFanfare();
     gameClientRef.current?.sendGameAction('upgrade_land');
     setStatus('Server đang mở rộng đất…');
   };
   const upgradeBarn = () => {
     const cost = farmBarnUpgradeCost(progress.barnLevel);
     if (progress.coins < cost) { setStatus(`Cần ${cost} xu để nâng kho`); return; }
+    farmAudio.playFanfare();
     gameClientRef.current?.sendGameAction('upgrade_barn');
     setStatus('Server đang nâng cấp kho…');
   };
@@ -727,6 +832,7 @@ export default function App() {
     const requiredLevel = 4;
     if ((progress.homeTier || 1) >= 2) { setStatus('Nhà của bạn đã đạt cấp hiện có cao nhất'); return; }
     if (progress.level < requiredLevel || progress.coins < cost) { setStatus(`Cần cấp ${requiredLevel} và ${cost} xu để mua Nhà Nông Trại Ấm Cúng`); return; }
+    farmAudio.playFanfare();
     gameClientRef.current?.sendGameAction('upgrade_home');
     setStatus('Server đang nâng cấp nhà…');
   };
@@ -739,7 +845,7 @@ export default function App() {
     if (destination.id === 'farm' && !session.farmId) { setFocusedLand(null); setPanel('land'); setStatus('Bạn cần mua một lô đất trước.'); return; }
     const target = destination.id === 'farm'
       ? { ...destination, ...playerFarmTarget(session.farmId) }
-      : destination;
+      : destination.id === 'town' ? { ...destination, ...TOWN_SPAWN } : destination;
     if (!worldRef.current?.travelTo(target)) return;
     gameClientRef.current?.sendTravel(target);
     setPanel(null);
@@ -762,28 +868,23 @@ export default function App() {
     gameClientRef.current?.sendGameAction('buy_vehicle', { id: 'walk' });
     setStatus('Đang xuống xe…');
   };
-  const playCasino = (game, choice, amount, roundId) => {
-    if (venueMode?.venue !== 'casino') { setCasinoResult('Hãy vào hội quán trò chơi để đặt cược.'); return; }
-    if (progress.coins < amount) { setCasinoResult('Không đủ xu để đặt cược.'); return; }
-    gameClientRef.current?.sendGameAction('casino_bet', { game, choice, amount, roundId });
-    setCasinoResult('Đang gửi cược tới server…');
+  const casinoAction = payload => {
+    if (venueMode?.venue !== 'casino') {
+      worldRef.current?.enterVenue('casino', true);
+    }
+    gameClientRef.current?.sendGameAction('casino', payload);
+    setCasinoResult('');
   };
   const fishingCast = () => {
     if (!fishingWater) { setStatus('Hãy đứng sát bờ nước để thả câu.'); return; }
     if (!progress.fishing?.equippedRod) { setStatus('Hãy mua và trang bị cần câu trước.'); return; }
-    worldRef.current?.startFishingCast({
-      distance: Math.min(
-        FISHING_CONFIG.rods[progress.fishing.equippedRod]?.castDistance || 8,
-        FISHING_CONFIG.zones[fishingWater]?.castDistance || 8,
-      ),
-      animation: FISHING_CONFIG.rods[progress.fishing.equippedRod]?.animation || 'basic_cast',
-    });
     gameClientRef.current?.sendGameAction('fishing_cast');
+    setPanel(null);
     setStatus('Đã giăng câu · chờ phao rung…');
   };
   const fishingReel = () => {
     worldRef.current?.playFishingReel?.();
-    gameClientRef.current?.sendGameAction('fishing_reel');
+    gameClientRef.current?.sendGameAction('fishing_reel', {sessionId:progress.fishing?.pending?.id});
     setStatus('Đang giật cần…');
   };
   const fishingSellAll = () => {
@@ -802,21 +903,12 @@ export default function App() {
 
   // Onboarding handlers
   const handleCharacterCreation = data => {
-    gameClientRef.current?.sendGameAction('character_create', { name: data.name, outfit: data.outfit || 'starter' });
-    setSession(prev => {
-      const updated = {
-        ...prev,
-        name: data.name,
-        avatarIcon: data.avatarIcon,
-      };
-      saveWorldSession(updated);
-      return updated;
-    });
-    worldRef.current?.setPlayerOutfit(data.outfit || 'starter', data.outfitColor || '#f8fafc');
-    setVillageRequired(false);
-    setStatus(`Chào mừng cư dân mới ${data.name} đến với Thung Lũng Kaia!`);
-    setFocusedLand(null);
-    setPanel('land');
+    if (characterCreationRef.current) return;
+    if (!network.connected) { setCharacterCreationError('Chưa kết nối server. Vui lòng thử lại.'); return; }
+    characterCreationRef.current = { name: data.name.trim() };
+    setCharacterCreationPending(true);
+    setCharacterCreationError('');
+    gameClientRef.current?.sendGameAction('character_create', { name: data.name.trim(), outfit: 'starter' });
   };
 
   const handleClaimSeeds = () => {
@@ -943,12 +1035,14 @@ export default function App() {
   return (
     <main className={`game-shell pt-game-shell${venueMode ? ' in-venue' : ''}`}>
       <canvas ref={canvasRef} className="game-canvas" aria-label="Thế giới nông trại 3D" />
+      {gameStarted && boot.phase === 'ready' && (!panel || progress.fishing?.pending) && <FishingHUD fishing={progress.fishing} connected={network.connected} water={fishingWater} cast={fishingCast} send={(action,payload)=>gameClientRef.current?.sendGameAction(action,payload)} serverOffset={fishingServerOffset.current} caught={caughtFish} clearCaught={()=>setCaughtFish(null)} />}
       {/* Play Together Title & Start Screen */}
       {!gameStarted && (
         <GameStartScreen
           bootPhase={boot.phase}
           bootError={boot.error}
           bootProgress={bootProgress}
+          onRequestStart={() => setStartRequested(true)}
           onBeginExit={() => {
             worldRef.current?.playStartCinematic?.();
           }}
@@ -974,7 +1068,48 @@ export default function App() {
       )}
 
       {debugEnabled && <LiveWorldDebug worldRef={worldRef} />}
-      {venueMode && <section className="venue-banner"><b>{venueMode.label}</b><span>Chọn thao tác hoặc đến gần quầy rồi nhấn E</span><div className="venue-banner-actions"><button type="button" onClick={() => setPanel(venueMode.venue === 'supplies' ? 'shop' : venueMode.venue)}>{venueMode.venue === 'casino' ? 'Chơi Tài Xỉu / Bầu Cua' : 'Nói chuyện với chủ tiệm'}</button><button type="button" onClick={() => { setPanel(null); worldRef.current?.exitVenue(); }}>Ra cửa hàng</button></div></section>}
+      {venueMode && (
+        <section className="venue-banner">
+          <div className="venue-banner-content">
+            <b>{venueMode.label}</b>
+            {nearbyCasinoTable ? (
+              <span className="venue-table-badge">🎲 Đang đứng trước <strong>{nearbyCasinoTable.label}</strong></span>
+            ) : (
+              <span>{venueMode.venue === 'casino' ? 'Tiến lại gần 4 bàn 3D hoặc bấm trực tiếp vào bàn để chơi' : 'Chọn thao tác hoặc đến gần quầy rồi nhấn E'}</span>
+            )}
+          </div>
+          <div className="venue-banner-actions">
+            {venueMode.venue === 'casino' && nearbyCasinoTable ? (
+              <button
+                type="button"
+                className="venue-play-btn"
+                onClick={() => {
+                  setChosenCasinoGame(nearbyCasinoTable.game);
+                  setPanel('casino');
+                }}
+              >
+                🎮 Chơi {nearbyCasinoTable.label} (E)
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setPanel(venueMode.venue === 'supplies' ? 'shop' : venueMode.venue)}
+              >
+                {venueMode.venue === 'casino' ? 'Danh sách bàn & Đổi thưởng' : 'Nói chuyện với chủ tiệm'}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setPanel(null);
+                worldRef.current?.exitVenue();
+              }}
+            >
+              Ra cửa hàng
+            </button>
+          </div>
+        </section>
+      )}
 
       {gameStarted && !cameraCleanMode && (
         <>
@@ -1366,6 +1501,16 @@ export default function App() {
                 <div className="pt-app-icon"><Icon3dGuideBook size={32} /></div>
                 <span>Sổ Tay</span>
               </button>
+
+              <button
+                type="button"
+                className="pt-app-bubble app-notice"
+                onClick={() => { setPhoneOpen(false); setPlazaNoticeOpen(true); }}
+                title="Bảng Thông Báo & Sự Kiện Quảng Trường"
+              >
+                <div className="pt-app-icon" style={{ fontSize: '28px', lineHeight: 1 }}>📢</div>
+                <span>Bảng Tin</span>
+              </button>
             </div>
 
             <div className="hud-phone-settings" aria-label="Thiết lập trò chơi">
@@ -1445,8 +1590,42 @@ export default function App() {
       )}
 
       {/* Panels */}
-      {panel && panel !== 'orders' && panel !== 'fashion' && <div className="panel-backdrop" onClick={() => setPanel(null)}><section className="game-panel" onClick={event => event.stopPropagation()}>
-        <header><div><small>TRUNG TÂM NÔNG TRẠI</small><h2>{{ land: 'Mua đất · Quyền sở hữu', shop: 'Cửa hàng vật tư nông nghiệp', inventory: 'Kho nông sản', quests: 'Nhiệm vụ', factory: 'Xưởng chế biến', upgrade: 'Nâng cấp nông trại', map: 'Bản đồ Thung Lũng', city: 'Trung tâm thị trấn Ghibli', vehicles: 'Đại lý phương tiện & xưởng bay', casino: 'Casino & Giải Trí May Mắn', fishing: 'Cửa hàng đồ câu Lão Ngư' }[panel]}</h2></div><button type="button" onClick={() => setPanel(null)}>×</button></header>
+      {panel === 'casino' && (
+        <LiveCasinoGames
+          state={casinoState}
+          coins={progress.coins}
+          connected={network.connected}
+          inside={venueMode?.venue === 'casino'}
+          message={casinoResult}
+          defaultGame={chosenCasinoGame}
+          onAction={casinoAction}
+          onSelectGame={game => {
+            setChosenCasinoGame(game);
+            worldRef.current?.focusCasinoTable(game);
+          }}
+          onExit={() => setPanel(null)}
+        />
+      )}
+      {/* World Map Fast Travel Modal (Play Together Standard) */}
+      <PlayTogetherWorldMapModal
+        isOpen={panel === 'map'}
+        onClose={() => setPanel(null)}
+        onTravel={travelTo}
+        session={session}
+        playerCoord={worldRef.current?.getPlayerState?.() || { x: 0, z: 0 }}
+        currentZone={zoneAtPosition((worldRef.current?.getPlayerState?.()?.x) || 0, (worldRef.current?.getPlayerState?.()?.z) || 0)}
+      />
+
+      {panel && panel !== 'orders' && panel !== 'fashion' && panel !== 'casino' && panel !== 'map' && (
+        <div className="panel-backdrop" onClick={() => { farmAudio.playPop(); setPanel(null); }}>
+          <section className="game-panel" onClick={event => event.stopPropagation()} role="dialog" aria-modal="true">
+            <header>
+              <div>
+                <small>{PANEL_INFO[panel]?.badge || 'TRUNG TÂM NÔNG TRẠI'}</small>
+                <h2>{PANEL_INFO[panel]?.title || panel}</h2>
+              </div>
+              <button type="button" onClick={() => { farmAudio.playPop(); setPanel(null); }} aria-label="Đóng">✕</button>
+            </header>
         {panel === 'land' && <LandMarket lots={landLots} focusFarmId={focusedLand} playerId={session.playerId} ownsLand={Boolean(session.farmId)} coins={progress.coins} pending={landPending} onVisit={lot => { const gate = WORLD_VILLAGES.find(v => v.id === lot.villageId)?.gate; if (gate) travelTo({ id: lot.villageId, label: lot.villageName, ...gate }); }} onBuy={lot => { if (!network.connected) { setStatus('Chưa kết nối server.'); return; } setLandPending(true); gameClientRef.current?.sendGameAction('buy_land', { farmId: lot.farmId }); }} />}
         {panel === 'livestock' && <LivestockRefresh>{() => <div className="item-list">
           <h3>Chăn nuôi · {progress.coins} xu</h3>
@@ -1468,10 +1647,26 @@ export default function App() {
         {panel === 'quests' && <div className="item-list">{QUESTS.map(quest => { const current = Math.min(quest.goal, progress.stats[quest.stat]); const claimed = progress.claimedQuests.includes(quest.id); return <button key={quest.id} disabled={claimed || current < quest.goal} onClick={() => claimQuest(quest)}><i>{claimed ? <Icon3dCheck /> : <Icon3dStar />}</i><span><b>{quest.title}</b><small>{current}/{quest.goal} · thưởng {quest.xp} XP</small></span><em>{claimed ? 'Đã nhận' : `+${quest.coins} xu`}</em></button>; })}</div>}
         {panel === 'factory' && <div className="item-list">{RECIPES.map(recipe => <button key={recipe.id} onClick={() => craft(recipe)}><i>{recipeIcons[recipe.id]}</i><span><b>{recipe.name}</b><small>{Object.entries(recipe.inputs).map(([id,count]) => `${CROPS[id]?.name || id} ${count}`).join(' · ')} · +{recipe.xp} XP</small></span><em>Chế biến</em></button>)}</div>}
         {panel === 'upgrade' && <div className="item-list"><button onClick={upgradeLand}><i><Icon3dSprout /></i><span><b>Mở rộng đất · {progress.unlockedPlots}/48 ô</b><small>{EXPANSIONS.find(item => item.plots > progress.unlockedPlots) ? `Yêu cầu cấp ${EXPANSIONS.find(item => item.plots > progress.unlockedPlots).level}` : 'Đã đạt tối đa'}</small></span><em>{EXPANSIONS.find(item => item.plots > progress.unlockedPlots)?.cost || 'MAX'} xu</em></button><button onClick={upgradeBarn}><i><Icon3dBarn /></i><span><b>Nâng kho lên cấp {progress.barnLevel + 1}</b><small>Tăng thêm 20 chỗ chứa</small></span><em>{farmBarnUpgradeCost(progress.barnLevel)} xu</em></button><button onClick={upgradeHome}><i><Icon3dHouseCabin /></i><span><b>{(progress.homeTier || 1) >= 2 ? 'Nhà Nông Trại Ấm Cúng' : 'Nâng cấp căn nhà gỗ'}</b><small>{(progress.homeTier || 1) >= 2 ? 'Đã sở hữu · cấp nhà 2' : 'Mở ở cấp 4 · thay căn nhà khởi đầu đơn giản'}</small></span><em>{(progress.homeTier || 1) >= 2 ? 'Đã mua' : '1800 xu'}</em></button></div>}
-        {panel === 'map' && <><div className="destination-grid">{destinations.map(destination => <button key={destination.id} onClick={() => travelTo(destination)}><i>{destination.icon}</i><b>{destination.label}</b><small>{destination.description}</small><em>Đi xe buýt →</em></button>)}</div><div className="city-district-strip"><strong>PHÂN KHU TRUNG TÂM</strong>{cityDestinations.map(district => <button key={district.id} type="button" onClick={() => travelTo({ ...district, description: district.label })}><span>{cityDistrictIcons[district.id]}</span>{district.label}</button>)}</div></>}
-        {panel === 'city' && <div className="destination-grid"><button onClick={() => setPanel('shop')}><i><Icon3dSprout size={28} /></i><b>Vật tư</b><small>Mua hạt giống theo cấp</small><em>Mở cửa hàng</em></button><button onClick={() => isFeatureLocked(progress, 'casino') ? setStatus('Casino mở sau khi hoàn thành hướng dẫn!') : setPanel('casino')}><i><Icon3dDice size={28} /></i><b>Casino giải trí</b><small>{isFeatureLocked(progress, 'casino') ? 'Khóa tân thủ' : 'Trò chơi xúc xắc may mắn'}</small><em>Vào chơi</em></button><button onClick={() => setPanel('fashion')}><i><Icon3dWardrobe size={28} /></i><b>Thời trang</b><small>Mua và thay trang phục Sophie</small><em>Xem đồ</em></button><button onClick={() => isFeatureLocked(progress, 'vehicles') ? setStatus('Đại lý xe mở sau khi hoàn thành hướng dẫn!') : setPanel('vehicles')}><i><Icon3dCub50 size={28} /></i><b>Đại lý xe</b><small>{isFeatureLocked(progress, 'vehicles') ? 'Khóa tân thủ' : 'Xe đạp cổ & chổi bay'}</small><em>Xem xe</em></button><button onClick={() => setPanel('fishing')}><i><Icon3dFishingRodPro size={28} /></i><b>Đồ câu cá</b><small>Cần câu trúc, cước & mồi câu</small><em>Mở tiệm</em></button></div>}
+        {panel === 'city' && (
+          <div className="destination-grid">
+            <button onClick={() => { setPanel(null); worldRef.current?.enterVenue('supplies'); }}>
+              <i><Icon3dSprout size={28} /></i><b>Vật tư</b><small>Mua hạt giống theo cấp</small><em>Đến tiệm 3D →</em>
+            </button>
+            <button onClick={() => isFeatureLocked(progress, 'casino') ? setStatus('Casino mở sau khi hoàn thành hướng dẫn!') : (setPanel(null), worldRef.current?.enterVenue('casino'))}>
+              <i><Icon3dDice size={28} /></i><b>Hội quán Casino</b><small>{isFeatureLocked(progress, 'casino') ? 'Khóa tân thủ' : 'Trò chơi dân gian & xúc xắc'}</small><em>Vào sảnh 3D →</em>
+            </button>
+            <button onClick={() => { setPanel(null); worldRef.current?.enterVenue('fashion'); }}>
+              <i><Icon3dWardrobe size={28} /></i><b>Thời trang</b><small>Mua và thay trang phục Sophie</small><em>Đến tiệm 3D →</em>
+            </button>
+            <button onClick={() => isFeatureLocked(progress, 'vehicles') ? setStatus('Đại lý xe mở sau khi hoàn thành hướng dẫn!') : (setPanel(null), worldRef.current?.enterVenue('vehicles'))}>
+              <i><Icon3dCub50 size={28} /></i><b>Đại lý xe</b><small>{isFeatureLocked(progress, 'vehicles') ? 'Khóa tân thủ' : 'Xe đạp cổ & chổi bay'}</small><em>Đến tiệm 3D →</em>
+            </button>
+            <button onClick={() => { setPanel(null); worldRef.current?.enterVenue('fishing'); }}>
+              <i><Icon3dFishingRodPro size={28} /></i><b>Đồ câu cá</b><small>Cần câu trúc, cước & mồi câu</small><em>Đến tiệm 3D →</em>
+            </button>
+          </div>
+        )}
         {panel === 'vehicles' && <div className="item-list">{vehicles.map(vehicle => { const owned = progress.ownedVehicles.includes(vehicle.id); return <button key={vehicle.id} onClick={() => buyVehicle(vehicle)}><i>{vehicle.icon}</i><span><b>{vehicle.name}</b><small>Tốc độ {vehicle.speed} · {progress.vehicle === vehicle.id ? 'đang dùng' : owned ? 'đã sở hữu' : 'chưa mua'}</small></span><em>{owned ? 'Chọn' : `${vehicle.cost} xu`}</em></button>; })}</div>}
-        {panel === 'casino' && <LiveCasinoGames state={casinoState} coins={progress.coins} connected={network.connected} inside={venueMode?.venue === 'casino'} pending={progress.casinoPending} message={casinoResult} onBet={playCasino} />}
         {panel === 'fishing' && (
           <div className="item-list">
             <div className="capacity" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#fff', padding: '10px 14px', borderRadius: '14px', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>
@@ -1502,7 +1697,10 @@ export default function App() {
             {Object.values(FISHING_CONFIG.rods).map(rod => <button key={`equip-${rod.id}`} type="button" disabled={!progress.fishing?.ownedRods?.includes(rod.id)} onClick={() => gameClientRef.current?.sendGameAction('fishing_equip', { id: rod.id })}><span><b>{rod.name}</b><small>{rod.id === progress.fishing?.equippedRod ? 'Đang dùng' : 'Đã sở hữu'}</small></span><em>{rod.id === progress.fishing?.equippedRod ? 'Đang dùng' : 'Trang bị'}</em></button>)}
             <button type="button" disabled={!progress.fishing?.equippedBait} onClick={() => gameClientRef.current?.sendGameAction('fishing_equip', { id: null })}><span><b>Không dùng mồi</b><small>Tiết kiệm mồi cho cá thường</small></span><em>{progress.fishing?.equippedBait ? 'Bỏ mồi' : 'Đang dùng'}</em></button>
             {Object.values(FISHING_CONFIG.baits).map(bait => <button key={`equip-${bait.id}`} type="button" disabled={!(progress.fishing?.bait?.[bait.id] > 0)} onClick={() => gameClientRef.current?.sendGameAction('fishing_equip', { id: bait.id })}><span><b>{bait.name}</b><small>Còn {progress.fishing?.bait?.[bait.id] || 0} · hiếm +{Math.round(bait.rareBonus * 100)}%</small></span><em>{bait.id === progress.fishing?.equippedBait ? 'Đang dùng' : 'Trang bị'}</em></button>)}
-            <div className="fishing-section-title">Cá đã câu</div>
+            <div className="fishing-section-title">Bộ sưu tập · giữ kỷ lục cả sau khi bán</div>
+            {Object.entries(FISHING_CONFIG.missions).map(([id,mission])=><button key={id} disabled={!network.connected||progress.fishing?.claimedMissions?.includes(id)||fishingMissionProgress(progress.fishing||{},mission)<mission.goal} onClick={()=>gameClientRef.current?.sendGameAction('fishing_claim_mission',{id})}><span><b>{mission.name}</b><small>{Math.min(mission.goal,fishingMissionProgress(progress.fishing||{},mission))}/{mission.goal}</small></span><em>{progress.fishing?.claimedMissions?.includes(id)?'Đã nhận':`${mission.coins} xu · ${mission.xp} XP`}</em></button>)}
+            <div className="fishing-guide">{Object.values(FISHING_CONFIG.fish).map(fish => <span key={fish.id} style={{display:'block'}}>{progress.fishing?.collection?.[fish.id] ? `${fish.name} · ${progress.fishing.collection[fish.id].count} lần bắt · kỷ lục ${Number(progress.fishing.collection[fish.id].maxWeight).toFixed(2)} kg` : '🔒 Loài chưa khám phá'}</span>)}</div>
+            <div className="fishing-section-title">Cá trong thùng</div>
             <div className="fishing-guide">Đã bắt {progress.fishing?.stats?.totalCaught || 0} con · cá hiếm {progress.fishing?.stats?.rareCaught || 0} · kỷ lục {Number(progress.fishing?.stats?.largestFish || 0).toFixed(2)} kg</div>
             {Object.entries(LAKE_FISH).map(([id, fish]) => {
               const record = progress.fishing?.fish?.[id];
@@ -1513,7 +1711,7 @@ export default function App() {
             <button type="button" className="fishing-sell-all" disabled={!fishingInventoryCount(progress.fishing)} onClick={fishingSellAll}>Bán toàn bộ cá</button>
           </div>
         )}
-      </section></div>}
+      </section></div>)}
 
       {/* Sophie's Fashion Boutique Modal */}
       {panel === 'fashion' && (
@@ -1553,6 +1751,8 @@ export default function App() {
           villages={villages}
           defaultVillageId={session.villageId || ''}
           onSubmit={handleCharacterCreation}
+          pending={characterCreationPending}
+          error={characterCreationError}
         />
       )}
 
@@ -1613,6 +1813,47 @@ export default function App() {
           progress={progress}
           onBuyOffer={handleBuyOffer}
           onClose={() => setRoadsideOpen(false)}
+        />
+      )}
+
+      {/* Plaza Leaderboard Monument Modal */}
+      {leaderboardOpen && (
+        <LeaderboardModal
+          leaderboard={socialState.leaderboard}
+          myPlayer={{ name: session.name, progress }}
+          onVisitFarm={friendId => {
+            setLeaderboardOpen(false);
+            setStatus(`Đang xem thông tin nông trại của ${friendId}…`);
+          }}
+          onAddFriend={friendId => {
+            gameClientRef.current?.send({ type: 'social_action', friendId, action: 'add_friend' });
+            emitReward({ text: '+1 Yêu cầu kết bạn', icon: '🤝', color: '#10b981' });
+          }}
+          onClose={() => setLeaderboardOpen(false)}
+        />
+      )}
+
+      {/* Plaza Community Billboard & Event Notice Modal */}
+      {plazaNoticeOpen && (
+        <PlazaEventNoticeModal
+          onClaimDailyReward={reward => {
+            setProgress(prev => ({ ...prev, coins: prev.coins + 200 }));
+            emitReward({ text: '+200 Xu Điểm Danh!', icon: '🪙', color: '#f59e0b' });
+            farmAudio.playFanfare();
+            setStatus('Đã nhận thưởng điểm danh ngày 3 (+200 Xu)!');
+          }}
+          onRedeemCode={(code, info) => {
+            if (info.coins) setProgress(prev => ({ ...prev, coins: prev.coins + info.coins }));
+            emitReward({ text: `+${info.coins} Xu Giftcode!`, icon: '🎁', color: '#ec4899' });
+            farmAudio.playFanfare();
+            setStatus(`Kích hoạt thành công mã ${code}!`);
+          }}
+          onNavigateVenue={venue => {
+            setPlazaNoticeOpen(false);
+            setPanel(null);
+            worldRef.current?.enterVenue(venue);
+          }}
+          onClose={() => setPlazaNoticeOpen(false)}
         />
       )}
 

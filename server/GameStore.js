@@ -1,4 +1,6 @@
 import { MongoClient } from 'mongodb';
+import { BEACH_CONFIG } from '../shared/beachConfig.js';
+import { advanceFishingSession, FISHING_GAME, fishingTimePhase, claimFishingMission } from '../shared/fishingSession.js';
 import { applyLivestockAction } from '../shared/livestockActions.js';
 import { CROPS, FARM_CONFIG, farmBarnCapacity, farmBarnUpgradeCost } from '../shared/farmConfig.js';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
@@ -9,6 +11,7 @@ import {
   FISHING_CONFIG,
   FISHING_GEAR,
   fishingWaterAt,
+  fishingCastTarget,
   normalizeFishingState,
   fishingInventoryCount,
   fishingCapacity,
@@ -21,6 +24,7 @@ const mongo = new MongoClient(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27
 });
 const SESSION_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 let collections;
+export function getGameStoreDatabase() { return mongo.db(process.env.MONGODB_DB || 'farm_online_3d'); }
 export let farmSecurity;
 export async function initFarmSecurity() { await farmSecurity.init(); }
 export async function loadFarmAssignment(villageId, farmId) {
@@ -225,7 +229,8 @@ function pickFishingCatch(zoneId, baitId = null) {
   const normalPool = pool.filter(fish => fish.rarity === 'common');
   const selectedPool = Math.random() < rareChance && rarePool.length ? rarePool : (normalPool.length ? normalPool : pool);
   const preferred = new Set(bait?.preferredFish || []);
-  const weighted = selectedPool.flatMap(fish => [fish, ...(preferred.has(fish.id) ? [fish] : [])]);
+  const phase=fishingTimePhase();
+  const weighted = selectedPool.flatMap(fish => [fish, ...(preferred.has(fish.id) ? [fish] : []), ...(FISHING_CONFIG.timePreferences[fish.id]?.includes(phase)?[fish]:[])]);
   const fish = weighted[Math.floor(Math.random() * weighted.length)] || selectedPool[0];
   const [minWeight, maxWeight] = fish.weight;
   const weight = Math.round((minWeight + Math.random() * (maxWeight - minWeight)) * 100) / 100;
@@ -248,6 +253,7 @@ export async function performAction(playerId, action, payload = {}, context = {}
   const fail = error => ({ error, player });
   let actionResult = null;
   const fishingZone = () => context.venue ? null : fishingWaterAt(context.x, context.z);
+  const atFishingShop = () => context.venue === 'fishing' || (!context.venue && Math.hypot(context.x-BEACH_CONFIG.vendor.x,context.z-BEACH_CONFIG.vendor.z)<=BEACH_CONFIG.vendor.interactionDistance);
   if (action === 'character_create') { if (p.onboarding.characterCreated) return fail('Nhân vật đã được tạo.'); player.name = String(payload.name || player.name).slice(0, 24); p.outfit = 'starter'; p.onboarding.characterCreated = true; p.onboarding.step = 1; }
   else if (action === 'select_crop') { if (!CROPS[payload.crop] || p.level < CROPS[payload.crop].level) return fail('Hạt giống chưa mở khóa.'); p.selectedCrop = payload.crop; }
   else if (action === 'sell_item') { const crop = CROPS[payload.id]; const amount = Math.max(1, Math.min(99, Number(payload.amount) || 1)); if (!crop || (p.inventory[payload.id] || 0) < amount) return fail('Không đủ nông sản.'); p.inventory[payload.id] -= amount; p.coins += crop.sellPrice * amount; }
@@ -276,6 +282,7 @@ export async function performAction(playerId, action, payload = {}, context = {}
     player.customization = normalized;
   }
   else if (action === 'fishing_buy') {
+    if(!atFishingShop())return fail('Hãy đến tiệm đồ câu hoặc quầy Lão Ngư để mua.');
     const gear = FISHING_GEAR[payload.id];
     if (!gear || p.coins < gear.cost) return fail('Không đủ xu hoặc đồ câu không hợp lệ.');
     if (gear.kind === 'rod') {
@@ -293,6 +300,7 @@ export async function performAction(playerId, action, payload = {}, context = {}
     p.coins -= gear.cost;
   }
   else if (action === 'fishing_equip') {
+    if (p.fishing.pending && Date.now() < p.fishing.pending.expiresAt) return fail('Hãy thu cần trước khi đổi trang bị.');
     const id = payload.id;
     if (id === null || id === undefined || id === '') {
       p.fishing.equippedBait = null;
@@ -316,6 +324,10 @@ export async function performAction(playerId, action, payload = {}, context = {}
     if (fishingInventoryCount(p.fishing) >= fishingCapacity(p.fishing)) return fail('Thùng cá đã đầy. Hãy bán cá trước khi câu tiếp.');
     if (p.fishing.pending && Date.now() < p.fishing.pending.expiresAt) return fail('Phao vẫn đang ở dưới nước.');
     const baitId = p.fishing.equippedBait;
+    const rod = FISHING_CONFIG.rods[p.fishing.equippedRod];
+    if(!rod)return fail('Cần câu không hợp lệ.');
+    const target = fishingCastTarget(context.x,context.z,zone,Math.min(rod.castDistance,FISHING_CONFIG.zones[zone].castDistance));
+    if(!target)return fail('Không tìm thấy mặt nước trong tầm cần câu.');
     const bait = baitId ? FISHING_CONFIG.baits[baitId] : null;
     if (baitId) {
       if (!(p.fishing.bait[baitId] > 0)) return fail('Đã hết mồi câu.');
@@ -323,47 +335,32 @@ export async function performAction(playerId, action, payload = {}, context = {}
     }
     const catchData = pickFishingCatch(zone, baitId);
     if (!catchData) return fail('Vùng nước này chưa có dữ liệu cá.');
-    const rod = FISHING_CONFIG.rods[p.fishing.equippedRod];
     const now = Date.now();
     const minBite = FISHING_CONFIG.defaults.biteMinMs / Math.max(1, bait?.biteSpeed || 1);
     const maxBite = FISHING_CONFIG.defaults.biteMaxMs / Math.max(1, bait?.biteSpeed || 1);
     const biteAt = now + Math.floor(minBite + Math.random() * Math.max(1, maxBite - minBite));
     p.fishing.pending = {
+      id: randomBytes(16).toString('hex'), phase: 'waiting', x: context.x, z: context.z,
+      timePhase: fishingTimePhase(),
+      target,
       zone,
       rodId: p.fishing.equippedRod,
       baitId,
       castAt: now,
       biteAt,
-      expiresAt: now + FISHING_CONFIG.defaults.pendingTimeoutMs,
+      expiresAt: biteAt + FISHING_GAME.hookWindowMs,
       fishId: catchData.fishId,
       weight: catchData.weight,
       castDistance: Math.min(rod.castDistance, FISHING_CONFIG.zones[zone]?.castDistance || rod.castDistance),
     };
   }
-  else if (action === 'fishing_reel') {
-    const pending = p.fishing.pending;
-    if (!pending || fishingWaterAt(context.x, context.z) !== pending.zone) return fail('Hãy ở lại vùng nước đã thả phao.');
-    const now = Date.now();
-    if (now < pending.biteAt) return fail('Cá chưa cắn, hãy chờ phao rung.');
-    if (now > pending.expiresAt) { p.fishing.pending = null; return fail('Cá đã bơi đi mất.'); }
-    if (fishingInventoryCount(p.fishing) >= fishingCapacity(p.fishing)) return fail('Thùng cá đã đầy.');
-    const fish = FISHING_CONFIG.fish[pending.fishId];
-    if (!fish) return fail('Loài cá không còn trong cấu hình.');
-    const entry = fishingEntry(p.fishing, pending.fishId);
-    entry.count += 1;
-    entry.totalWeight += pending.weight;
-    entry.maxWeight = Math.max(entry.maxWeight, pending.weight);
-    const value = calculateFishSaleValue(pending.fishId, pending.weight);
-    p.fishing.catchLog.push({ id: pending.fishId, weight: pending.weight, value, rarity: fish.rarity, caughtAt: now });
-    p.fishing.catchLog = p.fishing.catchLog.slice(-FISHING_CONFIG.defaults.maxCatchLog);
-    p.fishing.stats.totalCaught += 1;
-    if (fish.rarity !== 'common') p.fishing.stats.rareCaught += 1;
-    p.fishing.stats.largestFish = Math.max(p.fishing.stats.largestFish, pending.weight);
-    p.fishing.pending = null;
-    p.xp += fish.xp;
-    return (await savePlayer(player)) ? { player, result: { fishCaught: pending.fishId, weight: pending.weight, value, rarity: fish.rarity, zone: pending.zone } } : fail('Xung đột giao dịch, vui lòng thử lại.');
+  else if (['fishing_reel', 'fishing_pull', 'fishing_cancel'].includes(action)) {
+    try { actionResult = advanceFishingSession(p.fishing, action, payload, context); }
+    catch(error) { return fail(error.message); }
+    if (actionResult.fishCaught) p.xp += actionResult.xp;
   }
   else if (action === 'fishing_sell' || action === 'fishing_sell_all') {
+    if(!atFishingShop())return fail('Hãy mang cá tới tiệm đồ câu hoặc quầy Lão Ngư để bán.');
     const requestedId = action === 'fishing_sell_all' ? null : payload.id;
     const entries = requestedId ? [[requestedId, p.fishing.fish[requestedId]]] : Object.entries(p.fishing.fish);
     let soldCount = 0;
@@ -387,6 +384,10 @@ export async function performAction(playerId, action, payload = {}, context = {}
     p.fishing.lastSale = { count: soldCount, coins: saleTotal, at: Date.now() };
     actionResult = { fishSold: { count: soldCount, coins: saleTotal } };
   }
+  else if(action==='fishing_claim_mission') {
+    try{const reward=claimFishingMission(p.fishing,payload.id);p.coins+=reward.coins;p.xp+=reward.xp;actionResult={fishingMission:payload.id};}
+    catch(error){return fail(error.message);}
+  }
   else if (action === 'casino') return fail('Hãy tham gia bàn Tài Xỉu hoặc Bầu Cua online.');
   else if (['build_pen', 'buy_animal', 'feed_animals', 'collect_animals', 'sell_animal'].includes(action)) {
     if (!context.farmId || (await loadFarmAssignment(context.villageId, context.farmId))?.playerId !== playerId) return fail('Bạn cần sở hữu nông trại trước.');
@@ -405,6 +406,7 @@ export async function performAction(playerId, action, payload = {}, context = {}
   else if (action === 'roadside_buy') { const offers = { carrot: { amount: 5, price: 50 }, wheat: { amount: 4, price: 100 }, tomato: { amount: 3, price: 135 }, strawberry: { amount: 2, price: 210 } }; const offer = offers[payload.crop]; if (!offer || Number(payload.amount) !== offer.amount || Number(payload.price) !== offer.price || p.coins < offer.price || inventoryCount(p) + offer.amount > barnCapacity(p)) return fail('Giao dịch ven đường không hợp lệ.'); p.coins -= offer.price; p.inventory[payload.crop] += offer.amount; }
   else if (action === 'reset_orders') { if (p.completedOrders.length < Object.keys(ORDERS).length || p.coins < 25) return fail('Chưa thể làm mới đơn hàng.'); p.coins -= 25; p.completedOrders = []; }
   else return fail('Hành động không được hỗ trợ.');
+  if(action.startsWith('fishing_'))actionResult={...actionResult,fishingUpdated:true};
   if (!(await savePlayer(player))) return fail('Xung đột giao dịch, vui lòng thử lại.');
   return { player, ...(actionResult ? { result: actionResult } : {}) };
 }

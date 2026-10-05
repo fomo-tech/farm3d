@@ -4,8 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "test:casino": "node scripts/test-casino-rules.mjs && node scripts/test-casino-mongo.mjs",
     "test:beach": "node scripts/test-beach.mjs",
     "test:fishing-config": "node scripts/test-fishing-config.mjs",
+    "test:fishing": "node scripts/test-fishing-config.mjs && node scripts/test-fishing-water.mjs && node scripts/test-fishing-session.mjs && node scripts/test-fishing-rig.mjs && node scripts/test-fishing-server.mjs",
     "test:livestock": "node scripts/test-livestock-actions.mjs && node scripts/test-owned-herd.mjs && node scripts/test-livestock-server.mjs",
     "test:farm-config": "node scripts/test-farm-config.mjs",
     "test:farm-security": "node scripts/test-farm-gate-swing.mjs && node scripts/test-farm-security-client.mjs && node scripts/test-farm-security.mjs && node scripts/test-farm-security-network.mjs",
@@ -25,10 +27,10 @@
     "test:camera": "node scripts/test-camera-view.mjs",
     "test:venues-casino": "node scripts/test-venues-casino.mjs && node scripts/test-venue-culling.mjs",
     "test:fashion": "node scripts/test-fashion-boutique.mjs",
-    "test:shop-meshes": "node scripts/test-shop-meshes.mjs",
+    "test:roads": "node scripts/test-roads-connectivity.mjs",
     "test:streaming": "node scripts/test-streaming-lifecycle.mjs && node scripts/test-world-render-index.mjs && node scripts/test-world-chunk-streamer.mjs && node scripts/test-foliage-chunks.mjs && node scripts/test-fog-streaming.mjs && node scripts/test-collision-system.mjs && node scripts/test-runtime-safety.mjs",
     "test:streaming-report": "node scripts/verify-streaming-report.mjs",
-    "build": "npm run validate:assets && npm run validate:farm-layout && vite build",
+    "build": "npm run validate:assets && npm run validate:farm-layout && npm run test:roads && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {

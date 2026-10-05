@@ -241,10 +241,10 @@ export function* createFarmAnimalsSteps(scene, shadows) {
   createFarmDog(-74, 34, Math.PI / 4);
   yield;
 
-  // Ngựa trang trại trong bãi cỏ chuồng trại (hoàn toàn an toàn khỏi trục đường x=60)
-  createFarmHorse(88, 108, Math.PI / 3);
+  // Ngựa trang trại trong bãi cỏ chuồng trại
+  createFarmHorse(86, 110, Math.PI / 3);
   yield;
-  createFarmHorse(94, 114, -Math.PI / 4);
+  createFarmHorse(90, 113, -Math.PI / 4);
   yield;
 
   // Chú cáo cam lấp ló bìa rừng thông

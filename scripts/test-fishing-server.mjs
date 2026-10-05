@@ -1,0 +1,37 @@
+import assert from 'node:assert/strict';
+import {MongoClient} from 'mongodb';
+import {randomUUID} from 'node:crypto';
+const databaseName=`farm_fishing_test_${randomUUID().replaceAll('-','')}`;
+process.env.MONGODB_DB=databaseName;
+const mongo=new MongoClient(process.env.MONGODB_URI||'mongodb://127.0.0.1:27017',{serverSelectionTimeoutMS:5000});
+let failed=false;
+try{
+ await mongo.connect();const store=await import('../server/GameStore.js');await store.initGameStore();
+ const db=mongo.db(databaseName),players=db.collection('players'),ctx={x:162,z:2};
+ await store.authenticate('angler',null);
+ assert.ok((await store.performAction('angler','fishing_cast',{},ctx)).error);
+ assert.ok((await store.performAction('angler','fishing_buy',{id:'rod_bamboo'},ctx)).error);
+ assert.ok(!(await store.performAction('angler','fishing_buy',{id:'rod_bamboo'},{venue:'fishing'})).error);
+ const cast=await store.performAction('angler','fishing_cast',{},ctx);assert.ok(!cast.error);const id=cast.player.progress.fishing.pending.id;
+ assert.ok((await store.performAction('angler','fishing_cast',{},ctx)).error);
+ assert.ok((await store.performAction('angler','fishing_reel',{sessionId:id},ctx)).error);
+ // Only the isolated test database is advanced to avoid real-time sleeps.
+ await players.updateOne({playerId:'angler'},{$set:{'progress.fishing.pending.biteAt':Date.now()-20,'progress.fishing.pending.expiresAt':Date.now()+2000}});
+ const hook=await store.performAction('angler','fishing_reel',{sessionId:id},ctx);assert.ok(!hook.error);assert.equal(hook.player.progress.fishing.stats.totalCaught,0);
+ await players.updateOne({playerId:'angler'},{$set:{'progress.fishing.pending.pull':99,'progress.fishing.pending.lastPulseAt':Date.now()-450}});
+ const finishes=await Promise.all([1,2].map(()=>store.performAction('angler','fishing_pull',{sessionId:id,sequence:1,holding:true},ctx)));
+ assert.equal(finishes.filter(result=>!result.error).length,1);
+ const finish=finishes.find(result=>!result.error);assert.ok(finish.result.fishCaught);
+ assert.ok((await store.performAction('angler','fishing_pull',{sessionId:id,sequence:1,holding:true},ctx)).error);
+ const saved=await store.loadPlayer('angler');assert.equal(saved.progress.fishing.stats.totalCaught,1);
+ assert.ok(!(await store.performAction('angler','fishing_claim_mission',{id:'first_fish'},ctx)).error);
+ assert.ok((await store.performAction('angler','fishing_claim_mission',{id:'first_fish'},ctx)).error);
+ assert.ok((await store.performAction('angler','fishing_sell_all',{},ctx)).error);
+ const sold=await store.performAction('angler','fishing_sell_all',{},{venue:'fishing'});assert.ok(!sold.error);assert.equal(sold.result.fishSold.count,1);
+ assert.equal((await store.loadPlayer('angler')).progress.fishing.collection[finish.result.fishCaught].count,1);
+ assert.ok((await store.performAction('angler','fishing_sell_all',{},{venue:'fishing'})).error);
+ await players.updateOne({playerId:'angler'},{$set:{'progress.fishing.fish.carp':{count:10,totalWeight:10,maxWeight:1}}});
+ assert.ok((await store.performAction('angler','fishing_cast',{},ctx)).error);
+ console.log('PASS Mongo: buy/cast/hook/pull/catch/save/sell, duplicate reward blocked, collection retained');
+}catch(error){failed=true;console.error(error);}finally{if(mongo.topology?.isConnected())await mongo.db(databaseName).dropDatabase();await mongo.close();}
+process.exit(failed?1:0);

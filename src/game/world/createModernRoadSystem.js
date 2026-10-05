@@ -116,6 +116,7 @@ export function* createModernBoulevardSteps(scene, options = {}) {
   intersections.forEach(item => {
     const worldPos = typeof item === 'object' ? item.pos : item;
     const openWidth = (typeof item === 'object' && item.width) ? item.width : 7.5;
+    const side = (typeof item === 'object' && item.side !== undefined) ? item.side : 0; // 0: both sides, 1: right/east, -1: left/west
     const localPos = isNorthSouth ? (worldPos - z) : (worldPos - x);
     const startZ = localPos - openWidth / 2;
     const endZ = localPos + openWidth / 2;
@@ -126,31 +127,44 @@ export function* createModernBoulevardSteps(scene, options = {}) {
         start: Math.max(-halfL, startZ),
         end: Math.min(halfL, endZ),
         width: openWidth,
+        side,
       });
     }
   });
 
   openings.sort((a, b) => a.start - b.start);
 
-  const walkStartBoundary = -halfL + sidewalkStartOffset;
-  const walkEndBoundary = halfL - sidewalkEndOffset;
+  const getSideBoundaries = (s) => {
+    const startOff = typeof sidewalkStartOffset === 'object' ? (sidewalkStartOffset[s] ?? 0) : (sidewalkStartOffset || 0);
+    const endOff = typeof sidewalkEndOffset === 'object' ? (sidewalkEndOffset[s] ?? 0) : (sidewalkEndOffset || 0);
+    return {
+      walkStart: -halfL + startOff,
+      walkEnd: halfL - endOff,
+    };
+  };
 
-  const segments = [];
-  let curZ = walkStartBoundary;
-
-  for (const op of openings) {
-    if (op.start > curZ + 0.4) {
-      segments.push({ start: curZ, end: Math.min(walkEndBoundary, op.start) });
+  const getSideSegments = (s) => {
+    const { walkStart, walkEnd } = getSideBoundaries(s);
+    if (walkEnd <= walkStart + 0.3) return [];
+    const sideOps = openings.filter(op => op.side === 0 || op.side === s);
+    const segs = [];
+    let cur = walkStart;
+    for (const op of sideOps) {
+      if (op.start > cur + 0.4) {
+        segs.push({ start: cur, end: Math.min(walkEnd, op.start) });
+      }
+      cur = Math.max(cur, op.end);
     }
-    curZ = Math.max(curZ, op.end);
-  }
-  if (curZ < walkEndBoundary - 0.4) {
-    segments.push({ start: curZ, end: walkEndBoundary });
-  }
+    if (cur < walkEnd - 0.4) {
+      segs.push({ start: cur, end: walkEnd });
+    }
+    if (sideOps.length === 0 && walkEnd > walkStart + 0.4) {
+      segs.push({ start: walkStart, end: walkEnd });
+    }
+    return segs;
+  };
 
-  if (openings.length === 0 && walkEndBoundary > walkStartBoundary + 0.4) {
-    segments.push({ start: walkStartBoundary, end: walkEndBoundary });
-  }
+  const segments = getSideSegments(0);
 
   // 2. Tim đường phân làn: Dải đá sa thạch hoa văn cổ điển (Inlaid Sandstone Ribbons)
   if (hasCenterDashes && length >= 8) {
@@ -178,11 +192,12 @@ export function* createModernBoulevardSteps(scene, options = {}) {
   }
 
   // 3. Hai đường viền đá sa thạch chạy dọc mép lề đường
-  if (hasEdgeLines && segments.length > 0) {
+  if (hasEdgeLines) {
     [-1, 1].forEach(side => {
       const edgeX = side * (width / 2 - 0.35);
+      const sideSegments = getSideSegments(side);
 
-      segments.forEach((seg, sidx) => {
+      sideSegments.forEach((seg, sidx) => {
         const segLen = seg.end - seg.start;
         if (segLen <= 0.4) return;
         const segMid = (seg.start + seg.end) / 2;
@@ -204,13 +219,15 @@ export function* createModernBoulevardSteps(scene, options = {}) {
   if (hasStopLines && openings.length > 0) {
     openings.forEach((op, opIdx) => {
       [op.start, op.end].forEach((stopZ, stIdx) => {
+        const offsetZ = stIdx === 0 ? -3.0 : 0.25;
+        const finalZ = stopZ + offsetZ;
+        if (finalZ < -halfL + 0.5 || finalZ > halfL - 0.5) return;
         const stopLine = MeshBuilder.CreateBox(`stopline-${id}-${opIdx}-${stIdx}`, {
           width: width - 0.8,
           height: 0.016,
           depth: 0.42,
         }, scene);
-        const offsetZ = stIdx === 0 ? -3.0 : 0.25;
-        stopLine.position.set(0, 0.089, stopZ + offsetZ);
+        stopLine.position.set(0, 0.089, finalZ);
         stopLine.material = mats.edgeInlay;
         stopLine.parent = root;
       });
@@ -223,8 +240,9 @@ export function* createModernBoulevardSteps(scene, options = {}) {
     [-1, 1].forEach(side => {
       const curbX = side * (width / 2 + 0.18);
       const walkX = side * (width / 2 + 0.36 + sidewalkWidth / 2);
+      const sideSegments = getSideSegments(side);
 
-      segments.forEach((seg, sidx) => {
+      sideSegments.forEach((seg, sidx) => {
         const segLen = seg.end - seg.start;
         if (segLen <= 0.3) return;
         const segMid = (seg.start + seg.end) / 2;
@@ -412,8 +430,12 @@ export function* createCountryRoadSteps(scene, options = {}) {
     hasCenterDashes = true,
     hasEdgeCurbs = true,
     curbWidth = 0.28,
+    curbStartOffset = 0,
+    curbEndOffset = 0,
     hasSidewalk = false,
     sidewalkWidth = 1.6,
+    sidewalkStartOffset = 0,
+    sidewalkEndOffset = 0,
     hasStreetLamps = false,
     lampInterval = 48,
     intersections = [],
@@ -472,6 +494,7 @@ export function* createCountryRoadSteps(scene, options = {}) {
   for (const [_index, item] of (intersections).entries()) {
     const worldPos = typeof item === 'object' ? item.pos : item;
     const openWidth = (typeof item === 'object' && item.width) ? item.width : (width + 1.2);
+    const side = (typeof item === 'object' && item.side !== undefined) ? item.side : 0;
     const localPos = isNorthSouth ? (worldPos - z) : (worldPos - x);
     const startZ = localPos - openWidth / 2;
     const endZ = localPos + openWidth / 2;
@@ -482,6 +505,7 @@ export function* createCountryRoadSteps(scene, options = {}) {
         start: Math.max(-halfL, startZ),
         end: Math.min(halfL, endZ),
         width: openWidth,
+        side,
       });
     }
 
@@ -492,32 +516,46 @@ export function* createCountryRoadSteps(scene, options = {}) {
   openings.sort((a, b) => a.start - b.start);
     yield;
 
-  const segments = [];
-    yield;
-  let curZ = -halfL;
-    yield;
-  for (const op of openings) {
-    if (op.start > curZ + 0.3) {
-      segments.push({ start: curZ, end: Math.min(halfL, op.start) });
-    }
-    curZ = Math.max(curZ, op.end);
+  const getCountrySideBoundaries = (s, startOffVal, endOffVal) => {
+    const startOff = typeof startOffVal === 'object' ? (startOffVal[s] ?? 0) : (startOffVal || 0);
+    const endOff = typeof endOffVal === 'object' ? (endOffVal[s] ?? 0) : (endOffVal || 0);
+    return {
+      start: -halfL + startOff,
+      end: halfL - endOff,
+    };
+  };
 
-      yield;
-}
-    yield;
-  if (curZ < halfL - 0.3) {
-    segments.push({ start: curZ, end: halfL });
-  }
-    yield;
-  if (openings.length === 0) {
-    segments.push({ start: -halfL, end: halfL });
-  }
+  const getCountrySideSegments = (s, isSidewalk = false) => {
+    const { start: segStart, end: segEnd } = isSidewalk
+      ? getCountrySideBoundaries(s, sidewalkStartOffset, sidewalkEndOffset)
+      : getCountrySideBoundaries(s, curbStartOffset, curbEndOffset);
+    if (segEnd <= segStart + 0.3) return [];
+    const sideOps = openings.filter(op => op.side === 0 || op.side === s);
+    if (sideOps.length === 0) {
+      return [{ start: segStart, end: segEnd }];
+    }
+    const segs = [];
+    let cur = segStart;
+    for (const op of sideOps) {
+      if (op.start > cur + 0.3) {
+        segs.push({ start: cur, end: Math.min(segEnd, op.start) });
+      }
+      cur = Math.max(cur, op.end);
+    }
+    if (cur < segEnd - 0.3) {
+      segs.push({ start: cur, end: segEnd });
+    }
+    return segs;
+  };
+
+  const segments = getCountrySideSegments(0, false);
     yield;
 
   // 2. Gờ đá tự nhiên bo viền 2 bên tiếp giáp thảm cỏ (được ngắt tại ngã tư)
   if (hasEdgeCurbs) {
     for (const [_index, side] of ([-1, 1]).entries()) {
-      for (const [sidx, seg] of (segments).entries()) {
+      const sideSegments = getCountrySideSegments(side);
+      for (const [sidx, seg] of (sideSegments).entries()) {
         const segLen = seg.end - seg.start;
         if (segLen <= 0.3) continue;
         const segMid = (seg.start + seg.end) / 2;
@@ -542,7 +580,8 @@ export function* createCountryRoadSteps(scene, options = {}) {
   // 3. Vỉa hè đi bộ đá phiến mật ong (tùy chọn cho trục chính làng)
   if (hasSidewalk) {
     for (const [_index, side] of ([-1, 1]).entries()) {
-      for (const [sidx, seg] of (segments).entries()) {
+      const sideSegments = getCountrySideSegments(side, true);
+      for (const [sidx, seg] of (sideSegments).entries()) {
         const segLen = seg.end - seg.start;
         if (segLen <= 0.3) continue;
         const segMid = (seg.start + seg.end) / 2;

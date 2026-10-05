@@ -109,12 +109,13 @@ export function GameStartScreen({
   bootError = '',
   bootProgress = { phase: 'loading', percentage: 0, message: 'Đang khởi động…', current: 0, total: 40 },
   onBeginExit,
+  onRequestStart,
   onStart,
 }) {
   const [displayProgress, setDisplayProgress] = useState(0);
   const displayProgressRef = useRef(0);
   const [isExiting, setIsExiting] = useState(false);
-  const targetProgress = bootPhase === 'ready' ? 100 : Math.max(5, Math.min(100, bootProgress?.percentage || 0));
+  const targetProgress = bootPhase === 'idle' ? 0 : bootPhase === 'ready' ? 100 : Math.max(5, Math.min(100, bootProgress?.percentage || 0));
 
   // Smooth responsive progress interpolation
   useEffect(() => {
@@ -135,7 +136,17 @@ export function GameStartScreen({
 
   const isReady = bootPhase === 'ready' && displayProgress >= 99.5;
 
+  // One click requests loading; only a genuinely ready world can dismiss the cover.
+  useEffect(() => {
+    if (!isReady) return undefined;
+    setIsExiting(true);
+    onBeginExit?.();
+    const timer = setTimeout(() => onStart?.(), 420);
+    return () => clearTimeout(timer);
+  }, [isReady]);
+
   const handleStartGame = () => {
+    if (bootPhase === 'idle') { onRequestStart?.(); return; }
     if (!isReady || isExiting) return;
     setIsExiting(true);
     onBeginExit?.();
@@ -144,7 +155,7 @@ export function GameStartScreen({
     }, 420);
   };
 
-  const statusMsg = getLoadingStatus(displayProgress);
+  const statusMsg = bootProgress?.message || getLoadingStatus(displayProgress);
 
   return (
     <div
@@ -182,7 +193,7 @@ export function GameStartScreen({
         )}
 
         {/* State A: Loading Game Console (Matching Reference Image) */}
-        {bootPhase !== 'error' && !isReady && (
+        {bootPhase !== 'error' && bootPhase !== 'idle' && !isReady && (
           <div className="pt-loading-console">
             {/* Progress bar capsule with right percentage badge */}
             <div className="pt-jelly-track-wrapper">
@@ -207,7 +218,7 @@ export function GameStartScreen({
         )}
 
         {/* State B: Ready State - Login Actions (Matching Reference Image 1:1) */}
-        {bootPhase !== 'error' && isReady && (
+        {bootPhase === 'idle' && (
           <div className="pt-ready-action-stage">
             {/* Primary Golden Play Button: CHƠI NGAY with Radiant Cartoon Whiskers */}
             <div className="pt-play-now-wrap">

@@ -58,6 +58,10 @@ const signature = scene => scene.meshes.map(mesh => {
 });
 assert.deepEqual(signature(sliced), signature(direct), 'slicing must preserve exact road geometry and transforms');
 const world = await readFile(new URL('../src/game/world/FarmWorld.js', import.meta.url), 'utf8');
+assert.ok(world.indexOf('if (!this.bootReady && !this.bootFrameRequested)') < world.indexOf('this.scene.render();'), 'covered loading canvas must not draw partially-built world every frame');
+const pipeline = world.slice(world.indexOf('async startWorldBootPipeline()'),world.indexOf('async populateBackgroundScenery()'));
+assert.ok(pipeline.indexOf('await this.renderIndex.ready') < pipeline.indexOf('await waitForRenderedFrame();'), 'first visible draw must wait for spatial index');
+assert.equal((world.match(/= installNearbyShadows\(/g)||[]).length,1,'shadow observer must only be installed once');
 for (const name of ['createBusRoute', 'createFarmAnimals', 'createGrandWindingRiver']) {
   assert.match(world, new RegExp(`yield\\* ${name}Steps\\(`));
   assert.ok(!new RegExp(`= ${name}\\(`).test(world), `boot must not call synchronous ${name}`);

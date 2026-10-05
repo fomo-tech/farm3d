@@ -24,9 +24,10 @@ const autoScene = new Scene(autoEngine);
 const autoCamera = new FreeCamera('auto', Vector3.Zero(), autoScene);
 const auto = createCinematicRenderingPipeline(autoScene, autoCamera, { quality: 'balanced', stableSamples: true });
 const processing = auto.pipeline.imageProcessing;
+const originalSamples = auto.pipeline.samples;
 for (let i = 0; i < 20; i++) {
   auto.setQuality(i % 2 ? 'balanced' : 'eco', true);
-  assert.equal(auto.pipeline.samples, 4);
+  assert.equal(auto.pipeline.samples, originalSamples, 'Auto preserves the sample count supported by the engine');
   assert.equal(auto.pipeline.imageProcessing, processing, 'Auto must not rebuild grading between effect levels');
 }
 autoScene.dispose(); autoEngine.dispose();

@@ -313,8 +313,8 @@ export function createVenues3DFactory(scene, shadows) {
       root.rotation.y = Math.PI / 4;
 
       const matMarble = makeMat(scene, 'casino-marble-white', '#f8fafc');
-      const matWall = makeMat(scene, 'casino-wall-royal', '#991b1b'); // Đỏ nhung hoàng gia
-      const matGold = makeMat(scene, 'casino-gold-trim', '#fbbf24', '#f59e0b'); // Mạ vàng kim
+      const matWall = makeMat(scene, 'casino-wall-royal', '#174b4a');
+      const matGold = makeMat(scene, 'casino-gold-trim', '#d8c18d');
       const matRoof = makeMat(scene, 'casino-roof-slate', '#1e293b');
       const matDice = makeMat(scene, 'casino-dice-ivory', '#ffffff', '#fefce8');
       const matPip = makeMat(scene, 'casino-pip-ruby', '#ef4444', '#dc2626');

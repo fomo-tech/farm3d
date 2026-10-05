@@ -139,7 +139,19 @@
   }
 
   window.__farmDebug = {
-    mark(stage) { if (hasReachedReady) return; currentStage = stage; ensureUi(); render(); },
+    mark(stage) {
+      if (hasReachedReady) return;
+      currentStage = stage;
+      if (stage === 'Creating Babylon world') {
+        const bootStartedAt = Date.now();
+        setTimeout(() => {
+          if (!hasReachedReady && !worldRunning && sessionMetrics.frames === 0) {
+            report('BOOT TIMEOUT', `Game chưa sẵn sàng sau ${Math.round((Date.now() - bootStartedAt) / 1000)} giây tải`);
+          }
+        }, 45000);
+      }
+      ensureUi(); render();
+    },
     report(error, source) { report(source || 'APP ERROR', error); },
     stage(stage) { finishStage(); runtimeStage = stage; stageStartedAt = performance.now(); },
     endStage() { finishStage(); runtimeStage = 'outside measured render work'; },
@@ -256,9 +268,4 @@
   });
   document.addEventListener('DOMContentLoaded', ensureUi);
 
-  setTimeout(function () {
-    if (!hasReachedReady && currentStage !== 'World ready' && !worldRunning && sessionMetrics.frames === 0) {
-      report('BOOT TIMEOUT', `Game chưa sẵn sàng sau ${Math.round((Date.now() - startedAt) / 1000)} giây`);
-    }
-  }, 45000);
 })();

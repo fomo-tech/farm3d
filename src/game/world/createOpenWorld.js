@@ -13,11 +13,11 @@ import { buildHumanMesh } from '../player/buildHumanMesh.js';
 
 // Landmark imports
 import { createWindmill } from './landmarks/createWindmill.js';
-import { createGrainSilo, createArtisanWorkshop } from './landmarks/createSiloAndWorkshop.js';
+import { createArtisanWorkshop } from './landmarks/createSiloAndWorkshop.js';
 import { createTownHall } from './landmarks/createTownHall.js';
 import { createMajesticFountain } from './landmarks/createFountain.js';
 import { createLighthouse } from './landmarks/createLighthouse.js';
-import { createLakeDistrict } from './landmarks/createWaterBody.js';
+import { createLakeDistrictSteps } from './landmarks/createWaterBody.js';
 import { createCozyBeach } from './landmarks/createCozyBeach.js';
 import { createRomanticLake, createRomanticLakeSteps } from './landmarks/createRomanticLake.js';
 import { createSeasideOcean } from './landmarks/createSeasideOcean.js';
@@ -34,6 +34,7 @@ import {
 import {
   createModernBoulevardSteps,
   createZebraCrosswalk,
+  createCulDeSac,
 } from './createModernRoadSystem.js';
 import {
   createConcertStage,
@@ -468,7 +469,10 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
     yield;
 
   // === HỆ THỐNG ĐƯỜNG ĐÔ THỊ & NÔNG TRẠI MXH ĐỒNG BỘ 100% CHUẨN PLAY TOGETHER ===
-  const farmIntersections = farmCrossroadZList.map(pos => ({ pos, width: 7.5 }));
+  const farmIntersections = [
+    { pos: 86, width: 6.0 }, // Nối thẳng Quốc lộ 86 liên làng
+    ...farmCrossroadZList.map(pos => ({ pos, width: 7.5 })),
+  ];
     yield;
 
   // 1. Đại lộ Bắc - Nam (Nối Tòa Thị Chính qua Quảng trường xuống hết Thung Lũng Nông Trại)
@@ -489,49 +493,128 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
     yield;
 
   // 2. Đại lộ Đông - Tây (Nối Ngoại Ô Bình Minh qua Quảng trường sang Hồ Pha Lê)
-  yield* createModernBoulevardSteps(scene, { id: 'blvd-west', x: -84, z: 0, length: 76, width: 8.5, sidewalkWidth: 2.4, isNorthSouth: false, shadows, lampInterval: 28 });
+  yield* createModernBoulevardSteps(scene, {
+    id: 'blvd-west',
+    x: -84,
+    z: 0,
+    length: 76,
+    width: 8.5,
+    sidewalkWidth: 2.4,
+    isNorthSouth: false,
+    shadows,
+    lampInterval: 28,
+    intersections: [{ pos: -122, width: 7.5, side: -1 }],
+  });
     yield;
-  yield* createModernBoulevardSteps(scene, { id: 'blvd-east', x: 84, z: 0, length: 76, width: 8.5, sidewalkWidth: 2.4, isNorthSouth: false, shadows, lampInterval: 28 });
-    yield;
-  yield* createModernBoulevardSteps(scene, { id: 'blvd-east-lake', x: 130, z: 0, length: 36, width: 7.5, sidewalkWidth: 2.2, isNorthSouth: false, shadows, lampInterval: 28 });
+  // Bùng binh Cửa Tây kết nối phố chợ và ngoại ô Mộc Lan (loại bỏ hoàn toàn đường cụt)
+  createCulDeSac(scene, { id: 'cul-blvd-west', x: -122, z: 0, radius: 7.2, shadows });
     yield;
 
-  // 3. Hai trục dọc Nông trại phía Tây & phía Đông (Bao bọc 24 lô nông trang)
+  yield* createModernBoulevardSteps(scene, {
+    id: 'blvd-east',
+    x: 84,
+    z: 0,
+    length: 76,
+    width: 8.5,
+    sidewalkWidth: 2.4,
+    isNorthSouth: false,
+    shadows,
+    lampInterval: 28,
+    intersections: [{ pos: 122, width: 7.5, side: -1 }],
+  });
+    yield;
+
+  // 2b. Tuyến nối trực tiếp từ 2 cánh Đông - Tây Đô Thị Trung Tâm xuống Quốc Lộ 86
+  // Trục nối Tây Đô Thị (x = -122) chạy thẳng xuống QL86 (z = 86)
+  yield* createModernBoulevardSteps(scene, {
+    id: 'link-city-west-highway',
+    x: -122,
+    z: 43,
+    length: 86,
+    width: 7.0,
+    sidewalkWidth: 2.0,
+    isNorthSouth: true,
+    shadows,
+    lampInterval: 32,
+    sidewalkStartOffset: 4.25,
+    sidewalkEndOffset: 3.0,
+    intersections: [
+      { pos: 0, width: 8.5 },
+      { pos: 86, width: 6.5 },
+    ],
+  });
+    yield;
+
+  // Trục nối Đông Đô Thị (x = 122) chạy thẳng xuống QL86 (z = 86)
+  yield* createModernBoulevardSteps(scene, {
+    id: 'link-city-east-highway',
+    x: 122,
+    z: 43,
+    length: 86,
+    width: 7.0,
+    sidewalkWidth: 2.0,
+    isNorthSouth: true,
+    shadows,
+    lampInterval: 32,
+    sidewalkStartOffset: 4.25,
+    sidewalkEndOffset: 3.0,
+    intersections: [
+      { pos: 0, width: 8.5 },
+      { pos: 86, width: 6.5 },
+    ],
+  });
+    yield;
+
+  // 3. Hai trục dọc Nông trại phía Tây & phía Đông (Bao bọc 24 lô nông trang, nối liền từ QL86 đến đường ngang số 7)
+  // Chiều dài 180m: chạy liền mạch từ z = 86 (giao QL86) đến z = 266 (đường ngang số 7)
+  const spineWestIntersections = [
+    { pos: 86, width: 6.0, side: 1 },
+    ...farmCrossroadZList.map(pos => ({ pos, width: 7.5, side: 1 })),
+  ];
   yield* createModernBoulevardSteps(scene, {
     id: 'farm-spine-west',
     x: -60,
-    z: 184,
-    length: 176,
+    z: 176,
+    length: 180,
     width: 7.5,
     sidewalkWidth: 2.2,
     isNorthSouth: true,
     shadows,
     lampInterval: 32,
-    intersections: farmIntersections,
-  });
-    yield;
-  yield* createModernBoulevardSteps(scene, {
-    id: 'farm-spine-east',
-    x: 60,
-    z: 184,
-    length: 176,
-    width: 7.5,
-    sidewalkWidth: 2.2,
-    isNorthSouth: true,
-    shadows,
-    lampInterval: 32,
-    intersections: farmIntersections,
+    sidewalkStartOffset: { [-1]: 0, [1]: 3.0 },
+    sidewalkEndOffset: { [-1]: 0, [1]: 3.75 },
+    intersections: spineWestIntersections,
   });
     yield;
 
-  // 4. Bảy trục ngang Nông trại phân ô 24 lô đất (Nối liền 100% không khe hở với Đại lộ Nam)
+  const spineEastIntersections = [
+    { pos: 86, width: 6.0, side: -1 },
+    ...farmCrossroadZList.map(pos => ({ pos, width: 7.5, side: -1 })),
+  ];
+  yield* createModernBoulevardSteps(scene, {
+    id: 'farm-spine-east',
+    x: 60,
+    z: 176,
+    length: 180,
+    width: 7.5,
+    sidewalkWidth: 2.2,
+    isNorthSouth: true,
+    shadows,
+    lampInterval: 32,
+    sidewalkStartOffset: { [-1]: 3.0, [1]: 0 },
+    sidewalkEndOffset: { [-1]: 3.75, [1]: 0 },
+    intersections: spineEastIntersections,
+  });
+    yield;
+
+  // 4. Bảy trục ngang Nông trại phân ô 24 lô đất (Nối khép kín 100% giữa Trục Tây x = -60, Đại lộ Nam x = 0 và Trục Đông x = 60)
   for (const [index, z] of (farmCrossroadZList).entries()) {
-    // Nhánh Tây (chạy chính xác từ x = -68 đến x = -4.25, chạm khít lòng Đại lộ Nam)
+    // Nhánh Tây: chạy chính xác từ x = -60 (tim Trục Tây) đến x = -4.25 (mép Đại lộ Nam)
     yield* createModernBoulevardSteps(scene, {
       id: `farm-row-west-${index + 1}`,
-      x: -36.125,
+      x: -32.125,
       z: z,
-      length: 63.75,
+      length: 55.75,
       width: 7.5,
       sidewalkWidth: 2.2,
       isNorthSouth: false,
@@ -540,15 +623,15 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
       hasCenterDashes: true,
       hasEdgeLines: true,
       hasStopLines: true,
-      sidewalkEndOffset: 3.0,
-      intersections: [{ pos: -60, width: 7.5 }],
+      sidewalkStartOffset: 3.75, // Khớp chuẩn xác mép trong Trục Tây x = -60
+      sidewalkEndOffset: 0,
     });
-    // Nhánh Đông (chạy chính xác từ x = 4.25 đến x = 68, chạm khít lòng Đại lộ Nam)
+    // Nhánh Đông: chạy chính xác từ x = 4.25 (mép Đại lộ Nam) đến x = 60 (tim Trục Đông)
     yield* createModernBoulevardSteps(scene, {
       id: `farm-row-east-${index + 1}`,
-      x: 36.125,
+      x: 32.125,
       z: z,
-      length: 63.75,
+      length: 55.75,
       width: 7.5,
       sidewalkWidth: 2.2,
       isNorthSouth: false,
@@ -557,8 +640,8 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
       hasCenterDashes: true,
       hasEdgeLines: true,
       hasStopLines: true,
-      sidewalkStartOffset: 3.0,
-      intersections: [{ pos: 60, width: 7.5 }],
+      sidewalkStartOffset: 0,
+      sidewalkEndOffset: 3.75, // Khớp chuẩn xác mép trong Trục Đông x = 60
     });
 
     // Vạch sang đường cho người đi bộ trên vỉa hè băng qua miệng 2 nhánh đường Nông trại
@@ -568,14 +651,21 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
     // Vạch sang đường cho người đi bộ băng qua Đại lộ Nam tại ngã 4
     createZebraCrosswalk(scene, { id: `crosswalk-farm-blvd-${z}`, x: 0, z: z - 5.5, width: 8.5, depth: 2.4, isNorthSouth: true });
 
-      yield;
-    }
     yield;
+  }
+  yield;
+
+  // Vạch sang đường tại điểm giao Quốc lộ 86 với Đại lộ Nam
+  createZebraCrosswalk(scene, { id: 'crosswalk-blvd-highway-86', x: 0, z: 86, width: 8.5, depth: 2.6, isNorthSouth: true });
+  yield;
 
   // 5. Tuyến đường nối xuống Bãi Biển Bình Minh & Cảng Tàu Hơi Nước Steamboat Port
   yield* createModernBoulevardSteps(scene, { id: 'blvd-beach-connector', x: 0, z: 300, length: 44, width: 8.5, sidewalkWidth: 2.4, isNorthSouth: true, shadows, lampInterval: 28 });
     yield;
   yield* createModernBoulevardSteps(scene, { id: 'blvd-steamboat-port', x: -22, z: 322, length: 40, width: 7.5, sidewalkWidth: 2.2, isNorthSouth: false, shadows, lampInterval: 28 });
+    yield;
+  // Bùng binh quay đầu cảng tàu kết nối bến phà & hải đăng (không để đường cụt)
+  createCulDeSac(scene, { id: 'cul-steamboat-port', x: -42, z: 322, radius: 6.5, shadows });
     yield;
 
   // 6. Hệ thống vạch sang đường đá ngà (Stone Crosswalks) tại 4 cửa ngõ Quảng trường
@@ -740,11 +830,11 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
   const farmersMarket = yield* createFarmersMarketSteps(scene, shadows, foliage, { x: -62, z: 24 });
     yield;
 
-  // 7. Town Citizens (Cư dân 3D dạo phố, thưởng thức cà phê và mua sắm nông sản)
+  // 7. Town Citizens (Cư dân 3D dạo phố, thưởng thức cà phê và mua sắm nông sản - đã xóa 2 đứa bé ở đài phun nước theo yêu cầu)
   const townCitizens = [];
   for (const [x, z, color] of [
-    [-5, 6, '#e7894f'], [5, 8, '#738ed4'], [-36, 4, '#be6d9b'],
-    [-64, 26, '#71a866'], [-12, 326, '#ed7185'], [138, 4, '#db835e'],
+    [-36, 4, '#be6d9b'],
+    [-64, 26, '#71a866'], [-12, 326, '#ed7185'], [112, -11, '#db835e'],
   ]) {
     yield `boot: town citizen ${x}:${z}`;
     townCitizens.push(citizen(scene, x, z, color, shadows));
@@ -753,19 +843,18 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
 
   // 8. Lake & Mountain District (Cozy Farmy Teardrop Lagoon, sandy shore, rustic wooden pier)
   yield 'boot: romantic lake';
-  yield* createRomanticLakeSteps(scene, shadows);
+  const romanticLake = yield* createRomanticLakeSteps(scene, shadows);
   yield;
 
 
   yield 'boot: lake district';
-  const lakeDistrict = createLakeDistrict(scene, shadows);
+  const lakeDistrict = yield* createLakeDistrictSteps(scene, shadows);
     yield;
-  // Tuyến đường dạo đá phiến ven hồ nối từ vỉa hè Đại lộ Đông sang Bến câu cá, Lều dã ngoại và Cầu vòm
-  createSteppingStoneTrail(scene, { x: 132, z: 5.5 }, { x: 138, z: 18 }, materials, 7);
-    yield;
-  createSteppingStoneTrail(scene, { x: 136, z: -5.5 }, { x: 152, z: -16 }, materials, 8);
-    yield;
-    yield;
+  terrainPatch(scene, 'lake-shop-access', 113, -11, 3.2, 14, materials.sidewalk);
+  yield;
+  // Rest-bank path terminates on land and stays clear of the fishing shop.
+  createSteppingStoneTrail(scene, { x: 113, z: 8 }, { x: 129, z: 22 }, materials, 7);
+  yield;
 
   // 9. Seaside Beach District (Boardwalk, coconut bar, loungers, palms)
   // Lối nối lát đá phiến từ đại lộ bờ biển xuống Cầu ván gỗ Boardwalk
@@ -784,10 +873,8 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
   const steamboatPort = createSteamboatPort(scene, shadows, { x: -38, y: 0, z: 358 });
     yield;
 
-  // 10. Farmsteads: Animated Dutch Windmill, Grain Silo, Artisan Workshop
+  // 10. Farmsteads: Animated Dutch Windmill, Artisan Workshop (đã xóa tháp silo ở 88, 112 theo yêu cầu)
   const windmill = createWindmill(scene, shadows, { x: -92, y: 0, z: 108 });
-    yield;
-  createGrainSilo(scene, shadows, { x: 88, y: 0, z: 112 });
     yield;
   createArtisanWorkshop(scene, shadows, { x: 88, y: 0, z: 136 });
     yield;
@@ -799,6 +886,7 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
     fountain: playTogetherPlaza.fountain,
     lighthouse,
     lakeDistrict,
+    romanticLake,
     playTogetherPlaza,
     farmersMarket,
     townCitizens,

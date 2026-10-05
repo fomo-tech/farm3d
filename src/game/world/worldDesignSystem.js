@@ -231,64 +231,277 @@ export function createCozyMaterial(scene, name, hex, emissiveHex = null, specula
 /**
  * Tạo bảng hiệu gỗ khắc chữ nổi thanh lịch viền vàng ấm
  */
-export function createRusticSignboard(scene, title, subtitle = '', accentColor = '#f59e0b', parent = null, width = 6.0, height = 1.8) {
-  const dt = new DynamicTexture(`rustic-sign-${title}`, { width: 2048, height: 640 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
-  dt.hasAlpha = true;
-  dt.anisotropicFilteringLevel = 16;
-  const ctx = dt.getContext();
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  ctx.clearRect(0, 0, 2048, 640);
-
-  // Nền gỗ sồi sẫm sang trọng
-  ctx.fillStyle = '#2c1810';
-  ctx.beginPath();
-  ctx.roundRect(32, 32, 1984, 576, 64);
-  ctx.fill();
-
-  // Khung viền chỉ vàng chạm khắc
-  ctx.strokeStyle = accentColor;
-  ctx.lineWidth = 20;
-  ctx.stroke();
-
-  // Chỉ viền phụ bên trong
-  ctx.strokeStyle = '#78350f';
-  ctx.lineWidth = 8;
-  ctx.beginPath();
-  ctx.roundRect(64, 64, 1920, 512, 40);
-  ctx.stroke();
-
-  // Tiêu đề chữ nổi màu kem ngà
-  ctx.font = '900 164px "Nunito", "Segoe UI", Arial, sans-serif';
-  ctx.fillStyle = '#fffdf0';
-  ctx.textAlign = 'center';
-  ctx.shadowColor = 'rgba(0,0,0,0.35)';
-  ctx.shadowBlur = 5;
-  const titleY = subtitle ? 270 : 340;
-  ctx.fillText(title, 1024, titleY, 1840);
-
-  if (subtitle) {
-    ctx.font = '800 96px "Nunito", "Segoe UI", Arial, sans-serif';
-    ctx.fillStyle = '#ffe2ae';
-    ctx.shadowBlur = 4;
-    ctx.fillText(subtitle.toUpperCase(), 1024, 430, 1840);
-  }
-
-  dt.update();
-
+export function createRusticSignboard(scene, title, subtitle = '', accentColor = '#f59e0b', parent = null, width = 6.0, height = 1.8, billboard = true) {
   const signMat = new StandardMaterial(`rustic-sign-mat-${title}`, scene);
-  signMat.diffuseColor = Color3.Black();
-  signMat.emissiveTexture = dt;
-  signMat.opacityTexture = dt;
-  signMat.disableLighting = true;
-  signMat.specularColor = Color3.Black();
+  signMat.alpha = 1;
+
+  if (typeof document !== 'undefined' || typeof OffscreenCanvas !== 'undefined') {
+    const dt = new DynamicTexture(`rustic-sign-${title}`, { width: 2048, height: 640 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+    dt.hasAlpha = true;
+    dt.anisotropicFilteringLevel = 16;
+    const ctx = dt.getContext();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.clearRect(0, 0, 2048, 640);
+
+    // Nền gỗ sồi sẫm sang trọng
+    ctx.fillStyle = '#2c1810';
+    ctx.beginPath();
+    ctx.roundRect(32, 32, 1984, 576, 64);
+    ctx.fill();
+
+    // Khung viền chỉ vàng chạm khắc
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 20;
+    ctx.stroke();
+
+    // Chỉ viền phụ bên trong
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.roundRect(64, 64, 1920, 512, 40);
+    ctx.stroke();
+
+    // Tiêu đề chữ nổi màu kem ngà
+    ctx.font = '900 164px "Nunito", "Segoe UI", Arial, sans-serif';
+    ctx.fillStyle = '#fffdf0';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.35)';
+    ctx.shadowBlur = 5;
+    const titleY = subtitle ? 270 : 340;
+    ctx.fillText(title, 1024, titleY, 1840);
+
+    if (subtitle) {
+      ctx.font = '800 96px "Nunito", "Segoe UI", Arial, sans-serif';
+      ctx.fillStyle = '#ffe2ae';
+      ctx.shadowBlur = 4;
+      ctx.fillText(subtitle.toUpperCase(), 1024, 430, 1840);
+    }
+
+    dt.update();
+    signMat.diffuseColor = Color3.Black();
+    signMat.emissiveTexture = dt;
+    signMat.opacityTexture = dt;
+    signMat.disableLighting = true;
+    signMat.specularColor = Color3.Black();
+  } else {
+    signMat.diffuseColor = Color3.FromHexString('#2c1810');
+    signMat.emissiveColor = Color3.FromHexString(accentColor).scale(0.35);
+  }
 
   const plane = MeshBuilder.CreatePlane(`rustic-sign-plane-${title}`, { width, height }, scene);
   plane.material = signMat;
-  plane.billboardMode = Mesh.BILLBOARDMODE_Y;
+  if (billboard) {
+    plane.billboardMode = Mesh.BILLBOARDMODE_Y;
+  }
   if (parent) plane.parent = parent;
 
   return plane;
+}
+
+/**
+ * Tạo bảng hiệu mặt tiền 3D cao cấp (Storefront Fascia Signboard)
+ * Gắn cố định trên tường mặt tiền, có khung gỗ vát cạnh, chỉ vàng, 2 đèn rọi cổ ngỗng và chữ sắc nét
+ */
+export function createStorefrontSignboard(scene, {
+  title,
+  subtitle = '',
+  icon = '',
+  accentColor = '#f59e0b',
+  parent = null,
+  width = 6.8,
+  height = 1.6,
+  position = new Vector3(0, 7.75, 6.45),
+  rotationY = 0,
+}) {
+  const signRoot = new TransformNode(`storefront-sign-root-${title}`, scene);
+  signRoot.position.copyFrom(position);
+  signRoot.rotation.y = rotationY;
+  if (parent) signRoot.parent = parent;
+
+  // 1. Tấm gỗ nền sồi tối vát cạnh
+  const plaque = MeshBuilder.CreateBox(`storefront-sign-plaque-${title}`, { width: width + 0.35, height: height + 0.25, depth: 0.16 }, scene);
+  const plaqueMat = new StandardMaterial(`sign-plaque-mat-${title}`, scene);
+  plaqueMat.diffuseColor = Color3.FromHexString('#1c120c');
+  plaqueMat.ambientColor = plaqueMat.diffuseColor.scale(0.4);
+  plaqueMat.specularColor = new Color3(0.08, 0.08, 0.08);
+  plaqueMat.alpha = 1;
+  plaque.material = plaqueMat;
+  plaque.parent = signRoot;
+
+  // 2. Viền kim loại mạ vàng / đồng thau nổi
+  const trim = MeshBuilder.CreateBox(`storefront-sign-trim-${title}`, { width: width + 0.12, height: height + 0.1, depth: 0.20 }, scene);
+  const trimMat = new StandardMaterial(`sign-trim-mat-${title}`, scene);
+  trimMat.diffuseColor = Color3.FromHexString('#d97706');
+  trimMat.emissiveColor = Color3.FromHexString('#b45309').scale(0.35);
+  trimMat.specularColor = new Color3(0.5, 0.5, 0.5);
+  trimMat.specularPower = 64;
+  trimMat.alpha = 1;
+  trim.material = trimMat;
+  trim.parent = signRoot;
+
+  // 3. Mặt bảng hiệu đồ họa độ phân giải cao
+  const signMat = new StandardMaterial(`storefront-sign-face-mat-${title}`, scene);
+  signMat.alpha = 1;
+  signMat.backFaceCulling = false;
+
+  if (typeof document !== 'undefined' || typeof OffscreenCanvas !== 'undefined') {
+    const dt = new DynamicTexture(`storefront-sign-dt-${title}`, { width: 2048, height: 512 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+    dt.anisotropicFilteringLevel = 16;
+    const ctx = dt.getContext();
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    // Nền gỗ gụ sẫm sang trọng
+    ctx.fillStyle = '#160e0a';
+    ctx.fillRect(0, 0, 2048, 512);
+
+    // Dải hoa văn viền vàng kép chạm khắc
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 18;
+    if (typeof ctx.roundRect === 'function') {
+      ctx.beginPath();
+      ctx.roundRect(24, 24, 2000, 464, 36);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.roundRect(44, 44, 1960, 424, 24);
+      ctx.stroke();
+    } else {
+      ctx.strokeRect(24, 24, 2000, 464);
+      ctx.strokeStyle = '#fef08a';
+      ctx.lineWidth = 6;
+      ctx.strokeRect(44, 44, 1960, 424);
+    }
+
+    // Tiêu đề chữ nổi tiếng Việt vàng rực rỡ có đổ bóng sâu
+    ctx.font = '900 130px Arial, "Nunito", "Segoe UI", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.95)';
+    ctx.shadowBlur = 12;
+    const titleY = subtitle ? 215 : 285;
+    ctx.fillText(`★  ${title.toUpperCase()}  ★`, 1024, titleY, 1900);
+
+    if (subtitle) {
+      ctx.font = 'bold 64px Arial, "Nunito", "Segoe UI", sans-serif';
+      ctx.fillStyle = '#fde68a';
+      ctx.shadowBlur = 6;
+      ctx.fillText(subtitle.toUpperCase(), 1024, 345, 1900);
+    }
+
+    dt.update();
+    dt.uScale = -1;
+    dt.uOffset = 1;
+    signMat.diffuseTexture = dt;
+    signMat.emissiveTexture = dt;
+    signMat.diffuseColor = Color3.White();
+    signMat.emissiveColor = Color3.White();
+    signMat.disableLighting = true;
+    signMat.specularColor = Color3.Black();
+  } else {
+    signMat.diffuseColor = Color3.FromHexString('#1c120c');
+    signMat.emissiveColor = Color3.FromHexString('#f59e0b').scale(0.6);
+  }
+
+  const face = MeshBuilder.CreatePlane(`storefront-sign-face-${title}`, { width, height, sideOrientation: Mesh.DOUBLESIDE }, scene);
+  face.position.set(0, 0, 0.12);
+  face.material = signMat;
+  face.parent = signRoot;
+
+  // 4. Hai cụm đèn rọi cổ ngỗng bằng đồng thau trên đỉnh bảng hiệu
+  [-width * 0.28, width * 0.28].forEach((lx, lidx) => {
+    const arm = MeshBuilder.CreateCylinder(`sign-lamp-arm-${title}-${lidx}`, { diameter: 0.05, height: 0.38, tessellation: 8 }, scene);
+    arm.position.set(lx, height / 2 + 0.15, 0.12);
+    arm.rotation.x = -0.55;
+    arm.material = trimMat;
+    arm.parent = signRoot;
+
+    const shade = MeshBuilder.CreateCylinder(`sign-lamp-shade-${title}-${lidx}`, { diameterTop: 0.08, diameterBottom: 0.28, height: 0.18, tessellation: 12 }, scene);
+    shade.position.set(lx, height / 2 + 0.26, 0.25);
+    shade.rotation.x = 0.55;
+    shade.material = trimMat;
+    shade.parent = signRoot;
+
+    const bulbMat = new StandardMaterial(`sign-bulb-mat-${title}-${lidx}`, scene);
+    bulbMat.diffuseColor = Color3.FromHexString('#fef08a');
+    bulbMat.emissiveColor = Color3.FromHexString('#fef08a');
+    bulbMat.disableLighting = true;
+    bulbMat.alpha = 1;
+    const bulb = MeshBuilder.CreateSphere(`sign-lamp-bulb-${title}-${lidx}`, { diameter: 0.14, segments: 8 }, scene);
+    bulb.position.set(lx, height / 2 + 0.22, 0.23);
+    bulb.material = bulbMat;
+    bulb.parent = signRoot;
+  });
+
+  return signRoot;
+}
+
+/**
+ * Tạo bảng hiệu vẫy 2 mặt nhô ra từ góc tường (Projecting Blade Sign)
+ * Có tay đòn sắt nghệ thuật uốn cong và bảng gỗ/enamel 2 mặt với biểu tượng đặc trưng
+ */
+export function createProjectingBladeSign(scene, {
+  parent = null,
+  position = new Vector3(7.2, 5.2, 6.35),
+  accentColor = '#f59e0b',
+  iconLabel = 'SHOP',
+}) {
+  const bladeRoot = new TransformNode(`blade-sign-root-${iconLabel}`, scene);
+  bladeRoot.position.copyFrom(position);
+  if (parent) bladeRoot.parent = parent;
+
+  const matIron = new StandardMaterial(`blade-iron-mat-${iconLabel}`, scene);
+  matIron.diffuseColor = Color3.FromHexString('#1c1917');
+  matIron.specularColor = new Color3(0.2, 0.2, 0.2);
+  matIron.alpha = 1;
+
+  // 1. Tay đỡ sắt gắn tường vuông góc vươn ra 1.4m
+  const ironArm = MeshBuilder.CreateBox(`blade-iron-arm-${iconLabel}`, { width: 0.08, height: 0.12, depth: 1.35 }, scene);
+  ironArm.position.set(0, 0, 0.65);
+  ironArm.material = matIron;
+  ironArm.parent = bladeRoot;
+
+  // Thanh chéo trợ lực
+  const brace = MeshBuilder.CreateBox(`blade-iron-brace-${iconLabel}`, { width: 0.06, height: 0.6, depth: 0.6 }, scene);
+  brace.position.set(0, -0.22, 0.35);
+  brace.rotation.x = Math.PI / 4;
+  brace.material = matIron;
+  brace.parent = bladeRoot;
+
+  // 2. Hai móc xích treo
+  [0.35, 0.95].forEach((cz, idx) => {
+    const chain = MeshBuilder.CreateCylinder(`blade-chain-${iconLabel}-${idx}`, { diameter: 0.04, height: 0.22, tessellation: 6 }, scene);
+    chain.position.set(0, -0.14, cz);
+    chain.material = matIron;
+    chain.parent = bladeRoot;
+  });
+
+  // 3. Biển vẫy tròn / bát giác 2 mặt
+  const discMat = new StandardMaterial(`blade-disc-mat-${iconLabel}`, scene);
+  discMat.diffuseColor = Color3.FromHexString('#291811');
+  discMat.emissiveColor = Color3.FromHexString(accentColor).scale(0.3);
+  discMat.specularColor = new Color3(0.3, 0.3, 0.3);
+  discMat.alpha = 1;
+
+  const plaque = MeshBuilder.CreateCylinder(`blade-plaque-${iconLabel}`, { diameter: 1.05, height: 0.10, tessellation: 24 }, scene);
+  plaque.position.set(0, -0.65, 0.65);
+  plaque.rotation.z = Math.PI / 2;
+  plaque.material = discMat;
+  plaque.parent = bladeRoot;
+
+  const rim = MeshBuilder.CreateTorus(`blade-rim-${iconLabel}`, { diameter: 1.08, thickness: 0.08, tessellation: 24 }, scene);
+  rim.position.set(0, -0.65, 0.65);
+  rim.rotation.z = Math.PI / 2;
+  const rimMat = new StandardMaterial(`blade-rim-mat-${iconLabel}`, scene);
+  rimMat.diffuseColor = Color3.FromHexString(accentColor);
+  rimMat.alpha = 1;
+  rim.material = rimMat;
+  rim.parent = bladeRoot;
+
+  return bladeRoot;
 }
 
 /**

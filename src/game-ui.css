@@ -13,38 +13,46 @@
   outline-offset: 3px;
 }
 .game-shell .game-panel {
-  color: var(--game-ink);
-  background: var(--game-paper);
-  border: 2px solid var(--game-border);
-  border-radius: 24px;
-  box-shadow: 0 12px 40px #183b4433, 0 3px 0 #bcb6a0;
+  color: #0f172a;
+  background: #fdfdf9;
+  border: 4px solid #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.42), 0 5px 0 #cbd5e1;
   scrollbar-width: thin;
-  scrollbar-color: #96c6b6 transparent;
+  scrollbar-color: #94a3b8 #f1f5f9;
 }
-.game-shell .game-panel h2 { color: #27625d; letter-spacing: .01em; }
+.game-shell .game-panel h2 {
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  font-family: 'Outfit', 'Nunito', sans-serif;
+  font-weight: 900;
+}
 .game-shell .game-panel input,
 .game-shell .game-panel select {
-  border: 1px solid #c8d7ce;
-  border-radius: 12px;
-  padding: 10px 12px;
-  color: var(--game-ink);
-  background: #fffefa;
+  border: 2px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 10px 14px;
+  color: #0f172a;
+  background: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 0 #e2e8f0;
 }
 .game-shell .game-panel button {
-  min-height: 40px;
-  border-radius: 12px;
+  touch-action: manipulation;
 }
-.game-shell .game-panel button:disabled { opacity: .5; cursor: not-allowed; }
-.game-shell .game-panel p { line-height: 1.55; }
+.game-shell .game-panel p {
+  line-height: 1.55;
+  color: #475569;
+}
 .pt-start-screen-backdrop .pt-logo-word .char {
   font-size: clamp(38px, 8vw, 94px);
   line-height: 0.95;
 }
 @media (max-width: 600px) {
   .game-shell .game-panel {
-    max-width: calc(100vw - 24px);
-    max-height: calc(100dvh - 48px);
-    border-radius: 18px;
+    max-width: calc(100vw - 20px);
+    max-height: calc(100dvh - 36px);
+    border-radius: 22px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

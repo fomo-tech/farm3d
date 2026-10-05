@@ -8,7 +8,7 @@ import { FISHING_CONFIG } from '../../../shared/fishingConfig.js';
 import { buildHumanMesh } from './buildHumanMesh.js';
 import { createVehicleRigs } from './createVehicleRigs.js';
 
-function createFishingRig(scene, root, human) {
+export function createFishingRig(scene, root, human) {
   const bobberMaterial = new StandardMaterial('local-fishing-bobber-material', scene);
   bobberMaterial.diffuseColor = Color3.FromHexString('#ef4444');
   bobberMaterial.emissiveColor = Color3.FromHexString('#fb7185').scale(0.22);
@@ -16,6 +16,15 @@ function createFishingRig(scene, root, human) {
   const bobber = MeshBuilder.CreateSphere('local-fishing-bobber', { diameter: 0.18, segments: 8 }, scene);
   bobber.material = bobberMaterial;
   bobber.setEnabled(false);
+
+  const caughtMaterial = new StandardMaterial('caught-fish-material',scene);
+  caughtMaterial.diffuseColor=Color3.FromHexString('#e9a63a');
+  const caughtRoot = new TransformNode('caught-fish',scene);
+  const body=MeshBuilder.CreateSphere('caught-fish-body',{diameter:1,segments:8},scene);
+  body.scaling.set(.65,.28,.22);body.material=caughtMaterial;body.parent=caughtRoot;
+  const tail=MeshBuilder.CreateCylinder('caught-fish-tail',{height:.25,diameterTop:0,diameterBottom:.35,tessellation:3},scene);
+  tail.rotation.z=-Math.PI/2;tail.position.x=-.4;tail.scaling.z=.3;tail.material=caughtMaterial;tail.parent=caughtRoot;
+  caughtRoot.setEnabled(false);
 
   const linePoints = [new Vector3(), new Vector3(), new Vector3()];
   const line = MeshBuilder.CreateLines('local-fishing-line', { points: linePoints, updatable: true }, scene);
@@ -42,10 +51,12 @@ function createFishingRig(scene, root, human) {
     bobber.setEnabled(false);
     line.setEnabled(false);
     human.clearFishingPose?.();
+    caughtRoot.setEnabled(false);
   };
 
   const updateLine = () => {
     const hand = (human.toolGrip || human.rightArm).getAbsolutePosition();
+    if(phase==='catch'){caughtRoot.position.copyFrom(hand);caughtRoot.position.y+=.3; caughtRoot.rotation.y=root.rotation.y;}
     linePoints[0].copyFrom(hand);
     linePoints[1].set(
       (hand.x + bobber.position.x) * 0.5,
@@ -73,13 +84,17 @@ function createFishingRig(scene, root, human) {
 
   return {
     update,
-    startCast(distance = 8, nextAnimationId = 'basic_cast') {
+    startCast(distance = 8, nextAnimationId = 'basic_cast', waterTarget = null) {
       castDistance = Math.max(3, Number(distance) || 8);
       animationId = nextAnimationId || 'basic_cast';
       const position = root.getAbsolutePosition();
       const forward = new Vector3(Math.sin(root.rotation.y), 0, Math.cos(root.rotation.y));
       baseTarget.copyFrom(position).addInPlace(forward.scale(castDistance));
       baseTarget.y = position.y + 0.13;
+      if(waterTarget && [waterTarget.x,waterTarget.z].every(Number.isFinite)) {
+        baseTarget.set(waterTarget.x,waterTarget.y ?? .13,waterTarget.z);
+        root.rotation.y=Math.atan2(baseTarget.x-position.x,baseTarget.z-position.z);
+      }
       target.copyFrom(baseTarget);
       phase = 'cast';
       elapsed = 0;
@@ -95,7 +110,9 @@ function createFishingRig(scene, root, human) {
     },
     setPhase(nextPhase) {
       if (phase === 'idle') return;
-      if (nextPhase === 'waiting' || nextPhase === 'bite') phase = nextPhase;
+      if (phase === 'cast') return;
+      if(nextPhase==='reel' && phase!=='reel') human.playFishingAction?.('reel',()=>human.setFishingPose?.(true),animationDuration('reel'));
+      if (nextPhase === 'waiting' || nextPhase === 'bite' || nextPhase === 'reel') phase = nextPhase;
     },
     playReel() {
       if (phase === 'idle') return;
@@ -103,11 +120,14 @@ function createFishingRig(scene, root, human) {
       elapsed = 0;
       human.playFishingAction?.('reel', () => human.setFishingPose?.(true), animationDuration('reel'));
     },
-    finishCatch(success = true) {
+    finishCatch(success = true, fish = null) {
       if (phase === 'idle') return;
       if (!success) { hide(); return; }
       phase = 'catch';
       elapsed = 0;
+      if(fish?.color)caughtMaterial.diffuseColor=Color3.FromHexString(fish.color);
+      caughtRoot.setEnabled(true);
+      bobber.setEnabled(false);line.setEnabled(false);
       human.playFishingAction?.('catch', hide, animationDuration('catch'));
     },
     clear: hide,
@@ -116,6 +136,7 @@ function createFishingRig(scene, root, human) {
       bobberMaterial.dispose();
       bobber.dispose();
       line.dispose();
+      caughtRoot.dispose();caughtMaterial.dispose();
     },
   };
 }
@@ -382,7 +403,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
     startFishingCast(options = {}) {
       autoTarget = null;
       onArrive = null;
-      fishingRig.startCast(options.distance || 8, options.animation || 'basic_cast');
+      fishingRig.startCast(options.distance || 8, options.animation || 'basic_cast', options.target);
     },
     setFishingPhase(phase) {
       fishingRig.setPhase(phase);
@@ -390,8 +411,8 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
     playFishingReel() {
       fishingRig.playReel();
     },
-    finishFishingCatch(success = true) {
-      fishingRig.finishCatch(success);
+    finishFishingCatch(success = true, fish = null) {
+      fishingRig.finishCatch(success, fish);
     },
     clearFishing() {
       fishingRig.clear();

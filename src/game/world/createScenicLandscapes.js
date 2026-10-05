@@ -368,9 +368,7 @@ export function* createScenicLandscapesSteps(scene, foliage, shadows, foliageIns
   const lakePromenadeSpots = [
     { x: 88, z: -14 },
     { x: 104, z: -16 },
-    { x: 120, z: -18 },
-    { x: 136, z: -20 },
-    { x: 132, z: -16 },
+    { x: 100, z: -30 },
     { x: 96, z: 22 },
     { x: 112, z: 24 },
     { x: 128, z: 26 },
@@ -448,7 +446,8 @@ export function* createScenicLandscapesSteps(scene, foliage, shadows, foliageIns
   // =========================================================================
   // 10. KHU DU LỊCH SINH THÁI HỒ PHA LÊ & BẾN THUYỀN THIÊN NGA PLAY TOGETHER
   // =========================================================================
-  createCrystalLakeScenicFeatures(scene, root, foliage, shadows);
+  // Crystal Lake's water decorations and boat are owned by its district builder.
+  // Rebuilding them here previously overlapped the pier and added another 38 meshes.
     yield;
 
   // =========================================================================
@@ -1057,95 +1056,6 @@ function createAllVillageThematicLandmarks(scene, parent, foliage, shadows) {
  * Nâng cấp cảnh quan Hồ Pha Lê (Crystal Lake):
  * Cụm hoa súng nổi trên mặt nước & thuyền đạp vịt đôi phong cách Play Together
  */
-function createCrystalLakeScenicFeatures(scene, parent, foliage, shadows) {
-  const root = new TransformNode('crystal-lake-scenic-features', scene);
-  root.parent = parent;
-
-  const matLilyPad = makeMat(scene, 'lake-lilypad', '#15803d', '#166534', 0.08);
-  const matLotusFlower = makeMat(scene, 'lake-lotus-flower', '#f472b6', '#ec4899', 0.25);
-  const matSwanWhite = makeMat(scene, 'swan-boat-white', '#f8fafc', null, 0.4);
-  const matSwanBeak = makeMat(scene, 'swan-boat-beak', '#f97316', null, 0.2);
-
-  // 1. 6 Cụm Hoa Súng Bồng Bềnh Trên Mặt Hồ Pha Lê (tâm hồ: 165, 2)
-  const lilyClusters = [
-    { x: 152, z: -8 },
-    { x: 172, z: 12 },
-    { x: 180, z: -6 },
-    { x: 148, z: 15 },
-    { x: 162, z: -16 },
-    { x: 176, z: 20 },
-  ];
-
-  lilyClusters.forEach((pos, cIdx) => {
-    // Lá súng tròn dẹt
-    for (let p = 0; p < 4; p++) {
-      const angle = (p * Math.PI * 2) / 4 + cIdx * 0.4;
-      const lx = pos.x + Math.cos(angle) * 1.5;
-      const lz = pos.z + Math.sin(angle) * 1.5;
-      const pad = MeshBuilder.CreateCylinder(`lilypad-${cIdx}-${p}`, {
-        diameter: 1.3,
-        height: 0.02,
-        tessellation: 12,
-      }, scene);
-      pad.position.set(lx, 0.05, lz);
-      pad.material = matLilyPad;
-      pad.parent = root;
-
-      // Hoa sen hồng nở ở giữa cụm
-      if (p === 0) {
-        const lotus = MeshBuilder.CreateSphere(`lotus-${cIdx}`, {
-          diameter: 0.45,
-          segments: 8,
-          slice: 0.6,
-        }, scene);
-        lotus.position.set(pos.x, 0.12, pos.z);
-        lotus.material = matLotusFlower;
-        lotus.parent = root;
-      }
-    }
-  });
-
-  // 2. 2 Chiếc Thuyền Thiên Nga Đạp Nước Play Together Neo Tại Cầu Tàu Hồ Pha Lê
-  [
-    { x: 138, z: -7, rot: 0.3 },
-    { x: 142, z: 7, rot: -0.3 },
-  ].forEach((b, i) => {
-    const boatRoot = new TransformNode(`swan-boat-${i}`, scene);
-    boatRoot.position.set(b.x, 0.04, b.z);
-    boatRoot.rotation.y = b.rot;
-    boatRoot.parent = root;
-
-    // Thân thuyền
-    const hull = MeshBuilder.CreateBox(`swan-hull-${i}`, { width: 2.2, height: 0.6, depth: 3.2 }, scene);
-    hull.position.y = 0.3;
-    hull.material = matSwanWhite;
-    hull.parent = boatRoot;
-
-    // Cổ và đầu thiên nga uốn cong
-    const neck = MeshBuilder.CreateCylinder(`swan-neck-${i}`, { height: 1.4, diameter: 0.3 }, scene);
-    neck.position.set(0, 1.1, 1.2);
-    neck.rotation.x = -0.35;
-    neck.material = matSwanWhite;
-    neck.parent = boatRoot;
-
-    const head = MeshBuilder.CreateSphere(`swan-head-${i}`, { diameter: 0.6 }, scene);
-    head.position.set(0, 1.8, 1.45);
-    head.material = matSwanWhite;
-    head.parent = boatRoot;
-
-    const beak = MeshBuilder.CreateCylinder(`swan-beak-${i}`, {
-      diameterTop: 0,
-      diameterBottom: 0.25,
-      height: 0.45,
-    }, scene);
-    beak.position.set(0, 1.75, 1.8);
-    beak.rotation.x = Math.PI / 2;
-    beak.material = matSwanBeak;
-    beak.parent = boatRoot;
-
-    shadows?.addShadowCaster(hull);
-  });
-}
 
 /**
  * Giàn hoa leo Pergola uốn vòm lãng mạn tại các lối vào công viên và trạm xe buýt
@@ -1159,7 +1069,6 @@ function createScenicPergolas(scene, parent, foliage, shadows) {
 
   const pergolaSpots = [
     { x: -14, z: 68, rot: 0 },         // Lối vào Đại Công Viên Trung Tâm (đặt tại đường dạo bộ phía Tây)
-    { x: 126, z: 14, rot: 0 },         // Lối dạo Hồ Pha Lê (ngoài hành lang đường z = 0)
     { x: -292, z: 76, rot: 0 },      // Cổng Làng Hoa Mai
     { x: 292, z: 76, rot: 0 },       // Cổng Làng Ven Sông
   ];
