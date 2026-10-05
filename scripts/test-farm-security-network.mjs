@@ -52,7 +52,11 @@ try {
   assert.equal((await thief.request({ type: 'game_action', action: 'farm_gate', payload: { farmId: 'farm_000001', open: true } })).type, 'action_error');
   assert.equal((await gate(true)).type, 'farm_gate');
   assert.equal((await thief.wait(m => m.type === 'farm_gate' && m.open)).open, true, 'gate broadcast reaches other account');
-  for (const [x, z] of [[-45, 103], [-46, 105], [-48.15, 107.2]]) assert.equal((await thief.move(x, z)).accepted, true);
+  for (const [x, z] of [[-45, 103], [-46, 105], [-48.15, 107.2]]) {
+    // Respect the real server speed budget instead of teleporting the fixture.
+    await new Promise(resolve => setTimeout(resolve, 400));
+    assert.equal((await thief.move(x, z)).accepted, true);
+  }
   let pending = await theft('steal_start'); assert.equal(pending.type, 'theft_pending');
   assert.equal((await gate(false)).type, 'farm_gate');
   await new Promise(resolve => setTimeout(resolve, 3100));

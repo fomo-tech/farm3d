@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:net';
 import { MongoClient } from 'mongodb';
 import { WebSocket } from 'ws';
+import { TOWN_SPAWN } from '../shared/playerSpawn.js';
 
 const databaseName = `farm_multiplayer_test_${randomUUID().replaceAll('-', '')}`;
 const mongo = new MongoClient(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017', { serverSelectionTimeoutMS: 5000 });
@@ -41,7 +42,7 @@ function connectPlayer(index) {
     return new Promise((resolve, reject) => {
       const waiter = { match, resolve, timer: setTimeout(() => {
         waiters.splice(waiters.indexOf(waiter), 1);
-        reject(new Error(`Client ${index}: timeout waiting for message`));
+        reject(new Error(`Client ${index}: timeout waiting for message; received ${JSON.stringify(messages.slice(-5).map(m=>({type:m.type,message:m.message})))}`));
       }, timeoutMs) };
       waiters.push(waiter);
     });
@@ -77,20 +78,29 @@ try {
 
   const players = await Promise.all(Array.from({ length: 8 }, (_, index) => connectPlayer(index)));
   assert.equal(new Set(players.map(player => player.playerId)).size, 8);
+  const rewardRequest={type:'game_action',requestId:randomUUID(),action:'claim_daily_reward',payload:{coins:999999}};
+  players[0].socket.send(JSON.stringify(rewardRequest));
+  const reward=await players[0].waitFor(message=>message.type==='account_state'&&message.requestId===rewardRequest.requestId);
+  assert.equal(reward.result.communityReward.coins,200);
+  assert.equal(reward.progress.coins,380);
+  players[0].socket.send(JSON.stringify({...rewardRequest,requestId:randomUUID()}));
+  await players[0].waitFor(message=>message.type==='action_error'&&message.message.includes('đã nhận thưởng'));
+  const persisted=await mongo.db(databaseName).collection('players').findOne({playerId:players[0].playerId});
+  assert.equal(persisted.progress.coins,380,'network retries cannot duplicate daily reward');
   await Promise.all(players.map(player => player.waitFor(message =>
     message.type === 'world_state' && message.players.length === 8 &&
     new Set(message.players.map(other => other.playerId)).size === 8)));
 
   const start = Date.now();
   await Promise.all(players.map((player, index) => {
-    const x = index * 0.5;
-    player.socket.send(JSON.stringify({ type: 'move', x, y: 0, z: 18, rotation: index * 0.1 }));
+    const x = TOWN_SPAWN.x + index * 0.1;
+    player.socket.send(JSON.stringify({ type: 'move', x, y: 0, z: TOWN_SPAWN.z, rotation: index * 0.1 }));
     return player.waitFor(message => message.type === 'move_ack' && message.accepted === true && message.x === x);
   }));
   const moveAckMs = Date.now() - start;
   const synchronized = await players[0].waitFor(message =>
     message.type === 'world_state' && message.players.length === 8 &&
-    message.players.some(other => other.playerId === players[7].playerId && other.x === 3.5));
+    message.players.some(other => other.playerId === players[7].playerId && Math.abs(other.x-TOWN_SPAWN.x-.7)<.0001));
   assert.equal(synchronized.players.length, 8);
 
   players[7].socket.close();

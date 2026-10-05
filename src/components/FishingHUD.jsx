@@ -37,11 +37,19 @@ export function FishingHUD({ fishing, connected, water, send, cast, serverOffset
   useEffect(()=>()=>{audio.current?.close().catch(()=>{});},[]);
   const pending=fishing?.pending;
   const hold = value => { held.current=value;setPressed(value); };
+  const canCast=connected&&water&&fishing?.equippedRod&&!pending&&fishingInventoryCount(fishing)<fishingCapacity(fishing);
+  const repeatCast=()=>{
+    if(!canCast)return;
+    const time=Date.now()+serverOffset;
+    if(time-actionSent.current.at<1300)return;
+    actionSent.current={key:'cast',at:time};
+    clearCaught();tone(440);cast();
+  };
   useEffect(()=>{held.current=false;setPressed(false);sent.current={key:'',at:0};actionSent.current={key:'',at:0};},[pending?.id,pending?.phase,connected]);
   const primary = () => {
     if(!connected)return;
     const time=Date.now()+serverOffset;
-    if(caught){clearCaught();return;}
+    if(caught){repeatCast();return;}
     if(pending?.phase==='fighting')return;
     if(pending && (time<pending.biteAt || time>pending.expiresAt))return;
     if(!pending && (!water || !fishing?.equippedRod || fishingInventoryCount(fishing)>=fishingCapacity(fishing)))return;
@@ -85,16 +93,18 @@ export function FishingHUD({ fishing, connected, water, send, cast, serverOffset
   },[now,pending,connected,send]);
   if(caught){
     const fish=FISHING_CONFIG.fish[caught.fishCaught];
-    return <section className="fish-result" role="dialog" aria-label="Cá vừa bắt"><span className="fish-result-art"><VectorFish size={64} color={fish?.color || '#38bdf8'} /></span><small>{caught.rarity} · {caught.zone}</small><h2>{fish?.name}</h2><b>{Number(caught.weight).toFixed(2)} kg</b><p>Đã vào thùng cá · giá trị {caught.value} xu</p><button onClick={clearCaught}>Câu tiếp</button></section>;
+    const rarity={common:'Thông thường',uncommon:'Ít gặp',rare:'Hiếm',epic:'Quý hiếm',legendary:'Huyền thoại'}[caught.rarity]||'Cá vừa bắt';
+    return <section className="fish-result" role="dialog" aria-label="Cá vừa bắt"><span className="fish-result-art"><VectorFish size={80} color={fish?.color || '#38bdf8'} /></span><small>{rarity}</small><h2>{fish?.name}</h2><b>{Number(caught.weight).toFixed(2)} kg</b><p>Đã vào thùng cá · giá trị {caught.value} xu</p><button disabled={!canCast} onClick={repeatCast}>Thả câu tiếp · F</button>{!canCast&&<p role="status">{!connected?'Đang chờ kết nối':!water?'Quay lại bờ nước để câu tiếp':!fishing?.equippedRod?'Trang bị cần câu trước':'Thùng cá đầy — hãy bán cá'}</p>}<button className="fish-cancel" onClick={clearCaught}>Cất cá</button></section>;
   }
   if(!pending && !water)return null;
   const fighting=pending?.phase==='fighting', biting=pending && !fighting && now>=pending.biteAt && now<=pending.expiresAt;
   const struggling=fighting&&fishResistance(pending,now);
-  return <section className="fish-hud" aria-label="Câu cá">
+  return <section className={`fish-hud fish-state-${fighting?'fighting':biting?'bite':pending?'waiting':'ready'}`} aria-label="Câu cá">
     <header><b style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dFishingRodBamboo size={18} /> {fighting?'Kéo cá':biting?'Cá cắn!':'Câu cá'}</b><small>{fishingInventoryCount(fishing)}/{fishingCapacity(fishing)} cá</small></header>
     {fighting ? <>
       <label>Lực căng dây <strong>{Math.round(pending.tension)}%</strong></label>
-      <meter aria-label="Lực căng dây" min="0" max="100" low="20" high="80" optimum="45" value={pending.tension}/>
+      <div className="fish-tension-track" role="meter" aria-label="Lực căng dây" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pending.tension)}><span className="fish-tension-safe"/><i style={{left:`${Math.max(0,Math.min(100,pending.tension))}%`}}/></div>
+      <div className="fish-tension-labels"><span>Chùng</span><span>An toàn</span><span>Đứt dây</span></div>
       <label>Kéo cá về <strong>{Math.round(pending.pull)}%</strong></label><progress aria-label="Tiến độ kéo cá" max="100" value={pending.pull}/>
       <p>{struggling?'Cá vùng vẫy — thả nút để giảm căng!':'Giữ nút kéo, giữ lực căng trong vùng an toàn.'}</p>
       <button className="fish-pull" aria-pressed={pressed} disabled={!connected} onBlur={()=>hold(false)} onPointerDown={e=>{if(e.button!==0)return;e.currentTarget.setPointerCapture(e.pointerId);hold(true);}} onPointerUp={()=>hold(false)} onPointerCancel={()=>hold(false)} onLostPointerCapture={()=>hold(false)} onKeyDown={e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();e.stopPropagation();hold(true);}}} onKeyUp={e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();e.stopPropagation();hold(false);}}}>{pressed?'Đang kéo… · thả để hạ lực':'Giữ kéo cá · F'}</button>

@@ -110,25 +110,6 @@ export const ALL_BRIDGES = Object.freeze([
     lanternCount: 2,
     pierCount: 0,
   },
-  {
-    id: 'bridge-park-stone',
-    name: 'Cầu Đá Hoa Viên',
-    subtitle: 'Công Viên Trung Tâm',
-    type: BRIDGE_TYPES.PEDESTRIAN_STONE,
-    cx: 88,
-    cz: 48,
-    spanX: 9,
-    widthZ: 3.2,
-    deckY: 0.12,
-    archPeakY: 0.35,
-    rampLen: 1.8,
-    stoneColor: '#cbd5e1',
-    railColor: '#94a3b8',
-    accentColor: '#e2e8f0',
-    hasLanterns: false,
-    lanternCount: 0,
-    pierCount: 0,
-  },
 ]);
 
 /**

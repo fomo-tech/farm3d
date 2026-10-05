@@ -10,7 +10,8 @@ import {
   createChibiMelonMesh,
   createChibiTomatoMesh,
   createChibiWheatMesh,
-} from '../world/createPlayTogetherProps.js';
+  createChibiStrawberryMesh,
+} from './createBotanicalCrops.js';
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
 
 function getSoilMaterial(scene) {
@@ -47,8 +48,9 @@ function buildCropMesh(scene, cropId, progress, key, shadows = null) {
     case 'melon':
       return createChibiMelonMesh(scene, key, progress, { shadows });
     case 'tomato':
-    case 'strawberry':
       return createChibiTomatoMesh(scene, key, progress, { shadows });
+    case 'strawberry':
+      return createChibiStrawberryMesh(scene, key, progress, { shadows });
     case 'wheat':
       return createChibiWheatMesh(scene, key, progress, { shadows });
     default:

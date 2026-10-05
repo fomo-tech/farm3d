@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrivalAvatar } from './ArrivalAvatar.jsx';
 import './CharacterArrival.css';
+import './CharacterGameStyle.css';
 import {
   Icon3dNonLa,
   Icon3dShirt,
@@ -119,10 +120,10 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
           <div className="pt-studio-header">
             <div className="pt-studio-badge">
               <Icon3dSparkleStar size={20} />
-              <span>VIBE CITY · CƯ DÂN MỚI</span>
+              <span>LÀNG BÌNH MINH · TẠO NHÂN VẬT</span>
               <Icon3dPartyPopper size={20} />
             </div>
-            <h2>Xin chào, bạn mới!</h2>
+            <h2>Sẵn sàng vào thị trấn?</h2>
             <p>Đặt tên và bắt đầu với trang phục cơ bản. Bạn có thể mua đồ mới sau này.</p>
           </div>
 
@@ -177,13 +178,13 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
                     maxLength={18}
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    placeholder="Nhập biệt danh cute…"
+                    placeholder="Đặt tên riêng của bạn"
                   />
                   <button
                     type="button"
                     className={`pt-dice-btn ${diceRolling ? 'is-rolling' : ''}`}
                     onClick={handleRollDice}
-                    title="Gợi ý tên ngẫu nhiên siêu ngộ nghĩnh!"
+                    title="Gợi ý tên nhân vật"
                     aria-label="Xúc xắc chọn tên ngẫu nhiên"
                   >
                     <Icon3dDice size={28} />
@@ -282,7 +283,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
                 disabled={!name.trim()}
                 onClick={handleCompleteStudio}
               >
-                Tiếp tục →
+                Xác nhận nhân vật →
               </button>
             </div>
           </div>

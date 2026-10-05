@@ -55,6 +55,7 @@ function createSoilMound(scene, parent, key, { diameter = 1.15, height = 0.24, r
  * Tinh gọn, vừa vặn tầm mắt, xoay chậm và nhấp nhô nhẹ nhàng
  */
 export function createHarvestStar(scene, parent, key, options = {}) {
+  if (options.showHarvestMarker !== true) return null;
   const { height = 1.48, scale = 0.75 } = options;
   const starRoot = new TransformNode(`harvest-star-root-${key}`, scene);
   starRoot.position.set(0, height, 0);

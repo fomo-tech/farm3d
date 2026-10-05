@@ -534,3 +534,5 @@
   transform: none;
   box-shadow: 0 2px 0 #94a3b8;
 }
+.world-map-overview{padding:12px 20px;background:#edf2f4}.world-map-overview svg{display:block;width:100%;max-height:300px;border:1px solid #758d99;border-radius:10px}.world-map-overview small{display:block;color:#345365;font-size:11px;margin-top:6px}
+.pt-map-backdrop .pt-map-modal{width:min(1120px,96vw);max-height:94vh;border-radius:16px;overflow-y:auto;display:block}.pt-map-backdrop .pt-map-header{background:#23485a;padding:12px 20px;box-shadow:none}.pt-map-backdrop .pt-map-header-ribbon{display:none}.pt-map-backdrop .pt-map-title{font-size:20px}.pt-map-backdrop .world-map-overview{padding:12px 16px;background:#e6eddf}.pt-map-backdrop .world-map-overview svg{max-height:none;aspect-ratio:5/3}.pt-map-backdrop .pt-map-home-banner{padding:8px 16px}.pt-map-backdrop .pt-map-radar-strip{flex-wrap:wrap}.pt-map-backdrop .pt-map-tabs{flex-wrap:wrap;overflow:visible}.pt-map-backdrop .pt-map-grid{max-height:none;overflow:visible}@media(max-width:700px){.pt-map-backdrop .world-map-overview{overflow-x:auto}.pt-map-backdrop .world-map-overview svg{min-width:650px}}

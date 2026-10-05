@@ -16,9 +16,12 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
   let blushColor = options.blushColor || '#ef9e94';
   let smileColor = options.smileColor || '#55302b';
 
+  // Spend the extra texture resolution on the local avatar, not every remote
+  // player in a crowded square. Keep mipmaps for clean distant faces.
+  const textureSize = idPrefix === 'local-player' ? 1024 : CHARACTER_RENDER_CONFIG.geometryBudget.faceTextureSize;
   const texture = new DynamicTexture(
     `${idPrefix}-face-deluxe-tex`,
-    { width: CHARACTER_RENDER_CONFIG.geometryBudget.faceTextureSize, height: CHARACTER_RENDER_CONFIG.geometryBudget.faceTextureSize },
+    { width: textureSize, height: textureSize },
     scene,
     true,
     Texture.TRILINEAR_SAMPLINGMODE
@@ -34,7 +37,7 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
 
   function renderFace(expression = 'happy') {
     const ctx = texture.getContext();
-    const drawScale = CHARACTER_RENDER_CONFIG.geometryBudget.faceTextureSize / 1024;
+    const drawScale = textureSize / 1024;
     ctx.setTransform(drawScale, 0, 0, drawScale, 0, 0);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
@@ -43,8 +46,8 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
     const eyeLeftX = 340;
     const eyeRightX = 684;
     const eyeY = 455;
-    const eyeRadiusX = 90;
-    const eyeRadiusY = 108;
+    const eyeRadiusX = 100;
+    const eyeRadiusY = 102;
 
     // 1. MÁ HỒNG CHIBI (BLUSH)
     const blushY = 575;
@@ -52,20 +55,31 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
     if (blushType === 'peach') {
       [eyeLeftX - 60, eyeRightX + 60].forEach(bx => {
         const grad = ctx.createRadialGradient(bx, blushY, 6, bx, blushY, blushRadius);
-        grad.addColorStop(0, 'rgba(239, 158, 148, 0.55)');
-        grad.addColorStop(0.45, 'rgba(239, 158, 148, 0.25)');
+        grad.addColorStop(0, 'rgba(239, 158, 148, 0.35)');
+        grad.addColorStop(0.45, 'rgba(239, 158, 148, 0.15)');
         grad.addColorStop(1, 'rgba(251, 113, 133, 0)');
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(bx, blushY, blushRadius, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.globalAlpha = 0.14;
+        ctx.globalAlpha = 0.16;
         ctx.fillStyle = blushColor;
         ctx.beginPath();
-        ctx.ellipse(bx, blushY, 42, 18, 0, 0, Math.PI * 2);
+        ctx.ellipse(bx, blushY, 44, 20, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
+
+        // Vệt má hồng chéo phớt nhẹ phong cách anime Play Together (///)
+        ctx.strokeStyle = 'rgba(244, 63, 94, 0.35)';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        [-14, 0, 14].forEach(offset => {
+          ctx.beginPath();
+          ctx.moveTo(bx + offset - 7, blushY - 9);
+          ctx.lineTo(bx + offset + 7, blushY + 9);
+          ctx.stroke();
+        });
       });
     } else if (blushType === 'heart') {
       [eyeLeftX - 60, eyeRightX + 60].forEach(bx => {
@@ -88,9 +102,9 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
 
     // 2. MŨI CHIBI (NOSE)
     if (noseType === 'dot') {
-      ctx.fillStyle = 'rgba(217, 119, 6, 0.32)';
+      ctx.fillStyle = 'rgba(126, 77, 53, 0.55)';
       ctx.beginPath();
-      ctx.ellipse(512, 532, 10, 6, 0, 0, Math.PI * 2);
+      ctx.ellipse(512, 552, 15, 9, 0, 0, Math.PI * 2);
       ctx.fill();
     } else if (noseType === 'cat_nose') {
       ctx.fillStyle = '#f43f5e';
@@ -121,7 +135,7 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
 
     // 4. LÔNG MÀY THANH TÚ
     ctx.strokeStyle = '#3e2723';
-    ctx.lineWidth = 10;
+    ctx.lineWidth = 16;
     ctx.lineCap = 'round';
     if (expression === 'excited') {
       drawArc(ctx, eyeLeftX, eyeY - 105, 48, -0.22);
@@ -130,8 +144,14 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
       drawArc(ctx, eyeLeftX, eyeY - 118, 50, 0);
       drawArc(ctx, eyeRightX, eyeY - 118, 50, 0);
     } else {
-      drawArc(ctx, eyeLeftX, eyeY - 90, 46, 0.08);
-      drawArc(ctx, eyeRightX, eyeY - 90, 46, -0.08);
+      // Relaxed brows with distinct ends instead of tiny surprised arcs.
+      [eyeLeftX, eyeRightX].forEach((ex, i) => {
+        const side = i === 0 ? -1 : 1;
+        ctx.beginPath();
+        ctx.moveTo(ex - side * 58, eyeY - 141);
+        ctx.quadraticCurveTo(ex, eyeY - 157, ex + side * 62, eyeY - 135);
+        ctx.stroke();
+      });
     }
 
     // 5. KHUÔN MIỆNG
@@ -188,25 +208,70 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
       drawSurprisedEye(ctx, x, y, 78, darkColor, irisTint);
     } else {
       // Classic
-      drawChibiEye(ctx, x, y, rx, ry, darkColor, irisTint);
+      drawChibiEye(ctx, x, y, rx, ry, darkColor, irisTint, side);
     }
   }
 
-  function drawChibiEye(ctx, x, y, rx, ry, darkColor, irisTint) {
+  function drawChibiEye(ctx, x, y, rx, ry, darkColor, irisTint, side = 1) {
+    // Almond-soft outline and visible sclera make the gaze readable even
+    // when the avatar occupies only a small area of the screen.
     ctx.fillStyle = darkColor;
     ctx.beginPath();
     ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = irisTint;
+    ctx.fillStyle = '#fff8f0';
     ctx.beginPath();
-    ctx.ellipse(x, y + ry * 0.38, rx * 0.65, ry * 0.36, 0, 0, Math.PI);
+    ctx.ellipse(x, y + 4, rx * 0.88, ry * 0.86, 0, 0, Math.PI * 2);
     ctx.fill();
 
+    // Vibrant gradient iris with rich shading
+    const iris = ctx.createLinearGradient(x, y - ry, x, y + ry);
+    iris.addColorStop(0, darkColor);
+    iris.addColorStop(0.55, irisTint);
+    iris.addColorStop(1, '#ffffff');
+    ctx.fillStyle = iris;
+    ctx.beginPath();
+    ctx.ellipse(x, y + ry * 0.08, rx * 0.68, ry * 0.82, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Deep inner pupil
+    ctx.fillStyle = '#1c151b';
+    ctx.beginPath();
+    ctx.ellipse(x, y - ry * 0.02, rx * 0.40, ry * 0.54, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Lower anime crescent reflection
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
+    ctx.beginPath();
+    ctx.arc(x, y + ry * 0.40, rx * 0.40, Math.PI * 0.15, Math.PI * 0.85);
+    ctx.fill();
+
+    // Main anime catchlight
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.ellipse(x + rx * 0.22, y - ry * 0.28, 19, 24, 0, 0, Math.PI * 2);
+    ctx.ellipse(x - rx * 0.22, y - ry * 0.34, 24, 27, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // Secondary twinkle catchlight
+    ctx.globalAlpha = 0.85;
+    ctx.beginPath();
+    ctx.arc(x + rx * 0.28, y + ry * 0.32, 11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Play Together stylized upper eyeliner and cute outer lash flick
+    ctx.strokeStyle = '#1e1b18';
+    ctx.lineWidth = 14;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(x, y + ry * 0.04, rx * 0.92, Math.PI * 1.14, Math.PI * 1.86);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x + side * rx * 0.80, y - ry * 0.26);
+    ctx.lineTo(x + side * (rx * 1.08), y - ry * 0.46);
+    ctx.stroke();
   }
 
   function drawSparkleEye(ctx, x, y, rx, ry, darkColor, irisTint) {
@@ -351,12 +416,13 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
 
   function drawMouthClassic(ctx, x, y, color) {
     ctx.strokeStyle = color;
-    ctx.lineWidth = 11;
+    ctx.lineWidth = 15;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
     ctx.beginPath();
-    ctx.arc(x, y - 16, 65, Math.PI * 0.12, Math.PI * 0.88);
+    ctx.moveTo(x - 65, y + 4);
+    ctx.bezierCurveTo(x - 34, y + 42, x + 34, y + 42, x + 65, y + 4);
     ctx.stroke();
 
     ctx.fillStyle = color;

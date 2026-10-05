@@ -42,8 +42,6 @@ import {
   createSmartBusShelter,
   createLuckyWheel3D,
   createClawMachine3D,
-  createDowntownSkatePark,
-  createTownDirectoryKiosk,
   createSkateboardRack,
 } from './landmarks/createPlazaAmenities.js';
 import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
@@ -810,14 +808,14 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
     yield;
   const clawMachine = createClawMachine3D(scene, shadows, { x: -36, y: 0, z: -12 }, -Math.PI / 4);
     yield;
-  // Phía Tây: Sân trượt ván & giá ván trượt Downtown
-  const skatePark = createDowntownSkatePark(scene, shadows, { x: -22, y: 0, z: -38 }, Math.PI / 4);
-    yield;
+  // Removed the skatepark ramp/funbox/rails at the user's request.
+  // Preserve the scene result shape for existing callers.
+  const skatePark = null;
+  // Phía Tây: Giá ván trượt Downtown (vật thể riêng, giữ nguyên).
   const skateboardRack = createSkateboardRack(scene, shadows, { x: -28, y: 0, z: -36 }, -Math.PI / 4);
     yield;
-  // Kiosk thông tin định vị thị trấn đặt nép vỉa hè Tây, tuyệt đối không chắn trục tâm
-  const directoryKiosk = createTownDirectoryKiosk(scene, shadows, { x: -12.5, y: 0, z: 24 });
-    yield;
+  // Removed the black/cyan directory kiosk near the western plaza entrance.
+  const directoryKiosk = null;
 
   // 4. Tòa Thị Chính Đô Thị Hiện Đại & Tháp Đồng Hồ 28m (Metropolis Civic City Hall)
   // Di dời sang khuôn viên công quyền phía Tây x: -38 để giải phóng 100% trục đường Bắc x: 0

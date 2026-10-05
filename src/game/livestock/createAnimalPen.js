@@ -152,6 +152,11 @@ function createChickenCoopHouse(scene, x, z, materials, shadows) {
 }
 
 export function createAnimalPen(scene, origin, shadows) {
+  // Đã xóa chuồng gia súc tại (88, 112) theo yêu cầu người dùng
+  return {
+    update() {},
+    dispose() {},
+  };
   const materials = {
     wood: material(scene, 'pen-wood-deep', '#795548'),
     postWood: material(scene, 'pen-post-wood', '#5d4037'),

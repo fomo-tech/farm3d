@@ -117,69 +117,7 @@ export function* createVietnameseCountrysideSteps(scene, shadows) {
   // 1. HÀNG RÀO GỖ TRẮNG NÔNG TRANG NGOẠI Ô (WHITE PICKET FENCES)
   // Đã giải phóng hoàn toàn hành lang Quốc Lộ 86 (z = 86) để các tuyến xe buýt và phương tiện thông suốt 100%
 
-  // 2. KHU ĐỒNG CỎ CHĂN THẢ BÒ SỮA SẠCH ĐẸP (DAIRY COW PASTURE)
-  // Bố trí tại khuôn viên đồng quê (x: 88, z: 112) - Hoàn toàn nằm ngoài hành lang an toàn của mọi trục đường
-  const pastureGrass = MeshBuilder.CreateDisc('dairy-pasture-green', { radius: 10, tessellation: 36 }, scene);
-    yield;
-  pastureGrass.rotation.x = Math.PI / 2;
-    yield;
-  pastureGrass.position.set(88, 0.05, 112);
-    yield;
-  pastureGrass.material = materials.grassPasture;
-    yield;
-  pastureGrass.parent = root;
-    yield;
-
-  // Hàng rào gỗ trắng bao quanh bãi chăn thả an toàn
-  createWhitePicketFence(scene, shadows, 20, { x: 88, y: 0, z: 102 }, 0, root);
-    yield;
-  createWhitePicketFence(scene, shadows, 20, { x: 88, y: 0, z: 122 }, 0, root);
-    yield;
-  createWhitePicketFence(scene, shadows, 20, { x: 78, y: 0, z: 112 }, Math.PI / 2, root);
-    yield;
-  createWhitePicketFence(scene, shadows, 20, { x: 98, y: 0, z: 112 }, Math.PI / 2, root);
-    yield;
-
-  // Máng cỏ gỗ sạch sẽ cho bò sữa
-  const feedTrough = MeshBuilder.CreateBox('cow-feed-trough', { width: 3.8, height: 0.6, depth: 1.1 }, scene);
-    yield;
-  feedTrough.position.set(88, 0.3, 104);
-    yield;
-  feedTrough.material = materials.timber;
-    yield;
-  feedTrough.parent = root;
-    yield;
-
-  const troughHay = MeshBuilder.CreateBox('cow-trough-hay', { width: 3.5, height: 0.3, depth: 0.9 }, scene);
-    yield;
-  troughHay.position.set(88, 0.5, 104);
-    yield;
-  troughHay.material = materials.straw;
-    yield;
-  troughHay.parent = root;
-    yield;
-
-  // Đàn bò sữa Holstein 3D thảnh thơi nhai cỏ
-  const cow1 = spawnModelSync(scene, MODEL_PATHS.animals.cow, {
-    position: new Vector3(86, 0, 110),
-    rotation: new Vector3(0, 0.4, 0),
-    scaling: new Vector3(0.48, 0.48, 0.48),
-    shadows,
-    name: 'pasture-cow-1',
-  });
-    yield;
-  if (cow1) cow1.parent = root;
-    yield;
-
-  const cow2 = spawnModelSync(scene, MODEL_PATHS.animals.cow, {
-    position: new Vector3(91, 0, 115),
-    rotation: new Vector3(0, -1.8, 0),
-    scaling: new Vector3(0.45, 0.45, 0.45),
-    shadows,
-    name: 'pasture-cow-2',
-  });
-    yield;
-  if (cow2) cow2.parent = root;
+  // 2. (Đã dọn dẹp chuồng trại và rào chắn tại x=88, z=112 theo yêu cầu)
     yield;
 
   // 3. CÁC KIỆN RƠM VÀNG ĐÓNG KHỐI (HAY BALES) XẾP TẦNG CẠNH TRANG TRẠI (TUYỆT ĐỐI KHÔNG CHẮN ĐƯỜNG)

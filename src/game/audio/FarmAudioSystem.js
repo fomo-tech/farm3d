@@ -44,7 +44,7 @@ class FarmAudioSystem {
   ensureContext() {
     if (!this.isInitialized) this.init();
     if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
+      this.ctx.resume().catch(() => {});
     }
   }
 
@@ -78,6 +78,27 @@ class FarmAudioSystem {
   }
 
   // Tiếng cuốc đất (Hoe dirt sound)
+  playCoins() {
+    // Optional feedback must never prevent a server-bound transaction.
+    try {
+      this.ensureContext();
+      if (this.isMuted || !this.ctx) return;
+      const now = this.ctx.currentTime;
+      [880, 1320, 1760].forEach((frequency, index) => {
+        const at = now + index * 0.055;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(frequency, at);
+        gain.gain.setValueAtTime(0.1, at);
+        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.16);
+        osc.connect(gain);gain.connect(this.sfxGain);
+        osc.onended = () => { osc.disconnect();gain.disconnect(); };
+        osc.start(at);osc.stop(at + 0.16);
+      });
+    } catch { /* Sound is optional; keep the gameplay action running. */ }
+  }
+
   playHoe() {
     this.ensureContext();
     if (this.isMuted || !this.ctx) return;

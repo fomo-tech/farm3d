@@ -99,6 +99,19 @@ export const TOPS = Object.freeze([
   { id: 'top_vampire_count', name: 'Áo Bá Tước Ma Cà Rồng', desc: 'Cổ áo dựng nhọn uy quyền, áo gile nhung đỏ thẫm đính huân chương dơi bạc', color: '#7f1d1d', cost: 590, rarity: 'legendary', tag: 'GOTHIC' },
   { id: 'top_kimono_sakura', name: 'Yukata Hoa Anh Đào', desc: 'Trang phục kimono truyền thống vạt chéo, đai lưng Obi vàng hoa rực rỡ', color: '#f472b6', cost: 520, rarity: 'epic', tag: 'FESTIVAL' },
   { id: 'top_teddy_mascot', name: 'Áo Gấu Bông Teddy Khổng Lồ', desc: 'Áo bông lông xù tròn xoe ấm áp phong cách linh vật mascot Play Together', color: '#92400e', cost: 580, rarity: 'legendary', tag: 'MASCOT' },
+  // Áo dài Việt Nam Nam & Nữ
+  { id: 'top_aodai_nu_sen', name: 'Áo Dài Nữ Hoa Sen Hồng', desc: 'Áo dài lụa truyền thống dáng ôm tôn nét duyên, cổ cao 3 phân, hai tà áo thướt tha mềm mại', color: '#f472b6', cost: 580, rarity: 'legendary', tag: 'VIETNAM' },
+  { id: 'top_aodai_nu_trang', name: 'Áo Dài Trắng Nữ Sinh Tinh Khôi', desc: 'Áo dài lụa trắng thanh khiết, cổ tàu truyền thống duyên dáng tà áo bay nhẹ trong gió', color: '#ffffff', cost: 480, rarity: 'epic', tag: 'VIETNAM' },
+  { id: 'top_aodai_nam_gam', name: 'Áo Dài Nam Cách Tân Gấm Rồng', desc: 'Áo dài nam ngũ thân cách tân chất gấm xanh hoàng gia, vạt chéo đính khuy đồng vương giả', color: '#1e3a8a', cost: 580, rarity: 'legendary', tag: 'VIETNAM' },
+  { id: 'top_aodai_nam_gold', name: 'Áo Dài Nam Hoàng Triều Gấm Vàng', desc: 'Áo dài nam cách tân gấm vàng thêu họa tiết mây hoàng cung, tôn phong thái đĩnh đạc uy nghiêm', color: '#eab308', cost: 620, rarity: 'legendary', tag: 'VIETNAM' },
+  // Thời trang Học Đường & K-Pop Streetwear
+  { id: 'top_kpop_streetwear', name: 'Áo Thun K-Pop Idol Streetwear', desc: 'Áo thun đen form rộng layering cổ lọ trắng, phối dây xích bạc và quai chéo sân khấu cực chất', color: '#18181b', cost: 490, rarity: 'epic', tag: 'KPOP' },
+  { id: 'top_kpop_harness_crop', name: 'Croptop K-Pop Dây Đai Idol', desc: 'Croptop đen cá tính phối harness đai da và xích kim loại biểu diễn sân khấu', color: '#09090b', cost: 520, rarity: 'legendary', tag: 'KPOP' },
+  { id: 'top_kpop_cardigan_school', name: 'Áo Cardigan Học Đường Idol', desc: 'Cardigan dệt kim kẻ sọc cổ V phong cách học sinh K-Drama, phối sơ mi trắng cà vạt lỏng', color: '#334155', cost: 450, rarity: 'epic', tag: 'ACADEMY' },
+  // Áo Vest & Blazers
+  { id: 'top_blazer_luxury', name: 'Áo Vest Blazer Doanh Nhân Sang Trọng', desc: 'Áo vest blazer xanh navy may đo cao cấp, ve áo sắc sảo, cúc mạ vàng và khăn lụa cài túi ngực', color: '#0f172a', cost: 580, rarity: 'legendary', tag: 'SUIT' },
+  { id: 'top_vest_tuxedo_white', name: 'Áo Vest Tuxedo Dạ Hội Bạch Kim', desc: 'Bộ Tuxedo trắng muốt quý phái, ve áo satin đen tương phản kèm nơ bướm đen lịch lãm', color: '#f8fafc', cost: 620, rarity: 'legendary', tag: 'VIP' },
+  { id: 'top_vest_pinstripe', name: 'Áo Vest Kẻ Sọc Quý Tộc Anh Quốc', desc: 'Vest hai hàng khuy kẻ sọc pinstripe cổ điển đậm chất quý tộc thành London', color: '#1e293b', cost: 600, rarity: 'legendary', tag: 'SUIT' },
 ]);
 
 export const BOTTOMS = Object.freeze([
@@ -119,6 +132,11 @@ export const BOTTOMS = Object.freeze([
   { id: 'bot_royal_prince_pants', name: 'Quần Lụa Hoàng Tử Viền Vàng', desc: 'Quần tây trắng kẻ sọc vàng hoàng gia đồng điệu áo hoàng tử', color: '#ffffff', cost: 480, rarity: 'epic', tag: 'MYTHIC' },
   { id: 'bot_gothic_lolita_skirt', name: 'Chân Váy Gothic Lolita Ren Đen', desc: 'Váy xòe phồng ren đen ma mị phong cách quý tộc gothic', color: '#18181b', cost: 560, rarity: 'epic', tag: 'GOTHIC' },
   { id: 'bot_teddy_pants', name: 'Quần Gấu Bông Mập Mạp', desc: 'Quần lông gấu nâu phồng to tròn xoe đồng bộ mascot', color: '#92400e', cost: 460, rarity: 'epic', tag: 'MASCOT' },
+  // Áo dài Việt Nam - Quần lụa
+  { id: 'bot_aodai_pants_silk', name: 'Quần Lụa Trắng Thướt Tha Áo Dài', desc: 'Quần lụa trắng ống rộng mềm mại kết hợp hài hòa cùng tà áo dài truyền thống', color: '#fdfbf7', cost: 380, rarity: 'epic', tag: 'VIETNAM' },
+  { id: 'bot_aodai_pants_black', name: 'Quần Lụa Đen Truyền Thống', desc: 'Quần lụa đen óng ả phong cách cổ điển truyền thống tôn dáng tà áo dài', color: '#1e293b', cost: 340, rarity: 'epic', tag: 'VIETNAM' },
+  // K-Pop Streetwear
+  { id: 'bot_kpop_cargo_chains', name: 'Quần Hộp K-Pop Dây Xích Streetwear', desc: 'Quần túi hộp baggy đen đính xích kim loại và đai rủ phong cách thần tượng K-Pop', color: '#18181b', cost: 420, rarity: 'epic', tag: 'KPOP' },
 ]);
 
 export const SHOES = Object.freeze([
@@ -164,6 +182,12 @@ export const EARS_OPTIONS = Object.freeze([
   { id: 'cape_royal', name: 'Áo Choàng Hoàng Gia Viền Lông', desc: 'Áo choàng nhung đỏ thẫm viền lông trắng phấp phới khi chạy', cost: 690, rarity: 'legendary', tag: 'ROYAL' },
   { id: 'wings_faerie', name: 'Cánh Bướm Tiên Nữ Tinh Vân', desc: 'Đôi cánh bướm dạ quang phát sáng tự động vỗ cánh lơ lửng', cost: 790, rarity: 'legendary', tag: 'GLOW' },
   { id: 'wings_bat', name: 'Đôi Cánh Dơi Quỷ Dracula', desc: 'Cánh dơi Gothic đen tím vẫy đập huyền bí trong đêm', cost: 680, rarity: 'legendary', tag: 'GOTHIC' },
+  // Phụ kiện truyền thống Việt Nam
+  { id: 'non_la_vietnam', name: 'Nón Lá Việt Nam Truyền Thống', desc: 'Nón lá chóp nón đan nan tre tự nhiên mộc mạc, kèm quai nón lụa mềm mại', cost: 420, rarity: 'legendary', tag: 'VIETNAM' },
+  { id: 'khan_dong_truyenthong', name: 'Khăn Đóng Mấn Gấm Hoàng Gia', desc: 'Khăn đóng quấn nếp gấm xanh hoàng tộc truyền thống sang trọng đồng bộ áo dài', cost: 360, rarity: 'epic', tag: 'VIETNAM' },
+  // Phụ kiện K-Pop
+  { id: 'kpop_beret', name: 'Mũ Beret Idol K-Pop Thời Thượng', desc: 'Mũ nồi beret dạ đen đính huy hiệu kim loại chuẩn phong cách thần tượng dạo phố', cost: 380, rarity: 'epic', tag: 'KPOP' },
+  { id: 'kpop_idol_mic', name: 'Mic Cài Tai Thần Tượng Sân Khấu', desc: 'Microphone headset nhỏ gọn chuyên nghiệp của thần tượng khi biểu diễn', cost: 350, rarity: 'rare', tag: 'KPOP' },
 ]);
 
 export const EYES_OPTIONS = Object.freeze([
@@ -544,6 +568,114 @@ export const FULL_SETS = Object.freeze([
       shoeId: 'shoe_puffy_slides', shoeColor: '#b45309',
       ears: 'bear_ears', eyeType: 'surprised', eyeColor: '#0f172a',
       noseType: 'dot', mouthType: 'cat_mouth', blushType: 'heart',
+    },
+  },
+  {
+    id: 'set_aodai_nu_vietnam',
+    name: 'Hương Sắc Áo Dài Việt Nam',
+    desc: 'Trọn bộ áo dài lụa hồng hoa sen, quần lụa trắng thướt tha và nón lá truyền thống',
+    hair: 'hair_ponytail', hairColor: '#1e293b',
+    top: 'top_aodai_nu_sen', bottom: 'bot_aodai_pants_silk',
+    shoes: 'shoe_doll_flats', ears: 'non_la_vietnam',
+    cost: 1450,
+    rarity: 'legendary',
+    customization: {
+      hairStyle: 'hair_ponytail', hairColor: '#1e293b',
+      topId: 'top_aodai_nu_sen', topColor: '#f472b6',
+      bottomId: 'bot_aodai_pants_silk', bottomColor: '#fdfbf7',
+      shoeId: 'shoe_doll_flats', shoeColor: '#e11d48',
+      ears: 'non_la_vietnam', eyeType: 'smile_arc', eyeColor: '#785242',
+      noseType: 'dot', mouthType: 'smile', blushType: 'peach',
+    },
+  },
+  {
+    id: 'set_aodai_nam_vietnam',
+    name: 'Áo Dài Nam Khăn Đóng Hoàng Triều',
+    desc: 'Trọn bộ áo dài nam cách tân gấm rồng, quần lụa, khăn đóng vương giả và giày da Oxford',
+    hair: 'hair_slick_side', hairColor: '#1e293b',
+    top: 'top_aodai_nam_gam', bottom: 'bot_aodai_pants_silk',
+    shoes: 'shoe_oxford_wingtip', ears: 'khan_dong_truyenthong',
+    cost: 1480,
+    rarity: 'legendary',
+    customization: {
+      hairStyle: 'hair_slick_side', hairColor: '#1e293b',
+      topId: 'top_aodai_nam_gam', topColor: '#1e3a8a',
+      bottomId: 'bot_aodai_pants_silk', bottomColor: '#fdfbf7',
+      shoeId: 'shoe_oxford_wingtip', shoeColor: '#3f1a0e',
+      ears: 'khan_dong_truyenthong', eyeType: 'classic', eyeColor: '#0f172a',
+      noseType: 'dot', mouthType: 'smile', blushType: 'none',
+    },
+  },
+  {
+    id: 'set_kpop_stage_idol',
+    name: 'Thần Tượng Sân Khấu K-Pop',
+    desc: 'Set trang phục biểu diễn sân khấu gồm áo layering xích kim loại, quần hộp dây rủ, mũ beret và sneaker chunky',
+    hair: 'hair_wolf_cut', hairColor: '#1e293b',
+    top: 'top_kpop_streetwear', bottom: 'bot_kpop_cargo_chains',
+    shoes: 'shoe_chunky_white', ears: 'kpop_beret',
+    cost: 1550,
+    rarity: 'legendary',
+    customization: {
+      hairStyle: 'hair_wolf_cut', hairColor: '#1e293b',
+      topId: 'top_kpop_streetwear', topColor: '#18181b',
+      bottomId: 'bot_kpop_cargo_chains', bottomColor: '#18181b',
+      shoeId: 'shoe_chunky_white', shoeColor: '#ffffff',
+      ears: 'kpop_beret', eyeType: 'cat_eyes', eyeColor: '#0284c7',
+      noseType: 'dot', mouthType: 'smile', blushType: 'peach',
+    },
+  },
+  {
+    id: 'set_kpop_kdrama_academy',
+    name: 'Nam Thần Học Đường K-Drama',
+    desc: 'Áo cardigan dệt kim phối sơ mi cà vạt, quần tây ống suông, giày loafer và kính tròn trí thức',
+    hair: 'hair_slick_side', hairColor: '#451a03',
+    top: 'top_kpop_cardigan_school', bottom: 'bot_suit_slacks',
+    shoes: 'shoe_school_loafers', ears: 'round_glasses',
+    cost: 1390,
+    rarity: 'epic',
+    customization: {
+      hairStyle: 'hair_slick_side', hairColor: '#451a03',
+      topId: 'top_kpop_cardigan_school', topColor: '#334155',
+      bottomId: 'bot_suit_slacks', bottomColor: '#1e293b',
+      shoeId: 'shoe_school_loafers', shoeColor: '#0f172a',
+      ears: 'round_glasses', eyeType: 'classic', eyeColor: '#0f172a',
+      noseType: 'dot', mouthType: 'smile', blushType: 'none',
+    },
+  },
+  {
+    id: 'set_executive_blazer',
+    name: 'Quý Ông Doanh Nhân Thành Đạt',
+    desc: 'Trọn bộ vest blazer xanh navy, sơ mi trắng cà vạt, quần tây ly thẳng và giày da Oxford Brogue',
+    hair: 'hair_slick_side', hairColor: '#1e293b',
+    top: 'top_blazer_luxury', bottom: 'bot_suit_slacks',
+    shoes: 'shoe_oxford_wingtip', ears: 'round_glasses',
+    cost: 1600,
+    rarity: 'legendary',
+    customization: {
+      hairStyle: 'hair_slick_side', hairColor: '#1e293b',
+      topId: 'top_blazer_luxury', topColor: '#0f172a',
+      bottomId: 'bot_suit_slacks', bottomColor: '#1e293b',
+      shoeId: 'shoe_oxford_wingtip', shoeColor: '#3f1a0e',
+      ears: 'round_glasses', eyeType: 'classic', eyeColor: '#0f172a',
+      noseType: 'dot', mouthType: 'smile', blushType: 'none',
+    },
+  },
+  {
+    id: 'set_white_tuxedo_gala',
+    name: 'Bạch Mã Tuxedo Dạ Tiệc Hoàng Gia',
+    desc: 'Bộ tuxedo trắng tinh khôi ve đen satin, nơ bướm lịch thiệp, quần tây đen và giày da Oxford',
+    hair: 'hair_slick_side', hairColor: '#0f172a',
+    top: 'top_vest_tuxedo_white', bottom: 'bot_suit_slacks',
+    shoes: 'shoe_oxford_wingtip', ears: 'human',
+    cost: 1650,
+    rarity: 'legendary',
+    customization: {
+      hairStyle: 'hair_slick_side', hairColor: '#0f172a',
+      topId: 'top_vest_tuxedo_white', topColor: '#f8fafc',
+      bottomId: 'bot_suit_slacks', bottomColor: '#1e293b',
+      shoeId: 'shoe_oxford_wingtip', shoeColor: '#1c1917',
+      ears: 'human', eyeType: 'classic', eyeColor: '#0f172a',
+      noseType: 'dot', mouthType: 'smile', blushType: 'none',
     },
   },
 ]);

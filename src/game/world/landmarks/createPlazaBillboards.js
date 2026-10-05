@@ -1,4 +1,4 @@
-import { Color3, Color4 } from '@babylonjs/core/Maths/math.color.js';
+import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
@@ -13,13 +13,13 @@ import {
   createGroundLightPoolOnly,
 } from '../worldDesignSystem.js';
 
-function makeMat(scene, name, hex, emissiveHex = null, specular = 0.35, specularPower = 64) {
+function makeMat(scene, name, hex, emissiveHex = null, specular = 0.2, specularPower = 32) {
   const m = new StandardMaterial(name, scene);
   m.diffuseColor = Color3.FromHexString(hex);
   m.ambientColor = m.diffuseColor.scale(0.5);
   m.specularColor = new Color3(specular, specular, specular);
   m.specularPower = specularPower;
-  if (emissiveHex) m.emissiveColor = Color3.FromHexString(emissiveHex).scale(0.05);
+  if (emissiveHex) m.emissiveColor = Color3.FromHexString(emissiveHex).scale(0.08);
   return m;
 }
 
@@ -45,30 +45,29 @@ function drawSafeRoundRect(ctx, x, y, w, h, r) {
 }
 
 /**
- * CẤU HÌNH QUẢNG CÁO THƯƠNG MẠI
+ * CẤU HÌNH THÔNG TIN NÔNG TRẠI VIỆT NAM (BẢNG TIN HỢP TÁC XÃ LÀNG)
  */
 export const PLAZA_BILLBOARD_SPONSOR = {
-  headerTag: 'KAIA METROPOLIS MEDIA · 4K BROADCAST',
-  mainHeadline: 'VỊ TRÍ ĐẶT QUẢNG CÁO VIP 24/7',
-  subHeadline: 'ĐÓN ĐẦU 100% CƯ DÂN & DU KHÁCH NGAY TẠI CỔNG CHÍNH VÀO THÀNH PHỐ',
-  bullet1: 'Phát sóng TVC, Banner & Slogan thương hiệu 24/7 toàn cảnh sắc nét',
-  bullet2: 'Tích hợp đường link Web / Shop / Fanpage và Tặng Giftcode độc quyền',
-  bullet3: 'Hệ thống Loa Thông Báo tự động phát thông điệp toàn server định kỳ',
-  bullet4: 'Miễn phí thiết kế 3D chuyên nghiệp & Đặt NPC đại sứ thương hiệu riêng',
-  contactHotline: 'HOTLINE / ZALO BOOKING: 0988.888.XXX',
-  brandName: 'THƯƠNG HIỆU CỦA BẠN',
-  promoBadge: 'GIẢM 30% HÔM NAY',
-  tickerNotice: '★ LIÊN HỆ ĐẶT QUẢNG CÁO THEO HOTLINE & ZALO TRÊN BẢNG · CHÀO MỪNG CÁC THƯƠNG HIỆU & DOANH NGHIỆP TÀI TRỢ ★',
+  headerTag: '🌾 BẢNG TIN LÀNG BÌNH MINH · HỢP TÁC XÃ NÔNG SẢN VIỆT 🌾',
+  mainHeadline: 'CỔNG THÔNG TIN & QUẢNG BÁ NÔNG SẢN',
+  subHeadline: 'KẾT NỐI BÀ CON NHÀ VƯỜN · GIAO THƯƠNG NÔNG SẢN · ĐÓN ĐẦU DU KHÁCH',
+  bullet1: 'Bản tin thời tiết mùa vụ, giá nông sản & lịch gieo trồng rau củ quả hữu cơ',
+  bullet2: 'Khu giao thương chợ quê: Mua bán sỉ lúa vàng, bắp ngô, dưa hấu & sữa tươi',
+  bullet3: 'Hệ thống Loa Phát Thanh xã: Điểm tin mùa màng bội thu & văn nghệ làng quê',
+  bullet4: 'Hỗ trợ mở gian hàng chợ quê 3D & dựng biển hiệu quảng bá nông trại xanh',
+  contactHotline: 'BAN QUẢN LÝ NÔNG TRẠI · HOTLINE: 0988.888.XXX',
+  brandName: 'NÔNG SẢN BÌNH MINH',
+  promoBadge: 'ƯU ĐÃI NÔNG DÂN MỚI -30%',
+  tickerNotice: '🌾 CHÚC BÀ CON & DU KHÁCH MỘT MÙA MÀNG BỘI THU · MƯA THUẬN GIÓ HÒA · VẠN SỰ HANH THÔNG 🌾',
 };
 
 // =============================================================================
-// CỔNG CHÀO KHẢI HOÀN MÔN ĐẠI LỘ BẮC (GRAND ENTRANCE PORTAL OF KAIA TOWN)
-// Vị trí: Đặt tại Cổng vào Đại lộ Bắc (x: 0, z: 25.5).
-// - Hai trụ tháp cẩm thạch đôi uy nghi hai bên lề đường (x = ±5.8m), lòng đường 9.4m thông thoáng.
-// - Vòm cổng Khải Hoàn Môn cao 12.2m bắc ngang qua đại lộ, tĩnh không 4.8m cho xe cộ qua lại.
-// - MẶT BẮC (hướng ra nông trại): MÀN HÌNH LED QUẢNG CÁO 4K (ai vào thành phố cũng thấy 100%).
-//   => Không bấm vào hiển thị popup (hiển thị đầy đủ thông tin trực tiếp trên bảng 3D).
-// - MẶT NAM (hướng vào đài phun nước): BẢNG VINH DANH TOP CƯ DÂN (người trong quảng trường thấy rõ).
+// CỔNG LÀNG NÔNG THÔN & BẢNG TIN HỢP TÁC XÃ VIỆT NAM
+// Kiến trúc truyền thống:
+// - Bệ đá ong tự nhiên, rường cột gỗ lim cổ thụ trầm ấm có đai đồng cổ bọc gia cố.
+// - Mái ngói đỏ đất nung âm dương truyền thống uốn cong nhẹ cổ kính che mưa nắng.
+// - Treo đèn lồng đỏ Hội An ấm áp, chum gốm sành cúc vạn thọ dưới chân cột.
+// - Hoành phi sơn son thếp vàng chạm nổi Bông Lúa Vàng / Hoa Sen Đất Việt.
 // =============================================================================
 export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z: 25.5 }, yaw = 0, shadows = null, adConfig = PLAZA_BILLBOARD_SPONSOR) {
   const root = new TransformNode('plaza-grand-entrance-portal', scene);
@@ -76,111 +75,136 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
   root.rotation.y = yaw;
   if (parent) root.parent = parent;
 
-  const matLimestone = makeMat(scene, 'portal-limestone', '#f7f2e8', '#dfd7c8', 0.25, 45);
-  const matFoundation = makeMat(scene, 'portal-found', '#8c857b', '#6b655d', 0.2, 40);
-  const matGoldTrim = makeMat(scene, 'portal-gold', '#f59e0b', '#d97706', 0.85, 110);
-  const matBezelWood = makeMat(scene, 'portal-bezel-wood', '#2d1810', '#1c0f0a', 0.4, 60);
+  // Bảng vật liệu kiến trúc nông thôn Việt Nam cao cấp
+  const matLimTeak = makeMat(scene, 'portal-lim-teak', '#3e2115', '#241209', 0.15, 24); // Gỗ lim sẫm màu
+  const matWarmWood = makeMat(scene, 'portal-warm-wood', '#78350f', '#522306', 0.18, 28); // Gỗ mít / sồi già
+  const matRoofTiles = makeMat(scene, 'portal-roof-tiles', '#b91c1c', '#7f1d1d', 0.12, 20); // Ngói đỏ đất nung
+  const matStonePlinth = makeMat(scene, 'portal-stone-plinth', '#57534e', '#3c3836', 0.08, 16); // Bệ đá ong rêu phong
+  const matBrass = makeMat(scene, 'portal-brass-trim', '#d97706', '#92400e', 0.65, 80); // Đồng cổ đúc
+  const matLanternRed = makeMat(scene, 'portal-lantern-silk', '#dc2626', '#f59e0b', 0.35, 40); // Lụa đỏ Hội An
 
-  // 1. Hai trụ tháp cẩm thạch La Mã đôi hai bên đại lộ (x = ±5.8m, thông thủy lòng đường 9.4m)
+  // 1. Hai trụ cột gỗ lim cổ thụ đôi hai bên đại lộ (x = ±5.8m, thông thủy lòng đường 9.4m)
   [-5.8, 5.8].forEach((px, idx) => {
-    // Chân bệ móng đá kiên cố (2.4m rộng × 3.2m sâu × 1.2m cao)
-    const pedestalFound = MeshBuilder.CreateBox(`portal-ped-found-${idx}`, { width: 2.6, depth: 3.4, height: 0.4 }, scene);
-    pedestalFound.position.set(px, 0.2, 0);
-    pedestalFound.material = matFoundation;
+    // Chân bệ móng đá ong kiên cố (2.4m rộng × 3.2m sâu × 0.45m cao)
+    const pedestalFound = MeshBuilder.CreateBox(`portal-ped-found-${idx}`, { width: 2.6, depth: 3.4, height: 0.45 }, scene);
+    pedestalFound.position.set(px, 0.22, 0);
+    pedestalFound.material = matStonePlinth;
     pedestalFound.parent = root;
     pedestalFound.receiveShadows = true;
 
-    const pedestalPlinth = MeshBuilder.CreateBox(`portal-ped-plinth-${idx}`, { width: 2.3, depth: 3.1, height: 0.8 }, scene);
-    pedestalPlinth.position.set(px, 0.8, 0);
-    pedestalPlinth.material = matLimestone;
-    pedestalPlinth.parent = root;
-    pedestalPlinth.receiveShadows = true;
-
-    // Đai vàng kim chân cột
-    const pedRing = MeshBuilder.CreateBox(`portal-ped-ring-${idx}`, { width: 2.4, depth: 3.2, height: 0.12 }, scene);
-    pedRing.position.set(px, 1.25, 0);
-    pedRing.material = matGoldTrim;
-    pedRing.parent = root;
-
-    // Thân trụ tháp cẩm thạch đôi vươn cao
-    [-0.7, 0.7].forEach((colZ, cidx) => {
-      const col = MeshBuilder.CreateCylinder(`portal-col-${idx}-${cidx}`, {
-        diameterTop: 1.1,
-        diameterBottom: 1.25,
-        height: 5.6,
-        tessellation: 18,
+    // Tảng đá xanh tròn chạm cánh sen kê chân cột gỗ
+    [-0.75, 0.75].forEach((colZ, cidx) => {
+      const plinthDisc = MeshBuilder.CreateCylinder(`portal-plinth-disc-${idx}-${cidx}`, {
+        diameter: 1.5,
+        height: 0.55,
+        tessellation: 20,
       }, scene);
-      col.position.set(px, 4.1, colZ);
-      col.material = matLimestone;
+      plinthDisc.position.set(px, 0.65, colZ);
+      plinthDisc.material = matStonePlinth;
+      plinthDisc.parent = root;
+      plinthDisc.receiveShadows = true;
+
+      // Cột gỗ lim tròn cổ thụ vươn cao vững chãi
+      const col = MeshBuilder.CreateCylinder(`portal-col-${idx}-${cidx}`, {
+        diameterTop: 1.05,
+        diameterBottom: 1.2,
+        height: 5.6,
+        tessellation: 20,
+      }, scene);
+      col.position.set(px, 3.7, colZ);
+      col.material = matLimTeak;
       col.parent = root;
       shadows?.addShadowCaster(col);
 
-      // Đai vàng quanh thân cột
-      [2.5, 4.2, 6.2].forEach((ry, ridx) => {
-        const ring = MeshBuilder.CreateTorus(`portal-c-ring-${idx}-${cidx}-${ridx}`, { diameter: 1.3, thickness: 0.12, tessellation: 18 }, scene);
+      // Đai đồng cổ bọc gia cố thân cột
+      [1.3, 3.8, 5.8].forEach((ry, ridx) => {
+        const ring = MeshBuilder.CreateTorus(`portal-c-ring-${idx}-${cidx}-${ridx}`, {
+          diameter: 1.25,
+          thickness: 0.08,
+          tessellation: 18,
+        }, scene);
         ring.position.set(px, ry, colZ);
-        ring.material = matGoldTrim;
+        ring.material = matBrass;
         ring.parent = root;
       });
     });
 
-    // Khối tường đệm giữa 2 cột tròn
-    const colWall = MeshBuilder.CreateBox(`portal-col-wall-${idx}`, { width: 1.4, depth: 1.8, height: 5.4 }, scene);
-    colWall.position.set(px, 4.1, 0);
-    colWall.material = matLimestone;
+    // Bức giáp vách gỗ lim rường cột đệm giữa 2 trụ
+    const colWall = MeshBuilder.CreateBox(`portal-col-wall-${idx}`, { width: 1.35, depth: 1.6, height: 5.2 }, scene);
+    colWall.position.set(px, 3.7, 0);
+    colWall.material = matWarmWood;
     colWall.parent = root;
 
-    // Đèn lồng cổ điển chiếu sáng cổng vào
-    createWarmHangingLantern(scene, new Vector3(px + (px > 0 ? -1.3 : 1.3), 5.4, 0), root, shadows);
+    // Đèn lồng đỏ Hội An truyền thống treo bên cột
+    const lanternRoot = new TransformNode(`portal-lantern-${idx}`, scene);
+    lanternRoot.position.set(px + (px > 0 ? -1.35 : 1.35), 5.2, 0);
+    lanternRoot.parent = root;
 
-    // Chậu hoa hồng trang trí dưới chân trụ tháp
-    const urn = MeshBuilder.CreateCylinder(`portal-urn-${idx}`, { diameterTop: 0.9, diameterBottom: 0.6, height: 0.7, tessellation: 12 }, scene);
-    urn.position.set(px + (px > 0 ? 1.4 : -1.4), 0.75, 1.2);
-    urn.material = matLimestone;
-    urn.parent = root;
+    const lanternBody = MeshBuilder.CreateSphere(`portal-lantern-body-${idx}`, { diameterX: 0.65, diameterY: 0.9, diameterZ: 0.65, segments: 12 }, scene);
+    lanternBody.material = matLanternRed;
+    lanternBody.parent = lanternRoot;
 
-    const roseBush = MeshBuilder.CreateSphere(`portal-bush-${idx}`, { diameter: 0.85, segments: 6 }, scene);
-    roseBush.position.set(px + (px > 0 ? 1.4 : -1.4), 1.3, 1.2);
-    roseBush.material = makeMat(scene, `portal-rose-${idx}`, '#f43f5e', '#e11d48', 0.3, 30);
-    roseBush.parent = root;
+    const lanternCapTop = MeshBuilder.CreateCylinder(`portal-lantern-cap-t-${idx}`, { diameter: 0.45, height: 0.1, tessellation: 12 }, scene);
+    lanternCapTop.position.y = 0.48;
+    lanternCapTop.material = matBrass;
+    lanternCapTop.parent = lanternRoot;
+
+    const lanternCapBtm = MeshBuilder.CreateCylinder(`portal-lantern-cap-b-${idx}`, { diameter: 0.4, height: 0.1, tessellation: 12 }, scene);
+    lanternCapBtm.position.y = -0.48;
+    lanternCapBtm.material = matBrass;
+    lanternCapBtm.parent = lanternRoot;
+
+    // Chum sành Bát Tràng cúc vạn thọ trang trí chân cổng
+    const clayJar = MeshBuilder.CreateCylinder(`portal-jar-${idx}`, {
+      diameterTop: 0.8,
+      diameterBottom: 0.5,
+      height: 0.85,
+      tessellation: 16,
+    }, scene);
+    clayJar.position.set(px + (px > 0 ? 1.4 : -1.4), 0.85, 1.2);
+    clayJar.material = matWarmWood;
+    clayJar.parent = root;
+
+    const flowerCluster = MeshBuilder.CreateSphere(`portal-marigold-${idx}`, { diameter: 0.95, segments: 8 }, scene);
+    flowerCluster.position.set(px + (px > 0 ? 1.4 : -1.4), 1.35, 1.2);
+    flowerCluster.material = makeMat(scene, `portal-flower-${idx}`, '#f59e0b', '#d97706', 0.2, 20);
+    flowerCluster.parent = root;
 
     // Vệt sáng ấm loang chân trụ
     createGroundLightPoolOnly(scene, root, new Vector3(px, 0.126, 0), 4.5);
   });
 
-  // 2. Khối Nhịp Cầu Cổng Khải Hoàn Môn (Bridge Entablature) bắc qua đại lộ
-  // Tĩnh không thông thủy cho nhân vật đi dưới: y = 4.8m (rất thoáng)
-  const archUnderbeam = MeshBuilder.CreateBox('portal-arch-beam', { width: 13.8, height: 0.6, depth: 2.6 }, scene);
+  // 2. Khối Xà Thượng Rường Cột Gỗ Lim bắc ngang đại lộ (Clearance y = 4.85m)
+  const archUnderbeam = MeshBuilder.CreateBox('portal-arch-beam', { width: 14.2, height: 0.7, depth: 2.4 }, scene);
   archUnderbeam.position.set(0, 5.0, 0);
-  archUnderbeam.material = matLimestone;
+  archUnderbeam.material = matLimTeak;
   archUnderbeam.parent = root;
 
-  // Hộp kiến trúc chứa 2 màn hình LED (Width: 13.2m, Height: 6.8m, Depth: 2.2m)
-  const archHousing = MeshBuilder.CreateBox('portal-arch-housing', { width: 13.2, height: 6.6, depth: 2.2 }, scene);
+  // Hộp khung bao bảng thông tin bằng gỗ sồi dày dặn
+  const archHousing = MeshBuilder.CreateBox('portal-arch-housing', { width: 13.2, height: 6.6, depth: 2.0 }, scene);
   archHousing.position.set(0, 8.4, 0);
-  archHousing.material = matLimestone;
+  archHousing.material = matWarmWood;
   archHousing.parent = root;
   shadows?.addShadowCaster(archHousing);
 
-  // Viền gờ gỗ & vàng cổ điển bao quanh nhịp cổng
-  const archGoldRim = MeshBuilder.CreateBox('portal-arch-gold-rim', { width: 13.4, height: 0.25, depth: 2.3 }, scene);
+  // Thanh xà gồ gỗ nẹp chỉ đồng cổ viền bảng
+  const archGoldRim = MeshBuilder.CreateBox('portal-arch-gold-rim', { width: 13.4, height: 0.35, depth: 2.15 }, scene);
   archGoldRim.position.set(0, 11.75, 0);
-  archGoldRim.material = matGoldTrim;
+  archGoldRim.material = matBrass;
   archGoldRim.parent = root;
 
   // ===========================================================================
-  // 3. MẶT BẮC: MÀN HÌNH LED QUẢNG CÁO 4K (NORTH COMMERCIAL ADVERTISING SCREEN)
-  // Quay mặt ra phía Bắc (+Z): 100% người từ nông trại vào thành phố đều thấy ngay!
-  // Tuyệt đối không hiện popup khi bấm vào (hiển thị thông tin trực tiếp 100% trên bảng)
+  // 3. MẶT BẮC: BẢNG TIN NÔNG TRẠI & HỢP TÁC XÃ (NORTH FARMSTEAD NOTICE BOARD)
+  // Hướng ra phía Bắc (+Z): 100% người từ nông trại bước vào thị trấn đều thấy ngay!
   // ===========================================================================
   const screenW = 11.2;
   const screenH = 5.8;
   const screenCenterY = 8.3;
 
-  // Viền màn hình Bắc
+  // Khung viền gỗ chạm chỉ đồng
   const adBorder = MeshBuilder.CreateBox('portal-ad-border', { width: screenW + 0.35, height: screenH + 0.35, depth: 0.15 }, scene);
-  adBorder.position.set(0, screenCenterY, 1.15);
-  adBorder.material = matGoldTrim;
+  adBorder.position.set(0, screenCenterY, 1.05);
+  adBorder.material = matLimTeak;
   adBorder.parent = root;
 
   const adPlane = MeshBuilder.CreatePlane('portal-ad-screen-plane', {
@@ -188,11 +212,10 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     height: screenH,
     sideOrientation: Mesh.FRONTSIDE,
   }, scene);
-  adPlane.position.set(0, screenCenterY, 1.25);
-  adPlane.rotation.y = Math.PI; // Quay mặt về phía Bắc (+Z), đọc chữ từ trái sang phải chuẩn xác 100%
+  adPlane.position.set(0, screenCenterY, 1.15);
+  adPlane.rotation.y = Math.PI; // Quay mặt về phía Bắc (+Z)
   adPlane.parent = root;
-  // Hiển thị trực tiếp 100% trên bảng 3D, không bấm vào hiển thị popup theo đúng yêu cầu
-  adPlane.metadata = { label: 'Bảng Quảng Cáo Thương Mại Kaia' };
+  adPlane.metadata = { label: 'Bảng Tin Nông Trại Bình Minh' };
 
   const adScreenMat = new StandardMaterial('portal-ad-mat', scene);
   adScreenMat.disableLighting = true;
@@ -201,9 +224,6 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
   adScreenMat.specularColor = Color3.Black();
 
   if (typeof document !== 'undefined' || typeof OffscreenCanvas !== 'undefined') {
-    // Keep the logical artwork at 2048x1152 but upload a 1024x576 texture;
-    // the old pair of large canvas uploads caused a synchronous 60-70ms boot
-    // hitch before the first playable frame.
     const sdtAd = new DynamicTexture('portal-ad-texture', { width: 1024, height: 576 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
     sdtAd.anisotropicFilteringLevel = 4;
     sdtAd.hasAlpha = false;
@@ -211,198 +231,185 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     ctx.save();
     ctx.scale(0.5, 0.5);
 
-    // Nền Dark Sapphire & Sunset Modern sang trọng
+    // Nền gỗ sồi già & giấy điệp dân gian truyền thống ấm cúng
     const bgGrad = ctx.createLinearGradient(0, 0, 0, 1152);
-    bgGrad.addColorStop(0, '#0a1628');
-    bgGrad.addColorStop(0.5, '#122b54');
-    bgGrad.addColorStop(1, '#0a1628');
+    bgGrad.addColorStop(0, '#2b1408');
+    bgGrad.addColorStop(0.5, '#451f0b');
+    bgGrad.addColorStop(1, '#2b1408');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, 2048, 1152);
 
-    // Lưới neon công nghệ
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
-    ctx.lineWidth = 2;
-    for (let x = 0; x <= 2048; x += 64) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 1152); ctx.stroke();
-    }
-    for (let y = 0; y <= 1152; y += 64) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(2048, y); ctx.stroke();
+    // Hoa văn phên tre / thoi dệt lúa nước dân gian chìm nhẹ
+    ctx.strokeStyle = 'rgba(217, 119, 6, 0.12)';
+    ctx.lineWidth = 1.5;
+    for (let x = -1152; x <= 2048 + 1152; x += 64) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 1152, 1152); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, 1152); ctx.lineTo(x + 1152, 0); ctx.stroke();
     }
 
-    // Viền LED phát sáng rực rỡ
-    ctx.strokeStyle = '#f59e0b';
+    // Khung viền chỉ đồng & hoa văn thổ cẩm
+    ctx.strokeStyle = '#d97706';
     ctx.lineWidth = 14;
     ctx.strokeRect(20, 20, 2008, 1112);
 
-    ctx.strokeStyle = '#38bdf8';
+    ctx.strokeStyle = '#fef08a';
     ctx.lineWidth = 4;
     ctx.strokeRect(34, 34, 1980, 1084);
 
-    // TOP BROADCAST HEADER (Cao 125px)
+    // 1. BANNER TIÊU ĐỀ TRUYỀN THỐNG (Đỏ thắm viền vàng)
     const headerGrad = ctx.createLinearGradient(0, 0, 2048, 0);
-    headerGrad.addColorStop(0, '#991b1b');
-    headerGrad.addColorStop(0.25, '#e11d48');
-    headerGrad.addColorStop(0.5, '#f59e0b');
-    headerGrad.addColorStop(0.75, '#e11d48');
-    headerGrad.addColorStop(1, '#991b1b');
+    headerGrad.addColorStop(0, '#7f1d1d');
+    headerGrad.addColorStop(0.3, '#b91c1c');
+    headerGrad.addColorStop(0.5, '#dc2626');
+    headerGrad.addColorStop(0.7, '#b91c1c');
+    headerGrad.addColorStop(1, '#7f1d1d');
     ctx.fillStyle = headerGrad;
-    ctx.fillRect(40, 40, 1968, 115);
+    ctx.fillRect(40, 40, 1968, 125);
 
-    ctx.font = '900 52px Arial, "Nunito", sans-serif';
-    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 48px Arial, "Nunito", sans-serif';
+    ctx.fillStyle = '#fef08a';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-    ctx.shadowBlur = 8;
-    ctx.fillText(`★  ${adConfig.headerTag}  ★`, 1024, 82);
-
-    ctx.font = '800 24px Arial, "Nunito", sans-serif';
-    ctx.fillStyle = '#fef08a';
-    ctx.fillText('★ MÀN HÌNH LED 4K KHỔNG LỒ 24/7 · TIẾP CẬN 100,000+ LƯỢT CƯ DÂN & DU KHÁCH ★', 1024, 128);
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowBlur = 6;
+    ctx.fillText(adConfig.headerTag || '🌾 BẢNG TIN LÀNG BÌNH MINH · HỢP TÁC XÃ NÔNG SẢN VIỆT 🌾', 1024, 102);
     ctx.shadowBlur = 0;
 
-    // PHẦN THÂN: KHU VỰC QUẢNG CÁO THƯƠNG MẠI
-    // 1. Khung Quảng Cáo Lớn Bên Trái (Width: 1320px)
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+    // 2. KHU VỰC THÔNG TIN BÊN TRÁI (Width: 1260px)
+    ctx.fillStyle = '#fef08a';
+    ctx.font = '900 60px Arial, "Nunito", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(adConfig.mainHeadline || 'CỔNG THÔNG TIN & QUẢNG BÁ NÔNG SẢN', 85, 235);
+
+    ctx.fillStyle = '#fed7aa';
+    ctx.font = '800 30px Arial, "Nunito", sans-serif';
+    ctx.fillText(adConfig.subHeadline || 'KẾT NỐI BÀ CON NHÀ VƯỜN · GIAO THƯƠNG NÔNG SẢN · ĐÓN ĐẦU DU KHÁCH', 85, 290);
+
+    // Đường gân vàng rơm chia phân cách
     ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    drawSafeRoundRect(ctx, 55, 180, 1320, 810, 28);
-    ctx.fill();
+    ctx.moveTo(85, 325);
+    ctx.lineTo(1345, 325);
     ctx.stroke();
 
-    // Huy hiệu Vị Trí Kim Cương
-    ctx.fillStyle = '#f59e0b';
-    ctx.beginPath();
-    drawSafeRoundRect(ctx, 85, 208, 380, 48, 16);
-    ctx.fill();
-
-    ctx.font = '900 26px Arial, "Nunito", sans-serif';
-    ctx.fillStyle = '#0f172a';
-    ctx.textAlign = 'center';
-    ctx.fillText('★ VỊ TRÍ ĐẶT QUẢNG CÁO VIP SỐ 1 ★', 275, 234);
-
-    // Tiêu đề Quảng Cáo Chính Cực To
-    ctx.font = '900 66px Arial, "Nunito", sans-serif';
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'left';
-    ctx.fillText(adConfig.mainHeadline, 85, 315);
-
-    // Slogan phụ nổi bật
-    ctx.font = '800 32px Arial, "Nunito", sans-serif';
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillText(adConfig.subHeadline, 85, 370);
-
-    // 4 Dòng Lợi Ích Nổi Bật Khi Đặt Quảng Cáo
+    // 4 DÒNG BẢN TIN NÔNG TRẠI
     const bullets = [
-      `✔  ${adConfig.bullet1}`,
-      `✔  ${adConfig.bullet2}`,
-      `✔  ${adConfig.bullet3}`,
-      `✔  ${adConfig.bullet4 || 'Hỗ trợ thiết kế 3D chuyên nghiệp & Đặt NPC đại sứ thương hiệu'}`,
+      `🌾  ${adConfig.bullet1}`,
+      `🌾  ${adConfig.bullet2}`,
+      `🌾  ${adConfig.bullet3}`,
+      `🌾  ${adConfig.bullet4 || 'Hỗ trợ mở gian hàng chợ quê 3D & dựng biển hiệu riêng'}`,
     ];
     bullets.forEach((b, bIdx) => {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
       ctx.beginPath();
-      drawSafeRoundRect(ctx, 85, 415 + bIdx * 76, 1260, 64, 14);
+      drawSafeRoundRect(ctx, 85, 365 + bIdx * 82, 1260, 68, 14);
       ctx.fill();
 
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
       ctx.font = '700 28px Arial, "Nunito", sans-serif';
-      ctx.fillStyle = '#f8fafc';
-      ctx.fillText(b, 110, 450 + bIdx * 76);
+      ctx.fillStyle = '#fef3c7';
+      ctx.fillText(b, 110, 408 + bIdx * 82);
     });
 
-    // GIANT CALL-TO-ACTION HOTLINE BOX
+    // HỘP LIÊN HỆ BAN QUẢN LÝ NÔNG TRẠI (Nền vàng lúa mật ong)
     const boxGrad = ctx.createLinearGradient(85, 0, 1345, 0);
     boxGrad.addColorStop(0, '#f59e0b');
+    boxGrad.addColorStop(0.5, '#fbbf24');
     boxGrad.addColorStop(1, '#ea580c');
     ctx.fillStyle = boxGrad;
     ctx.beginPath();
-    drawSafeRoundRect(ctx, 85, 735, 1260, 230, 24);
+    drawSafeRoundRect(ctx, 85, 725, 1260, 235, 24);
     ctx.fill();
 
-    ctx.font = '900 50px Arial, "Nunito", sans-serif';
-    ctx.fillStyle = '#0f172a';
+    ctx.font = '900 48px Arial, "Nunito", sans-serif';
+    ctx.fillStyle = '#451a03';
     ctx.textAlign = 'center';
-    ctx.fillText(adConfig.contactHotline, 715, 795);
+    ctx.fillText(adConfig.contactHotline, 715, 785);
 
-    ctx.font = '800 28px Arial, "Nunito", sans-serif';
+    ctx.font = '800 27px Arial, "Nunito", sans-serif';
     ctx.fillStyle = '#78350f';
-    ctx.fillText('HỖ TRỢ DOANH NGHIỆP, SHOP GAME, STREAMER & CÁ NHÂN QUẢNG BÁ', 715, 855);
+    ctx.fillText('HỖ TRỢ BÀ CON NÔNG DÂN, NHÀ TÀI TRỢ & DOANH NGHIỆP NÔNG SẢN SẠCH', 715, 845);
 
     ctx.font = '700 24px Arial, "Nunito", sans-serif';
     ctx.fillStyle = '#451a03';
-    ctx.fillText('TELEGRAM: @KaiaAdsMedia · FANPAGE: fb.com/KaiaOnline3D · BQT KAIA', 715, 915);
+    ctx.fillText('ĐIỆN THOẠI / ZALO HỢP TÁC XÃ · HÒM THƯ GÓP Ý LÀNG QUÊ BÌNH MINH', 715, 905);
 
-    // 2. Khung Poster Mockup / QR Code Bên Phải (Width: 590px)
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
-    ctx.strokeStyle = '#38bdf8';
+    // 3. KHUNG QR KẾT NỐI BÊN PHẢI (Width: 590px - Kiểu Mành Tre Mộc Mạc)
+    ctx.fillStyle = 'rgba(20, 10, 5, 0.85)';
+    ctx.strokeStyle = '#d97706';
     ctx.lineWidth = 4;
     ctx.beginPath();
-    drawSafeRoundRect(ctx, 1400, 180, 590, 810, 28);
+    drawSafeRoundRect(ctx, 1400, 190, 590, 770, 24);
     ctx.fill();
     ctx.stroke();
 
-    // Header Poster QR
-    ctx.font = '900 34px Arial, "Nunito", sans-serif';
-    ctx.fillStyle = '#38bdf8';
+    // Tiêu đề khung QR
+    ctx.font = '900 32px Arial, "Nunito", sans-serif';
+    ctx.fillStyle = '#fef08a';
     ctx.textAlign = 'center';
-    ctx.fillText('QUÉT MÃ ĐẶT CHỖ & TƯ VẤN', 1695, 230);
+    ctx.fillText('QUÉT MÃ KẾT NỐI HỢP TÁC XÃ', 1695, 245);
 
-    // Khung trắng chứa QR Code sắc nét
+    // Nền trắng chứa QR code
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(1465, 260, 460, 460);
+    ctx.beginPath();
+    drawSafeRoundRect(ctx, 1475, 275, 440, 440, 18);
+    ctx.fill();
 
-    // Vẽ mô phỏng QR Code sắc nét
-    ctx.fillStyle = '#0f172a';
-    [[1485, 280], [1825, 280], [1485, 620]].forEach(([qx, qy]) => {
-      ctx.fillRect(qx, qy, 80, 80);
+    // Mô phỏng QR Code sắc nét
+    ctx.fillStyle = '#1c1917';
+    [[1495, 295], [1835, 295], [1495, 635]].forEach(([qx, qy]) => {
+      ctx.fillRect(qx, qy, 76, 76);
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(qx + 16, qy + 16, 48, 48);
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(qx + 28, qy + 28, 24, 24);
+      ctx.fillRect(qx + 14, qy + 14, 48, 48);
+      ctx.fillStyle = '#1c1917';
+      ctx.fillRect(qx + 26, qy + 26, 24, 24);
     });
     for (let r = 0; r < 9; r++) {
       for (let c = 0; c < 9; c++) {
         if ((r + c) % 3 === 0 || (r * c) % 5 === 0) {
-          ctx.fillRect(1585 + c * 24, 380 + r * 24, 20, 20);
+          ctx.fillRect(1595 + c * 23, 390 + r * 23, 19, 19);
         }
       }
     }
 
-    // Logo ở tâm QR
+    // Logo Bông Lúa ở tâm QR
     ctx.fillStyle = '#f59e0b';
     ctx.beginPath();
-    drawSafeRoundRect(ctx, 1640, 435, 110, 110, 16);
+    drawSafeRoundRect(ctx, 1640, 440, 110, 110, 16);
     ctx.fill();
-    ctx.font = '900 24px Arial';
-    ctx.fillStyle = '#0f172a';
-    ctx.fillText('KAIA', 1695, 480);
-    ctx.fillText('ADS', 1695, 510);
+    ctx.font = '900 26px Arial';
+    ctx.fillStyle = '#451a03';
+    ctx.fillText('NÔNG', 1695, 485);
+    ctx.fillText('TRẠI', 1695, 520);
 
-    // Badge khuyến mãi góc dưới
-    ctx.fillStyle = '#ef4444';
+    // Badge đỏ ưu đãi nông dân
+    ctx.fillStyle = '#dc2626';
     ctx.beginPath();
     drawSafeRoundRect(ctx, 1465, 745, 460, 75, 18);
     ctx.fill();
 
-    ctx.font = '900 36px Arial, "Nunito", sans-serif';
+    ctx.font = '900 34px Arial, "Nunito", sans-serif';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(adConfig.promoBadge || 'GIẢM 30% HÔM NAY', 1695, 792);
+    ctx.fillText(adConfig.promoBadge || 'ƯU ĐÃI NÔNG DÂN MỚI -30%', 1695, 792);
 
-    ctx.font = '700 24px Arial, "Nunito", sans-serif';
-    ctx.fillStyle = '#cbd5e1';
-    ctx.fillText('Dành riêng cho 3 đối tác liên hệ đầu tuần', 1695, 860);
+    ctx.font = '700 23px Arial, "Nunito", sans-serif';
+    ctx.fillStyle = '#fed7aa';
+    ctx.fillText('Quét Zalo kết nối BQL & nhận sạp hàng đẹp', 1695, 860);
 
     ctx.font = '800 22px Arial, "Nunito", sans-serif';
-    ctx.fillStyle = '#fde047';
-    ctx.fillText('Quét Zalo hoặc gọi Hotline để booking', 1695, 920);
+    ctx.fillStyle = '#fef08a';
+    ctx.fillText('Hotline hỗ trợ 24/7 toàn thể bà con', 1695, 915);
 
-    // FOOTER TICKER BANNER (Cao 90px)
-    ctx.fillStyle = 'rgba(10, 15, 30, 0.95)';
-    ctx.strokeStyle = '#f59e0b';
+    // 4. DẢI HOA VĂN TICKER CHÂN BẢNG (Cao 90px)
+    ctx.fillStyle = 'rgba(35, 15, 6, 0.95)';
+    ctx.strokeStyle = '#d97706';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    drawSafeRoundRect(ctx, 55, 1010, 1935, 90, 20);
+    drawSafeRoundRect(ctx, 55, 1005, 1935, 95, 20);
     ctx.fill();
     ctx.stroke();
 
@@ -419,13 +426,12 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
   adPlane.material = adScreenMat;
 
   // ===========================================================================
-  // 4. MẶT NAM: BẢNG VINH DANH TOP CƯ DÂN (SOUTH LEADERBOARD SCREEN)
-  // Quay mặt vào phía Nam (-Z): người đứng trong quảng trường nhìn thấy toàn bộ!
-  // Nhấn phím [E] hoặc chạm vào để mở Bảng Xếp Hạng chi tiết
+  // 4. MẶT NAM: BẢNG VÀNG DANH DỰ THẦN NÔNG (SOUTH LEADERBOARD SCREEN)
+  // Hướng vào đài phun nước trung tâm: cư dân dạo phố đều nhìn thấy vinh danh!
   // ===========================================================================
   const ldBorder = MeshBuilder.CreateBox('portal-ld-border', { width: screenW + 0.35, height: screenH + 0.35, depth: 0.15 }, scene);
-  ldBorder.position.set(0, screenCenterY, -1.15);
-  ldBorder.material = matGoldTrim;
+  ldBorder.position.set(0, screenCenterY, -1.05);
+  ldBorder.material = matLimTeak;
   ldBorder.parent = root;
 
   const ldPlane = MeshBuilder.CreatePlane('portal-ld-screen-plane', {
@@ -433,10 +439,10 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     height: screenH,
     sideOrientation: Mesh.FRONTSIDE,
   }, scene);
-  ldPlane.position.set(0, screenCenterY, -1.25);
-  ldPlane.rotation.y = 0; // Quay mặt về phía Nam (-Z), đọc chữ từ trái sang phải chuẩn xác 100%
+  ldPlane.position.set(0, screenCenterY, -1.15);
+  ldPlane.rotation.y = 0; // Quay mặt về phía Nam (-Z)
   ldPlane.parent = root;
-  ldPlane.metadata = { interactive: 'leaderboard', label: 'Bảng Vinh Danh Kaia' };
+  ldPlane.metadata = { interactive: 'leaderboard', label: 'Bảng Vàng Thần Nông' };
 
   const ldScreenMat = new StandardMaterial('portal-ld-mat', scene);
   ldScreenMat.disableLighting = true;
@@ -452,25 +458,15 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     ctx.save();
     ctx.scale(0.5, 0.5);
 
-    // Nền Dark Royal Sapphire
+    // Nền gỗ gụ nâu đỏ sang trọng ấm áp
     const bgGrad = ctx.createLinearGradient(0, 0, 0, 1152);
-    bgGrad.addColorStop(0, '#061026');
-    bgGrad.addColorStop(0.5, '#0e224d');
-    bgGrad.addColorStop(1, '#061026');
+    bgGrad.addColorStop(0, '#261107');
+    bgGrad.addColorStop(0.5, '#3d1c0c');
+    bgGrad.addColorStop(1, '#261107');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, 2048, 1152);
 
-    // Lưới công nghệ vàng kim
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.08)';
-    ctx.lineWidth = 2;
-    for (let x = 0; x <= 2048; x += 64) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 1152); ctx.stroke();
-    }
-    for (let y = 0; y <= 1152; y += 64) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(2048, y); ctx.stroke();
-    }
-
-    ctx.strokeStyle = '#f59e0b';
+    ctx.strokeStyle = '#d97706';
     ctx.lineWidth = 14;
     ctx.strokeRect(20, 20, 2008, 1112);
 
@@ -478,47 +474,47 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     ctx.lineWidth = 4;
     ctx.strokeRect(34, 34, 1980, 1084);
 
-    // HEADER BANNER HOÀNG GIA (Cao 125px)
+    // HEADER BANNER BẢNG VÀNG THẦN NÔNG
     const headerGrad = ctx.createLinearGradient(0, 0, 2048, 0);
     headerGrad.addColorStop(0, '#78350f');
-    headerGrad.addColorStop(0.25, '#f59e0b');
+    headerGrad.addColorStop(0.25, '#d97706');
     headerGrad.addColorStop(0.5, '#fef08a');
-    headerGrad.addColorStop(0.75, '#f59e0b');
+    headerGrad.addColorStop(0.75, '#d97706');
     headerGrad.addColorStop(1, '#78350f');
     ctx.fillStyle = headerGrad;
     ctx.fillRect(40, 40, 1968, 115);
 
-    ctx.font = '900 62px Arial, "Nunito", sans-serif';
-    ctx.fillStyle = '#0f172a';
+    ctx.font = '900 56px Arial, "Nunito", sans-serif';
+    ctx.fillStyle = '#451a03';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
     ctx.shadowBlur = 8;
-    ctx.fillText('★ BẢNG VINH DANH TOP CƯ DÂN & ĐẠI PHÚ HÀO KAIA ★', 1024, 98);
+    ctx.fillText('★ BẢNG VÀNG DANH DỰ · THẦN NÔNG XUẤT SẮC LÀNG BÌNH MINH ★', 1024, 98);
     ctx.shadowBlur = 0;
 
-    // CỘT TRÁI: TOP 3 HUYỀN THOẠI (Width: 940px)
+    // CỘT TRÁI: TOP 3 THẦN NÔNG TIÊU BIỂU
     const top3 = [
       {
-        rank: '[1] HẠNG 1', crown: '★', name: 'ĐẠI PHÚ HÀO KAIA',
-        lv: 'Cấp 50 · Dinh Thự Hoàng Gia · Thần Nông VIP', xp: '2,850,000 XP',
+        rank: '[1] THẦN NÔNG VÀNG', crown: '👑', name: 'ĐẠI PHÚ HÀO LÀNG NÔNG',
+        lv: 'Cấp 50 · Dinh Thự Nông Trang · Thần Nông VIP', xp: '2,850,000 XP',
         border: '#f59e0b', h: 240,
       },
       {
-        rank: '[2] HẠNG 2', crown: '✦', name: 'NÔNG TRẠI VUI VẺ',
-        lv: 'Cấp 46 · Biệt Thự Gỗ Sang Trọng', xp: '2,180,000 XP',
+        rank: '[2] THẦN NÔNG BẠC', crown: '✦', name: 'NÔNG DÂN TIÊU BIỂU',
+        lv: 'Cấp 46 · Trang Trại Cây Ăn Trái Trù Phú', xp: '2,180,000 XP',
         border: '#cbd5e1', h: 200,
       },
       {
-        rank: '[3] HẠNG 3', crown: '◆', name: 'THẦN NÔNG XỨ SỞ',
-        lv: 'Cấp 43 · Trang Trại Cây Ăn Quả', xp: '1,790,000 XP',
+        rank: '[3] THẦN NÔNG ĐỒNG', crown: '◆', name: 'NÔNG TRẠI CHĂM CHỈ',
+        lv: 'Cấp 43 · Vườn Rau Củ Quả Hữu Cơ', xp: '1,790,000 XP',
         border: '#d97706', h: 200,
       },
     ];
 
     let leftY = 185;
     top3.forEach((t) => {
-      ctx.fillStyle = '#172554';
+      ctx.fillStyle = 'rgba(20, 10, 5, 0.85)';
       ctx.strokeStyle = t.border;
       ctx.lineWidth = 4;
       ctx.beginPath();
@@ -528,62 +524,62 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
 
       ctx.fillStyle = t.border;
       ctx.beginPath();
-      drawSafeRoundRect(ctx, 85, leftY + 18, 220, 50, 14);
+      drawSafeRoundRect(ctx, 85, leftY + 18, 250, 50, 14);
       ctx.fill();
 
-      ctx.font = '900 28px Arial, "Nunito", sans-serif';
-      ctx.fillStyle = '#0f172a';
+      ctx.font = '900 26px Arial, "Nunito", sans-serif';
+      ctx.fillStyle = '#451a03';
       ctx.textAlign = 'center';
-      ctx.fillText(t.rank, 195, leftY + 44);
+      ctx.fillText(t.rank, 210, leftY + 44);
 
-      ctx.font = '52px Arial';
-      ctx.fillText(t.crown, 340, leftY + 45);
+      ctx.font = '48px Arial';
+      ctx.fillText(t.crown, 370, leftY + 45);
 
-      ctx.font = '900 46px Arial, "Nunito", sans-serif';
+      ctx.font = '900 44px Arial, "Nunito", sans-serif';
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'left';
       ctx.fillText(t.name, 85, leftY + (t.h === 240 ? 120 : 110));
 
-      ctx.font = '700 28px Arial, "Nunito", sans-serif';
+      ctx.font = '700 26px Arial, "Nunito", sans-serif';
       ctx.fillStyle = '#fde047';
       ctx.fillText(t.lv, 85, leftY + (t.h === 240 ? 175 : 158));
 
-      ctx.font = '900 40px Arial, "Nunito", sans-serif';
-      ctx.fillStyle = '#38bdf8';
+      ctx.font = '900 38px Arial, "Nunito", sans-serif';
+      ctx.fillStyle = '#f59e0b';
       ctx.textAlign = 'right';
       ctx.fillText(t.xp, 970, leftY + (t.h === 240 ? 175 : 158));
 
       leftY += t.h + 24;
     });
 
-    // CỘT PHẢI: TOP 4 ĐẾN TOP 10 (Width: 960px)
+    // CỘT PHẢI: TOP 4 ĐẾN TOP 10
     const top4to10 = [
-      { r: '4', name: 'Hải Tặc Hồ Pha Lê', lv: 'Lv.40 · Cao Thủ Câu Cá', xp: '1,420,000 XP' },
-      { r: '5', name: 'Nông Dân Chăm Chỉ', lv: 'Lv.37 · Bậc Thầy Trồng Trọt', xp: '1,150,000 XP' },
-      { r: '6', name: 'Bé Mầm Đáng Yêu', lv: 'Lv.34 · Trang Trại Hoa Hồng', xp: '980,000 XP' },
-      { r: '7', name: 'Vua Đua Xe Tốc Độ', lv: 'Lv.31 · Đại Gia Xe Thể Thao', xp: '820,000 XP' },
-      { r: '8', name: 'Kẹo Ngọt Marshmallow', lv: 'Lv.28 · Tiệm Bánh Ngọt', xp: '690,000 XP' },
-      { r: '9', name: 'Gió Mùa Thu Xanh', lv: 'Lv.25 · Nông Dân Cần Mẫn', xp: '540,000 XP' },
-      { r: '10', name: 'Cư Dân Thị Trấn Mới', lv: 'Lv.22 · Tân Binh Tiềm Năng', xp: '410,000 XP' },
+      { r: '4', name: 'Hải Tặc Bến Câu Cá', lv: 'Lv.40 · Cao Thủ Săn Cá Hồ Pha Lê', xp: '1,420,000 XP' },
+      { r: '5', name: 'Nông Dân Cần Mẫn', lv: 'Lv.37 · Bậc Thầy Trồng Lúa Vàng', xp: '1,150,000 XP' },
+      { r: '6', name: 'Bé Mầm Xanh Tươi', lv: 'Lv.34 · Trang Trại Dâu Tây Đỏ', xp: '980,000 XP' },
+      { r: '7', name: 'Vua Xe Kéo Làng Quê', lv: 'Lv.31 · Đội Trưởng Giao Nông Sản', xp: '820,000 XP' },
+      { r: '8', name: 'Hương Vị Đồng Quê', lv: 'Lv.28 · Tiệm Bánh Ngô Nướng', xp: '690,000 XP' },
+      { r: '9', name: 'Gió Mùa Vàng Lúa', lv: 'Lv.25 · Nông Dân Cần Cù', xp: '540,000 XP' },
+      { r: '10', name: 'Cư Dân Xóm Mới', lv: 'Lv.22 · Tân Binh Tiềm Năng', xp: '410,000 XP' },
     ];
 
     let rightY = 185;
     top4to10.forEach((row) => {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-      ctx.strokeStyle = '#334155';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      ctx.strokeStyle = '#522306';
       ctx.lineWidth = 2;
       ctx.beginPath();
       drawSafeRoundRect(ctx, 1030, rightY, 955, 80, 16);
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = '#f59e0b';
+      ctx.fillStyle = '#d97706';
       ctx.beginPath();
       ctx.arc(1075, rightY + 40, 24, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.font = '900 28px Arial, "Nunito", sans-serif';
-      ctx.fillStyle = '#0f172a';
+      ctx.fillStyle = '#fef08a';
       ctx.textAlign = 'center';
       ctx.fillText(row.r, 1075, rightY + 42);
 
@@ -597,16 +593,16 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
       ctx.fillText(row.lv, 1530, rightY + 42);
 
       ctx.font = '900 30px Arial, "Nunito", sans-serif';
-      ctx.fillStyle = '#38bdf8';
+      ctx.fillStyle = '#f59e0b';
       ctx.textAlign = 'right';
       ctx.fillText(row.xp, 1960, rightY + 42);
 
       rightY += 95;
     });
 
-    // FOOTER TICKER BANNER (Cao 90px)
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-    ctx.strokeStyle = '#f59e0b';
+    // FOOTER TICKER
+    ctx.fillStyle = 'rgba(25, 12, 5, 0.95)';
+    ctx.strokeStyle = '#d97706';
     ctx.lineWidth = 3;
     ctx.beginPath();
     drawSafeRoundRect(ctx, 60, 1010, 1928, 90, 20);
@@ -616,7 +612,7 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     ctx.font = '800 30px Arial, "Nunito", sans-serif';
     ctx.fillStyle = '#fef08a';
     ctx.textAlign = 'center';
-    ctx.fillText('★ DỮ LIỆU ĐỒNG BỘ TRỰC TIẾP · BƯỚC LẠI GẦN VÀ NHẤN [E] HOẶC CHẠM ĐỂ MỞ BẢNG CHI TIẾT ★', 1024, 1056);
+    ctx.fillText('🌾 DỮ LIỆU ĐỒNG BỘ TRỰC TIẾP · BƯỚC LẠI GẦN VÀ NHẤN [E] ĐỂ XEM CHI TIẾT BẢNG VÀNG 🌾', 1024, 1056);
 
     sdtLd.update();
     ctx.restore();
@@ -626,45 +622,98 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
   ldPlane.material = ldScreenMat;
 
   // ===========================================================================
-  // 5. ĐỈNH CỔNG KHẢI HOÀN MÔN (PORTAL CROWN & MEDALLION)
-  // Biểu tượng Huy Hiệu Mặt Trời Hoàng Gia Kaia xoay nhẹ trên đỉnh (y = 12.5m)
+  // 5. MÁI NGÓI ĐỎ ĐẤT NUNG TRUYỀN THỐNG VIỆT NAM (CURVED TERRACOTTA ROOF)
+  // Che mưa nắng trên đỉnh bảng thông tin giống kiến trúc đình làng & cổng làng
   // ===========================================================================
-  const crownRoot = new TransformNode('portal-crown-root', scene);
-  crownRoot.position.set(0, 12.3, 0);
-  crownRoot.parent = root;
+  const roofRoot = new TransformNode('portal-roof-root', scene);
+  roofRoot.position.set(0, 12.0, 0);
+  roofRoot.parent = root;
 
-  const pediment = MeshBuilder.CreateBox('portal-pediment-top', { width: 8.5, height: 0.6, depth: 2.4 }, scene);
-  pediment.material = matLimestone;
-  pediment.parent = crownRoot;
+  // Khối xà gồ đỡ rui mè gỗ lim
+  const roofRafters = MeshBuilder.CreateBox('portal-roof-rafters', { width: 14.8, height: 0.45, depth: 3.6 }, scene);
+  roofRafters.position.set(0, 0.2, 0);
+  roofRafters.material = matWarmWood;
+  roofRafters.parent = roofRoot;
 
-  const sunMedallion = MeshBuilder.CreateCylinder('portal-sun-medallion', { diameter: 2.2, height: 0.28, tessellation: 8 }, scene);
-  sunMedallion.position.set(0, 1.2, 0);
-  sunMedallion.rotation.x = Math.PI / 2;
-  sunMedallion.material = matGoldTrim;
-  sunMedallion.parent = crownRoot;
-  shadows?.addShadowCaster(sunMedallion);
+  // Mái ngói dốc 2 tầng đất nung
+  // Mái chính (Mặt trước + Mặt sau nghiêng 32 độ)
+  const roofMainNorth = MeshBuilder.CreateBox('portal-roof-slope-n', { width: 15.6, height: 0.22, depth: 2.3 }, scene);
+  roofMainNorth.position.set(0, 1.15, 0.95);
+  roofMainNorth.rotation.x = 0.56; // Nghiêng về mặt Bắc
+  roofMainNorth.material = matRoofTiles;
+  roofMainNorth.parent = roofRoot;
+  shadows?.addShadowCaster(roofMainNorth);
 
-  const starCore = MeshBuilder.CreateCylinder('portal-star-core', { diameter: 1.4, height: 0.32, tessellation: 5 }, scene);
-  starCore.position.set(0, 1.2, 0);
-  starCore.rotation.x = Math.PI / 2;
-  starCore.material = makeMat(scene, 'portal-star-ruby', '#fef08a', '#f59e0b', 0.9, 120);
-  starCore.parent = crownRoot;
+  const roofMainSouth = MeshBuilder.CreateBox('portal-roof-slope-s', { width: 15.6, height: 0.22, depth: 2.3 }, scene);
+  roofMainSouth.position.set(0, 1.15, -0.95);
+  roofMainSouth.rotation.x = -0.56; // Nghiêng về mặt Nam
+  roofMainSouth.material = matRoofTiles;
+  roofMainSouth.parent = roofRoot;
+  shadows?.addShadowCaster(roofMainSouth);
 
-  // Dàn đèn rọi LED cao áp chiếu xuống 2 mặt màn hình
+  // Bờ nóc đắp ngói nóc truyền thống (Roof Ridge)
+  const roofRidge = MeshBuilder.CreateCylinder('portal-roof-ridge', {
+    diameter: 0.6,
+    height: 15.8,
+    tessellation: 12,
+  }, scene);
+  roofRidge.rotation.z = Math.PI / 2;
+  roofRidge.position.set(0, 1.95, 0);
+  roofRidge.material = matRoofTiles;
+  roofRidge.parent = roofRoot;
+
+  // Hai đầu bờ nóc chạm Kìm Nóc đúc đồng uốn lượn phong cách cổ truyền
+  [-7.9, 7.9].forEach((rx, ridx) => {
+    const kimNoc = MeshBuilder.CreateTorus(`portal-kim-noc-${ridx}`, {
+      diameter: 0.9,
+      thickness: 0.22,
+      tessellation: 16,
+    }, scene);
+    kimNoc.position.set(rx, 2.35, 0);
+    kimNoc.rotation.y = Math.PI / 2;
+    kimNoc.rotation.x = ridx === 0 ? 0.35 : -0.35;
+    kimNoc.material = matBrass;
+    kimNoc.parent = roofRoot;
+  });
+
+  // Tấm hoành phi gỗ sơn son thếp vàng ở chính giữa bờ nóc
+  const signBoard = MeshBuilder.CreateBox('portal-crest-board', { width: 4.8, height: 1.1, depth: 0.3 }, scene);
+  signBoard.position.set(0, 2.5, 0);
+  signBoard.material = makeMat(scene, 'portal-crest-bg', '#991b1b', '#7f1d1d', 0.4, 40);
+  signBoard.parent = roofRoot;
+
+  const signBorder = MeshBuilder.CreateBox('portal-crest-border', { width: 5.1, height: 1.35, depth: 0.22 }, scene);
+  signBorder.position.set(0, 2.5, 0);
+  signBorder.material = matBrass;
+  signBorder.parent = roofRoot;
+
+  // Huy hiệu Bông Lúa Vàng đúc đồng ở trung tâm hoành phi
+  const riceEmblem = MeshBuilder.CreateCylinder('portal-rice-emblem', { diameter: 1.6, height: 0.35, tessellation: 24 }, scene);
+  riceEmblem.position.set(0, 2.5, 0.2);
+  riceEmblem.rotation.x = Math.PI / 2;
+  riceEmblem.material = matBrass;
+  riceEmblem.parent = roofRoot;
+  shadows?.addShadowCaster(riceEmblem);
+
+  const emblemCore = MeshBuilder.CreateCylinder('portal-emblem-core', { diameter: 1.1, height: 0.38, tessellation: 8 }, scene);
+  emblemCore.position.set(0, 2.5, 0.22);
+  emblemCore.rotation.x = Math.PI / 2;
+  emblemCore.material = makeMat(scene, 'portal-emblem-gold-glow', '#fef08a', '#f59e0b', 0.9, 120);
+  emblemCore.parent = roofRoot;
+
+  // 3 Đèn Lồng Hội An rọi sáng mặt bảng dưới mái ngói
   [-3.8, 0, 3.8].forEach((lx, lidx) => {
-    // Rọi xuống mặt Bắc (Quảng Cáo)
-    const lampNorth = MeshBuilder.CreateBox(`portal-flood-n-${lidx}`, { width: 0.75, height: 0.3, depth: 0.35 }, scene);
-    lampNorth.position.set(lx, 11.9, 1.35);
-    lampNorth.rotation.x = 0.55;
-    lampNorth.material = makeMat(scene, `portal-flood-mat-n-${lidx}`, '#fef08a', '#f59e0b', 0.9, 120);
-    lampNorth.parent = root;
+    // Đèn lồng mặt Bắc
+    const lNorth = MeshBuilder.CreateSphere(`portal-eave-lantern-n-${lidx}`, { diameterX: 0.55, diameterY: 0.75, diameterZ: 0.55, segments: 10 }, scene);
+    lNorth.position.set(lx, 11.4, 1.45);
+    lNorth.material = matLanternRed;
+    lNorth.parent = root;
 
-    // Rọi xuống mặt Nam (Bảng Vinh Danh)
-    const lampSouth = MeshBuilder.CreateBox(`portal-flood-s-${lidx}`, { width: 0.75, height: 0.3, depth: 0.35 }, scene);
-    lampSouth.position.set(lx, 11.9, -1.35);
-    lampSouth.rotation.x = -0.55;
-    lampSouth.material = makeMat(scene, `portal-flood-mat-s-${lidx}`, '#fef08a', '#f59e0b', 0.9, 120);
-    lampSouth.parent = root;
+    // Đèn lồng mặt Nam
+    const lSouth = MeshBuilder.CreateSphere(`portal-eave-lantern-s-${lidx}`, { diameterX: 0.55, diameterY: 0.75, diameterZ: 0.55, segments: 10 }, scene);
+    lSouth.position.set(lx, 11.4, -1.45);
+    lSouth.material = matLanternRed;
+    lSouth.parent = root;
   });
 
   return {
@@ -672,16 +721,15 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     adPlane,
     ldPlane,
     animate: (t) => {
-      starCore.rotation.y = t * 0.002;
+      emblemCore.rotation.y = t * 0.0015;
     },
   };
 }
 
 // =============================================================================
-// BACKWARD-COMPATIBLE WRAPPERS (Nếu có module nào import hàm cũ)
+// BACKWARD-COMPATIBLE WRAPPERS
 // =============================================================================
 export function createPlazaLeaderboardMonument(scene, parent, position, yaw = 0, shadows = null) {
-  // Trả về đối tượng giữ nguyên interface cũ
   return createPlazaGrandPortal(scene, parent, position, yaw, shadows);
 }
 

@@ -8,6 +8,7 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { FARM_TILE_KEY_PATTERN } from '../shared/farmLayout.js';
 import { decodeFarmId } from '../shared/villageLayout.js';
 import { FarmSecurity, withFarmLock } from './FarmSecurity.js';
+import { cropYield } from '../shared/farmSecurity.js';
 import {
   FISHING_CONFIG,
   FISHING_GEAR,
@@ -40,8 +41,10 @@ export async function initGameStore() {
   collections = { players: database.collection('players'), crops: database.collection('crops'), likes: database.collection('farm_likes'), friendships: database.collection('friendships') };
   collections.assignments = database.collection('farm_assignments');
   farmSecurity = new FarmSecurity(collections);
+  await recoverFarmWrites();
   await Promise.all([
     collections.players.createIndex({ playerId: 1 }, { unique: true }),
+    collections.players.createIndex({ 'progress.nameKey': 1 }, { unique: true, sparse: true }),
     collections.crops.createIndex({ villageId: 1, farmId: 1, tileKey: 1 }, { unique: true }),
     collections.likes.createIndex({ villageId: 1, farmId: 1, playerId: 1 }, { unique: true }),
     collections.friendships.createIndex({ playerId: 1, friendId: 1 }, { unique: true }),
@@ -171,6 +174,18 @@ async function savePlayer(player) {
   return player;
 }
 
+export async function chargeTravel(playerId, cost) {
+  if (!Number.isSafeInteger(cost) || cost < 0) return { error: 'Phí dịch chuyển không hợp lệ.' };
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const player = await loadPlayer(playerId);
+    if (!player) return { error: 'Không tìm thấy người chơi.' };
+    if (player.progress.coins < cost) return { error: `Cần ${cost} xu để dịch chuyển.` };
+    player.progress.coins -= cost;
+    if (await savePlayer(player)) return { player };
+  }
+  return { error: 'Giao dịch đang bận, vui lòng thử lại.' };
+}
+
 // Casino stakes and payouts use the same revision guard as other purchases.
 // A pending stake is persisted so a restart can refund an unfinished round.
 export async function casinoPlaceBet(playerId, roundId, game, choice, amount) {
@@ -257,9 +272,20 @@ export async function performAction(playerId, action, payload = {}, context = {}
   let actionResult = null;
   const fishingZone = () => context.venue ? null : fishingWaterAt(context.x, context.z);
   const atFishingShop = () => context.venue === 'fishing' || (!context.venue && Math.hypot(context.x-BEACH_CONFIG.vendor.x,context.z-BEACH_CONFIG.vendor.z)<=BEACH_CONFIG.vendor.interactionDistance);
-  if (action === 'character_create') { if (p.onboarding.characterCreated) return fail('Nhân vật đã được tạo.'); player.name = String(payload.name || player.name).slice(0, 24); p.outfit = 'starter'; p.onboarding.characterCreated = true; p.onboarding.step = 1; }
+  if (action === 'character_create') {
+    if (p.onboarding.characterCreated) return fail('Nhân vật đã được tạo.');
+    if (typeof payload.name !== 'string' || !payload.name.trim() || payload.name.trim().length > 18) return fail('Tên nhân vật cần từ 3 đến 18 ký tự.');
+    const name = sanitizeName(String(payload.name || '').normalize('NFC')).replace(/\s+/g, ' ').trim();
+    if (name.length < 3 || name.length > 18) return fail('Tên nhân vật cần từ 3 đến 18 ký tự.');
+    const nameKey = name.toLocaleLowerCase('vi');
+    const existing = await collections.players.findOne({ playerId: { $ne: playerId }, 'progress.onboarding.characterCreated': true,
+      $or: [{ 'progress.nameKey': nameKey }, { name }] }, { collation: { locale: 'vi', strength: 2 } });
+    if (existing) return fail('Tên nhân vật đã được sử dụng. Hãy chọn tên khác.');
+    player.name = name; p.nameKey = nameKey;
+    p.outfit = 'starter'; p.onboarding.characterCreated = true; p.onboarding.step = 1;
+  }
   else if (action === 'select_crop') { if (!CROPS[payload.crop] || p.level < CROPS[payload.crop].level) return fail('Hạt giống chưa mở khóa.'); p.selectedCrop = payload.crop; }
-  else if (action === 'sell_item') { const crop = CROPS[payload.id]; const amount = Math.max(1, Math.min(99, Number(payload.amount) || 1)); if (!crop || (p.inventory[payload.id] || 0) < amount) return fail('Không đủ nông sản.'); p.inventory[payload.id] -= amount; p.coins += crop.sellPrice * amount; }
+  else if (action === 'sell_item') { const crop = CROPS[payload.id]; const amount = Number(payload.amount ?? 1); if (!Number.isSafeInteger(amount) || amount < 1 || amount > 99) return fail('Số lượng bán phải là số nguyên từ 1 đến 99.'); if (!crop || (p.inventory[payload.id] || 0) < amount) return fail('Không đủ nông sản.'); p.inventory[payload.id] -= amount; p.coins += crop.sellPrice * amount; }
   else if (action === 'deliver_order') { const order = ORDERS[payload.id]; if (!order || p.completedOrders.includes(payload.id) || !requireItems(p, order.items)) return fail('Không thể giao đơn hàng.'); consume(p, order.items); p.coins += order.coins; p.xp += order.xp; p.stats.orders += 1; p.completedOrders.push(payload.id); if (p.onboarding.step === 4) p.onboarding.step = 5; }
   else if (action === 'claim_quest') { const quest = QUESTS[payload.id]; if (!quest || p.claimedQuests.includes(payload.id) || p.stats[quest.stat] < quest.goal) return fail('Nhiệm vụ chưa hoàn thành.'); p.coins += quest.coins; p.xp += quest.xp; p.claimedQuests.push(payload.id); }
   else if (action === 'craft') { const recipe = RECIPES[payload.id]; if (!recipe || !requireItems(p, recipe.inputs)) return fail('Không đủ nguyên liệu.'); consume(p, recipe.inputs); p.inventory[payload.id] += 1; p.xp += recipe.xp; p.stats.crafted += 1; }
@@ -417,12 +443,32 @@ export async function performAction(playerId, action, payload = {}, context = {}
   else if (action === 'reset_orders') { if (p.completedOrders.length < Object.keys(ORDERS).length || p.coins < 25) return fail('Chưa thể làm mới đơn hàng.'); p.coins -= 25; p.completedOrders = []; }
   else return fail('Hành động không được hỗ trợ.');
   if(action.startsWith('fishing_'))actionResult={...actionResult,fishingUpdated:true};
-  if (!(await savePlayer(player))) return fail('Xung đột giao dịch, vui lòng thử lại.');
+  try {
+    if (!(await savePlayer(player))) return fail('Xung đột giao dịch, vui lòng thử lại.');
+  } catch (error) {
+    if (action === 'character_create' && error.code === 11000) return fail('Tên nhân vật đã được sử dụng. Hãy chọn tên khác.');
+    throw error;
+  }
   return { player, ...(actionResult ? { result: actionResult } : {}) };
 }
 
 export async function farmAction(playerId, villageId, ownedFarmId, payload) {
-  return withFarmLock(payload.farmId, () => applyFarmAction(playerId, villageId, ownedFarmId, payload));
+  return withFarmLock(`player-farm:${playerId}`, () => withFarmLock(payload.farmId, async () => {
+    await recoverFarmWrites({ 'progress.pendingFarmWrite.farmId': payload.farmId });
+    return applyFarmAction(playerId, villageId, ownedFarmId, payload);
+  }));
+}
+// Durable outbox: account changes and the intended crop state are committed
+// together in one player document. Replay is idempotent after a crash; unlike
+// Mongo transactions this also works on a standalone local MongoDB server.
+async function recoverFarmWrites(filter = {}) {
+  for await (const player of collections.players.find({ ...filter, 'progress.pendingFarmWrite.id': { $exists: true } })) {
+    const write = player.progress.pendingFarmWrite;
+    await collections.crops.replaceOne({ villageId: write.villageId, farmId: write.storageFarmId, tileKey: write.tileKey },
+      { ...write.next, villageId: write.villageId, farmId: write.storageFarmId, tileKey: write.tileKey }, { upsert: true });
+    await collections.players.updateOne({ playerId: player.playerId, 'progress.pendingFarmWrite.id': write.id },
+      { $unset: { 'progress.pendingFarmWrite': '' }, $inc: { revision: 1 } });
+  }
 }
 async function applyFarmAction(playerId, villageId, ownedFarmId, payload) {
   const player = docToPlayer(await collections.players.findOne({ playerId }));
@@ -446,9 +492,9 @@ async function applyFarmAction(playerId, villageId, ownedFarmId, payload) {
   else if (action === 'plant') { const crop = CROPS[payload.crop]; if (current.state !== 'tilled' || !crop || player.progress.level < crop.level) return { error: 'Không thể gieo hạt.' }; if (player.progress.freeSeeds > 0 && payload.crop === 'carrot') player.progress.freeSeeds -= 1; else { if (player.progress.coins < crop.seedCost) return { error: 'Không đủ xu mua hạt.' }; player.progress.coins -= crop.seedCost; } player.progress.stats.planted += 1; player.progress.xp += 2; const tutorial = player.progress.onboarding.step === 2; next = { state: 'planted', crop: payload.crop, plantedAt: now, tutorialFastGrowth: tutorial, yield: tutorial ? FARM_CONFIG.security.theft.tutorialYield : FARM_CONFIG.security.theft.normalYield, stolenAmount: 0 }; }
   else if (action === 'water') { if (current.state !== 'planted') return { error: 'Cây chưa thể tưới.' }; player.progress.stats.watered += 1; player.progress.xp += farmId === ownedFarmId ? 1 : 5; if (farmId !== ownedFarmId) player.progress.coins += 5; next = { state: 'watered', crop: current.crop, plantedAt: current.plantedAt, wateredAt: now, tutorialFastGrowth: Boolean(current.tutorialFastGrowth), yield: current.yield || 1, stolenAmount: 0 }; }
   else if (action === 'harvest') {
-    const crop = CROPS[current.crop]; const growMs = current.tutorialFastGrowth || player.progress.onboarding.step === 2 ? FARM_CONFIG.care.tutorialGrowMs : crop?.growMs;
+    const crop = CROPS[current.crop]; const growMs = current.tutorialFastGrowth ? FARM_CONFIG.care.tutorialGrowMs : crop?.growMs;
     if (current.state !== 'watered' || !crop || now - current.wateredAt < growMs) return { error: 'Cây chưa chín.' };
-    const amount = (current.yield || 1) - (current.stolenAmount || 0);
+    const amount = cropYield(current) - (current.stolenAmount || 0);
     if (inventoryCount(player.progress) + amount > barnCapacity(player.progress)) return { error: 'Kho đã đầy.' };
     player.progress.inventory[current.crop] = (player.progress.inventory[current.crop] || 0) + amount;
     player.progress.stats.harvested += 1; player.progress.xp += 8;
@@ -456,9 +502,10 @@ async function applyFarmAction(playerId, villageId, ownedFarmId, payload) {
     next = { state: 'tilled', yield: 0, stolenAmount: 0, tutorialFastGrowth: false };
   }
   else return { error: 'Hành động ruộng không hợp lệ.' };
-  await collections.crops.updateOne({ villageId, farmId: storageFarmId, tileKey }, { $set: { ...next, villageId, farmId: storageFarmId, tileKey } }, { upsert: true });
+  player.progress.pendingFarmWrite = { id: randomBytes(16).toString('hex'), farmId, storageFarmId, villageId, tileKey, next };
   if (!(await savePlayer(player))) return { error: 'Xung đột giao dịch, vui lòng thử lại.' };
-  return { player, tileData: next };
+  await recoverFarmWrites({ playerId });
+  return { player: await loadPlayer(playerId), tileData: next };
 }
 
 export async function loadFarms(villageId, farmIds = null) {

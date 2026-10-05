@@ -222,29 +222,10 @@ export function* createFarmAnimalsSteps(scene, shadows) {
     });
   }
 
-  // === ĐẶT CÁC CON VẬT VÀO ĐÚNG KHU VỰC CHUỒNG TRANG TRẠI (ANIMAL PEN X:88, Z:112) ===
-  // Bò sữa gặm cỏ trong chuồng trang trại đồng quê
-  createChibiCow(85, 114, Math.PI / 4);
-  yield;
-  createChibiCow(91, 116, -Math.PI / 3);
-  yield;
-
-  // Cừu lông mềm trong đồng cỏ trang trại
-  createChibiSheep(84, 118, Math.PI / 6);
-  yield;
-  createChibiSheep(92, 112, -Math.PI / 4);
-  yield;
-
   // Chú chó Shiba canh cổng Nông Trại Thung Lũng
   createFarmDog(-70, 36, -Math.PI / 3);
   yield;
   createFarmDog(-74, 34, Math.PI / 4);
-  yield;
-
-  // Ngựa trang trại trong bãi cỏ chuồng trại
-  createFarmHorse(86, 110, Math.PI / 3);
-  yield;
-  createFarmHorse(90, 113, -Math.PI / 4);
   yield;
 
   // Chú cáo cam lấp ló bìa rừng thông

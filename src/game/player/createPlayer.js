@@ -9,6 +9,7 @@ import { buildHumanMesh } from './buildHumanMesh.js';
 import { createVehicleRigs } from './createVehicleRigs.js';
 import { VEHICLE_MOTION, approachVehicleSpeed } from './vehicleMotion.js';
 import { applyVehiclePose } from './applyVehiclePose.js';
+import { avatarAppearance } from '../../../shared/avatarAppearance.js';
 
 export function createFishingRig(scene, root, human) {
   const bobberMaterial = new StandardMaterial('local-fishing-bobber-material', scene);
@@ -26,6 +27,14 @@ export function createFishingRig(scene, root, human) {
   body.scaling.set(.65,.28,.22);body.material=caughtMaterial;body.parent=caughtRoot;
   const tail=MeshBuilder.CreateCylinder('caught-fish-tail',{height:.25,diameterTop:0,diameterBottom:.35,tessellation:3},scene);
   tail.rotation.z=-Math.PI/2;tail.position.x=-.4;tail.scaling.z=.3;tail.material=caughtMaterial;tail.parent=caughtRoot;
+  const eyeMaterial=new StandardMaterial('caught-fish-eye-material',scene);
+  eyeMaterial.diffuseColor=Color3.FromHexString('#172b38');
+  for(const side of [-1,1]){
+    const eye=MeshBuilder.CreateSphere(`caught-fish-eye-${side}`,{diameter:.055,segments:8},scene);
+    eye.position.set(.2,.055,side*.095);eye.material=eyeMaterial;eye.parent=caughtRoot;
+  }
+  const fin=MeshBuilder.CreateCylinder('caught-fish-fin',{height:.16,diameterTop:0,diameterBottom:.2,tessellation:3},scene);
+  fin.position.y=.16;fin.scaling.z=.25;fin.material=caughtMaterial;fin.parent=caughtRoot;
   caughtRoot.setEnabled(false);
 
   const linePoints = [new Vector3(), new Vector3(), new Vector3()];
@@ -58,7 +67,12 @@ export function createFishingRig(scene, root, human) {
 
   const updateLine = () => {
     const hand = (human.toolGrip || human.rightArm).getAbsolutePosition();
-    if(phase==='catch'){caughtRoot.position.copyFrom(hand);caughtRoot.position.y+=.3; caughtRoot.rotation.y=root.rotation.y;}
+    if(phase==='catch'){
+      caughtRoot.position.copyFrom(hand);caughtRoot.position.y+=.3;
+      caughtRoot.rotation.y=root.rotation.y;
+      caughtRoot.rotation.z=Math.sin(elapsed*12)*.12;
+      tail.rotation.y=Math.sin(elapsed*18)*.4;
+    }
     linePoints[0].copyFrom(hand);
     linePoints[1].set(
       (hand.x + bobber.position.x) * 0.5,
@@ -145,7 +159,7 @@ export function createFishingRig(scene, root, human) {
       bobberMaterial.dispose();
       bobber.dispose();
       line.dispose();
-      caughtRoot.dispose();caughtMaterial.dispose();
+      caughtRoot.dispose();caughtMaterial.dispose();eyeMaterial.dispose();
     },
   };
 }
@@ -164,6 +178,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
     overallsColor: '#2563eb',
     bootsColor: '#f7f0e6',
     hasHat: false,
+    ...avatarAppearance(controls.getOutfitId?.(), controls.getCustomization?.() || null),
     shadows: shadowGenerator,
   });
   human.root.parent = root;

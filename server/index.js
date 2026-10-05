@@ -1,4 +1,6 @@
 import { createServer } from 'node:http';
+import { travelCost } from '../shared/travelConfig.js';
+import { chargeTravel } from './GameStore.js';
 import { WebSocketServer, WebSocket } from 'ws';
 import { purchaseFarm, listLandMarket, getAssignment, initVillageRegistry, isAssignedFarm, listVillageAssignments, listVillages, positionForLot, villageChannel, villageForFarm } from './VillageRegistry.js';
 import { authenticate, casinoRefundStale, farmAction, initGameStore, initFarmSecurity, farmSecurity, loadFarmAssignment, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
@@ -202,11 +204,12 @@ async function refreshPublicFarms(channelId) {
 }
 
 function broadcastToChannel(channelId, payload, excludeSocket = null) {
-  channelPlayers(channelId).forEach(client => {
-    if (client.socket !== excludeSocket) {
+  const target = channelId || 'world:main';
+  for (const client of clients.values()) {
+    if (client.socket !== excludeSocket && client.playerId && (client.channelId === target || !client.channelId || target === 'world:main')) {
       safeSend(client.socket, payload);
     }
-  });
+  }
 }
 
 wss.on('connection', socket => {
@@ -239,6 +242,7 @@ wss.on('connection', socket => {
         await savePosition(client.playerId, recoveredPosition);
       }
       client.vehicle = account.progress?.vehicle || 'walk';
+      client.outfit = account.progress?.outfit || 'starter';
       safeSend(socket, { type: 'account_state', sessionToken: account.token, progress: account.progress, livestock: account.livestock, position: account.position?.layoutVersion === MAP_LAYOUT_VERSION ? account.position : null });
       safeSend(socket, { type: 'village_list', villages: await listVillages() });
       const existing = await getAssignment(client.playerId);
@@ -311,6 +315,7 @@ wss.on('connection', socket => {
       return;
     }
     if (message.type === 'move') {
+      if (client.travelPending) return;
       const safePosition = recoverTownSpawn(client,{legacyDefault:false,clearance:.45});
       if(safePosition !== client){client.x=safePosition.x;client.y=safePosition.y;client.z=safePosition.z;client.rotation=safePosition.rotation;}
       const x = Number(message.x); const y = Number(message.y || 0); const z = Number(message.z); const rotation = Number(message.rotation);
@@ -351,6 +356,7 @@ wss.on('connection', socket => {
       if (previousRoom !== client.roomId) broadcastPresence(client.channelId);
     }
     if (message.type === 'travel') {
+      if (client.travelPending) return;
       const x = Number(message.x); const z = Number(message.z);
       if (Number.isFinite(x) && Number.isFinite(z) && Math.abs(x) <= 10_000_000 && Math.abs(z) <= 10_000_000) {
         const previousRoom = client.roomId;
@@ -358,6 +364,17 @@ wss.on('connection', socket => {
         const townTravel = Math.hypot(x-TOWN_SPAWN.x,z-TOWN_SPAWN.z)<12 || Math.hypot(x,z-18)<12;
         const allowed = townTravel || [...(ownFarm ? [{ x: ownFarm.x + 6, z: ownFarm.z - 4 }] : []), { x: 126, z: 2 }, { x: 0, z: 320 }, ...WORLD_VILLAGES.map(v => v.gate)].some(point => Math.hypot(x - point.x, z - point.z) < 12);
         if (!allowed) return;
+        const target = { x: townTravel ? TOWN_SPAWN.x : x, z: townTravel ? TOWN_SPAWN.z : z };
+        const cost = travelCost(client, target);
+        client.travelPending = true;
+        let payment;
+        try { payment = await chargeTravel(client.playerId, cost); }
+        finally { client.travelPending = false; }
+        if (payment.error) {
+          safeSend(socket, { type: 'action_error', message: payment.error });
+          return;
+        }
+        safeSend(socket, { type: 'account_state', progress: payment.player.progress, livestock: payment.player.livestock, result: { travelCost: cost } });
         // Fast travel always lands outdoors; a client must cross a validated
         // venue doorway before it may join an interior room or place bets.
         client.x = townTravel ? TOWN_SPAWN.x : x; client.y = 0; client.z = townTravel ? TOWN_SPAWN.z : z; client.venue = null; client.lastSeen = Date.now();
@@ -516,11 +533,25 @@ wss.on('connection', socket => {
     if (message.type === 'emote') {
       const { emote } = message;
       if (!emote) return;
+      console.log(`[EMOTE] ${client.name} (${client.playerId}): ${emote}`);
       broadcastToChannel(client.channelId, {
         type: 'player_emote',
         playerId: client.playerId,
         fromName: client.name,
         emote: String(emote).slice(0, 16),
+      });
+    }
+    if (message.type === 'chat') {
+      const text = String(message.text || '').trim().slice(0, 100);
+      const emote = message.emote ? String(message.emote).slice(0, 16) : null;
+      if (!text && !emote) return;
+      console.log(`[CHAT] ${client.name} (${client.playerId}): "${text}" (emote: ${emote})`);
+      broadcastToChannel(client.channelId, {
+        type: 'player_chat',
+        playerId: client.playerId,
+        fromName: client.name,
+        text,
+        emote,
       });
     }
     } catch (error) {

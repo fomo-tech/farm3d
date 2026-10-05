@@ -393,6 +393,8 @@ export class FarmingSystem {
       if (!tile.metadata?.interactive || tile.isDisposed?.() || tile.isEnabled?.() === false) continue;
       const owner = !tile.metadata.farmId || tile.metadata.farmId === this.playerFarmId;
       if (owner && tile.metadata.index >= this.getUnlockedPlots()) continue;
+      const farmId = tile.metadata.farmId || this.playerFarmId;
+      if (this.pendingActions.has(`${farmId}:${this.rawTileKey(tile)}`)) continue;
       if (!this.determineSmartTool(tile)) continue;
       const tilePosition = worldPosition(tile);
       const distance = Math.hypot(tilePosition.x - position.x, tilePosition.z - position.z);

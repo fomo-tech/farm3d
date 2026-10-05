@@ -48,6 +48,7 @@ import { chunkAt } from './WorldPartition.js';
 import { RENDER_CONFIG, WORLD_LAYOUT } from './worldLayout.js';
 import { ProceduralWorld } from './ProceduralWorld.js';
 import { buildHumanMesh } from '../player/buildHumanMesh.js';
+import { avatarAppearance } from '../../../shared/avatarAppearance.js';
 import { createAtmosphere } from './createAtmosphere.js';
 import { createFarmGateAndSign } from '../farming/createFarmGateAndMailbox.js';
 import { createFarmhouse, createStarterFarmhouse } from './createFarmhouse.js';
@@ -56,8 +57,9 @@ import { createClassicRedBarn } from './landmarks/createSocialFarmstead.js';
 import { createVillageGate } from './landmarks/createVillageGate.js';
 import { createFashionBoutiqueInterior } from './landmarks/createFashionInterior.js';
 import { createCasinoLoungeInterior } from './landmarks/createCasinoInterior.js';
-import { createFoliageFactory } from './createFoliage.js';
 import { createCinematicRenderingPipeline } from '../rendering/CinematicRenderingPipeline.js';
+import { showCharacterChatBubble } from '../player/CharacterChatBubble.js';
+import { createFoliageFactory } from './createFoliage.js';
 import { createStylizedGrass } from './createStylizedGrass.js';
 import { createFarmAnimalsSteps } from './createFarmAnimals.js';
 import { createVietnameseCountrysideSteps, createVietnameseCountryside } from './createVietnameseCountryside.js';
@@ -189,15 +191,10 @@ function createSign(scene, label, position, color) {
   });
 }
 
-function createRemoteAvatar(scene, id, name, color, shadows) {
+function createRemoteAvatar(scene, id, name, appearance, shadows) {
   const root = new TransformNode(`remote-player-${id}`, scene);
   const human = buildHumanMesh(scene, `remote-${id}`, {
-    outfitColor: color,
-    skinColor: '#fcd5b5',
-    hairColor: '#76503b',
-    pantsColor: '#2b4162',
-    bootsColor: '#5c381e',
-    hatRibbonColor: color,
+    ...appearance,
     shadows,
   });
   human.root.parent = root;
@@ -207,7 +204,6 @@ function createRemoteAvatar(scene, id, name, color, shadows) {
 }
 
 
-const REMOTE_COLORS = ['#5f91c8', '#e87994', '#8a72b8', '#58a66a', '#d98248', '#3f9d98'];
 const VENUES = VENUE_LAYOUT;
 
 function getClampedInteriorRadius(camera, target, bounds, desiredRadius) {
@@ -1719,12 +1715,7 @@ export class FarmWorld {
 
       if (this.currentVenue === 'casino' && this.focusedCasinoTable) {
         const vInt = VENUES.casino.interior;
-        const tableCoords = {
-          'tai-xiu': { x: -6.5, y: 1.2, z: -3.5 },
-          'bau-cua': { x: 6.5, y: 1.2, z: -3.5 },
-          'bai-cao': { x: -6.5, y: 1.2, z: 4.5 },
-          'tien-len': { x: 6.5, y: 1.2, z: 4.5 },
-        };
+        const tableCoords = CASINO_TABLE_ANCHORS;
         const tbl = tableCoords[this.focusedCasinoTable];
         if (tbl) {
           _TMP_DESIRED_TARGET.set(vInt.x + tbl.x, vInt.y + tbl.y, vInt.z + tbl.z);
@@ -2042,13 +2033,18 @@ export class FarmWorld {
       let remote = this.remotePlayers.get(player.playerId);
       const effectiveY = Number.isFinite(player.y) && player.y !== 0 ? player.y : (VENUES[player.venue]?.interior.y ?? getTerrainHeight(player.x, player.z));
       if (!remote) {
-        remote = createRemoteAvatar(this.scene, player.playerId, player.name, REMOTE_COLORS[index % REMOTE_COLORS.length], this.shadows);
+        remote = createRemoteAvatar(this.scene, player.playerId, player.name, avatarAppearance(player.outfit, player.customization), this.shadows);
         remote.position.set(player.x, effectiveY, player.z);
         this.remotePlayers.set(player.playerId, remote);
       }
       if (remote.metadata.playerName !== player.name) {
         remote.metadata.playerName = player.name;
         remote.metadata.nameplate?.setName(player.name);
+      }
+      if (!player.customization && remote.metadata.lastOutfit !== (player.outfit || 'starter')) {
+        const appearance = avatarAppearance(player.outfit);
+        remote.metadata.human?.setOutfit?.(appearance.outfitId, appearance.outfitColor);
+        remote.metadata.lastOutfit = appearance.outfitId;
       }
       if (player.customization && remote.metadata.lastCustomization !== JSON.stringify(player.customization)) {
         remote.metadata.lastCustomization = JSON.stringify(player.customization);
@@ -2106,13 +2102,16 @@ export class FarmWorld {
     const dx = authoritative.x - this.player.root.position.x;
     const dz = authoritative.z - this.player.root.position.z;
     const error = Math.hypot(dx, dz);
-    if (error <= 0.35) return;
+    // A rejection must return to a valid starting point even for centimetre
+    // errors. Partial correction repeatedly resubmitted an invalid endpoint.
+    const rejected = authoritative.accepted === false;
+    if (error <= (rejected ? 0.001 : 0.35)) return;
     const targetY = (Number.isFinite(authoritative.y) && authoritative.y !== 0) ? authoritative.y : (VENUES[this.currentVenue]?.interior.y ?? getTerrainHeight(authoritative.x, authoritative.z));
     if (performance.now() - (this.lastCorrectionReportAt || 0) > 15000) {
       this.lastCorrectionReportAt = performance.now();
       window.__farmDebug?.report(`Server từ chối/correct bước di chuyển, lệch ${error.toFixed(2)}m; lý do: ${authoritative.reason || 'server không cung cấp'}. Vị trí: ${authoritative.x}, ${authoritative.z}.`, 'SERVER MOVEMENT CORRECTION');
     }
-    if (error > 4) {
+    if (rejected || error > 4) {
       this.player.root.position.set(authoritative.x, targetY, authoritative.z);
     } else {
       this.player.root.position.x += dx * 0.35;
@@ -2295,17 +2294,23 @@ export class FarmWorld {
     if (this.foliageInstancing) { this.foliageInstancing._enabled = next; if (next) this.foliageInstancing.lastChunkUpdate = -1000; }
   }
 
-  focusCasinoTable(gameKind = null) {
-    const changed = this.focusedCasinoTable !== gameKind;
+  focusCasinoTable(gameKind = null, preview = false) {
+    const changed = this.focusedCasinoTable !== gameKind || (this.casinoTablePreview && !preview);
+    this.casinoTablePreview = preview;
     this.focusedCasinoTable = gameKind;
     if (!this.player || !this.currentVenue || this.currentVenue !== 'casino') return;
     const vInt = VENUES.casino.interior;
     const tableCoords = CASINO_TABLE_ANCHORS;
     const table = tableCoords[gameKind];
+    // In table mode show only the selected game's furniture. Restore the
+    // complete hall when returning to exploration.
+    for (const game of Object.keys(CASINO_TABLE_ANCHORS)) {
+      this.scene?.getTransformNodeByName(`casino-table-3d-${game}`)?.setEnabled(!table || !this.casinoScreenActive || game === gameKind);
+    }
     // First-person table view: the avatar must not clip through the felt.
     this.player.root.setEnabled(!(table && this.casinoScreenActive));
     if (table) {
-      if (changed) {
+      if (changed && !preview) {
         this.player.stop();
         this.player.root.position.set(vInt.x + table.seatX, vInt.y, vInt.z + table.seatZ);
       }
@@ -2824,12 +2829,13 @@ export class FarmWorld {
     this.updateFarmSigns(this.remotePlayerState || []);
   }
 
-  showEmote(playerId, emoteChar) {
+  showChatBubble(playerId, text = '', emoteChar = null) {
     let targetRoot = null;
-    const myId = this.callbacks.getPlayerId?.();
-    const isMe = (playerId === myId || !playerId);
-    const isWave = emoteChar === 'wave' || emoteChar === 'hello';
-    const isCheer = ['party', 'celebrate', 'heart', 'sparkle', 'trophy'].includes(emoteChar);
+    const myId = this.callbacks.getPlayerId?.() || this.player?.id;
+    const isMe = (!playerId || (myId && playerId === myId) || (this.player && playerId === this.player.id));
+    const lower = (text || '').toLowerCase();
+    const isWave = emoteChar === 'wave' || emoteChar === 'hello' || lower.includes('chào') || lower.includes('hello') || lower.includes('hi ');
+    const isCheer = ['party', 'celebrate', 'heart', 'sparkle', 'trophy'].includes(emoteChar) || lower.includes('vui') || lower.includes('tuyệt') || lower.includes('haha');
 
     if (isMe) {
       targetRoot = this.player?.root;
@@ -2840,6 +2846,14 @@ export class FarmWorld {
       }
     } else {
       targetRoot = this.remotePlayers.get(playerId);
+      if (!targetRoot) {
+        for (const [rId, remote] of this.remotePlayers) {
+          if (rId === playerId || remote.metadata?.playerId === playerId || remote.name === `remote-player-${playerId}`) {
+            targetRoot = remote;
+            break;
+          }
+        }
+      }
       if (targetRoot?.metadata?.human) {
         if (isWave) {
           targetRoot.metadata.human.playAction('wave');
@@ -2848,122 +2862,22 @@ export class FarmWorld {
         }
       }
     }
+    if (!targetRoot) {
+      if (isMe) targetRoot = this.player?.root;
+      else return;
+    }
     if (!targetRoot) return;
 
-    // Hủy bong bóng cũ nếu có
-    const existingBubble = targetRoot.getChildren().find(c => c.name === 'emote-bubble');
-    if (existingBubble) existingBubble.dispose();
-
-    const bubblePlane = MeshBuilder.CreatePlane('emote-bubble', { width: 1.4, height: 1.4 }, this.scene);
-    bubblePlane.position.set(0, 2.5, 0);
-    bubblePlane.billboardMode = Mesh.BILLBOARDMODE_ALL;
-    bubblePlane.parent = targetRoot;
-
-    const texture = new DynamicTexture(`bubble-tex-${Date.now()}`, { width: 256, height: 256 }, this.scene, true);
-    texture.hasAlpha = true;
-    const ctx = texture.getContext();
-    ctx.clearRect(0, 0, 256, 256);
-
-    // Bo tròn bong bóng chat
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
-    ctx.beginPath();
-    ctx.roundRect(16, 16, 224, 190, 48);
-    ctx.fill();
-
-    // Viền pastel dễ thương
-    ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 10;
-    ctx.stroke();
-
-    // Mũi nhọn đuôi bong bóng chỉ xuống đầu
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
-    ctx.beginPath();
-    ctx.moveTo(112, 206);
-    ctx.lineTo(128, 238);
-    ctx.lineTo(144, 206);
-    ctx.closePath();
-    ctx.fill();
-
-    // Vẽ hình Vector Icon sắc nét 100% không phụ thuộc font emoji
-    ctx.save();
-    ctx.translate(128, 105);
-
-    if (emoteChar === 'heart') {
-      // Trái tim đỏ hồng pastel 3D
-      ctx.beginPath();
-      ctx.moveTo(0, 35);
-      ctx.bezierCurveTo(-50, -10, -50, -50, 0, -30);
-      ctx.bezierCurveTo(50, -50, 50, -10, 0, 35);
-      ctx.closePath();
-      const grad = ctx.createLinearGradient(0, -50, 0, 35);
-      grad.addColorStop(0, '#f43f5e');
-      grad.addColorStop(1, '#e11d48');
-      ctx.fillStyle = grad;
-      ctx.fill();
-      ctx.strokeStyle = '#be123c';
-      ctx.lineWidth = 4;
-      ctx.stroke();
-    } else if (emoteChar === 'trophy') {
-      // Cúp vàng chiến thắng
-      ctx.fillStyle = '#f59e0b';
-      ctx.beginPath();
-      ctx.arc(0, -15, 30, 0, Math.PI);
-      ctx.lineTo(0, 20);
-      ctx.fill();
-      ctx.fillRect(-24, 20, 48, 12);
-      ctx.fillStyle = '#fbbf24';
-      ctx.beginPath();
-      ctx.arc(0, -18, 22, 0, Math.PI);
-      ctx.fill();
-    } else if (emoteChar === 'party') {
-      // Pháo hoa / party starburst
-      ctx.fillStyle = '#8b5cf6';
-      ctx.beginPath();
-      ctx.arc(0, 0, 28, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#fde047';
-      ctx.font = 'bold 36px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('★', 0, 2);
-    } else {
-      // Ngôi sao vàng hoàng gia 3D
-      ctx.fillStyle = '#f59e0b';
-      ctx.font = 'bold 64px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('★', 0, 2);
-    }
-    ctx.restore();
-    texture.update();
-
-    const bubbleMat = new StandardMaterial(`bubble-mat-${Date.now()}`, this.scene);
-    bubbleMat.diffuseTexture = texture;
-    bubbleMat.opacityTexture = texture;
-    bubbleMat.specularColor = Color3.Black();
-    bubbleMat.disableLighting = true;
-    bubblePlane.material = bubbleMat;
-
-    // Animation pop up & bay bổng
-    let frame = 0;
-    const obs = this.scene.onBeforeRenderObservable.add(() => {
-      frame += 1;
-      if (frame < 12) {
-        const s = 0.4 + (frame / 12) * 0.6;
-        bubblePlane.scaling.set(s, s, s);
-      }
-      bubblePlane.position.y = 2.5 + Math.sin(frame * 0.08) * 0.08;
-
-      if (frame > 150) { // ~ 2.5s
-        const fade = Math.max(0, 1 - (frame - 150) / 30);
-        bubbleMat.alpha = fade;
-        if (frame >= 180) {
-          this.scene.onBeforeRenderObservable.remove(obs);
-          bubblePlane.dispose();
-          texture.dispose();
-          bubbleMat.dispose();
-        }
-      }
+    const senderName = isMe ? 'Bạn' : (targetRoot.metadata?.playerName || 'Người chơi');
+    showCharacterChatBubble(this.scene, targetRoot, {
+      text,
+      emote: emoteChar,
+      isLocal: isMe || targetRoot === this.player?.root,
+      senderName,
     });
+  }
+
+  showEmote(playerId, emoteChar) {
+    this.showChatBubble(playerId, '', emoteChar);
   }
 }

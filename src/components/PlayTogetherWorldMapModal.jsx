@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import './PlayTogetherWorldMapModal.css';
+import './WorldMapGameStyle.css';
+import { WorldMapSurface } from './WorldMapSurface.jsx';
 import { farmAudio } from '../game/audio/FarmAudioSystem.js';
 import { WORLD_LAYOUT } from '../game/world/worldLayout.js';
 import { WORLD_VILLAGES } from '../../shared/villageLayout.js';
@@ -148,7 +150,7 @@ const SPECIAL_DESTINATIONS = [
   },
   {
     id: 'beach',
-    label: 'Bãi Biển & Cảng Steamboat',
+    label: 'Bãi biển & Bến tàu',
     category: 'nature',
     badge: '★ Bờ Cát',
     color: '#0d9488',
@@ -171,6 +173,8 @@ export default function PlayTogetherWorldMapModal({
 }) {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDestination,setSelectedDestination]=useState(null);
+  const [mapZoom,setMapZoom]=useState(1);
 
   // 1. Determine player's owned farm
   const myFarm = useMemo(() => {
@@ -294,7 +298,7 @@ export default function PlayTogetherWorldMapModal({
               <h2 className="pt-map-title">BẢN ĐỒ THẾ GIỚI 3D</h2>
             </div>
             <p className="pt-map-subtitle">
-              Xe buýt đưa đón tức thì · Kết nối 100% đường giao thông không góc cụt
+              Xem vị trí hiện tại · chọn điểm đến để dịch chuyển có phí
             </p>
           </div>
           <button
@@ -311,6 +315,7 @@ export default function PlayTogetherWorldMapModal({
           </button>
         </header>
 
+        <section className="world-map-overview" aria-label="Bản đồ thế giới"><WorldMapSurface playerCoord={playerCoord} myFarm={myFarm} destinations={allDestinations} selectedId={selectedDestination?.id} onSelect={setSelectedDestination} zoom={mapZoom}/><div className="map-zoom-controls"><button type="button" aria-label="Thu nhỏ bản đồ" disabled={mapZoom<=1} onClick={()=>setMapZoom(z=>Math.max(1,z-.5))}>−</button><button type="button" onClick={()=>setMapZoom(1)}>Toàn cảnh</button><button type="button" aria-label="Phóng to bản đồ" disabled={mapZoom>=3} onClick={()=>setMapZoom(z=>Math.min(3,z+.5))}>+</button></div>{selectedDestination&&<aside className="map-destination-preview"><b>{selectedDestination.label}</b><span>{Math.round(Math.hypot(selectedDestination.x-playerCoord.x,selectedDestination.z-playerCoord.z))} m · Phí được xác nhận trước khi đi</span><button type="button" onClick={()=>handleTravelClick(selectedDestination)}>Dịch chuyển</button><button type="button" aria-label="Bỏ chọn điểm đến" onClick={()=>setSelectedDestination(null)}>×</button></aside>}</section>
         {/* Home Farm Quick-Warp Banner (Play Together Recall VIP Card) */}
         {myFarm && (
           <div className="pt-map-home-banner">
@@ -345,7 +350,7 @@ export default function PlayTogetherWorldMapModal({
           </div>
           <div className="pt-map-radar-summary">
             <span>Tọa độ: ({Math.round(playerCoord.x)}, {Math.round(playerCoord.z)})</span>
-            <span>15 trạm xe buýt sẵn sàng</span>
+            <span>Bấm điểm đến để xem lựa chọn dịch chuyển</span>
           </div>
         </div>
 
@@ -405,74 +410,7 @@ export default function PlayTogetherWorldMapModal({
           )}
         </nav>
 
-        {/* Destination Cards Grid */}
-        <div className="pt-map-body">
-          <div className="pt-map-grid">
-            {filteredDestinations.map(dest => {
-              const isHere = dest.isHere || dest.distance <= 18;
-
-              return (
-                <div
-                  key={dest.id}
-                  className={`pt-dest-card ${dest.isMyVillage ? 'is-my-farm' : ''} ${isHere ? 'is-current-pos' : ''}`}
-                  style={{
-                    borderTop: `4px solid ${dest.color || '#3b82f6'}`,
-                  }}
-                >
-                  <div className="pt-dest-top">
-                    <div
-                      className="pt-dest-icon-frame"
-                      style={{
-                        background: dest.gradient || 'linear-gradient(135deg, #f1f5f9, #e2e8f0)',
-                        border: `2px solid ${dest.color || '#cbd5e1'}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {dest.Icon ? <dest.Icon size={32} /> : <Icon3dHouseCabin size={32} />}
-                    </div>
-
-                    <div className="pt-dest-meta">
-                      <div className="pt-dest-tag-row">
-                        <span
-                          className={`pt-dest-tag ${dest.isMyVillage ? 'badge-owner' : ''} ${isHere ? 'badge-here' : ''}`}
-                          style={
-                            !dest.isMyVillage && !isHere
-                              ? { backgroundColor: `${dest.color}22`, color: dest.color }
-                              : {}
-                          }
-                        >
-                          {dest.badge}
-                        </span>
-                        {isHere && <span className="pt-dest-tag badge-here">Đang Ở Đây</span>}
-                      </div>
-
-                      <h3 className="pt-dest-name">{dest.label}</h3>
-                      <p className="pt-dest-desc">{dest.sub}</p>
-                    </div>
-                  </div>
-
-                  <div className="pt-dest-bottom">
-                    <div className="pt-dest-distance">
-                      <span>{dest.highway}</span>
-                    </div>
-
-                    <button
-                      type="button"
-                      className={`pt-dest-bus-btn ${isHere ? 'is-here' : ''}`}
-                      disabled={isHere}
-                      onClick={() => handleTravelClick(dest)}
-                      title={isHere ? 'Bạn đang ở ngay đây' : `Đi xe buýt tới ${dest.label}`}
-                    >
-                      <span>{isHere ? 'ĐANG Ở ĐÂY' : 'LÊN XE BUÝT'}</span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <div className="map-destination-list" aria-label="Điểm đến">{filteredDestinations.map(dest=><button type="button" key={dest.id} aria-pressed={selectedDestination?.id===dest.id} onClick={()=>setSelectedDestination(dest)}>{dest.Icon&&<dest.Icon size={20}/>}<span>{dest.label}</span><small>{Math.round(Math.hypot(dest.x-playerCoord.x,dest.z-playerCoord.z))} m</small></button>)}</div>
       </div>
     </div>
   );

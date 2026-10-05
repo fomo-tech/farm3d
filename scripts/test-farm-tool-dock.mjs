@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { build } from 'esbuild';
+const result=await build({entryPoints:['src/components/FarmToolDock.jsx'],bundle:true,write:false,platform:'node',format:'esm',external:['react'],loader:{'.css':'empty'},jsx:'automatic'});
+assert.ok(result.outputFiles[0].text.includes('FarmToolDock'));
+const source=await readFile('src/components/FarmToolDock.jsx','utf8');
+assert.match(source,/disabled=\{!connected\|\|progress.level<crop.level\}/);
+assert.match(source,/chooseCrop\(crop\)/);
+assert.match(source,/aria-pressed=\{progress.selectedCrop===crop.id\}/);
+const ids=[...source.matchAll(/\['(hand|hoe|seed|water|harvest)',/g)].map(m=>m[1]);
+assert.deepEqual(ids,['hand','hoe','seed','water','harvest']);
+console.log('PASS farm dock: JSX bundle, authoritative seed selection, lock/connect guards, hotkey order');

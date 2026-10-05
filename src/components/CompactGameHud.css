@@ -75,3 +75,51 @@
   .compact-game-hud .livestock-card { top:180px; max-width:210px; }
 }
 .compact-game-hud.hud-modal-open :is(.pt-context-action-wrap,.vehicle-quick-menu,.pt-hotbar,.pt-joystick,.pt-action-bubbles,.farm-zone-badge,.livestock-card,.hud-map-button) { display:none; }
+
+/* Neutral compact HUD: quiet surfaces, one contextual action, no overlap. */
+.compact-game-hud { --hud-surface:#f5f7faed; --hud-ink:#243447; }
+.compact-game-hud :is(.pt-profile-card,.pt-location-pill,.pt-candy-btn,.farm-zone-badge,.pt-quest-card) {
+  background:#f5f7faed !important; color:#243447 !important;
+  border:1px solid #bac7d3 !important; border-radius:10px !important;
+  box-shadow:0 2px 6px #14263820 !important;
+}
+.compact-game-hud .pt-fashion-btn { width:42px !important; height:42px !important; font-size:10px; }
+.compact-game-hud .pt-context-action-wrap { right:16px !important; left:auto !important; bottom:86px !important; transform:none !important; max-width:260px; }
+.compact-game-hud .pt-context-action-btn {
+  min-height:48px !important; background:#23455c !important; color:#fff !important;
+  border:1px solid #638297 !important; border-radius:12px !important;
+  box-shadow:0 2px 6px #14263830 !important; padding:8px 12px !important;
+}
+.compact-game-hud .pt-context-title { color:#fff !important; font-size:14px !important; }
+.compact-game-hud .pt-context-hint { color:#d8e5ee !important; font-size:10px !important; }
+.compact-game-hud .pt-context-glow-ring { display:none; }
+.compact-game-hud .pt-context-icon-bubble { background:transparent !important; box-shadow:none !important; }
+.compact-game-hud .farm-herd-compact {
+  top:174px !important; right:16px !important; left:auto !important;
+  width:auto !important; max-width:230px !important; padding:5px !important;
+  display:flex; gap:5px; align-items:center; background:#f5f7faed !important;
+  border:1px solid #bac7d3 !important; border-radius:10px !important; box-shadow:none !important;
+}
+.compact-game-hud .farm-herd-compact .livestock-info { display:none; }
+.compact-game-hud .farm-herd-compact .livestock-action-btn {
+  width:auto !important; margin:0 !important; padding:8px !important;
+  background:#23455c !important; color:#fff !important; border:0 !important;
+  border-radius:7px !important; box-shadow:none !important; font-size:12px !important;
+}
+.compact-game-hud .avatar-chat-bar-container {
+  left:150px !important; bottom:16px !important; transform:none !important;
+  width:220px !important; max-width:calc(100vw - 250px) !important;
+}
+.compact-game-hud .avatar-chat-bar-container.focused { width:360px !important; }
+.compact-game-hud .avatar-chat-form {
+  border:1px solid #bac7d3 !important; border-radius:10px !important;
+  background:#f5f7faed !important; box-shadow:none !important; padding:4px 6px !important;
+}
+.compact-game-hud .avatar-chat-bar-container:not(.focused) .chat-send-btn { display:none; }
+.compact-game-hud .farm-manual-tools { bottom:160px !important; padding:7px !important; background:#f5f7faed !important; border-radius:8px !important; font-size:12px; }
+.compact-game-hud.hud-modal-open :is(.avatar-chat-bar-container,.farm-manual-tools) { display:none; }
+@media(max-width:600px) {
+  .compact-game-hud .avatar-chat-bar-container { left:110px !important; width:170px !important; max-width:calc(100vw - 200px) !important; }
+  .compact-game-hud .farm-herd-compact { top:144px !important; right:10px !important; max-width:190px !important; }
+  .compact-game-hud .pt-context-action-wrap { bottom:90px !important; max-width:220px; }
+}

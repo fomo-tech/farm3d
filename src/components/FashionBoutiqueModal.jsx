@@ -243,7 +243,7 @@ export function FashionBoutiqueModal({
       const closeup = ['hairStyle', 'ears', 'eyeType', 'mouthType', 'noseType', 'blushType'].includes(field);
       camera.alpha = isBackView ? Math.PI * 1.3 : Math.PI / 2;
       camera.beta = 1.45;
-      camera.target.set(0, closeup ? (isWaistOrBack ? 1.35 : 1.98) : field === 'topId' ? 1.35 : field === 'shoeId' ? 0.22 : field === 'bottomId' ? 0.65 : 1.15, 0);
+      camera.target.set(0, closeup ? (isWaistOrBack ? 1.25 : 1.48) : field === 'topId' ? 1.20 : field === 'shoeId' ? 0.22 : field === 'bottomId' ? 0.60 : 1.05, 0);
       camera.radius = closeup ? (isWaistOrBack ? 2.6 : 1.45) : field === 'topId' ? 2.2 : field === 'shoeId' ? 1.25 : field === 'bottomId' ? 2.5 : 4.5;
       try {
         avatar.applyCustomization(custom);
@@ -334,16 +334,16 @@ export function FashionBoutiqueModal({
     const camera = cameraRef.current;
     if (!camera) return;
     if (mode === 'face') {
-      camera.target.set(0, 1.98, 0);
+      camera.target.set(0, 1.48, 0);
       camera.radius = 1.9;
       camera.beta = 1.42;
     } else if (mode === 'accessories') {
-      camera.target.set(0, 1.45, 0);
-      camera.radius = 3.2;
+      camera.target.set(0, 1.30, 0);
+      camera.radius = 3.0;
       camera.beta = 1.40;
     } else {
-      camera.target.set(0, 1.15, 0);
-      camera.radius = 4.5;
+      camera.target.set(0, 1.05, 0);
+      camera.radius = 4.2;
       camera.beta = 1.45;
     }
   };

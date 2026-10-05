@@ -151,9 +151,9 @@ export class OwnedHerd {
 
     // Tọa độ lệch tự nhiên cho tối đa 3 bé mỗi loài (tạo thành tam giác tự nhiên, KHÔNG xếp hàng một)
     const naturalOffsets = [
-      { ox: -0.42, oz: -0.28, rx: 0.45, rz: 0.35, speed: 0.65 },
-      { ox: 0.45, oz: 0.32, rx: 0.38, rz: 0.42, speed: 0.55 },
-      { ox: 0.08, oz: 0.55, rx: 0.48, rz: 0.38, speed: 0.6 },
+      { ox: -0.55, oz: -0.38, rx: 0.12, rz: 0.12, speed: 0.65 },
+      { ox: 0.55, oz: -0.38, rx: 0.12, rz: 0.12, speed: 0.55 },
+      { ox: 0, oz: 0.62, rx: 0.12, rz: 0.12, speed: 0.6 },
     ];
 
     for (const [index, animal] of animals.entries()) {
@@ -206,7 +206,7 @@ export class OwnedHerd {
       // LOÀI 1: BÉ HEO CHIBI HỒNG NGỌT NGÀO (PIG)
       // ==========================================
       if (species === 'pig') {
-        root.scaling.setAll(0.92);
+        root.scaling.setAll(0.78);
         const pinkBody = '#f9a8d4';
         const darkPink = '#f472b6';
         const blushPink = '#fb7185';
@@ -264,7 +264,7 @@ export class OwnedHerd {
       // LOÀI 2: BÉ GÀ BÔNG CHIBI LÔNG TRẮNG (CHICKEN)
       // ==========================================
       else if (species === 'chicken') {
-        root.scaling.setAll(0.72);
+        root.scaling.setAll(0.55);
         const whiteBody = '#ffffff';
         const combRed = '#ef4444';
         const beakGold = '#f59e0b';
@@ -329,7 +329,7 @@ export class OwnedHerd {
       // LOÀI 3: BÉ VỊT VÀNG NƯỚC (DUCK)
       // ==========================================
       else if (species === 'duck') {
-        root.scaling.setAll(0.72);
+        root.scaling.setAll(0.60);
         const yellowBody = '#fef08a';
         const billOrange = '#fb923c';
 
@@ -372,7 +372,7 @@ export class OwnedHerd {
       // LOÀI 4: CỪU BÔNG LÔNG XÙ (SHEEP)
       // ==========================================
       else if (species === 'sheep') {
-        root.scaling.setAll(0.9);
+        root.scaling.setAll(0.78);
         const wool = '#f8fafc';
         const woolShadow = '#e2e8f0';
         const face = '#475569';

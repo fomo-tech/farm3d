@@ -134,11 +134,7 @@ export class WorldCollisionSystem {
     // 6. Xưởng Thủ Công tại (88, 136)
     this.addBox('artisan-workshop', 83.5, 92.5, 132.5, 139.5);
 
-    // 7. Bãi Cỏ Bò Sữa - 4 hàng rào gỗ trắng bao quanh (88, 112)
-    this.addBox('pasture-fence-w', 77.6, 78.4, 101.5, 122.5);
-    this.addBox('pasture-fence-e', 97.6, 98.4, 101.5, 122.5);
-    this.addBox('pasture-fence-n', 77.6, 98.4, 101.5, 102.4);
-    this.addBox('pasture-fence-s', 77.6, 98.4, 121.6, 122.5);
+    // (Đã dọn dẹp hàng rào bãi chăn thả tại x=88, z=112)
 
     // 8. Sân Khấu Nghệ Thuật tại (38, -6)
     this.addBox('concert-stage', 31.5, 44.5, -10.5, -1.5);

@@ -1,6 +1,7 @@
 import { WorldCollisionSystem } from '../src/game/physics/WorldCollisionSystem.js';
 import { vehicleCollisionRadius } from '../shared/vehicleCollision.js';
 import { busRouteForId, nearBusRoute } from '../shared/busAuthorityConfig.js';
+import { VEHICLES } from '../shared/vehicleConfig.js';
 
 // The collision implementation has no WebGL/DOM dependencies. Reuse the same
 // static geometry and swept sliding rules as the client instead of endpoints only.
@@ -13,7 +14,7 @@ export class MovementAuthority {
     this.reset(client,now);this.rides.set(client,{route,expiresAt:now+600000});
     this.budgets.get(client).credit=6;return true;
   }
-  maxSpeed(client) { return this.rides.has(client)?48:32; }
+  maxSpeed(client) { return this.rides.has(client)?48:(Object.hasOwn(VEHICLES,client.vehicle)?VEHICLES[client.vehicle].speed:7)*1.35; }
   accepts(client, target, now=Date.now()) {
     let budget=this.budgets.get(client);
     if(!budget){this.reset(client,now);budget=this.budgets.get(client);}

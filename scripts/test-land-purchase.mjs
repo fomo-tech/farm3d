@@ -3,6 +3,8 @@ import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { MongoClient } from 'mongodb';
 import { WebSocket } from 'ws';
+import { farmTilePosition } from '../shared/farmLayout.js';
+import { CROPS } from '../shared/farmConfig.js';
 
 // Only an isolated, generated test database is used; never touches live player data.
 const databaseName = `farm_land_test_${randomUUID().replaceAll('-', '')}`;
@@ -48,7 +50,7 @@ try {
   await mongo.connect(); await startServer();
   const db = mongo.db(databaseName);
   const a = await connect(); const b = await connect();
-  assert.equal(a.welcome.farmId, null); assert.equal(a.welcome.spawn.x, 0); assert.equal(a.welcome.spawn.z, 18);
+  assert.equal(a.welcome.farmId, null); assert.equal(a.welcome.spawn.x, 0); assert.equal(a.welcome.spawn.z, 42);
   assert.equal(a.account.progress.unlockedPlots, 0); assert.deepEqual(a.account.progress.ownedHomes, []);
   assert.equal(await db.collection('farm_assignments').countDocuments(), 0);
   const initialMarket = await a.wait(m => m.type === 'farm_scope' && m.lots);
@@ -57,7 +59,12 @@ try {
   assert.equal(await db.collection('farm_assignments').countDocuments(), 0);
   assert.equal((await a.action('claim_seeds')).type, 'action_error');
   assert.equal((await a.action('character_create', { name: 'Buyer A' })).type, 'account_state');
+  assert.equal((await b.action('character_create', { name: '  buyer a  ' })).type, 'action_error', 'Names are unique across case and outer whitespace');
   await b.action('character_create', { name: 'Buyer B' });
+  const nameRaceA = await connect(), nameRaceB = await connect();
+  const nameRace = await Promise.all([nameRaceA.action('character_create', { name: 'Tên Chung' }), nameRaceB.action('character_create', { name: 'tên chung' })]);
+  assert.equal(nameRace.filter(result => result.type === 'account_state').length, 1, 'Database rejects concurrent duplicate names');
+  assert.equal(nameRace.filter(result => result.type === 'action_error').length, 1);
   const { lots } = await a.wait(m => m.type === 'farm_scope' && m.lots?.length === 288);
   assert.equal(new Set(lots.map(l => l.farmId)).size, 288);
   const ordered = [...lots].sort((x, y) => Math.hypot(x.x, x.z) - Math.hypot(y.x, y.z));
@@ -83,11 +90,50 @@ try {
   assert.equal(rejoined.account.progress.coins, 80);
   const scope = await rejoined.wait(m => m.type === 'farm_scope' && m.lots);
   assert.equal(scope.lots.find(l => l.farmId === cheapest.farmId).userName, winner === a ? 'Buyer A' : 'Buyer B');
+  // Exercise real websocket farm actions from the purchased parcel, without
+  // teleporting a live user or waiting minutes for a crop in the test fixture.
+  const tile = farmTilePosition(Number(cheapest.farmId.slice(-6)), '0:0');
+  await db.collection('players').updateOne({ playerId: winner.playerId }, { $set: { position: { ...tile, y: 0, rotation: 0, villageId: cheapest.villageId, layoutVersion: 7 } } });
+  const farmer = await connect(winner.playerId, winner.token);
+  const farm = async (action, extra = {}) => {
+    const requestId = randomUUID();
+    farmer.socket.send(JSON.stringify({ type: 'farm_action', farmId: cheapest.farmId, tileKey: '0:0', action, crop: 'carrot', requestId, ...extra }));
+    return farmer.wait(m => m.requestId === requestId && ['account_state', 'action_error'].includes(m.type));
+  };
+  const baseline = farmer.account.progress;
+  const tilled = await farm('till'); assert.equal(tilled.type, 'account_state', tilled.message);
+  const planted = await farm('plant'); assert.equal(planted.type, 'account_state', planted.message);
+  assert.equal(planted.progress.freeSeeds, baseline.freeSeeds - 1);
+  assert.equal(planted.progress.coins, baseline.coins);
+  assert.equal((await farm('water')).type, 'account_state');
+  assert.equal((await farm('harvest', { wateredAt: 0 })).type, 'action_error', 'Client cannot forge maturity');
+  const storedFarmId = `farm_${String(cheapest.lot).padStart(6, '0')}`;
+  await db.collection('crops').updateOne({ villageId: cheapest.villageId, farmId: storedFarmId, tileKey: '0:0' }, { $set: { wateredAt: Date.now() - CROPS.carrot.growMs - 1000 } });
+  const harvested = await farm('harvest'); assert.equal(harvested.type, 'account_state', harvested.message);
+  const amount = harvested.progress.inventory.carrot - (baseline.inventory.carrot || 0);
+  assert.ok(amount > 0);
+  assert.equal((await farm('harvest')).type, 'action_error', 'Cannot harvest twice');
+  for (const invalid of [1.5, -1, 0, 100, 'invalid']) assert.equal((await farmer.action('sell_item', { id: 'carrot', amount: invalid })).type, 'action_error');
+  const sold = await farmer.action('sell_item', { id: 'carrot', amount });
+  assert.equal(sold.type, 'account_state', sold.message);
+  assert.equal(sold.progress.coins, harvested.progress.coins + amount * CROPS.carrot.sellPrice);
+  assert.equal(sold.progress.inventory.carrot, baseline.inventory.carrot || 0);
+  const persisted = await connect(winner.playerId, winner.token);
+  assert.equal(persisted.account.progress.coins, sold.progress.coins);
+  assert.equal(persisted.account.progress.inventory.carrot, sold.progress.inventory.carrot);
+  assert.equal((await db.collection('crops').findOne({ villageId: cheapest.villageId, farmId: storedFarmId, tileKey: '0:0' })).state, 'tilled');
+  console.log('PASS: purchased land -> till -> plant -> water -> mature harvest -> sell -> reconnect; exact coins/inventory, invalid sales and repeat harvest.');
   // Crash recovery: a paid reservation must finalize; an unpaid one must release.
   await db.collection('farm_assignments').updateOne({ playerId: winner.playerId }, { $set: { status: 'pending' } });
   await db.collection('farm_assignments').insertOne({ playerId: loser.playerId, villageId: ordered[0].villageId, lot: ordered[0].lot, status: 'pending', purchaseId: 'unpaid' });
   clients.forEach(c => c.socket.terminate());
+  await db.collection('players').updateOne({ playerId: winner.playerId }, { $set: { 'progress.pendingFarmWrite': {
+    id: 'recovery-fixture', farmId: cheapest.farmId, storageFarmId: storedFarmId, villageId: cheapest.villageId,
+    tileKey: '0:1', next: { state: 'tilled' },
+  } } });
   await stopServer(); await startServer();
+  assert.equal((await db.collection('crops').findOne({ villageId: cheapest.villageId, farmId: storedFarmId, tileKey: '0:1' })).state, 'tilled');
+  assert.equal((await db.collection('players').findOne({ playerId: winner.playerId })).progress.pendingFarmWrite, undefined);
   assert.equal((await db.collection('farm_assignments').findOne({ playerId: winner.playerId })).status, 'owned');
   assert.equal(await db.collection('farm_assignments').countDocuments({ playerId: loser.playerId }), 0);
   // Legacy ownership has no purchase receipt/status and must be preserved.

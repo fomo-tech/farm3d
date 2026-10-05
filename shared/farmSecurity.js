@@ -4,6 +4,12 @@ import { decodeFarmId } from './villageLayout.js';
 export function farmGateOpen(assignment) {
   return typeof assignment?.gateOpen === 'boolean' ? assignment.gateOpen : FARM_CONFIG.security.gate.defaultOpen;
 }
+export function cropYield(row) {
+  const cfg = FARM_CONFIG.security.theft;
+  if (row?.tutorialFastGrowth) return row.yield || cfg.tutorialYield;
+  // Older ordinary crops predate the four-item yield schema.
+  return !row?.yield || row.yield === 1 ? cfg.normalYield : row.yield;
+}
 
 export function farmOrigin(farmId) {
   const decoded = decodeFarmId(farmId);
@@ -39,11 +45,11 @@ export function theftPolicy({ owner, gateOpen, row, now, claimedAt, playerCount 
   const cfg = FARM_CONFIG.security.theft;
   if (!cfg.enabled || owner) return { error: 'Không thể ăn trộm tại nông trại này.' };
   if (cfg.requireOpenGate && !gateOpen) return { error: 'Cổng đã đóng. Không thể ăn trộm.' };
-  if (now - claimedAt < cfg.newFarmProtectionMs) return { error: 'Nông trại mới đang được bảo vệ.' };
-  if (playerCount >= cfg.dailyPlayerLimit || farmCount >= cfg.dailyFarmLimit) return { error: 'Đã hết lượt ăn trộm hôm nay.' };
+  if (cfg.newFarmProtectionMs > 0 && now - claimedAt < cfg.newFarmProtectionMs) return { error: 'Nông trại mới đang được bảo vệ.' };
+  if (cfg.dailyLimitsEnabled && (playerCount >= cfg.dailyPlayerLimit || farmCount >= cfg.dailyFarmLimit)) return { error: 'Đã hết lượt ăn trộm hôm nay.' };
   const crop = FARM_CONFIG.crops[row?.crop];
   if (!crop || row.state !== 'watered' || row.tutorialFastGrowth || now - row.wateredAt < crop.growMs) return { error: 'Chỉ được lấy cây chín, không phải cây hướng dẫn.' };
   if (row.stolenAmount || row.theftClaim) return { error: 'Cây này đã bị lấy trong vụ hiện tại.' };
-  const amount = Math.floor((row.yield || 1) * (1 - cfg.ownerRetainedRatio));
+  const amount = Math.floor(cropYield(row) * (1 - cfg.ownerRetainedRatio));
   return amount > 0 ? { amount, crop: row.crop } : { error: 'Sản lượng cây này được bảo vệ toàn bộ.' };
 }

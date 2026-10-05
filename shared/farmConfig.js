@@ -72,15 +72,15 @@ export const FARM_CONFIG = deepFreeze(validateFarmConfig({
   care: { tutorialGrowMs: 8_000, feedBatchCost: 20, feedXp: 5, collectXp: 10, hungerMs: 360_000 },
   buildings: { barn: { baseCapacity: 20, capacityPerLevel: 20, upgradeCostPerLevel: 350 } },
   expansions: [{ plots: 24, cost: 500, level: 3 }, { plots: 36, cost: 1400, level: 6 }, { plots: 48, cost: 3200, level: 9 }],
-  visuals: { stages: [0, 0.25, 0.75, 1], cropScale: 1 },
+  visuals: { stages: [0, 0.25, 0.75, 1], cropScale: .85 },
   livestockVisuals: { walkRadius: .12, walkSpeed: .6, segments: 6,
     slots: { chicken: [-1.2, -1], duck: [1.2, -1], pig: [-1.2, 1], cow: [1.2, 1], sheep: [0, 1.7] },
     colors: { chicken: '#dcb27e', duck: '#f3eee3', pig: '#e9a6aa', cow: '#f3eee3', sheep: '#f8fafc' } },
   security: {
     gate: { defaultOpen: false, animationMs: 700, interactionDistance: 3, allowGuestExit: true },
     theft: { enabled: true, requireOpenGate: true, interactionMs: 3000, interactionDistance: 3,
-      dailyPlayerLimit: 3, dailyFarmLimit: 3, ownerRetainedRatio: 0.75,
-      newFarmProtectionMs: 72 * 60 * 60 * 1000, normalYield: 4, tutorialYield: 1 },
+      dailyPlayerLimit: 3, dailyFarmLimit: 3, dailyLimitsEnabled: false, ownerRetainedRatio: 0.75,
+      newFarmProtectionMs: 0, normalYield: 4, tutorialYield: 1 },
   },
 }));
 

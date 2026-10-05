@@ -29,6 +29,7 @@ assert.throws(()=>applyCommunityReward(rewards,'redeem_giftcode',{code:'OLD'},10
 assert.throws(()=>applyCommunityReward(rewards,'redeem_giftcode',{code:'OFF'},100,{OFF:{coins:1,enabled:false,expiresAt:null}}));
 
 const authority=new MovementAuthority(), client={...TOWN_SPAWN,vehicle:'walk',venue:null};
+assert.equal(authority.maxSpeed(client),7*1.35,'speed is derived from server-equipped vehicle');
 const rider={x:0,z:54,y:0,venue:null,vehicle:'walk'};
 assert.equal(authority.board({...rider,x:900},'bus-01A',0),false);
 assert.equal(authority.board(rider,'fake-bus',0),false);

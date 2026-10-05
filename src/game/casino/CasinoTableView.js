@@ -7,6 +7,7 @@ import {VENUE_LAYOUT} from '../../../shared/venueLayout.js';
 import {CASINO_SYMBOLS, CASINO_CONFIG} from '../../../shared/casino/casinoConfig.js';
 import {cardLabel, cardSuit} from '../../../shared/casino/cards.js';
 import {casinoAudio} from './casinoAudio.js';
+import {CASINO_TABLE_ANCHORS} from '../../../shared/casinoTableAnchors.js';
 
 /**
  * 3D Play Together Table Props: Dynamic 3D Dice, Ceramic Bowl, Felt Cards and Gold Chips
@@ -140,12 +141,7 @@ export class CasinoTableView {
     this.game = room?.game;
     if (room?.game) {
       const p = VENUE_LAYOUT.casino.interior;
-      const offsets = {
-        'tai-xiu': { x: -6.5, z: -3.5 },
-        'bau-cua': { x: 6.5, z: -3.5 },
-        'bai-cao': { x: -6.5, z: 4.5 },
-        'tien-len': { x: 6.5, z: 4.5 },
-      };
+      const offsets = CASINO_TABLE_ANCHORS;
       const off = offsets[room.game] || { x: 0, z: -3 };
       this.root.position.set(p.x + off.x, p.y + 0.05, p.z + off.z);
     }

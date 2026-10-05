@@ -24,8 +24,9 @@ export class GameClient {
     this.onAccountState = options.onAccountState || (() => {});
     this.onActionError = options.onActionError || (() => {});
     this.onSocialState = options.onSocialState || (() => {});
-    this.onCasinoState = options.onCasinoState || (() => {});
     this.onMoveAck = options.onMoveAck || (() => {});
+    this.onChat = options.onChat || (() => {});
+    this.onCasinoState = options.onCasinoState || (() => {});
     this.socket = null;
     this.profile = null;
     this.retry = null;
@@ -46,8 +47,14 @@ export class GameClient {
       this.connect(this.profile);
     };
     this.handleVisibility = () => {
-      if (document.visibilityState === 'visible' && !this.closed && !this.socket) this.handleOnline();
+      if (document.visibilityState !== 'visible' || this.closed) return;
+      // Background tabs/sleep can suspend timers for minutes. Give the socket
+      // a fresh probe window rather than treating that suspension as packet loss.
+      this.lastPongAt = Date.now();
+      this.sendNow({ type: 'ping', sentAt: this.lastPongAt });
+      if (!this.socket) this.handleOnline();
     };
+    this.handlePageHide = event => { if (!event.persisted) this.disconnect(); };
   }
 
   connect(profile) {
@@ -57,6 +64,7 @@ export class GameClient {
       window.addEventListener('offline', this.handleOffline);
       window.addEventListener('online', this.handleOnline);
       document.addEventListener('visibilitychange', this.handleVisibility);
+      window.addEventListener('pagehide', this.handlePageHide);
       this.listening = true;
     }
     if (this.socket && [WebSocket.OPEN, WebSocket.CONNECTING].includes(this.socket.readyState)) return;
@@ -119,6 +127,8 @@ export class GameClient {
           this.onMailboxNotice(message);
         } else if (message.type === 'player_emote') {
           this.onEmote(message);
+        } else if (message.type === 'player_chat') {
+          this.onChat(message);
         } else if (message.type === 'account_state') {
           this.acknowledge(message.requestId);
           this.onAccountState(message);
@@ -190,8 +200,14 @@ export class GameClient {
 
   startHeartbeat() {
     this.stopHeartbeat();
+    let previousTick = Date.now();
     this.heartbeat = window.setInterval(() => {
-      if (Date.now() - this.lastPongAt > 25_000) {
+      const now = Date.now();
+      const resumed = now - previousTick > 20_000;
+      previousTick = now;
+      if (document.visibilityState === 'hidden' || resumed) {
+        this.lastPongAt = now;
+      } else if (now - this.lastPongAt > 25_000) {
         this.socket?.close(4000, 'Heartbeat timeout');
         return;
       }
@@ -210,6 +226,7 @@ export class GameClient {
       window.removeEventListener('offline', this.handleOffline);
       window.removeEventListener('online', this.handleOnline);
       document.removeEventListener('visibilitychange', this.handleVisibility);
+      window.removeEventListener('pagehide', this.handlePageHide);
       this.listening = false;
     }
     window.clearTimeout(this.retry);
@@ -223,6 +240,7 @@ export class GameClient {
   sendFarmAction(actionData) { return this.sendReliable({ type: 'farm_action', ...actionData }); }
   sendMailboxHeart(farmId) { this.send({ type: 'mailbox_heart', farmId }); }
   sendEmote(emote) { this.send({ type: 'emote', emote }); }
+  sendChat(text, emote = null) { this.send({ type: 'chat', text, emote }); }
   sendGameAction(action, payload = {}) { return this.sendReliable({ type: 'game_action', action, payload }); }
   sendSocialAction(action, friendId) { this.send({ type: 'social_action', action, friendId }); }
 }

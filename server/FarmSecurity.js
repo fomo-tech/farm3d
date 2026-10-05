@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { FARM_CONFIG, farmBarnCapacity } from '../shared/farmConfig.js';
-import { farmGatePosition, insideFarm, theftPolicy, farmBoundaryBlocked, farmGateOpen } from '../shared/farmSecurity.js';
+import { farmGatePosition, insideFarm, theftPolicy, farmBoundaryBlocked, farmGateOpen, cropYield } from '../shared/farmSecurity.js';
 import { WORLD_VILLAGES, worldFarmId } from '../shared/villageLayout.js';
 
 // A per-farm queue serializes gate changes, watering, harvesting and stealing.
@@ -79,10 +79,13 @@ export class FarmSecurity {
       const total = Object.values(player.progress.inventory).reduce((sum, n) => sum + Number(n || 0), 0);
       if (total + policy.amount > farmBarnCapacity(player.progress.barnLevel)) return { error: 'Kho đã đầy.' };
       const claim = { id: randomUUID(), playerId, day, amount: policy.amount, crop: policy.crop, at: now, counterPath: `theftCounts.${day}` };
-      const reserved = await this.crops.updateOne({ _id: row._id, plantedAt: row.plantedAt, state: 'watered', theftClaim: { $exists: false }, stolenAmount: { $in: [null, 0] } }, { $set: { theftClaim: claim } });
+      const normalizedYield = cropYield(row);
+      const reserved = await this.crops.updateOne({ _id: row._id, plantedAt: row.plantedAt, state: 'watered', theftClaim: { $exists: false }, stolenAmount: { $in: [null, 0] } }, { $set: { theftClaim: claim, yield: normalizedYield } });
       if (!reserved.modifiedCount) return { error: 'Cây vừa được người khác lấy.' };
       row.theftClaim = claim;
-      const paid = await this.players.updateOne({ playerId, revision: player.revision || 0, [`farmTheftCounts.${day}`]: { $not: { $gte: FARM_CONFIG.security.theft.dailyPlayerLimit } } }, {
+      row.yield = normalizedYield;
+      const paid = await this.players.updateOne({ playerId, revision: player.revision || 0,
+        ...(FARM_CONFIG.security.theft.dailyLimitsEnabled ? { [`farmTheftCounts.${day}`]: { $not: { $gte: FARM_CONFIG.security.theft.dailyPlayerLimit } } } : {}) }, {
         $inc: { [`progress.inventory.${policy.crop}`]: policy.amount, [`farmTheftCounts.${day}`]: 1, revision: 1 },
         $addToSet: { farmTheftReceipts: claim.id }, $set: { updatedAt: now },
       });

@@ -1,0 +1,21 @@
+import { useState } from 'react';
+import { Icon3dHoe, Icon3dSeeds, Icon3dWateringCan, Icon3dBasket, Icon3dHand, Icon3dChicken } from './icons3d/GameIcons3D.jsx';
+import { farmBarnCapacity } from '../../shared/farmConfig.js';
+import './FarmToolDock.css';
+
+export function FarmToolDock({ crops, cropIcons, progress, connected, activeTool, selectTool, chooseCrop, openHerd, openInventory }) {
+  const [seedsOpen, setSeedsOpen] = useState(false);
+  const stored=Object.values(progress.inventory||{}).reduce((sum,value)=>sum+Number(value||0),0);
+  const capacity=farmBarnCapacity(progress.barnLevel||0);
+  const selected=crops[progress.selectedCrop];
+  const tools=[['hand','Tương tác',Icon3dHand],['hoe','Cuốc',Icon3dHoe],['seed',crops[progress.selectedCrop]?.name||'Hạt',Icon3dSeeds],['water','Nước',Icon3dWateringCan],['harvest','Thu hoạch',Icon3dBasket]];
+  return <section className="farm-game-dock" aria-label="Công cụ nông trại">
+    {seedsOpen && <div className="farm-seed-tray" aria-label="Chọn hạt giống">
+      <header><div><b>CHỌN HẠT</b><small>Hạt đang dùng: {selected?.name||'Chưa chọn'}</small></div><button type="button" onClick={()=>setSeedsOpen(false)} aria-label="Đóng khay hạt">×</button></header>
+      <div>{Object.values(crops).map(crop=><button type="button" key={crop.id} disabled={!connected||progress.level<crop.level} aria-pressed={progress.selectedCrop===crop.id} onClick={()=>chooseCrop(crop)}><span className="farm-crop-art">{cropIcons?.[crop.id]||<Icon3dSeeds size={30}/>}</span><b>{crop.name}</b><small>{progress.level<crop.level?`Khóa · cấp ${crop.level}`:`${crop.seedCost} xu / ô · ${Math.ceil(crop.growMs/60000)} phút`}</small>{progress.selectedCrop===crop.id&&<span className="farm-seed-check" aria-label="Đang chọn">✓</span>}</button>)}</div>
+      <small role="status">{connected?'Xu chỉ trừ khi gieo':'Mất kết nối · chưa thể đổi hạt'}</small>
+    </div>}
+    <div className="farm-dock-caption"><span>{tools.find(([id])=>id===activeTool)?.[1]||'Làm ruộng'}</span><button type="button" onClick={openInventory} className={stored>=capacity?'farm-storage-full':''}>Kho {stored}/{capacity}{stored>=capacity?' · Đầy':''}</button></div>
+    <div className="farm-game-slots">{tools.map(([id,label,Icon],index)=><button type="button" key={id} aria-pressed={activeTool===id} aria-expanded={id==='seed'?seedsOpen:undefined} title={`${label} · ${index+1}`} onClick={()=>{selectTool(id);setSeedsOpen(id==='seed'?!seedsOpen:false);}}><kbd>{index+1}</kbd>{id==='seed'&&cropIcons?.[progress.selectedCrop]?cropIcons[progress.selectedCrop]:<Icon size={28}/>}<span>{label}{id==='seed'?' ▴':''}</span></button>)}<i className="farm-dock-divider"/><button type="button" onClick={openHerd}><Icon3dChicken size={26}/><span>Vật nuôi</span></button><button type="button" onClick={openInventory}><Icon3dBasket size={24}/><span>Kho</span></button></div>
+  </section>;
+}

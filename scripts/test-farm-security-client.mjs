@@ -5,7 +5,7 @@ const system = Object.create(FarmingSystem.prototype);
 const sent = [], notices = [];
 Object.assign(system, { playerFarmId: 'farm_000002', tool: 'hand', pendingActions: new Set(), state: {},
   controls: { onNetworkAction: payload => sent.push(payload) }, notify: text => notices.push(text), gateStates: new Map() });
-const tile = { metadata: { farmId: 'farm_000001', column: 0, row: 0 }, getAbsolutePosition: () => new Vector3(-48.15, 0, 107.2) };
+const tile = { metadata: { interactive: true, farmId: 'farm_000001', column: 0, row: 0 }, getAbsolutePosition: () => new Vector3(-48.15, 0, 107.2) };
 system.state[system.key(tile)] = { crop: 'carrot', state: 'watered', wateredAt: Date.now() - 100000, yield: 4 };
 assert.equal(system.determineSmartTool(tile), 'harvest');
 assert.equal(sent.length, 0, 'smart tool selection must have no side effects');

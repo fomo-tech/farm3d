@@ -21,8 +21,10 @@ assert.equal(collision.resolveMovement(outside.x, outside.z, 0, 4).collided, fal
 const nowBase = Date.now();
 const mature = { state: 'watered', crop: 'carrot', plantedAt: nowBase - 120000, wateredAt: nowBase - 100000, yield: 4, stolenAmount: 0 };
 assert.equal(theftPolicy({ gateOpen: false, row: mature, now: nowBase, claimedAt: 0 }).error.includes('đóng'), true);
-assert.equal(theftPolicy({ gateOpen: true, row: { ...mature, yield: 1 }, now: nowBase, claimedAt: 0 }).error.includes('bảo vệ'), true);
-assert.equal(theftPolicy({ gateOpen: true, row: mature, now: nowBase, claimedAt: nowBase }).error.includes('mới'), true);
+assert.equal(theftPolicy({ gateOpen: true, row: { ...mature, yield: 1 }, now: nowBase, claimedAt: 0 }).amount, 1);
+assert.equal(theftPolicy({ gateOpen: true, row: { ...mature, yield: undefined }, now: nowBase, claimedAt: 0 }).amount, 1);
+assert.ok(theftPolicy({ gateOpen: true, row: { ...mature, yield: 1, tutorialFastGrowth: true }, now: nowBase, claimedAt: 0 }).error);
+assert.ok(theftPolicy({ gateOpen: true, row: mature, now: nowBase, claimedAt: nowBase }).amount > 0, 'Opening a new farm permits ripe crop theft');
 
 // Live Mongo tests use ONLY a generated temporary database.
 const mongo = new MongoClient(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017', { serverSelectionTimeoutMS: 5000 });
@@ -99,11 +101,11 @@ try {
   await resetCrop(); pending = await start(); now += 3100;
   assert.ok(!(await service.steal({ ...args('thief'), phase: 'finish', token: pending.token })).error);
   await resetCrop();
-  assert.ok((await service.steal({ ...args('second'), phase: 'start' })).error, 'aggregate farm daily limit');
+  assert.ok((await service.steal({ ...args('second'), phase: 'start' })).pending, 'No aggregate daily cap when gate is open');
   now += 86400000;
   assert.ok((await service.steal({ ...args('second'), phase: 'start' })).pending, 'next UTC day resets limits');
   await stores.players.updateOne({ playerId: 'second' }, { $set: { [`farmTheftCounts.${new Date(now).toISOString().slice(0, 10)}`]: FARM_CONFIG.security.theft.dailyPlayerLimit } });
-  assert.ok((await service.steal({ ...args('second'), phase: 'start' })).error, 'account daily limit');
+  assert.ok((await service.steal({ ...args('second'), phase: 'start' })).pending, 'No account daily cap when gate is open');
   await service.toggle(assignment, farmId, 'owner', false, outside);
   recovered = new FarmSecurity(stores); await recovered.init();
   assert.equal(recovered.blocksMovement(outside, inside), true, 'closed state survives restart');

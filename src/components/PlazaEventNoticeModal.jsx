@@ -234,7 +234,7 @@ export function PlazaEventNoticeModal({
               </form>
 
               {codeMessage && (
-                <div className={`bb-code-alert ${codeMessage.success ? 'success' : 'error'}`}>
+                <div className={`bb-code-alert ${rewardState?.codes?.includes(giftCode.trim().toUpperCase()) ? 'success' : 'error'}`}>
                   {rewardNotice || codeMessage.text}
                 </div>
               )}

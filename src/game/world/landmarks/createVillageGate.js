@@ -138,12 +138,13 @@ export function createVillageGate(scene, position, villageName = 'LÀNG HOA MAI'
   ridge.parent = root;
 
   // 4. Bảng tên làng bằng gỗ sồi chạm chữ nổi viền vàng hổ phách
-  // 4. Bảng tên làng bằng gỗ sồi chạm chữ nổi viền vàng hổ phách (2048x440 High-Res Sharp Texture)
+  // 4. Bảng tên làng sơn son thếp vàng truyền thống Việt Nam (2048x440 Ultra High-Res Sharp Texture)
   const texture = new DynamicTexture(`village-gate-sign-${villageId || villageName}`, { width: 2048, height: 440 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
   texture.anisotropicFilteringLevel = 16;
   const signMat = new StandardMaterial(`village-gate-sign-mat-${villageId}`, scene);
   signMat.diffuseTexture = texture;
   signMat.emissiveTexture = texture;
+  signMat.emissiveColor = new Color3(0.5, 0.5, 0.5); // Tự phát sáng 50% giúp chữ luôn rực rỡ, sắc nét rõ mồn một bất kể ngày đêm
   signMat.specularColor = Color3.Black();
   signMat.backFaceCulling = false;
 
@@ -172,38 +173,84 @@ export function createVillageGate(scene, position, villageName = 'LÀNG HOA MAI'
     ctx.imageSmoothingQuality = 'high';
     ctx.clearRect(0, 0, 2048, 440);
 
-    // Nền gỗ sồi sẫm sang trọng
-    ctx.fillStyle = theme.signBg || '#3d2314';
+    // 1. Nền gỗ lim/gỗ sồi sẫm màu sang trọng (Aged Timber Lacquer), tạo độ tương phản đỉnh cao
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, 440);
+    bgGrad.addColorStop(0, '#2e170d');
+    bgGrad.addColorStop(0.5, '#190d07');
+    bgGrad.addColorStop(1, '#25130a');
+    ctx.fillStyle = bgGrad;
     ctx.beginPath();
-    ctx.roundRect(28, 28, 1992, 384, 56);
+    ctx.roundRect(18, 18, 2012, 404, 46);
     ctx.fill();
 
-    // Viền màu nhận diện cụm làng
-    ctx.strokeStyle = theme.accentColor || '#f59e0b';
-    ctx.lineWidth = 20;
+    // 2. Viền ngoài thếp vàng / chỉ phào truyền thống
+    const accent = theme.accentColor || '#f59e0b';
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 18;
     ctx.stroke();
 
-    // Viền chỉ phụ
-    ctx.strokeStyle = '#78350f';
-    ctx.lineWidth = 8;
+    // 3. Viền chỉ trong tinh xảo
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 6;
     ctx.beginPath();
-    ctx.roundRect(56, 56, 1936, 328, 36);
+    ctx.roundRect(44, 44, 1960, 352, 30);
     ctx.stroke();
 
-    // Tên làng chữ nổi màu kem ngà
-    ctx.fillStyle = '#fffdf0';
-    ctx.font = '900 124px "Nunito", "Segoe UI", Arial, sans-serif';
+    // 4. Họa tiết hoa văn góc (Corner motifs)
+    const corners = [
+      [68, 68], [1980, 68], [68, 372], [1980, 372]
+    ];
+    ctx.fillStyle = '#fde047';
+    corners.forEach(([cx, cy]) => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // 5. TÊN LÀNG CHÍNH: Chữ khắc thếp vàng nổi 3D siêu sắc nét (Gold Leaf 3D Emboss)
+    const villageTitle = String(name || 'LÀNG NÔNG TRẠI').toUpperCase();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(0,0,0,0.6)';
-    ctx.shadowBlur = 20;
-    ctx.fillText(String(name || 'Làng Nông Trại').toUpperCase(), 1024, 190);
+    ctx.font = '900 138px "Baloo 2", "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
-    // Tên cụm làng nhỏ phía dưới
-    ctx.fillStyle = theme.accentColor || '#f59e0b';
-    ctx.font = 'bold 48px "Nunito", "Segoe UI", Arial, sans-serif';
-    ctx.shadowBlur = 10;
-    ctx.fillText(String(theme.groupLabel || '').toUpperCase(), 1024, 320);
+    const textY = 182;
+    const centerX = 1024;
+
+    // Lớp đổ bóng khắc chìm (Deep Carved Shadow)
+    ctx.fillStyle = '#060301';
+    ctx.fillText(villageTitle, centerX, textY + 7);
+    ctx.fillText(villageTitle, centerX + 3, textY + 6);
+
+    // Lớp viền đen định hình nét chữ cực kỳ sắc sảo (Bold Definition Outline)
+    ctx.strokeStyle = '#0a0502';
+    ctx.lineWidth = 18;
+    ctx.lineJoin = 'round';
+    ctx.miterLimit = 2;
+    ctx.strokeText(villageTitle, centerX, textY);
+
+    // Lớp mặt chữ: Thếp vàng lấp lánh (Brilliant Gold Leaf Gradient)
+    const goldGrad = ctx.createLinearGradient(0, textY - 70, 0, textY + 70);
+    goldGrad.addColorStop(0, '#ffffff');    // Vệt sáng lấp lánh trên đỉnh
+    goldGrad.addColorStop(0.28, '#fef08a'); // Vàng chanh rực rỡ
+    goldGrad.addColorStop(0.68, '#f59e0b'); // Vàng hổ phách
+    goldGrad.addColorStop(1, '#b45309');    // Đồng thau ấm
+    ctx.fillStyle = goldGrad;
+    ctx.fillText(villageTitle, centerX, textY);
+
+    // 6. TÊN CỤM LÀNG (SUBTITLE): Sắc sảo, sáng rõ
+    const subTitle = String(theme.groupLabel || 'CỤM LÀNG BAN MAI').toUpperCase();
+    ctx.font = '800 48px "Nunito", "Baloo 2", "Segoe UI", sans-serif';
+    const subY = 324;
+
+    // Viền đen chữ phụ
+    ctx.strokeStyle = '#060301';
+    ctx.lineWidth = 12;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(subTitle, centerX, subY);
+
+    // Mặt chữ phụ màu vàng óng nổi bật
+    ctx.fillStyle = '#fde047';
+    ctx.fillText(subTitle, centerX, subY);
 
     texture.update();
   };

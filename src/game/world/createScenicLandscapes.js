@@ -491,82 +491,9 @@ function createWorldBorderMountains(scene, parent, foliageInstancing = null) {
   // 1. Sinh Dãy Núi Ribbon Thủ Tục Uốn Lượn Liên Hoàn (Tầng Cận Cảnh & Tầng Đại Sơn Tuyết Ngọc)
   const { root: mtnRoot, ridgePoints } = createProceduralMountainRange(scene, root);
 
-  // 2. Trồng rặng thông đại ngàn viễn cảnh (Horizon Treeline Silhouettes) dọc sống núi
-  if (foliageInstancing && ridgePoints && ridgePoints.length > 0) {
-    ridgePoints.forEach((pt, idx) => {
-      // Trồng cây thông nhịp nhàng trên sườn núi và yên ngựa (y >= 32)
-      if (idx % 2 === 0 && pt.y >= 32) {
-        foliageInstancing.spawnTree('pine', pt.x, pt.z, {
-          y: pt.y - 1.2,
-          scale: 2.6 + (idx % 3) * 0.45,
-          rotY: pt.angle + Math.PI / 2,
-          withShadow: false,
-        });
 
-        // Điểm xuyết cây thông thứ 2 so le tạo thảm thực vật tự nhiên
-        if (idx % 4 === 0) {
-          const offR = 14;
-          const offX = pt.x - Math.cos(pt.angle) * offR;
-          const offZ = pt.z - Math.sin(pt.angle) * offR;
-          foliageInstancing.spawnTree('pine', offX, offZ, {
-            y: pt.y * 0.88,
-            scale: 2.1 + (idx % 2) * 0.35,
-            rotY: pt.angle + 1.1,
-            withShadow: false,
-          });
-        }
-      }
-    });
-  }
 
-  // 3. Đặt các khối vách đá 3D tự nhiên (3D Rock & Cliff GLTF Formations) dọc sườn núi
-  const cliffModels = [
-    MODEL_PATHS.rocks.cliff,
-    MODEL_PATHS.rocks.cliffRock,
-    MODEL_PATHS.rocks.tall,
-    MODEL_PATHS.rocks.tallB,
-    MODEL_PATHS.rocks.largeB,
-  ];
 
-  if (ridgePoints && ridgePoints.length > 0) {
-    ridgePoints.forEach((pt, idx) => {
-      if (idx % 4 === 0 && pt.y >= 30) {
-        const modelUrl = cliffModels[idx % cliffModels.length];
-        const rockScale = 7.0 + (idx % 3) * 2.2;
-        spawnModelSync(scene, modelUrl, {
-          position: new Vector3(pt.x, pt.y * 0.58, pt.z),
-          rotation: new Vector3(0, pt.angle + (idx % 2 === 0 ? 0.35 : -0.35), 0),
-          scaling: new Vector3(rockScale, rockScale * 1.25, rockScale),
-          parent: root,
-          name: `horizon-cliff-crag-${idx}`,
-        });
-      }
-    });
-  }
-
-  // 4. Mây tích bồng bềnh viễn cảnh Ghibli tựa vào sườn núi (Soft Horizon Cloud Puffs)
-  const matHorizonCloud = makeMat(scene, 'ghibli-horizon-cloud-mat', '#ffffff', '#f8fafc', 0.08);
-  matHorizonCloud.roughness = 0.9;
-
-  if (ridgePoints && ridgePoints.length > 0) {
-    ridgePoints.forEach((pt, idx) => {
-      if (idx % 6 === 1 && pt.y >= 45) {
-        const cloudDiam = 260 + (idx % 3) * 45;
-        const cloud = MeshBuilder.CreateSphere(`horizon-cloud-puff-${idx}`, {
-          diameter: cloudDiam,
-          segments: 16,
-        }, scene);
-        cloud.position.set(pt.x * 1.12, pt.y + 45 + (idx % 3) * 15, pt.z * 1.12);
-        cloud.scaling.set(2.2, 0.65, 1.4);
-        cloud.rotation.y = pt.angle + 0.5;
-        cloud.material = matHorizonCloud;
-        cloud.freezeWorldMatrix();
-        cloud.isPickable = false;
-        cloud.alwaysSelectAsActiveMesh = false;
-        cloud.parent = root;
-      }
-    });
-  }
 
   // 5. Quần đảo vách đá nhiệt đới 3D viễn cảnh phía Nam trên đại dương (Thay thế hoàn toàn cylinder)
   const islets = [
@@ -733,49 +660,7 @@ function createCentralBotanicalPark(scene, parent, foliage, shadows) {
     }
   });
 
-  // 4. Dòng Suối Nước Trong Vắt Nối Từ Hồ Pha Lê Về Thung Lũng (The Central Brook)
-  const brookLength = 46;
-  const brookMesh = MeshBuilder.CreatePlane('park-brook-surface', {
-    width: 5.5,
-    height: brookLength,
-  }, scene);
-  brookMesh.rotation.x = Math.PI / 2;
-  brookMesh.rotation.y = -0.16;
-  brookMesh.position.set(88, 0.03, 48);
-  brookMesh.material = matBrookWater;
-  brookMesh.parent = root;
-
-  // Cầu đá hoa viên nhỏ bắc qua suối (x = 88, z = 48) đồng bộ theo BridgeSystem
-  const bridgePark = ALL_BRIDGES.find(b => b.id === 'bridge-park-stone');
-  if (bridgePark) {
-    const footbridgeNode = buildBridge(scene, bridgePark, root, shadows);
-    footbridgeNode.rotation.y = -0.16 + Math.PI / 2;
-  }
-
-  // Hồ hoa súng nhỏ tại điểm cuối dòng suối thung lũng (x = 84, z = 68)
-  const pond = MeshBuilder.CreateCylinder('park-brook-end-pond', {
-    diameter: 8.5,
-    height: 0.05,
-    tessellation: 18,
-  }, scene);
-  pond.position.set(84, 0.03, 68);
-  pond.material = matBrookWater;
-  pond.parent = root;
-
-  // Đàn vịt trời tung tăng bơi lội
-  [
-    { x: 125, z: 42 },
-    { x: 70, z: 54 },
-    { x: 40, z: 60 },
-  ].forEach((pos, i) => {
-    spawnModelSync(scene, MODEL_PATHS.animals.duck, {
-      position: new Vector3(pos.x, 0.06, pos.z),
-      rotation: new Vector3(0, 0.6 + i * 1.1, 0),
-      scaling: new Vector3(1.3, 1.3, 1.3),
-      parent: root,
-      name: `park-duck-${i}`,
-    });
-  });
+  // (Đã dọn dẹp suối nhân tạo và cầu đá thừa tại x=88, z=48)
 
   // 5. Chòi Vọng Cảnh Nghỉ Chân Gỗ Lục Giác Mái Ngói Cam (x = -85, z = 46)
   if (!isPointOnRoadCorridor(-85, 46, 4.0)) {

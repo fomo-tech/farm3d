@@ -421,10 +421,9 @@ export function createStorefrontSignboard(scene, {
   signMat.backFaceCulling = false;
 
   if (typeof document !== 'undefined' || typeof OffscreenCanvas !== 'undefined') {
-    const dt = new DynamicTexture(`storefront-sign-dt-${title}`, { width: 1024, height: 256 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+    const dt = new DynamicTexture(`storefront-sign-dt-${title}`, { width: 2048, height: 512 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
     dt.anisotropicFilteringLevel = 4;
     const ctx = dt.getContext();
-    ctx.scale(0.5, 0.5);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
@@ -453,7 +452,7 @@ export function createStorefrontSignboard(scene, {
     }
 
     // Tiêu đề chữ nổi tiếng Việt vàng rực rỡ có đổ bóng sâu
-    ctx.font = '900 130px Arial, "Nunito", "Segoe UI", sans-serif';
+    ctx.font = '900 150px "Segoe UI", Arial, "Nunito", sans-serif';
     ctx.fillStyle = '#345576';
     ctx.textAlign = 'center';
     ctx.shadowColor = 'rgba(255,255,255,0)';
@@ -462,8 +461,8 @@ export function createStorefrontSignboard(scene, {
     ctx.fillText(title.toUpperCase(), 1024, titleY, 1840);
 
     if (subtitle) {
-      ctx.font = 'bold 64px Arial, "Nunito", "Segoe UI", sans-serif';
-      ctx.fillStyle = '#65808d';
+      ctx.font = 'bold 80px "Segoe UI", Arial, "Nunito", sans-serif';
+      ctx.fillStyle = '#345576';
       ctx.shadowBlur = 0;
       ctx.fillText(subtitle.toUpperCase(), 1024, 345, 1900);
     }
@@ -595,10 +594,10 @@ export function getOrCreateLampMaterials(scene) {
       haloTex.hasAlpha = true;
       const ctx = haloTex.getContext();
       const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-      grad.addColorStop(0.00, 'rgba(255, 252, 220, 1.0)');
-      grad.addColorStop(0.28, 'rgba(254, 215, 120, 0.82)');
-      grad.addColorStop(0.62, 'rgba(245, 158, 11, 0.32)');
-      grad.addColorStop(0.85, 'rgba(217, 119, 6, 0.10)');
+      grad.addColorStop(0.00, 'rgba(255, 248, 220, 0.70)');
+      grad.addColorStop(0.22, 'rgba(253, 224, 71, 0.40)');
+      grad.addColorStop(0.52, 'rgba(245, 158, 11, 0.14)');
+      grad.addColorStop(0.80, 'rgba(217, 119, 6, 0.04)');
       grad.addColorStop(1.00, 'rgba(180, 83, 9, 0.0)');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 128, 128);
@@ -611,9 +610,9 @@ export function getOrCreateLampMaterials(scene) {
       poolTex.hasAlpha = true;
       const pctx = poolTex.getContext();
       const pgrad = pctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-      pgrad.addColorStop(0.00, 'rgba(254, 225, 140, 0.70)');
-      pgrad.addColorStop(0.38, 'rgba(251, 191, 36, 0.45)');
-      pgrad.addColorStop(0.72, 'rgba(245, 158, 11, 0.16)');
+      pgrad.addColorStop(0.00, 'rgba(254, 240, 138, 0.42)');
+      pgrad.addColorStop(0.38, 'rgba(251, 191, 36, 0.20)');
+      pgrad.addColorStop(0.72, 'rgba(245, 158, 11, 0.06)');
       pgrad.addColorStop(1.00, 'rgba(245, 158, 11, 0.0)');
       pctx.fillStyle = pgrad;
       pctx.fillRect(0, 0, 128, 128);
@@ -627,7 +626,7 @@ export function getOrCreateLampMaterials(scene) {
       haloMat.emissiveColor = Color3.FromHexString('#fef08a');
       haloMat.disableLighting = true;
       haloMat.backFaceCulling = false;
-      haloMat.alpha = 0.85;
+      haloMat.alpha = 0.50;
       haloMat.fogEnabled = false;
     }
 
@@ -638,7 +637,7 @@ export function getOrCreateLampMaterials(scene) {
       poolMat.emissiveColor = Color3.FromHexString('#fed7aa');
       poolMat.disableLighting = true;
       poolMat.backFaceCulling = false;
-      poolMat.alpha = 0.65;
+      poolMat.alpha = 0.42;
       poolMat.zOffset = -6;
       poolMat.fogEnabled = false;
     }

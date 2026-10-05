@@ -1,0 +1,19 @@
+/* Character selection screen: scene-first composition, not a web form card. */
+.arrival-screen.pt-onboarding-backdrop { background:linear-gradient(160deg,#173d59,#327d9e 60%,#84c8c5); padding:20px; }
+.arrival-screen .pt-studio-card { width:980px; background:#12334fe8; border:2px solid #6ba0b5; border-radius:22px; box-shadow:0 8px 0 #0c263c,0 22px 60px #061c3b55; color:#fff; }
+.arrival-screen .pt-studio-header h2 { color:#fff; font-size:27px; }
+.arrival-screen .pt-studio-header p { color:#c8dfeb; font-size:13px; }
+.arrival-screen .pt-studio-badge { color:#9bdded; letter-spacing:1px; }
+.arrival-screen .pt-studio-body { grid-template-columns:1.2fr 1fr; gap:24px; }
+.arrival-screen .pt-studio-podium-wrap { min-height:420px; background:radial-gradient(ellipse at 50% 70%,#8bd0d9,#397c99 58%,#245772); border-radius:16px; }
+.arrival-screen .pt-studio-podium-wrap:before { content:'NHÂN VẬT CỦA BẠN'; color:#dbf3ff; letter-spacing:1px; }
+.arrival-screen .arrival-avatar-canvas { height:350px; }
+.arrival-screen .pt-studio-podium-wrap:after { background:#d9f5f5; box-shadow:0 8px 0 #377f99,0 14px 30px #122f5140; }
+.arrival-screen .pt-studio-controls { gap:14px; }
+.arrival-screen .pt-input-block label { color:#c8dfeb; letter-spacing:.4px; }
+.arrival-screen .pt-studio-tab-content { min-height:135px; }
+.arrival-screen .pt-options-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.arrival-screen .pt-option-card { min-height:90px; border-radius:12px; }
+.arrival-screen .pt-studio-submit-btn { background:#f5ba3a; color:#293447; border:2px solid #ffdd8a; border-radius:14px; box-shadow:0 5px 0 #a77115; font-weight:900; }
+.arrival-screen .arrival-rotate-hint { color:#e2f3f7; }
+@media(max-width:700px) { .arrival-screen .pt-studio-body { grid-template-columns:1fr; } .arrival-screen .pt-studio-podium-wrap { min-height:240px; } .arrival-screen .arrival-avatar-canvas { height:230px; } }

@@ -8,3 +8,10 @@
 @keyframes fish-bite-pulse{to{box-shadow:0 3px 0 #b87513,0 0 0 5px #f3aa2530}}
 @media(prefers-reduced-motion:reduce){.fish-hud .fish-bite-action{animation:none}}
 @media(max-width:700px){.fish-hud{right:10px;bottom:138px;width:210px}}
+.fish-tension-track{position:relative;height:16px;margin:8px 5px 3px;background:#bd6262;border-radius:8px;overflow:visible}
+.fish-tension-safe{position:absolute;left:20%;width:60%;height:100%;background:#49a985}
+.fish-tension-track i{position:absolute;top:-3px;width:5px;height:22px;background:#fff;border:1px solid #20384a;border-radius:3px;transform:translateX(-50%);transition:left .12s linear}
+.fish-tension-labels{display:flex;justify-content:space-between;font-size:10px;color:#526675;margin-bottom:10px}
+.fish-state-bite{border-color:#e9b84c}.fish-state-fighting{border-color:#75bcb0}
+.fish-result{width:min(280px,calc(100vw - 36px));padding:18px;border-radius:16px;border-width:2px;background:#f4f7f8;box-shadow:0 4px 0 #294956,0 8px 24px #18384930}
+.fish-result .fish-cancel{background:transparent;color:#425d6c;box-shadow:none;margin-top:8px;padding:7px}

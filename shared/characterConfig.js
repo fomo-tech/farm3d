@@ -47,7 +47,7 @@ export const CHARACTER_RENDER_CONFIG = Object.freeze({
     headScale: 0.74,
     torsoHeightScale: 1.24,
     hipHeight: 1.0,
-    headAnchor: 0.72,
+    headAnchor: 0.59,
     shoulderHeight: 0.50,
     upperArmLength: 0.32,
     forearmLength: 0.30,
