@@ -30,6 +30,9 @@ const HAIR_STYLE_ALIASES = Object.freeze({
   hair_wavy_curly: 'wavy',
   hair_slick_side: 'slick',
   hair_slick_back: 'slick',
+  hair_wolf_cut: 'wavy',
+  hair_beach_surfer: 'bob',
+  hair_celestial_flow: 'twintails',
 });
 
 const TOP_ALIASES = Object.freeze({
@@ -40,6 +43,22 @@ const TOP_ALIASES = Object.freeze({
   top_croptop_sport: 'croptop_summer',
   top_polo_preppy: 'polo',
   top_knit_sweater: 'knit',
+  top_school_blazer: 'bomber',
+  top_hawaii_shirt: 'starter',
+  top_duck_hoodie: 'hoodie_pastel',
+  top_angel_tunic: 'knit',
+  top_suit_vest_luxury: 'vest',
+  top_school_vest: 'vest',
+  top_cat_ear_hoodie: 'hoodie_oversized',
+  top_dino_hoodie: 'hoodie_oversized',
+  top_pastel_cloud_hoodie: 'hoodie_oversized',
+  top_sailor_uniform: 'sailor',
+  top_cyber_jacket: 'techwear',
+  top_royal_prince: 'prince',
+  top_ballgown_corset: 'croptop_summer',
+  top_vampire_count: 'vampire',
+  top_kimono_sakura: 'kimono',
+  top_teddy_mascot: 'hoodie_oversized',
 });
 
 const BOTTOM_ALIASES = Object.freeze({
@@ -48,6 +67,18 @@ const BOTTOM_ALIASES = Object.freeze({
   bot_tennis_skirt: 'skirt_pleated',
   bot_cargo_wide: 'cargo_pants',
   bot_jogger_sport: 'joggers_cozy',
+  bot_school_uniform: 'skirt_pleated',
+  bot_swim_trunks: 'shorts_denim',
+  bot_duck_pants: 'overalls_blue',
+  bot_angel_pants: 'cargo_pants',
+  bot_suit_slacks: 'cargo_pants',
+  bot_plaid_pleated_pink: 'skirt_pleated',
+  bot_sailor_skirt: 'skirt_pleated',
+  bot_tech_straps: 'cargo_pants',
+  bot_ballgown_princess: 'ballgown_princess',
+  bot_royal_prince_pants: 'cargo_pants',
+  bot_gothic_lolita_skirt: 'ballgown_princess',
+  bot_teddy_pants: 'cargo_pants',
 });
 
 const SHOE_ALIASES = Object.freeze({
@@ -56,6 +87,17 @@ const SHOE_ALIASES = Object.freeze({
   shoe_vintage_boots: 'boots_vintage',
   shoe_puffy_slides: 'slides',
   shoe_doll_flats: 'flats',
+  shoe_school_loafers: 'flats',
+  shoe_beach_sandals: 'slides',
+  shoe_duck_feet: 'sneaker_chunky',
+  shoe_celestial_heels: 'flats',
+  shoe_oxford_wingtip: 'boots_vintage',
+  shoe_dino_claws: 'sneaker_chunky',
+  shoe_mary_jane: 'flats',
+  shoe_roller_skates: 'runner_neon',
+  shoe_glass_slippers: 'flats',
+  shoe_royal_prince_boots: 'boots_vintage',
+  shoe_geta_wood: 'slides',
 });
 
 const EAR_ALIASES = Object.freeze({
@@ -64,6 +106,26 @@ const EAR_ALIASES = Object.freeze({
   rabbit_ears: 'rabbit',
   bear_ears: 'bear',
   elf_ears: 'elf',
+  shiba_ears: 'shiba',
+  duck_beak: 'duck',
+  halo_crown: 'halo',
+  duck_floatie: 'duck_floatie',
+  frog_backpack: 'frog_backpack',
+  cat_headphones: 'cat_headphones',
+  round_glasses: 'round_glasses',
+  angel_wings: 'angel_wings',
+  fox_tail: 'fox_tail',
+  devil_horns: 'devil_horns',
+  toast_mouth: 'toast_mouth',
+  lollipop_sweet: 'lollipop_sweet',
+  steampunk_goggles: 'steampunk_goggles',
+  crown_royal: 'crown_royal',
+  tiara_princess: 'crown_royal',
+  aura_stars: 'aura_stars',
+  cape_royal: 'cape_royal',
+  cape_vampire: 'cape_royal',
+  wings_faerie: 'wings_faerie',
+  wings_bat: 'wings_bat',
 });
 
 function makeMat(scene, name, hex, emissiveHex = null, specular = 0.14, specularPower = 48) {
@@ -127,6 +189,23 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     bottomPocket: makeMat(scene, `${idPrefix}-pt-bottom-pocket`, '#334155', null, 0.08, 28),
     shoeBoot: makeMat(scene, `${idPrefix}-pt-shoe-boot`, '#78350f', null, 0.18, 42),
     shoeNeon: makeMat(scene, `${idPrefix}-pt-shoe-neon`, '#34d399', '#10b981', 0.24, 48),
+    tieRed: makeMat(scene, `${idPrefix}-pt-tie-red`, '#ef4444', null, 0.2, 48),
+    vestWhite: makeMat(scene, `${idPrefix}-pt-vest-white`, '#ffffff', null, 0.12, 32),
+    vestNavy: makeMat(scene, `${idPrefix}-pt-vest-navy`, '#1e293b', null, 0.14, 40),
+    cyberNeon: makeMat(scene, `${idPrefix}-pt-cyber-neon`, '#06b6d4', '#22d3ee', 0.45, 64),
+    cyberDark: makeMat(scene, `${idPrefix}-pt-cyber-dark`, '#09090b', null, 0.15, 36),
+    foxOrange: makeMat(scene, `${idPrefix}-pt-fox-orange`, '#ea580c', null, 0.12, 32),
+    foxWhite: makeMat(scene, `${idPrefix}-pt-fox-white`, '#f8fafc', null, 0.10, 32),
+    devilRed: makeMat(scene, `${idPrefix}-pt-devil-red`, '#dc2626', '#991b1b', 0.4, 64),
+    toastCrust: makeMat(scene, `${idPrefix}-pt-toast-crust`, '#d97706', null, 0.08, 24),
+    toastButter: makeMat(scene, `${idPrefix}-pt-toast-butter`, '#fde047', null, 0.3, 48),
+    goggleLeather: makeMat(scene, `${idPrefix}-pt-goggle-leather`, '#5c2b16', null, 0.15, 36),
+    goggleLens: makeMat(scene, `${idPrefix}-pt-goggle-lens`, '#06b6d4', '#0891b2', 0.6, 96),
+    royalGold: makeMat(scene, `${idPrefix}-pt-royal-gold`, '#fbbf24', '#f59e0b', 0.65, 96),
+    royalRed: makeMat(scene, `${idPrefix}-pt-royal-red`, '#991b1b', null, 0.15, 36),
+    kimonoPink: makeMat(scene, `${idPrefix}-pt-kimono-pink`, '#f472b6', null, 0.12, 32),
+    batWingDark: makeMat(scene, `${idPrefix}-pt-bat-dark`, '#3b0764', '#1e1b4b', 0.25, 48),
+    fairyWingGlow: makeMat(scene, `${idPrefix}-pt-fairy-glow`, '#67e8f9', '#a5f3fc', 0.5, 64),
   };
   // Soft, subtle subsurface scatter on skin; no radioactive glow on hair and shirt.
   materials.skin.ambientColor = materials.skin.diffuseColor.scale(CHARACTER_RENDER_CONFIG.material.skinAmbient);
@@ -232,6 +311,13 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     bomber: new TransformNode(`${idPrefix}-top-bomber`, scene),
     polo: new TransformNode(`${idPrefix}-top-polo`, scene),
     knit: new TransformNode(`${idPrefix}-top-knit`, scene),
+    vest: new TransformNode(`${idPrefix}-top-vest`, scene),
+    hoodie_oversized: new TransformNode(`${idPrefix}-top-hoodie-oversized`, scene),
+    sailor: new TransformNode(`${idPrefix}-top-sailor`, scene),
+    techwear: new TransformNode(`${idPrefix}-top-techwear`, scene),
+    prince: new TransformNode(`${idPrefix}-top-prince`, scene),
+    vampire: new TransformNode(`${idPrefix}-top-vampire`, scene),
+    kimono: new TransformNode(`${idPrefix}-top-kimono`, scene),
   };
   Object.values(topVariants).forEach(node => {
     node.parent = torsoNode;
@@ -282,6 +368,227 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     knitRib.material = materials.shirtTrim;
     knitRib.parent = topVariants.knit;
   });
+
+  // 4. VEST QUÝ TỘC TUXEDO (Gile & Sơ Mi Trắng & Nơ Bướm Quý Phái)
+  const vestBody = shirtBody.clone(`${idPrefix}-vest-body`);
+  vestBody.scaling.set(1.045, 1.015, 1.045);
+  vestBody.position.set(0, 0.22, 0.01);
+  vestBody.material = materials.vestNavy;
+  vestBody.parent = topVariants.vest;
+
+  const vestShirtV = MeshBuilder.CreateBox(`${idPrefix}-vest-shirt-v`, { width: 0.18, height: 0.22, depth: 0.08 }, scene);
+  vestShirtV.position.set(0, 0.35, 0.22);
+  vestShirtV.material = materials.vestWhite;
+  vestShirtV.parent = topVariants.vest;
+
+  [-0.07, 0.07].forEach((cx, idx) => {
+    const collarLapel = MeshBuilder.CreateBox(`${idPrefix}-vest-collar-${idx}`, { width: 0.06, height: 0.08, depth: 0.03 }, scene);
+    collarLapel.rotation.z = idx === 0 ? 0.35 : -0.35;
+    collarLapel.position.set(cx, 0.41, 0.25);
+    collarLapel.material = materials.vestWhite;
+    collarLapel.parent = topVariants.vest;
+  });
+
+  const bowCenter = MeshBuilder.CreateSphere(`${idPrefix}-bow-center`, { diameter: 0.05, segments: 8 }, scene);
+  bowCenter.position.set(0, 0.40, 0.27);
+  bowCenter.material = materials.tieRed;
+  bowCenter.parent = topVariants.vest;
+  [-0.05, 0.05].forEach((bx, idx) => {
+    const bowWing = MeshBuilder.CreateSphere(`${idPrefix}-bow-wing-${idx}`, { diameter: 0.06, segments: 8 }, scene);
+    bowWing.scaling.set(1.4, 0.7, 0.5);
+    bowWing.rotation.z = idx === 0 ? 0.2 : -0.2;
+    bowWing.position.set(bx, 0.40, 0.265);
+    bowWing.material = materials.tieRed;
+    bowWing.parent = topVariants.vest;
+  });
+
+  [0.28, 0.20, 0.12].forEach((by, idx) => {
+    const vestBtn = MeshBuilder.CreateCylinder(`${idPrefix}-vest-btn-${idx}`, { height: 0.016, diameter: 0.034, tessellation: 10 }, scene);
+    vestBtn.rotation.x = Math.PI / 2;
+    vestBtn.position.set(0, by, 0.27);
+    vestBtn.material = materials.brass;
+    vestBtn.parent = topVariants.vest;
+  });
+
+  const pocketSquare = MeshBuilder.CreateBox(`${idPrefix}-pocket-square`, { width: 0.07, height: 0.035, depth: 0.02 }, scene);
+  pocketSquare.rotation.z = 0.15;
+  pocketSquare.position.set(0.12, 0.29, 0.25);
+  pocketSquare.material = materials.vestWhite;
+  pocketSquare.parent = topVariants.vest;
+
+  // 5. HOODIE OVERSIZED SIÊU PHỒNG (Streetwear & Dino Form Rộng)
+  const ovrHoodieBody = shirtBody.clone(`${idPrefix}-ovr-hoodie-body`);
+  ovrHoodieBody.scaling.set(1.08, 1.03, 1.08);
+  ovrHoodieBody.position.set(0, 0.22, 0.01);
+  ovrHoodieBody.material = materials.shirt;
+  ovrHoodieBody.parent = topVariants.hoodie_oversized;
+
+  const ovrHoodieHem = MeshBuilder.CreateTorus(`${idPrefix}-ovr-hoodie-hem`, { diameter: 0.54, thickness: 0.05, tessellation: 20 }, scene);
+  ovrHoodieHem.scaling.z = 0.88;
+  ovrHoodieHem.position.y = 0.02;
+  ovrHoodieHem.material = materials.shirtTrim;
+  ovrHoodieHem.parent = topVariants.hoodie_oversized;
+
+  const pouch = MeshBuilder.CreateBox(`${idPrefix}-ovr-pouch`, { width: 0.32, height: 0.17, depth: 0.08 }, scene);
+  pouch.position.set(0, 0.13, 0.26);
+  pouch.material = materials.shirt;
+  pouch.parent = topVariants.hoodie_oversized;
+
+  [-0.14, 0.14].forEach((px, idx) => {
+    const pocketTrim = MeshBuilder.CreateBox(`${idPrefix}-pouch-trim-${idx}`, { width: 0.025, height: 0.14, depth: 0.085 }, scene);
+    pocketTrim.rotation.z = idx === 0 ? -0.3 : 0.3;
+    pocketTrim.position.set(px, 0.14, 0.265);
+    pocketTrim.material = materials.shirtTrim;
+    pocketTrim.parent = topVariants.hoodie_oversized;
+  });
+
+  const bigBackHood = MeshBuilder.CreateSphere(`${idPrefix}-big-back-hood`, { diameter: 0.44, segments: 14 }, scene);
+  bigBackHood.scaling.set(1.28, 0.72, 0.90);
+  bigBackHood.position.set(0, 0.42, -0.22);
+  bigBackHood.material = materials.shirt;
+  bigBackHood.parent = topVariants.hoodie_oversized;
+
+  [-0.075, 0.075].forEach((dx, i) => {
+    const cord = MeshBuilder.CreateCylinder(`${idPrefix}-ovr-cord-${i}`, { height: 0.22, diameter: 0.022, tessellation: 8 }, scene);
+    cord.position.set(dx, 0.30, 0.25);
+    cord.rotation.x = -0.15;
+    cord.material = materials.hoodieCords;
+    cord.parent = topVariants.hoodie_oversized;
+
+    const tip = MeshBuilder.CreateCylinder(`${idPrefix}-ovr-cord-tip-${i}`, { height: 0.038, diameter: 0.028, tessellation: 8 }, scene);
+    tip.position.set(dx, 0.18, 0.27);
+    tip.material = materials.brass;
+    tip.parent = topVariants.hoodie_oversized;
+  });
+
+  // 6. ĐỒNG PHỤC NỮ SINH THỦY THỦ (Sailor Fuku Anime)
+  const sailorBody = shirtBody.clone(`${idPrefix}-sailor-body`);
+  sailorBody.scaling.set(1.03, 1.01, 1.03);
+  sailorBody.position.set(0, 0.22, 0.01);
+  sailorBody.material = materials.vestWhite;
+  sailorBody.parent = topVariants.sailor;
+
+  const sailorFlap = MeshBuilder.CreateBox(`${idPrefix}-sailor-flap`, { width: 0.46, height: 0.025, depth: 0.26 }, scene);
+  sailorFlap.position.set(0, 0.42, -0.12);
+  sailorFlap.rotation.x = -0.20;
+  sailorFlap.material = materials.topDark;
+  sailorFlap.parent = topVariants.sailor;
+
+  const flapStripe = MeshBuilder.CreateBox(`${idPrefix}-sailor-stripe`, { width: 0.44, height: 0.03, depth: 0.025 }, scene);
+  flapStripe.position.set(0, 0.39, -0.24);
+  flapStripe.rotation.x = -0.20;
+  flapStripe.material = materials.shirtTrim;
+  flapStripe.parent = topVariants.sailor;
+
+  const sailorKnot = MeshBuilder.CreateSphere(`${idPrefix}-sailor-knot`, { diameter: 0.065, segments: 10 }, scene);
+  sailorKnot.position.set(0, 0.36, 0.27);
+  sailorKnot.material = materials.tieRed;
+  sailorKnot.parent = topVariants.sailor;
+
+  [-0.06, 0.06].forEach((sx, idx) => {
+    const tail = MeshBuilder.CreateBox(`${idPrefix}-sailor-tail-${idx}`, { width: 0.045, height: 0.16, depth: 0.02 }, scene);
+    tail.rotation.z = idx === 0 ? 0.3 : -0.3;
+    tail.position.set(sx, 0.28, 0.27);
+    tail.material = materials.tieRed;
+    tail.parent = topVariants.sailor;
+  });
+
+  // 7. TECHWEAR CYBERPUNK JACKET (Chiến Thuật Tương Lai)
+  const techBody = shirtBody.clone(`${idPrefix}-tech-body`);
+  techBody.scaling.set(1.05, 1.02, 1.05);
+  techBody.position.set(0, 0.22, 0.01);
+  techBody.material = materials.cyberDark;
+  techBody.parent = topVariants.techwear;
+
+  const techCollar = MeshBuilder.CreateCylinder(`${idPrefix}-tech-collar`, { height: 0.12, diameter: 0.32, tessellation: 18 }, scene);
+  techCollar.position.set(0, 0.46, 0.02);
+  techCollar.material = materials.cyberDark;
+  techCollar.parent = topVariants.techwear;
+
+  const zipper = MeshBuilder.CreateBox(`${idPrefix}-tech-zipper`, { width: 0.025, height: 0.40, depth: 0.03 }, scene);
+  zipper.position.set(0, 0.22, 0.25);
+  zipper.material = materials.cyberNeon;
+  zipper.parent = topVariants.techwear;
+
+  [-0.14, 0.14].forEach((tx, idx) => {
+    const techStrap = MeshBuilder.CreateBox(`${idPrefix}-tech-strap-${idx}`, { width: 0.04, height: 0.30, depth: 0.03 }, scene);
+    techStrap.position.set(tx, 0.24, 0.24);
+    techStrap.material = materials.topDark;
+    techStrap.parent = topVariants.techwear;
+
+    const buckle = MeshBuilder.CreateBox(`${idPrefix}-tech-buckle-${idx}`, { width: 0.055, height: 0.035, depth: 0.04 }, scene);
+    buckle.position.set(tx, 0.24, 0.26);
+    buckle.material = materials.cyberNeon;
+    buckle.parent = topVariants.techwear;
+  });
+
+  // 8. ÁO HOÀNG TỬ BẠCH MÃ (Royal Prince Military Tunic)
+  const princeBody = shirtBody.clone(`${idPrefix}-prince-body`);
+  princeBody.scaling.set(1.04, 1.015, 1.04);
+  princeBody.position.set(0, 0.22, 0.01);
+  princeBody.material = materials.vestWhite;
+  princeBody.parent = topVariants.prince;
+
+  const princeCollar = MeshBuilder.CreateCylinder(`${idPrefix}-prince-collar`, { height: 0.07, diameter: 0.28, tessellation: 16 }, scene);
+  princeCollar.position.set(0, 0.44, 0.02);
+  princeCollar.material = materials.royalGold;
+  princeCollar.parent = topVariants.prince;
+
+  // Dải ruy băng danh dự vắt chéo ngực (Honor Sash)
+  const princeSash = MeshBuilder.CreateBox(`${idPrefix}-prince-sash`, { width: 0.06, height: 0.38, depth: 0.025 }, scene);
+  princeSash.rotation.z = -0.65;
+  princeSash.position.set(0, 0.22, 0.25);
+  princeSash.material = materials.royalRed;
+  princeSash.parent = topVariants.prince;
+
+  // Cặp cầu vai hoàng gia vàng có tua rua (Golden Epaulettes)
+  [-0.24, 0.24].forEach((ex, idx) => {
+    const epaulette = MeshBuilder.CreateBox(`${idPrefix}-epaulette-${idx}`, { width: 0.12, height: 0.035, depth: 0.08 }, scene);
+    epaulette.position.set(ex, 0.41, 0.02);
+    epaulette.material = materials.royalGold;
+    epaulette.parent = topVariants.prince;
+  });
+
+  // 9. ÁO BÁ TƯỚC MA CÀ RỒNG DRACULA (Gothic Vampire)
+  const vampBody = shirtBody.clone(`${idPrefix}-vamp-body`);
+  vampBody.scaling.set(1.045, 1.015, 1.045);
+  vampBody.position.set(0, 0.22, 0.01);
+  vampBody.material = materials.royalRed;
+  vampBody.parent = topVariants.vampire;
+
+  [-0.14, 0.14].forEach((vx, idx) => {
+    const poppedCollar = MeshBuilder.CreateCylinder(`${idPrefix}-vamp-collar-${idx}`, { height: 0.20, diameterTop: 0.02, diameterBottom: 0.14, tessellation: 3 }, scene);
+    poppedCollar.rotation.z = idx === 0 ? 0.45 : -0.45;
+    poppedCollar.rotation.x = -0.3;
+    poppedCollar.position.set(vx, 0.48, -0.06);
+    poppedCollar.material = materials.topDark;
+    poppedCollar.parent = topVariants.vampire;
+  });
+
+  const batPendant = MeshBuilder.CreateSphere(`${idPrefix}-bat-pendant`, { diameter: 0.07, segments: 8 }, scene);
+  batPendant.position.set(0, 0.33, 0.27);
+  batPendant.material = materials.royalGold;
+  batPendant.parent = topVariants.vampire;
+
+  // 10. YUKATA LỄ HỘI HOA ANH ĐÀO (Sakura Kimono)
+  const kimonoBody = shirtBody.clone(`${idPrefix}-kimono-body`);
+  kimonoBody.scaling.set(1.05, 1.02, 1.05);
+  kimonoBody.position.set(0, 0.22, 0.01);
+  kimonoBody.material = materials.kimonoPink;
+  kimonoBody.parent = topVariants.kimono;
+
+  // Đai lưng Obi vàng kim to bản
+  const obiSash = MeshBuilder.CreateCylinder(`${idPrefix}-obi-sash`, { height: 0.12, diameter: 0.54, tessellation: 20 }, scene);
+  obiSash.position.set(0, 0.10, 0.01);
+  obiSash.material = materials.royalGold;
+  obiSash.parent = topVariants.kimono;
+
+  // Nơ bướm Obi lớn sau lưng
+  const obiBow = MeshBuilder.CreateSphere(`${idPrefix}-obi-bow`, { diameter: 0.20, segments: 10 }, scene);
+  obiBow.scaling.set(1.3, 0.7, 0.5);
+  obiBow.position.set(0, 0.10, -0.26);
+  obiBow.material = materials.royalRed;
+  obiBow.parent = topVariants.kimono;
 
   // Rounded overalls keep a clean silhouette from the gameplay camera.
   const dungareesBib = MeshBuilder.CreateSphere(`${idPrefix}-dungarees-bib`, { diameter: 0.54, segments: 16 }, scene);
@@ -355,6 +662,88 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   seedBadge.position.set(0, 0.01, -0.13);
   seedBadge.material = materials.packLeaf;
   seedBadge.parent = backpackNode;
+
+  // CÁNH THIÊN THẦN THẦN THOẠI (ANGEL WINGS)
+  const angelWingsNode = new TransformNode(`${idPrefix}-angel-wings-node`, scene);
+  angelWingsNode.parent = torsoNode;
+  angelWingsNode.position.set(0, 0.32, -0.16);
+  angelWingsNode.setEnabled(false);
+  const wingMat = makeMat(scene, `${idPrefix}-wing-mat`, '#ffffff', '#fef9c3', 0.2);
+  [-0.14, 0.14].forEach((wx, idx) => {
+    const wingWing = MeshBuilder.CreateSphere(`${idPrefix}-wing-${idx}`, { diameter: 0.44, segments: 10 }, scene);
+    wingWing.scaling.set(idx === 0 ? -1.15 : 1.15, 0.48, 0.12);
+    wingWing.rotation.z = idx === 0 ? -0.42 : 0.42;
+    wingWing.rotation.y = idx === 0 ? -0.28 : 0.28;
+    wingWing.position.set(wx * 2.0, 0.08, 0);
+    wingWing.material = wingMat;
+    wingWing.parent = angelWingsNode;
+  });
+
+  // PHAO BƠI VỊT VÀNG QUANH EO (DUCK FLOATIE - PLAY TOGETHER SIGNATURE)
+  const duckFloatieNode = new TransformNode(`${idPrefix}-duck-floatie-node`, scene);
+  duckFloatieNode.parent = torsoNode;
+  duckFloatieNode.position.set(0, -0.01, 0);
+  duckFloatieNode.setEnabled(false);
+
+  const floatieTorus = MeshBuilder.CreateTorus(`${idPrefix}-floatie-torus`, {
+    diameter: 0.76,
+    thickness: 0.17,
+    tessellation: 28,
+  }, scene);
+  const floatieMat = makeMat(scene, `${idPrefix}-floatie-mat`, '#facc15', '#fde047');
+  floatieTorus.material = floatieMat;
+  floatieTorus.parent = duckFloatieNode;
+
+  const duckHeadFl = MeshBuilder.CreateSphere(`${idPrefix}-duck-head-fl`, { diameter: 0.22, segments: 12 }, scene);
+  duckHeadFl.position.set(0, 0.16, 0.38);
+  duckHeadFl.material = floatieMat;
+  duckHeadFl.parent = duckFloatieNode;
+
+  const duckBeakFl = MeshBuilder.CreateSphere(`${idPrefix}-duck-beak-fl`, { diameter: 0.13, segments: 10 }, scene);
+  duckBeakFl.scaling.set(1.3, 0.45, 1.25);
+  duckBeakFl.position.set(0, 0.13, 0.49);
+  const beakFlMat = makeMat(scene, `${idPrefix}-beak-fl-mat`, '#f97316');
+  duckBeakFl.material = beakFlMat;
+  duckBeakFl.parent = duckFloatieNode;
+
+  [-0.052, 0.052].forEach((ex, idx) => {
+    const eye = MeshBuilder.CreateSphere(`${idPrefix}-duck-eye-fl-${idx}`, { diameter: 0.038, segments: 8 }, scene);
+    eye.position.set(ex, 0.19, 0.45);
+    const eyeMat = makeMat(scene, `${idPrefix}-duck-eye-mat`, '#0f172a');
+    eye.material = eyeMat;
+    eye.parent = duckFloatieNode;
+  });
+
+  // BALO ẾCH XANH MẮT LỒI (FROG BACKPACK)
+  const frogBackpackNode = new TransformNode(`${idPrefix}-frog-backpack-node`, scene);
+  frogBackpackNode.parent = torsoNode;
+  frogBackpackNode.position.set(0, 0.22, -0.22);
+  frogBackpackNode.setEnabled(false);
+
+  const frogBody = MeshBuilder.CreateSphere(`${idPrefix}-frog-body`, { diameter: 0.38, segments: 14 }, scene);
+  frogBody.scaling.set(1.05, 1.15, 0.85);
+  const frogMat = makeMat(scene, `${idPrefix}-frog-mat`, '#4ade80', '#22c55e');
+  frogBody.material = frogMat;
+  frogBody.parent = frogBackpackNode;
+
+  [-0.11, 0.11].forEach((fx, idx) => {
+    const eyeSocket = MeshBuilder.CreateSphere(`${idPrefix}-frog-socket-${idx}`, { diameter: 0.13, segments: 10 }, scene);
+    eyeSocket.position.set(fx, 0.20, 0.05);
+    eyeSocket.material = frogMat;
+    eyeSocket.parent = frogBackpackNode;
+
+    const eyeWhite = MeshBuilder.CreateSphere(`${idPrefix}-frog-white-${idx}`, { diameter: 0.10, segments: 10 }, scene);
+    eyeWhite.position.set(fx, 0.20, -0.02);
+    const whiteMat = makeMat(scene, `${idPrefix}-frog-white-mat`, '#ffffff');
+    eyeWhite.material = whiteMat;
+    eyeWhite.parent = frogBackpackNode;
+
+    const eyePupil = MeshBuilder.CreateSphere(`${idPrefix}-frog-pupil-${idx}`, { diameter: 0.045, segments: 8 }, scene);
+    eyePupil.position.set(fx, 0.20, -0.06);
+    const pupilMat = makeMat(scene, `${idPrefix}-frog-pupil-mat`, '#0f172a');
+    eyePupil.material = pupilMat;
+    eyePupil.parent = frogBackpackNode;
+  });
 
   // ========================================================
   // 3. HEAD & CURVED FACE MESH (Ôm khít hộp sọ, 0% bay lơ lửng)
@@ -697,6 +1086,309 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     elfEar.parent = elfEarsNode;
   });
 
+  // TAI CÚN SHIBA NHÍ NHẢNH (SHIBA PUPPY EARS)
+  const shibaEarsNode = new TransformNode(`${idPrefix}-shiba-ears-node`, scene);
+  shibaEarsNode.parent = headNode;
+  shibaEarsNode.setEnabled(false);
+  const shibaMat = makeMat(scene, `${idPrefix}-shiba-mat`, '#d97706');
+  const shibaInnerMat = makeMat(scene, `${idPrefix}-shiba-in-mat`, '#fffbeb');
+  [-0.30, 0.30].forEach((sx, idx) => {
+    const sEar = MeshBuilder.CreateCylinder(`${idPrefix}-shiba-ear-${idx}`, { height: 0.22, diameterTop: 0.03, diameterBottom: 0.16, tessellation: 4 }, scene);
+    sEar.rotation.z = idx === 0 ? 0.38 : -0.38;
+    sEar.rotation.y = Math.PI / 4;
+    sEar.position.set(sx, 0.86, 0.02);
+    sEar.material = shibaMat;
+    sEar.parent = shibaEarsNode;
+
+    const sIn = MeshBuilder.CreateCylinder(`${idPrefix}-shiba-in-${idx}`, { height: 0.16, diameterTop: 0.02, diameterBottom: 0.11, tessellation: 4 }, scene);
+    sIn.rotation.z = idx === 0 ? 0.38 : -0.38;
+    sIn.rotation.y = Math.PI / 4;
+    sIn.position.set(sx, 0.86, 0.04);
+    sIn.material = shibaInnerMat;
+    sIn.parent = shibaEarsNode;
+  });
+
+  // MŨ MỎ VỊT VÀNG (DUCK BEAK)
+  const duckBeakNode = new TransformNode(`${idPrefix}-duck-beak-node`, scene);
+  duckBeakNode.parent = headNode;
+  duckBeakNode.setEnabled(false);
+  const duckBillMat = makeMat(scene, `${idPrefix}-duck-bill-mat`, '#f97316');
+  const duckBill = MeshBuilder.CreateSphere(`${idPrefix}-duck-bill`, { diameter: 0.28, segments: 10 }, scene);
+  duckBill.scaling.set(1.25, 0.42, 1.35);
+  duckBill.position.set(0, 0.28, 0.44);
+  duckBill.material = duckBillMat;
+  duckBill.parent = duckBeakNode;
+
+  // VÒNG HÀO QUANG THIÊN THẦN (HALO CROWN)
+  const haloNode = new TransformNode(`${idPrefix}-halo-node`, scene);
+  haloNode.parent = headNode;
+  haloNode.position.set(0, 1.15, 0);
+  haloNode.setEnabled(false);
+  const haloRing = MeshBuilder.CreateTorus(`${idPrefix}-halo-ring`, { diameter: 0.58, thickness: 0.045, tessellation: 24 }, scene);
+  haloRing.rotation.x = 0.18;
+  const haloMat = makeMat(scene, `${idPrefix}-halo-mat`, '#facc15', '#fef08a');
+  haloMat.disableLighting = true;
+  haloRing.material = haloMat;
+  haloRing.parent = haloNode;
+
+  // TAI NGHE MÈO PHÁT SÁNG (CAT HEADPHONES RGB)
+  const catHeadphonesNode = new TransformNode(`${idPrefix}-cat-headphones-node`, scene);
+  catHeadphonesNode.parent = headNode;
+  catHeadphonesNode.setEnabled(false);
+
+  const hpBand = MeshBuilder.CreateTorus(`${idPrefix}-hp-band`, { diameter: 0.94, thickness: 0.045, tessellation: 24 }, scene);
+  hpBand.scaling.set(1.0, 0.85, 0.35);
+  hpBand.position.set(0, 0.44, 0);
+  const hpMat = makeMat(scene, `${idPrefix}-hp-mat`, '#0f172a', '#1e293b');
+  hpBand.material = hpMat;
+  hpBand.parent = catHeadphonesNode;
+
+  const rgbMat = makeMat(scene, `${idPrefix}-hp-rgb-mat`, '#ec4899', '#f472b6');
+  [-0.49, 0.49].forEach((cx, idx) => {
+    const cup = MeshBuilder.CreateCylinder(`${idPrefix}-hp-cup-${idx}`, { height: 0.12, diameter: 0.30, tessellation: 18 }, scene);
+    cup.rotation.z = Math.PI / 2;
+    cup.position.set(cx, 0.39, 0);
+    cup.material = rgbMat;
+    cup.parent = catHeadphonesNode;
+  });
+
+  [-0.26, 0.26].forEach((ex, idx) => {
+    const hEar = MeshBuilder.CreateCylinder(`${idPrefix}-hp-ear-${idx}`, { height: 0.18, diameterTop: 0.02, diameterBottom: 0.14, tessellation: 3 }, scene);
+    hEar.rotation.z = idx === 0 ? 0.35 : -0.35;
+    hEar.rotation.y = Math.PI / 2;
+    hEar.position.set(ex, 0.92, 0.01);
+    hEar.material = rgbMat;
+    hEar.parent = catHeadphonesNode;
+  });
+
+  // KÍNH CẬN TRÒN NOBITA (ROUND GLASSES)
+  const roundGlassesNode = new TransformNode(`${idPrefix}-round-glasses-node`, scene);
+  roundGlassesNode.parent = headNode;
+  roundGlassesNode.setEnabled(false);
+  const glassRimMat = makeMat(scene, `${idPrefix}-glasses-mat`, '#334155');
+  [-0.18, 0.18].forEach((gx, idx) => {
+    const rim = MeshBuilder.CreateTorus(`${idPrefix}-glasses-rim-${idx}`, { diameter: 0.26, thickness: 0.024, tessellation: 20 }, scene);
+    rim.rotation.x = Math.PI / 2;
+    rim.position.set(gx, 0.44, 0.47);
+    rim.material = glassRimMat;
+    rim.parent = roundGlassesNode;
+  });
+  const glassBridge = MeshBuilder.CreateBox(`${idPrefix}-glasses-bridge`, { width: 0.11, height: 0.02, depth: 0.02 }, scene);
+  glassBridge.position.set(0, 0.44, 0.47);
+  glassBridge.material = glassRimMat;
+  glassBridge.parent = roundGlassesNode;
+
+  // ĐUÔI CÁO LÔNG XÙ LẮC LƯ (ANIMATED FOX TAIL)
+  const foxTailNode = new TransformNode(`${idPrefix}-fox-tail-node`, scene);
+  foxTailNode.parent = torsoNode;
+  foxTailNode.position.set(0, -0.06, -0.22);
+  foxTailNode.setEnabled(false);
+
+  const tailRootSeg = MeshBuilder.CreateSphere(`${idPrefix}-fox-tail-0`, { diameter: 0.18, segments: 10 }, scene);
+  tailRootSeg.scaling.set(0.9, 0.9, 1.2);
+  tailRootSeg.position.set(0, 0.04, -0.10);
+  tailRootSeg.material = materials.foxOrange;
+  tailRootSeg.parent = foxTailNode;
+
+  const tailMidSeg = MeshBuilder.CreateSphere(`${idPrefix}-fox-tail-1`, { diameter: 0.26, segments: 12 }, scene);
+  tailMidSeg.scaling.set(1.0, 1.1, 1.5);
+  tailMidSeg.position.set(0, 0.14, -0.24);
+  tailMidSeg.rotation.x = -0.35;
+  tailMidSeg.material = materials.foxOrange;
+  tailMidSeg.parent = foxTailNode;
+
+  const tailTipSeg = MeshBuilder.CreateSphere(`${idPrefix}-fox-tail-2`, { diameter: 0.20, segments: 10 }, scene);
+  tailTipSeg.scaling.set(0.85, 0.95, 1.3);
+  tailTipSeg.position.set(0, 0.28, -0.38);
+  tailTipSeg.rotation.x = -0.65;
+  tailTipSeg.material = materials.foxWhite;
+  tailTipSeg.parent = foxTailNode;
+
+  // CẶP SỪNG ÁC MA NEON (DEVIL HORNS)
+  const devilHornsNode = new TransformNode(`${idPrefix}-devil-horns-node`, scene);
+  devilHornsNode.parent = headNode;
+  devilHornsNode.setEnabled(false);
+
+  [-0.22, 0.22].forEach((hx, idx) => {
+    const horn = MeshBuilder.CreateCylinder(`${idPrefix}-devil-horn-${idx}`, {
+      height: 0.26,
+      diameterTop: 0.02,
+      diameterBottom: 0.12,
+      tessellation: 12,
+    }, scene);
+    horn.rotation.z = idx === 0 ? -0.45 : 0.45;
+    horn.rotation.x = 0.25;
+    horn.position.set(hx, 0.88, 0.18);
+    horn.material = materials.devilRed;
+    horn.parent = devilHornsNode;
+  });
+
+  // BÁNH MÌ NƯỚNG NGẬM MIỆNG (TOAST IN MOUTH)
+  const toastMouthNode = new TransformNode(`${idPrefix}-toast-mouth-node`, scene);
+  toastMouthNode.parent = headNode;
+  toastMouthNode.position.set(0, 0.32, 0.50);
+  toastMouthNode.rotation.z = 0.12;
+  toastMouthNode.rotation.x = 0.10;
+  toastMouthNode.setEnabled(false);
+
+  const toastSlice = MeshBuilder.CreateBox(`${idPrefix}-toast-slice`, { width: 0.16, height: 0.15, depth: 0.028 }, scene);
+  toastSlice.material = materials.toastCrust;
+  toastSlice.parent = toastMouthNode;
+
+  const toastButter = MeshBuilder.CreateBox(`${idPrefix}-toast-butter`, { width: 0.065, height: 0.065, depth: 0.034 }, scene);
+  toastButter.position.set(0.015, 0.02, 0.005);
+  toastButter.material = materials.toastButter;
+  toastButter.parent = toastMouthNode;
+
+  // KẸO MÚT CẦU VỒNG (LOLLIPOP SWEET)
+  const lollipopSweetNode = new TransformNode(`${idPrefix}-lollipop-node`, scene);
+  lollipopSweetNode.parent = headNode;
+  lollipopSweetNode.position.set(0.08, 0.31, 0.49);
+  lollipopSweetNode.rotation.z = -0.45;
+  lollipopSweetNode.rotation.x = 0.15;
+  lollipopSweetNode.setEnabled(false);
+
+  const stick = MeshBuilder.CreateCylinder(`${idPrefix}-lolli-stick`, { height: 0.20, diameter: 0.016, tessellation: 8 }, scene);
+  stick.position.set(0, -0.05, 0);
+  stick.material = materials.shirtTrim;
+  stick.parent = lollipopSweetNode;
+
+  const candy = MeshBuilder.CreateCylinder(`${idPrefix}-lolli-candy`, { height: 0.035, diameter: 0.15, tessellation: 18 }, scene);
+  candy.rotation.x = Math.PI / 2;
+  candy.position.set(0, 0.07, 0);
+  candy.material = materials.skirt;
+  candy.parent = lollipopSweetNode;
+
+  const candyRing = MeshBuilder.CreateTorus(`${idPrefix}-lolli-ring`, { diameter: 0.10, thickness: 0.016, tessellation: 16 }, scene);
+  candyRing.position.set(0, 0.07, 0);
+  candyRing.material = materials.toastButter;
+  candyRing.parent = lollipopSweetNode;
+
+  // KÍNH PHI CÔNG GÁC TRÁN (STEAMPUNK GOGGLES)
+  const steampunkGogglesNode = new TransformNode(`${idPrefix}-goggles-node`, scene);
+  steampunkGogglesNode.parent = headNode;
+  steampunkGogglesNode.position.set(0, 0.65, 0.32);
+  steampunkGogglesNode.rotation.x = -0.22;
+  steampunkGogglesNode.setEnabled(false);
+
+  const goggleBand = MeshBuilder.CreateTorus(`${idPrefix}-goggle-band`, { diameter: 0.90, thickness: 0.035, tessellation: 20 }, scene);
+  goggleBand.scaling.set(1.0, 0.3, 1.0);
+  goggleBand.position.set(0, 0, -0.16);
+  goggleBand.material = materials.goggleLeather;
+  goggleBand.parent = steampunkGogglesNode;
+
+  [-0.15, 0.15].forEach((gx, idx) => {
+    const rim = MeshBuilder.CreateCylinder(`${idPrefix}-goggle-rim-${idx}`, { height: 0.06, diameter: 0.22, tessellation: 16 }, scene);
+    rim.rotation.x = Math.PI / 2;
+    rim.position.set(gx, 0, 0.10);
+    rim.material = materials.brass;
+    rim.parent = steampunkGogglesNode;
+
+    const lens = MeshBuilder.CreateCylinder(`${idPrefix}-goggle-lens-${idx}`, { height: 0.065, diameter: 0.17, tessellation: 14 }, scene);
+    lens.rotation.x = Math.PI / 2;
+    lens.position.set(gx, 0, 0.10);
+    lens.material = materials.goggleLens;
+    lens.parent = steampunkGogglesNode;
+  });
+
+  // VƯƠNG MIỆN HOÀNG KIM RUBY (ROYAL CROWN)
+  const royalCrownNode = new TransformNode(`${idPrefix}-royal-crown-node`, scene);
+  royalCrownNode.parent = headNode;
+  royalCrownNode.position.set(0, 0.85, 0);
+  royalCrownNode.setEnabled(false);
+
+  const crownBand = MeshBuilder.CreateCylinder(`${idPrefix}-crown-band`, { height: 0.08, diameter: 0.50, tessellation: 20 }, scene);
+  crownBand.material = materials.royalGold;
+  crownBand.parent = royalCrownNode;
+
+  [-0.20, -0.10, 0, 0.10, 0.20].forEach((px, idx) => {
+    const peak = MeshBuilder.CreateCylinder(`${idPrefix}-crown-peak-${idx}`, { height: idx === 2 ? 0.14 : 0.09, diameterTop: 0.01, diameterBottom: 0.06, tessellation: 4 }, scene);
+    peak.position.set(px, idx === 2 ? 0.09 : 0.06, 0.23);
+    peak.material = materials.royalGold;
+    peak.parent = royalCrownNode;
+
+    const gem = MeshBuilder.CreateSphere(`${idPrefix}-crown-gem-${idx}`, { diameter: 0.04, segments: 8 }, scene);
+    gem.position.set(px, idx === 2 ? 0.14 : 0.10, 0.24);
+    gem.material = materials.royalRed;
+    gem.parent = royalCrownNode;
+  });
+
+  // HÀO QUANG 3 NGÔI SAO HOÀNG KIM XOAY VÒNG QUANH ĐẦU (ORBITING AURA STARS)
+  const floatingStarsNode = new TransformNode(`${idPrefix}-floating-stars-node`, scene);
+  floatingStarsNode.parent = headNode;
+  floatingStarsNode.position.set(0, 0.88, 0);
+  floatingStarsNode.setEnabled(false);
+
+  [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3].forEach((angle, idx) => {
+    const star = MeshBuilder.CreateSphere(`${idPrefix}-aura-star-${idx}`, { diameter: 0.09, segments: 8 }, scene);
+    star.scaling.set(1.2, 1.2, 0.4);
+    star.position.set(Math.cos(angle) * 0.48, Math.sin(idx * 2) * 0.06, Math.sin(angle) * 0.48);
+    star.material = materials.royalGold;
+    star.parent = floatingStarsNode;
+  });
+
+  // ÁO CHOÀNG HOÀNG GIA NHUNG ĐỎ VIỀN LÔNG TRẮNG (ROYAL ERMINE CAPE)
+  const royalCapeNode = new TransformNode(`${idPrefix}-royal-cape-node`, scene);
+  royalCapeNode.parent = torsoNode;
+  royalCapeNode.position.set(0, 0.36, -0.15);
+  royalCapeNode.setEnabled(false);
+
+  const capeCloth = MeshBuilder.CreateBox(`${idPrefix}-cape-cloth`, { width: 0.52, height: 0.72, depth: 0.025 }, scene);
+  capeCloth.position.set(0, -0.30, -0.06);
+  capeCloth.rotation.x = 0.12;
+  capeCloth.material = materials.royalRed;
+  capeCloth.parent = royalCapeNode;
+
+  const capeFur = MeshBuilder.CreateTorus(`${idPrefix}-cape-fur`, { diameter: 0.40, thickness: 0.08, tessellation: 18 }, scene);
+  capeFur.position.set(0, 0.02, 0.02);
+  capeFur.material = materials.vestWhite;
+  capeFur.parent = royalCapeNode;
+
+  const capeBrooch = MeshBuilder.CreateSphere(`${idPrefix}-cape-brooch`, { diameter: 0.065, segments: 10 }, scene);
+  capeBrooch.position.set(0, 0.04, 0.22);
+  capeBrooch.material = materials.royalGold;
+  capeBrooch.parent = royalCapeNode;
+
+  // CÁNH TIÊN NỮ BƯỚM DẠ QUANG PHÁT SÁNG (FAERIE WINGS)
+  const faerieWingsNode = new TransformNode(`${idPrefix}-faerie-wings-node`, scene);
+  faerieWingsNode.parent = torsoNode;
+  faerieWingsNode.position.set(0, 0.32, -0.16);
+  faerieWingsNode.setEnabled(false);
+
+  [-0.15, 0.15].forEach((wx, idx) => {
+    const upWing = MeshBuilder.CreateSphere(`${idPrefix}-f-wing-up-${idx}`, { diameter: 0.48, segments: 10 }, scene);
+    upWing.scaling.set(idx === 0 ? -1.3 : 1.3, 0.75, 0.08);
+    upWing.rotation.z = idx === 0 ? -0.55 : 0.55;
+    upWing.rotation.y = idx === 0 ? -0.35 : 0.35;
+    upWing.position.set(wx * 2.2, 0.18, 0);
+    upWing.material = materials.fairyWingGlow;
+    upWing.parent = faerieWingsNode;
+
+    const lowWing = MeshBuilder.CreateSphere(`${idPrefix}-f-wing-low-${idx}`, { diameter: 0.34, segments: 10 }, scene);
+    lowWing.scaling.set(idx === 0 ? -1.1 : 1.1, 0.55, 0.08);
+    lowWing.rotation.z = idx === 0 ? -0.2 : 0.2;
+    lowWing.rotation.y = idx === 0 ? -0.2 : 0.2;
+    lowWing.position.set(wx * 1.8, -0.08, 0);
+    lowWing.material = materials.kimonoPink;
+    lowWing.parent = faerieWingsNode;
+  });
+
+  // CÁNH DƠI QUỶ DRACULA GOTHIC (BAT WINGS)
+  const batWingsNode = new TransformNode(`${idPrefix}-bat-wings-node`, scene);
+  batWingsNode.parent = torsoNode;
+  batWingsNode.position.set(0, 0.32, -0.16);
+  batWingsNode.setEnabled(false);
+
+  [-0.14, 0.14].forEach((bx, idx) => {
+    const batWing = MeshBuilder.CreateSphere(`${idPrefix}-bat-w-${idx}`, { diameter: 0.46, segments: 10 }, scene);
+    batWing.scaling.set(idx === 0 ? -1.25 : 1.25, 0.55, 0.08);
+    batWing.rotation.z = idx === 0 ? -0.45 : 0.45;
+    batWing.rotation.y = idx === 0 ? -0.30 : 0.30;
+    batWing.position.set(bx * 2.1, 0.10, 0);
+    batWing.material = materials.batWingDark;
+    batWing.parent = batWingsNode;
+  });
+
   // Mũ cói nông dân truyền thống
   const hatNode = new TransformNode(`${idPrefix}-hat-node`, scene);
   hatNode.parent = headNode;
@@ -949,6 +1641,24 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   pleatedSkirt.material = materials.skirt;
   pleatedSkirt.parent = torsoNode;
   pleatedSkirt.setEnabled(false);
+
+  // Váy dạ hội công chúa bồng bềnh hoàng gia (Royal Princess Ballgown Skirt)
+  const ballgownSkirt = MeshBuilder.CreateSphere(`${idPrefix}-ballgown-skirt`, { diameter: 0.96, segments: 20 }, scene);
+  ballgownSkirt.scaling.set(1.05, 0.68, 0.98);
+  ballgownSkirt.position.set(0, -0.16, 0.02);
+  ballgownSkirt.material = materials.skirt;
+  ballgownSkirt.parent = torsoNode;
+  ballgownSkirt.setEnabled(false);
+
+  const ballgownLace = MeshBuilder.CreateTorus(`${idPrefix}-ballgown-lace`, { diameter: 0.92, thickness: 0.045, tessellation: 24 }, scene);
+  ballgownLace.position.set(0, -0.32, 0.02);
+  ballgownLace.material = materials.shirtTrim;
+  ballgownLace.parent = ballgownSkirt;
+
+  const ballgownRibbon = MeshBuilder.CreateTorus(`${idPrefix}-ballgown-ribbon`, { diameter: 0.54, thickness: 0.035, tessellation: 20 }, scene);
+  ballgownRibbon.position.set(0, 0.16, 0.02);
+  ballgownRibbon.material = materials.royalGold;
+  ballgownRibbon.parent = ballgownSkirt;
 
   const cargoDetailsNode = new TransformNode(`${idPrefix}-cargo-details`, scene);
   cargoDetailsNode.parent = torsoNode;
@@ -1287,7 +1997,25 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     rabbitEarsNode.setEnabled(showEarDetails && resolvedType === 'rabbit');
     bearEarsNode.setEnabled(showEarDetails && resolvedType === 'bear');
     elfEarsNode.setEnabled(showEarDetails && resolvedType === 'elf');
-    const showHuman = resolvedType === 'human' || resolvedType === 'cat' || resolvedType === 'rabbit' || resolvedType === 'bear';
+    shibaEarsNode.setEnabled(showEarDetails && resolvedType === 'shiba');
+    duckBeakNode.setEnabled(showEarDetails && resolvedType === 'duck');
+    haloNode.setEnabled(showEarDetails && (resolvedType === 'halo'));
+    angelWingsNode.setEnabled(showEarDetails && (resolvedType === 'halo' || resolvedType === 'angel_wings'));
+    duckFloatieNode.setEnabled(showEarDetails && resolvedType === 'duck_floatie');
+    frogBackpackNode.setEnabled(showEarDetails && resolvedType === 'frog_backpack');
+    catHeadphonesNode.setEnabled(showEarDetails && resolvedType === 'cat_headphones');
+    roundGlassesNode.setEnabled(showEarDetails && resolvedType === 'round_glasses');
+    foxTailNode.setEnabled(showEarDetails && resolvedType === 'fox_tail');
+    devilHornsNode.setEnabled(showEarDetails && resolvedType === 'devil_horns');
+    toastMouthNode.setEnabled(showEarDetails && resolvedType === 'toast_mouth');
+    lollipopSweetNode.setEnabled(showEarDetails && resolvedType === 'lollipop_sweet');
+    steampunkGogglesNode.setEnabled(showEarDetails && resolvedType === 'steampunk_goggles');
+    royalCrownNode.setEnabled(showEarDetails && (resolvedType === 'crown_royal' || resolvedType === 'tiara_princess'));
+    floatingStarsNode.setEnabled(showEarDetails && resolvedType === 'aura_stars');
+    royalCapeNode.setEnabled(showEarDetails && (resolvedType === 'cape_royal' || resolvedType === 'cape_vampire'));
+    faerieWingsNode.setEnabled(showEarDetails && resolvedType === 'wings_faerie');
+    batWingsNode.setEnabled(showEarDetails && resolvedType === 'wings_bat');
+    const showHuman = resolvedType !== 'elf';
     humanEars.forEach(m => m.setEnabled(showHuman));
     root.metadata = { ...(root.metadata || {}), ears: earType };
   }
@@ -1299,18 +2027,21 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
       setMaterialColor(materials.shirt, color);
       setMaterialColor(materials.topDark, color);
       setMaterialColor(materials.knit, color);
+      setMaterialColor(materials.vestNavy, color);
+      setMaterialColor(materials.kimonoPink, color);
     }
-    const isHoodie = resolvedTop === 'hoodie_pastel' || resolvedTop === 'farmer';
-    hoodieDetails.forEach(m => m.setEnabled(isHoodie));
-    longSleeves.forEach(mesh => mesh.setEnabled(isHoodie || resolvedTop === 'bomber' || resolvedTop === 'knit'));
-    const sleeveMaterial = resolvedTop === 'bomber' ? materials.topDark : resolvedTop === 'knit' ? materials.knit : materials.shirt;
+    const isHoodie = resolvedTop === 'hoodie_pastel' || resolvedTop === 'hoodie_oversized' || resolvedTop === 'farmer';
+    hoodieDetails.forEach(m => m.setEnabled(isHoodie && resolvedTop !== 'hoodie_oversized'));
+    const isLongSleeve = isHoodie || resolvedTop === 'bomber' || resolvedTop === 'knit' || resolvedTop === 'vest' || resolvedTop === 'techwear' || resolvedTop === 'prince' || resolvedTop === 'vampire' || resolvedTop === 'kimono';
+    longSleeves.forEach(mesh => mesh.setEnabled(isLongSleeve));
+    const sleeveMaterial = resolvedTop === 'bomber' ? materials.topDark : resolvedTop === 'vest' ? materials.vestNavy : resolvedTop === 'techwear' ? materials.cyberDark : resolvedTop === 'prince' ? materials.vestWhite : resolvedTop === 'vampire' ? materials.royalRed : resolvedTop === 'kimono' ? materials.kimonoPink : resolvedTop === 'knit' ? materials.knit : materials.shirt;
     [...longSleeves, ...shortSleeves].forEach(mesh => { mesh.material = sleeveMaterial; });
     shoulderSurfaces.forEach(mesh => { mesh.material = resolvedTop === 'tank' ? materials.skin : sleeveMaterial; });
     shoulderSurfaces.forEach(mesh => {
-      mesh.metadata.sleeveLength = isHoodie || resolvedTop === 'bomber' || resolvedTop === 'knit' || resolvedTop === 'tank' ? 0.63 : 0.24;
+      mesh.metadata.sleeveLength = isLongSleeve || resolvedTop === 'tank' ? 0.63 : 0.24;
       mesh.metadata.radius = resolvedTop === 'tank' ? 0.070 : 0.098;
     });
-    shortSleeves.forEach(mesh => mesh.setEnabled(resolvedTop !== 'tank' && !isHoodie && resolvedTop !== 'bomber' && resolvedTop !== 'knit'));
+    shortSleeves.forEach(mesh => mesh.setEnabled(resolvedTop !== 'tank' && !isLongSleeve));
     Object.entries(topVariants).forEach(([variant, node]) => {
       node.setEnabled(activeLod < 2 && variant === resolvedTop);
     });
@@ -1318,6 +2049,9 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     if (resolvedTop === 'croptop_summer') {
       shirtBody.scaling.set(1.0, 0.72 * (clothingScaled ? proportions.torsoHeightScale : 1), 1.0);
       shirtBody.position.y = 0.28 * (clothingScaled ? proportions.torsoHeightScale : 1);
+    } else if (resolvedTop === 'hoodie_oversized') {
+      shirtBody.scaling.set(1.08, 1.03 * (clothingScaled ? proportions.torsoHeightScale : 1), 1.08);
+      shirtBody.position.y = 0.22 * (clothingScaled ? proportions.torsoHeightScale : 1);
     } else {
       shirtBody.scaling.set(1.0, clothingScaled ? proportions.torsoHeightScale : 1, 1.0);
       shirtBody.position.y = 0.22 * (clothingScaled ? proportions.torsoHeightScale : 1);
@@ -1329,7 +2063,8 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     const resolvedBottom = BOTTOM_ALIASES[bottomId] || bottomId;
     activeBottomStyle = resolvedBottom;
     const isOveralls = resolvedBottom === 'overalls_blue' || resolvedBottom === 'farmer';
-    const isSkirt = resolvedBottom === 'skirt_pleated';
+    const isBallgown = resolvedBottom === 'ballgown_princess';
+    const isSkirt = resolvedBottom === 'skirt_pleated' || isBallgown;
     const isLongPants = resolvedBottom === 'cargo_pants' || resolvedBottom === 'joggers_cozy';
     if (color) {
       setMaterialColor(materials.overalls, color);
@@ -1337,15 +2072,19 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
       setMaterialColor(materials.bottomPocket, color);
     }
     overallDetails.forEach(m => m.setEnabled(isOveralls));
-    pleatedSkirt.setEnabled(isSkirt);
+    pleatedSkirt.setEnabled(isSkirt && !isBallgown);
+    ballgownSkirt.setEnabled(isBallgown);
     cargoDetailsNode.setEnabled(activeLod < 2 && resolvedBottom === 'cargo_pants');
     joggerDetailsNode.setEnabled(activeLod < 2 && resolvedBottom === 'joggers_cozy');
-    shortsSeat.setEnabled(!isSkirt);
+    shortsSeat.setEnabled(!isSkirt && !isBallgown);
     legOutfitParts.forEach(({ pantLeg, calf, shinPants, kneeSurface, longPants }) => {
       shinPants.setEnabled(false);
-      longPants.setEnabled(isLongPants || isOveralls);
+      longPants.setEnabled(!isBallgown && (isLongPants || isOveralls));
       kneeSurface.setEnabled(false);
-      if (isSkirt) {
+      if (isBallgown) {
+        pantLeg.setEnabled(false);
+        calf.setEnabled(false);
+      } else if (isSkirt) {
         pantLeg.setEnabled(false);
         calf.setEnabled(false);
       } else if (isLongPants || isOveralls) {
@@ -1513,10 +2252,10 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   // Túi hạt giống (Seed Pouch)
   const seedBagNode = new TransformNode(`${idPrefix}-tool-seedbag`, scene);
   seedBagNode.parent = toolsNode;
-  const pouch = MeshBuilder.CreateSphere(`${idPrefix}-pouch`, { diameterX: 0.22, diameterY: 0.26, diameterZ: 0.22, segments: 6 }, scene);
-  pouch.position.set(0, -0.08, 0.06);
-  pouch.material = toolMatPouch;
-  pouch.parent = seedBagNode;
+  const seedPouch = MeshBuilder.CreateSphere(`${idPrefix}-pouch`, { diameterX: 0.22, diameterY: 0.26, diameterZ: 0.22, segments: 6 }, scene);
+  seedPouch.position.set(0, -0.08, 0.06);
+  seedPouch.material = toolMatPouch;
+  seedPouch.parent = seedBagNode;
   seedBagNode.setEnabled(false);
 
   // Giỏ mây thu hoạch (Basket)
@@ -1740,10 +2479,12 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
       actionDuration = CHARACTER_ANIMATION_CONFIG.actionDurations[actionType]
         || CHARACTER_ANIMATION_CONFIG.actionDurations.default;
 
-      if (actionType === 'harvest' || actionType === 'celebrate') {
+      if (actionType === 'harvest' || actionType === 'celebrate' || actionType === 'cheer') {
         faceSystem.setExpression('excited');
-      } else if (actionType === 'wave') {
+      } else if (actionType === 'wave' || actionType === 'fashion_pose') {
         faceSystem.setExpression('wink');
+      } else if (actionType === 'heart_pose' || actionType === 'shy') {
+        faceSystem.setExpression('shy');
       } else {
         faceSystem.setExpression('happy');
       }
@@ -1801,6 +2542,12 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
 
       // Cọng mầm cây đung đưa trên đỉnh đầu
       sproutNode.rotation.z = Math.sin(animTimer * 4.5) * 0.18;
+
+      // Hiệu ứng vòng hào quang thiên thần bay bổng & cánh vỗ & phao vịt lắc lư
+      haloNode.position.y = 1.15 + Math.sin(animTimer * 3.5) * 0.035;
+      angelWingsNode.rotation.y = Math.sin(animTimer * 5.0) * 0.14;
+      duckFloatieNode.rotation.y = Math.sin(animTimer * 4.0) * 0.08;
+      duckFloatieNode.rotation.z = Math.sin(animTimer * 2.5) * 0.04;
 
       if (fishingAction || fishingPose) {
         if (fishingAction) fishingActionTime += delta;
@@ -1898,6 +2645,62 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
           rightArm.rotation.x = -2.3;
           rightArm.rotation.z = -0.5 + wave * 0.4;
           headNode.rotation.z = wave * 0.08;
+        } else if (currentAction === 'fashion_pose') {
+          // Dáng người mẫu Idol Play Together: 1 tay chống hông, nghiêng đầu nhí nhảnh, nháy mắt
+          const ease = Math.sin(p * Math.PI);
+          rightArm.rotation.x = -0.35 * ease;
+          rightArm.rotation.z = 0.85 * ease;
+          rightArm.rotation.y = 0.5 * ease;
+          leftArm.rotation.x = -0.35 * ease;
+          leftArm.rotation.z = -0.5 * ease;
+          torsoNode.rotation.y = 0.24 * ease;
+          torsoNode.rotation.z = -0.09 * ease;
+          headNode.rotation.z = 0.20 * ease;
+          headNode.rotation.x = -0.08 * ease;
+        } else if (currentAction === 'heart_pose') {
+          // Bắn tim đôi tay chụm lại hình trái tim
+          const ease = Math.sin(p * Math.PI);
+          const bob = Math.sin(actionTime * 6) * 0.04 * ease;
+          leftArm.rotation.x = -1.65 * ease;
+          leftArm.rotation.z = 0.72 * ease;
+          leftArm.rotation.y = -0.35 * ease;
+          rightArm.rotation.x = -1.65 * ease;
+          rightArm.rotation.z = -0.72 * ease;
+          rightArm.rotation.y = 0.35 * ease;
+          torsoNode.position.y = 0.60 + bob;
+          headNode.rotation.x = 0.12 * ease;
+          headNode.rotation.z = Math.sin(actionTime * 5) * 0.1 * ease;
+        } else if (currentAction === 'cheer') {
+          // Nhảy tưng bừng ăn mừng 2 tay giơ cao reo hò
+          const hop = Math.max(0, Math.sin(actionTime * 9));
+          torsoNode.position.y = 0.60 + hop * 0.30;
+          leftArm.rotation.x = -2.6 + Math.sin(actionTime * 12) * 0.2;
+          leftArm.rotation.z = -0.42;
+          rightArm.rotation.x = -2.6 - Math.sin(actionTime * 12) * 0.2;
+          rightArm.rotation.z = 0.42;
+          headNode.rotation.x = -0.22;
+          leftLeg.rotation.x = hop * -0.35;
+          rightLeg.rotation.x = hop * 0.35;
+        } else if (currentAction === 'shy') {
+          // Dáng thẹn thùng giấu tay sau lưng, lắc lư e ấp
+          const ease = Math.sin(p * Math.PI);
+          const sway = Math.sin(actionTime * 6) * ease;
+          leftArm.rotation.x = 0.45 * ease;
+          leftArm.rotation.z = 0.32 * ease;
+          rightArm.rotation.x = 0.45 * ease;
+          rightArm.rotation.z = -0.32 * ease;
+          torsoNode.rotation.y = sway * 0.16;
+          torsoNode.rotation.z = sway * 0.06;
+          headNode.rotation.x = 0.16 * ease;
+          headNode.rotation.z = -sway * 0.14;
+        } else if (currentAction === 'spin') {
+          // Xoay 360 độ điệu nghệ trên sàn runway
+          torsoNode.rotation.y = p * Math.PI * 2;
+          leftArm.rotation.z = -0.65;
+          rightArm.rotation.z = 0.65;
+          leftArm.rotation.x = -0.25;
+          rightArm.rotation.x = -0.25;
+          torsoNode.position.y = 0.60 + Math.sin(p * Math.PI) * 0.14;
         }
 
         leftLeg.rotation.x *= 0.8;
@@ -1954,6 +2757,24 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
         // Balo chú vịt vàng lắc lư vui vẻ theo nhịp chạy
         backpackNode.rotation.x = Math.sin(walkCycle * 2) * 0.14;
         backpackNode.rotation.z = Math.sin(walkCycle) * 0.08;
+
+        // Đuôi cáo đung đưa sống động theo nhịp bước chân
+        if (foxTailNode.isEnabled()) {
+          foxTailNode.rotation.y = Math.sin(walkCycle * 1.6) * 0.38;
+          foxTailNode.rotation.z = Math.cos(walkCycle * 1.6) * 0.18;
+        }
+
+        // Áo choàng hoàng gia phấp phới khi chạy
+        if (royalCapeNode.isEnabled()) {
+          royalCapeNode.rotation.x = 0.22 + Math.abs(Math.sin(walkCycle)) * 0.16;
+          royalCapeNode.rotation.z = Math.sin(walkCycle) * 0.08;
+        }
+        if (faerieWingsNode.isEnabled()) {
+          faerieWingsNode.rotation.y = Math.sin(animTimer * 12) * 0.28;
+        }
+        if (batWingsNode.isEnabled()) {
+          batWingsNode.rotation.y = Math.sin(animTimer * 8) * 0.22;
+        }
       } else {
         // ĐỨNG THỞ IDLE DỊU DÀNG
         const idleCycle = animTimer * CHARACTER_ANIMATION_CONFIG.idleBreathSpeed;
@@ -1967,6 +2788,21 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
         hairRoot.rotation.set(0, 0, 0);
         backpackNode.rotation.set(0, 0, 0);
 
+        if (foxTailNode.isEnabled()) {
+          foxTailNode.rotation.y = Math.sin(idleCycle * 1.2) * 0.20;
+          foxTailNode.rotation.z = Math.cos(idleCycle * 0.8) * 0.10;
+        }
+        if (royalCapeNode.isEnabled()) {
+          royalCapeNode.rotation.x = 0.05 + Math.sin(idleCycle) * 0.03;
+          royalCapeNode.rotation.z = 0;
+        }
+        if (faerieWingsNode.isEnabled()) {
+          faerieWingsNode.rotation.y = Math.sin(animTimer * 6) * 0.18;
+        }
+        if (batWingsNode.isEnabled()) {
+          batWingsNode.rotation.y = Math.sin(animTimer * 4) * 0.12;
+        }
+
         leftLeg.rotation.x *= 0.85;
         rightLeg.rotation.x *= 0.85;
 
@@ -1979,6 +2815,9 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
         rightArm.rotation.y = 0;
       }
       } finally {
+        if (floatingStarsNode.isEnabled()) {
+          floatingStarsNode.rotation.y += delta * 2.2;
+        }
         torsoNode.position.y += proportions.hipHeight - 0.60;
         const blend = 1 - Math.exp(-delta / CHARACTER_ANIMATION_CONFIG.locomotionBlendSeconds);
         animatedJoints.forEach((joint, i) => Vector3.LerpToRef(previousRotations[i], joint.rotation, blend, joint.rotation));

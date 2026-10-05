@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import { NullEngine } from '@babylonjs/core/Engines/nullEngine.js';
+import { Scene } from '@babylonjs/core/scene.js';
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
+import { WorldCollisionSystem } from '../src/game/physics/WorldCollisionSystem.js';
+const engine = new NullEngine(), scene = new Scene(engine), collision = new WorldCollisionSystem();
+collision.attachSceneObstacles(scene);
+const root = new TransformNode('road',scene); root.position.set(300,0,500); root.rotation.y = Math.PI/2;
+const lamp = MeshBuilder.CreateCylinder('lamp-base-test',{diameter:.55,height:.65},scene);
+lamp.position.set(2,.42,0); lamp.parent = root;
+await new Promise(resolve => setTimeout(resolve, 0)); // Babylon publishes new meshes asynchronously.
+collision.flushSceneObstacles();
+assert.ok(collision.isColliding(300,498,.45), 'parent-transformed lamp blocks pedestrian');
+collision.playerRadius = 1.22;
+let x = 297;
+for (let frame = 0; frame < 180; frame++) x = collision.resolveMovement(x,498,.1,0).x;
+assert.ok(x <= 300-1.22-.275+.001,'bike envelope stops before wheel reaches lamp');
+const count = collision.staticCircles.length;
+collision.flushSceneObstacles();
+assert.equal(collision.staticCircles.length,count,'no duplicate colliders');
+scene.dispose(); engine.dispose();
+console.log('PASS: streamed lamp collider, transformed road, bike footprint and no duplicate registration');

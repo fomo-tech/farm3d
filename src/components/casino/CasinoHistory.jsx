@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { CASINO_SYMBOLS } from '../../../shared/casino/casinoConfig.js';
 import { SymbolArt } from './CasinoArt.jsx';
+import { Icon3dNoticeBoard } from '../icons3d/GameIcons3D.jsx';
 
 export function CasinoHistory({ game, history = [], onClose }) {
   // Thống kê Tài Xỉu Soi Cầu
@@ -53,7 +54,7 @@ export function CasinoHistory({ game, history = [], onClose }) {
       <div className="pt-sub-modal-dialog pt-history-dialog" onClick={e => e.stopPropagation()}>
         <header className="pt-sub-modal-header">
           <div className="pt-modal-title-wrap">
-            <span className="pt-title-icon">📊</span>
+            <span className="pt-title-icon"><Icon3dNoticeBoard size={24} /></span>
             <h3>SOI CẦU & LỊCH SỬ PHIÊN ĐẤU</h3>
           </div>
           <button type="button" className="pt-candy-close-sm" onClick={onClose}>✕</button>
@@ -63,12 +64,12 @@ export function CasinoHistory({ game, history = [], onClose }) {
           {/* Thống kê Tài Xỉu */}
           {game === 'tai-xiu' && taiXiuStats && (
             <section className="pt-history-section">
-              <h4 className="pt-section-title">🎯 Tỷ Lệ Xuất Hiện ({history.length} phiên gần nhất)</h4>
+              <h4 className="pt-section-title">Tỷ Lệ Xuất Hiện ({history.length} phiên gần nhất)</h4>
               <div className="pt-stat-meter-box">
                 <div className="pt-meter-labels">
-                  <span className="meter-tai">🔴 Tài: {taiXiuStats.taiCount} ({taiXiuStats.taiPercent}%)</span>
-                  <span className="meter-triple">🟡 Bão: {taiXiuStats.tripleCount} ({taiXiuStats.triplePercent}%)</span>
-                  <span className="meter-xiu">🔵 Xỉu: {taiXiuStats.xiuCount} ({taiXiuStats.xiuPercent}%)</span>
+                  <span className="meter-tai">● Tài: {taiXiuStats.taiCount} ({taiXiuStats.taiPercent}%)</span>
+                  <span className="meter-triple">● Bão: {taiXiuStats.tripleCount} ({taiXiuStats.triplePercent}%)</span>
+                  <span className="meter-xiu">● Xỉu: {taiXiuStats.xiuCount} ({taiXiuStats.xiuPercent}%)</span>
                 </div>
                 <div className="pt-meter-track">
                   <div className="track-tai" style={{ width: `${taiXiuStats.taiPercent}%` }} />
@@ -96,7 +97,7 @@ export function CasinoHistory({ game, history = [], onClose }) {
           {/* Thống kê Bầu Cua */}
           {game === 'bau-cua' && bauCuaStats && (
             <section className="pt-history-section">
-              <h4 className="pt-section-title">🏮 Tần Suất 6 Linh Vật Dân Gian</h4>
+              <h4 className="pt-section-title">Tần Suất 6 Linh Vật Dân Gian</h4>
               <div className="pt-baucua-stat-cards">
                 {Object.keys(CASINO_SYMBOLS).map(key => {
                   const c = bauCuaStats.counts[key] || 0;
@@ -119,7 +120,7 @@ export function CasinoHistory({ game, history = [], onClose }) {
 
           {/* Bảng danh sách các ván đấu chi tiết */}
           <section className="pt-history-section">
-            <h4 className="pt-section-title">📜 Chi Tiết Từng Phiên Đấu</h4>
+            <h4 className="pt-section-title">Chi Tiết Từng Phiên Đấu</h4>
             {history.length === 0 ? (
               <div className="pt-history-empty">Chưa có lịch sử ván đấu nào ở bàn này.</div>
             ) : (

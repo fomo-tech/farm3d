@@ -1,0 +1,608 @@
+/* ========================================================
+   PLAY TOGETHER LUXURY 3D INVENTORY MODAL (TÚI ĐỒ)
+   Thiết kế chuẩn 1:1 theo mẫu giao diện Play Together
+   100% Thuần Vector & CSS - Tuyệt đối không dùng Emoji
+   ======================================================== */
+
+.pt-inv-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: ptInvFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes ptInvFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.pt-inv-modal {
+  position: relative;
+  width: 960px;
+  max-width: 96vw;
+  max-height: 92vh;
+  background: #ffffff;
+  border-radius: 32px;
+  box-shadow:
+    0 24px 70px -12px rgba(15, 23, 42, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.3),
+    0 4px 16px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ========================================================
+   1. HEADER NÔNG TRẠI GHIBLI / PLAY TOGETHER
+   ======================================================== */
+.pt-inv-header {
+  position: relative;
+  height: 124px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 32px 32px 0 0;
+}
+
+.pt-inv-header-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.pt-inv-scenery-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.pt-inv-header-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+}
+
+.pt-inv-header-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pt-inv-header-icon {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+  transition: transform 0.2s ease;
+}
+
+.pt-inv-header-icon:hover {
+  transform: rotate(-4deg) scale(1.06);
+}
+
+.pt-inv-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pt-inv-title {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow:
+    0 2px 0 #0284c7,
+    0 3px 6px rgba(2, 132, 199, 0.6),
+    0 6px 12px rgba(15, 23, 42, 0.25);
+}
+
+.pt-inv-subtitle {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #f0f9ff;
+  opacity: 0.95;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.pt-inv-close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pt-inv-close-btn:hover {
+  transform: scale(1.1) rotate(90deg);
+}
+
+.pt-inv-close-btn:active {
+  transform: scale(0.95);
+}
+
+/* ========================================================
+   2. THANH CÔNG CỤ: TABS DANH MỤC + SEARCH + SORT
+   ======================================================== */
+.pt-inv-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: #ffffff;
+  border-bottom: 1.5px solid #f1f5f9;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pt-inv-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pt-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pt-tab-btn:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #1e293b;
+  transform: translateY(-1px);
+}
+
+.pt-tab-btn.active {
+  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 14px -2px rgba(2, 132, 199, 0.4);
+  transform: translateY(-1px);
+}
+
+.pt-tab-btn.active:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+  color: #ffffff;
+}
+
+.pt-inv-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pt-inv-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 6px 14px;
+  width: 175px;
+  transition: all 0.18s ease;
+}
+
+.pt-inv-search:focus-within {
+  border-color: #38bdf8;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+  width: 200px;
+}
+
+.pt-inv-search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  width: 100%;
+}
+
+.pt-inv-search input::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.pt-inv-sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  transition: all 0.18s ease;
+}
+
+.pt-inv-sort:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+/* ========================================================
+   3. THÂN KHO ĐỒ: 2 CỘT (LƯỚI ITEM + CHI TIẾT)
+   ======================================================== */
+.pt-inv-body {
+  display: flex;
+  gap: 20px;
+  padding: 20px 24px 24px;
+  background: #f8fafc;
+  overflow-y: auto;
+  max-height: calc(92vh - 200px);
+}
+
+/* CỘT TRÁI: LƯỚI 5 CỘT X 3 HÀNG */
+.pt-inv-grid-container {
+  flex: 1;
+}
+
+.pt-inv-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.pt-inv-slot {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 8px;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.pt-inv-slot:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: #93c5fd;
+  box-shadow: 0 8px 18px -4px rgba(2, 132, 199, 0.18);
+}
+
+.pt-inv-slot.selected {
+  border: 3px solid #38bdf8;
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+  box-shadow:
+    0 0 0 3px rgba(56, 189, 248, 0.35),
+    0 8px 20px -4px rgba(2, 132, 199, 0.25);
+  transform: translateY(-2px);
+}
+
+.pt-inv-slot.empty {
+  background: #f1f5f9;
+  border: 2px dashed #cbd5e1;
+  cursor: default;
+  opacity: 0.6;
+}
+
+.pt-inv-slot.empty:hover {
+  transform: none;
+  border-color: #cbd5e1;
+  box-shadow: none;
+}
+
+.pt-slot-icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.pt-slot-badge {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #0f172a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+}
+
+.pt-inv-slot.selected .pt-slot-badge {
+  border-color: #38bdf8;
+  color: #0369a1;
+}
+
+/* ========================================================
+   4. CỘT PHẢI: BẢNG CHI TIẾT VẬT PHẨM (DETAIL CARD)
+   ======================================================== */
+.pt-inv-detail-card {
+  width: 320px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 26px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
+
+/* Hộp Preview 3D Lớn Nền Xanh Ngọc Pastel */
+.pt-detail-preview {
+  position: relative;
+  width: 100%;
+  height: 170px;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.8), 0 4px 12px rgba(2, 132, 199, 0.12);
+  overflow: hidden;
+}
+
+.pt-detail-preview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 85%, rgba(255, 255, 255, 0.6) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.pt-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pt-detail-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.2px;
+}
+
+.pt-detail-category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  padding: 3px 10px;
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.pt-detail-desc {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Số lượng hiện có */
+.pt-detail-count-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border: 1.5px solid #f1f5f9;
+  padding: 10px 14px;
+  border-radius: 14px;
+}
+
+.pt-detail-count-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.pt-detail-count-badge {
+  background: #e2e8f0;
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* Cặp nút hành động: SỬ DỤNG (Vàng Golden) + BỎ (Xám) */
+.pt-detail-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.pt-btn-use {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 18px;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(180deg, #fde047 0%, #facc15 45%, #eab308 100%);
+  color: #1e293b;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow:
+    0 4px 0 #ca8a04,
+    0 8px 18px -2px rgba(234, 179, 8, 0.4);
+  transition: all 0.15s ease;
+}
+
+.pt-btn-use:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 0 #ca8a04,
+    0 12px 22px -2px rgba(234, 179, 8, 0.45);
+}
+
+.pt-btn-use:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 2px 0 #ca8a04,
+    0 4px 10px -2px rgba(234, 179, 8, 0.35);
+}
+
+.pt-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pt-btn-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 13px 18px;
+  border-radius: 16px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pt-btn-drop:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+  transform: translateY(-1px);
+}
+
+.pt-btn-drop:active {
+  transform: translateY(1px);
+}
+
+.pt-btn-open-fashion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px 18px;
+  border-radius: 16px;
+  border: 2px solid #7dd3fc;
+  border-bottom: 4.5px solid #0284c7;
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pt-btn-open-fashion:hover {
+  transform: translateY(-2px);
+  border-bottom-width: 5.5px;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45);
+}
+
+.pt-btn-open-fashion:active {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+
+.pt-detail-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  padding: 24px;
+}
+
+/* ========================================================
+   RESPONSIVE DESIGN (Màn hình nhỏ hoặc điện thoại)
+   ======================================================== */
+@media (max-width: 860px) {
+  .pt-inv-body {
+    flex-direction: column;
+  }
+  .pt-inv-detail-card {
+    width: 100%;
+  }
+  .pt-inv-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .pt-inv-header {
+    height: 100px;
+  }
+  .pt-inv-title {
+    font-size: 26px;
+  }
+  .pt-inv-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .pt-inv-tabs {
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 4px;
+  }
+}

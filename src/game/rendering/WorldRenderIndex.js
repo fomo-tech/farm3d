@@ -12,7 +12,12 @@ export function installWorldRenderIndex(scene) {
     if (mesh.metadata?.spatialBoundsMutable) return true;
     if (mesh.skeleton || mesh.animations?.length) return true;
     for (let node = mesh; node; node = node.parent) {
-      if (node.metadata?.playerId || /player|bus|vehicle|animal|cow|alpaca|npc|elder|cloud|marker|crop|boat|river|water|lake|ocean|bridge|foliage|tree|bush|lod|flora/i.test(node.name || '')) return true;
+      // Vegetation/detail batches are static after their thin-instance buffer
+      // is built. They already carry spatialBoundsMutable while that buffer
+      // is changing; keeping the name-based tree/foliage fallback here makes
+      // thousands of immutable scenery meshes dynamic forever and forces a
+      // full dynamic-content scan every frame.
+      if (node.metadata?.playerId || /player|bus|vehicle|animal|cow|alpaca|npc|elder|cloud|marker|crop|boat|river|water|lake|ocean|bridge/i.test(node.name || '')) return true;
     }
     return false;
   };

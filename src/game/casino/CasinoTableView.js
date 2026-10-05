@@ -5,7 +5,7 @@ import {DynamicTexture} from '@babylonjs/core/Materials/Textures/dynamicTexture.
 import {Color3} from '@babylonjs/core/Maths/math.color.js';
 import {VENUE_LAYOUT} from '../../../shared/venueLayout.js';
 import {CASINO_SYMBOLS, CASINO_CONFIG} from '../../../shared/casino/casinoConfig.js';
-import {cardLabel} from '../../../shared/casino/cards.js';
+import {cardLabel, cardSuit} from '../../../shared/casino/cards.js';
 import {casinoAudio} from './casinoAudio.js';
 
 /**
@@ -35,7 +35,7 @@ export class CasinoTableView {
       m.parent = this.root;
       m.material = material;
       m.isPickable = false;
-      m.metadata = { interiorVenue: 'casino', venue: 'casino' };
+      m.metadata = { interiorVenue: 'casino', venue: 'casino', spatialBoundsMutable: true };
       return m;
     };
 
@@ -78,9 +78,15 @@ export class CasinoTableView {
     this.observer = scene.onBeforeRenderObservable.add(() => {
       if (!this.root.isEnabled()) return;
       const t = performance.now() * 0.005;
+      this.chips.forEach((chip, index) => {
+        if (!chip.isEnabled()) return;
+        const progress = Math.min(1, Math.max(0, (performance.now() - (chip.metadata.enteredAt || 0)) / 450));
+        chip.position.z = 0.4 - (1 - progress) * 1.5;
+        chip.position.y = 1.38 + Math.floor(index / 4) * 0.05 + Math.sin(progress * Math.PI) * 0.35;
+      });
 
       // Tìm bát 3D trên bàn Tài Xỉu
-      const bowlMesh = this.scene.getMeshByName('tx-3d-bowl');
+      const bowlMesh = this.game === 'tai-xiu' ? this.scene.getMeshByName('tx-3d-bowl') : null;
 
       if (this.phase === 'shaking') {
         this.dice.forEach((d, i) => {
@@ -91,6 +97,7 @@ export class CasinoTableView {
         });
 
         if (bowlMesh) {
+          bowlMesh.visibility = 1;
           bowlMesh.position.y = 1.42;
           bowlMesh.position.x = Math.sin(t * 24) * 0.04;
           bowlMesh.position.z = Math.cos(t * 24) * 0.04;
@@ -98,10 +105,11 @@ export class CasinoTableView {
       } else if (this.phase === 'reveal' || this.phase === 'result' || this.phase === 'settling') {
         // Nâng bát 3D lên để mở xúc xắc
         if (bowlMesh) {
-          const targetY = 2.15;
+          const targetY = 2.45;
           bowlMesh.position.y += (targetY - bowlMesh.position.y) * 0.1;
           bowlMesh.position.x = 0;
           bowlMesh.position.z = 0;
+          bowlMesh.visibility = 0.22;
         }
       } else {
         // Hạ bát 3D xuống khi cược hoặc chờ
@@ -110,14 +118,26 @@ export class CasinoTableView {
           bowlMesh.position.y += (targetY - bowlMesh.position.y) * 0.12;
           bowlMesh.position.x = 0;
           bowlMesh.position.z = 0;
+          bowlMesh.visibility = 1;
         }
       }
+      if (this.phase === 'dealing') {
+        this.cards.forEach((card, index) => {
+          const progress = Math.max(0, Math.min(1, (performance.now() - this.phaseStartedAt - index * 70) / 350));
+          card.position.x = (-1.2 + index * 0.2) * progress;
+          card.position.z = -0.4 * progress;
+          card.position.y = 1.38 + Math.sin(progress * Math.PI) * 0.45;
+          card.rotation.z = (1 - progress) * Math.PI;
+        });
+      }
+      this.animationFrames = (this.animationFrames || 0) + 1;
     });
 
     this.root.setEnabled(false);
   }
 
   update(room) {
+    this.game = room?.game;
     if (room?.game) {
       const p = VENUE_LAYOUT.casino.interior;
       const offsets = {
@@ -132,6 +152,7 @@ export class CasinoTableView {
 
     const nextPhase = room?.round?.phase;
     if (nextPhase !== this.prevPhase) {
+      this.phaseStartedAt = performance.now();
       if (nextPhase === 'shaking') {
         casinoAudio.playDiceShake();
       } else if (nextPhase === 'reveal' || nextPhase === 'result') {
@@ -160,14 +181,26 @@ export class CasinoTableView {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = '900 72px "Baloo 2", sans-serif';
-        const txt = values ? (CASINO_SYMBOLS[values[i]]?.name || String(values[i])) : '?';
-        ctx.fillText(txt, 128, 128);
+        if (this.game === 'tai-xiu' && Number.isInteger(values?.[i])) {
+          const pips = { 1: [4], 2: [0,8], 3: [0,4,8], 4: [0,2,6,8], 5: [0,2,4,6,8], 6: [0,2,3,5,6,8] };
+          ctx.fillStyle = values[i] === 1 || values[i] === 4 ? '#b85463' : '#304957';
+          for (const pip of pips[values[i]] || []) {
+            ctx.beginPath(); ctx.arc(64 + (pip % 3) * 64, 64 + Math.floor(pip / 3) * 64, 15, 0, Math.PI * 2); ctx.fill();
+          }
+        } else {
+          const txt = values ? (CASINO_SYMBOLS[values[i]]?.name || String(values[i])) : '?';
+          ctx.fillText(txt, 128, 128);
+        }
         t.update();
       });
 
       this.cards.forEach((c, i) => {
         const card = room?.round?.hand?.[i];
         c.setEnabled(card != null);
+        if (this.phase !== 'dealing') {
+          c.position.set(-1.2 + i * 0.2, 1.38, -0.4);
+          c.rotation.z = 0;
+        }
         const t = this.textures[i + 3];
         const ctx = t.getContext();
         ctx.fillStyle = '#ffffff';
@@ -175,7 +208,7 @@ export class CasinoTableView {
         ctx.strokeStyle = '#e2e8f0';
         ctx.lineWidth = 6;
         ctx.strokeRect(4, 4, 120, 184);
-        ctx.fillStyle = (card != null && (card.endsWith('h') || card.endsWith('d'))) ? '#dc2626' : '#0f172a';
+        ctx.fillStyle = (card != null && cardSuit(card) >= 2) ? '#dc2626' : '#0f172a';
         ctx.font = 'bold 28px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -191,13 +224,23 @@ export class CasinoTableView {
       }
     }
 
-    this.dice.forEach(d => d.setEnabled(['tai-xiu', 'bau-cua'].includes(room?.game)));
+    const showingDice = ['shaking', 'reveal', 'settling', 'result'].includes(this.phase);
+    const covered = this.game === 'tai-xiu' && this.phase === 'shaking';
+    this.dice.forEach(d => d.setEnabled(showingDice && !covered && ['tai-xiu', 'bau-cua'].includes(room?.game)));
     const count = Math.min(CASINO_CONFIG.maxVisibleChips, Math.ceil(Object.values(room?.round?.totals || {}).reduce((a, b) => a + b, 0) / 10));
-    this.chips.forEach((c, i) => c.setEnabled(i < count));
+    this.chips.forEach((c, i) => {
+      if (i < count && !c.isEnabled(false)) c.metadata.enteredAt = performance.now();
+      c.setEnabled(i < count);
+    });
   }
 
   setEnabled(value) {
     this.root.setEnabled(value);
+    // Floating table signs obscure the playing surface in the focused view.
+    const signs = { 'tai-xiu': 'tx', 'bau-cua': 'bc', 'bai-cao': 'ca', 'tien-len': 'tl' };
+    Object.entries(signs).forEach(([game, prefix]) => {
+      this.scene.getMeshByName(`${prefix}-3d-sign-label`)?.setEnabled(!value || game !== this.game);
+    });
   }
 
   dispose() {

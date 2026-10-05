@@ -4,9 +4,13 @@ import { isolateColorGrading, applyColorPreset } from './IsolatedColorGrading.js
 
 /**
  * Crisp world rendering: 4x MSAA, Khronos PBR Neutral Tone Mapping (Cozy Farmy standard),
- * and Contrast Adaptive Sharpening (CAS).
+ * without an edge-enhancement pass that amplifies stair-stepping.
  * Highlights roll off softly without burning out, preserving lush grass and pastel toy colors.
  */
+export function resolveAntialiasSamples(quality, supportedSamples = 1) {
+  return Math.min(quality === 'ultra' ? 4 : quality === 'eco' ? 1 : 2, Math.max(1, supportedSamples));
+}
+
 export function createCinematicRenderingPipeline(scene, camera, options = {}) {
   let pipeline = null;
   let currentPreset = 'day';
@@ -14,14 +18,12 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
   let stableSamples = !!options.stableSamples;
   const engine = scene.getEngine();
   const supportedSamples = engine.webGLVersion >= 2 ? Math.max(1, engine.getCaps().maxMSAASamples || 1) : 1;
-  const resolveSamples = quality => quality === 'eco' ? 1 : Math.min(options.lightweight ? 2 : 4, supportedSamples);
+  const resolveSamples = quality => resolveAntialiasSamples(quality, supportedSamples);
 
   try {
     pipeline = new DefaultRenderingPipeline('cinematic-pipeline', true, scene, [camera]);
     
     const quality = options.quality || (options.lightweight ? 'balanced' : 'ultra');
-    const isUltra = quality === 'ultra';
-    const isEco = quality === 'eco';
 
     // 1. Khử răng cưa phần cứng siêu sắc nét (4x Hardware MSAA trên desktop, 2x trên mobile)
     // MSAA khử răng cưa hình học trực tiếp ở rasterizer phần cứng, giữ nguyên 100% độ nét của texture & text
@@ -30,12 +32,9 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     // Tắt hoàn toàn FXAA khi có MSAA phần cứng để triệt tiêu hiện tượng mờ nhòe (FXAA làm mờ texture & viền)
     pipeline.fxaaEnabled = pipeline.samples < 2;
 
-    // Contrast Adaptive Sharpening (CAS): Giữ độ sắc nét vi mô tinh tế, không tạo viền sáng/tối
-    pipeline.sharpenEnabled = true;
-    if (pipeline.sharpen) {
-      pipeline.sharpen.edgeAmount = isEco ? 0.02 : (isUltra ? 0.08 : 0.05);
-      pipeline.sharpen.colorAmount = 1.0;
-    }
+    // Babylon's sharpen is an edge filter, not CAS. Native pixels and MSAA
+    // provide clarity without enhancing aliasing or adding a full-screen pass.
+    pipeline.sharpenEnabled = false;
 
     // Keep bloom disabled for clarity; retain tuned values if it is re-enabled later.
     pipeline.bloomEnabled = false;
@@ -77,31 +76,17 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
       stableSamples = keepSamplesStable;
       const isEco = quality === 'eco';
 
-      if (keepSamplesStable) {
-        // Trong chế độ Auto (keepSamplesStable = true), giữ nguyên cấu hình pipeline (samples, fxaa, sharpen)
-        // để tuyệt đối không trigger _buildPipeline(), chỉ tinh chỉnh thông số sharpen mà không giật khung hình
-        if (pipeline.sharpen) {
-          pipeline.sharpen.edgeAmount = isEco ? 0.02 : 0.05;
-        }
-      } else {
+      if (!keepSamplesStable) {
         const nextSamples = resolveSamples(quality);
         if (pipeline.samples !== nextSamples) pipeline.samples = nextSamples;
 
         if (quality === 'ultra') {
           pipeline.fxaaEnabled = nextSamples < 2;
-          pipeline.sharpenEnabled = true;
-          if (pipeline.sharpen) {
-            pipeline.sharpen.edgeAmount = 0.08;
-            pipeline.sharpen.colorAmount = 1.0;
-          }
+          pipeline.sharpenEnabled = false;
           pipeline.bloomEnabled = false;
         } else if (quality === 'balanced') {
           pipeline.fxaaEnabled = nextSamples < 2;
-          pipeline.sharpenEnabled = true;
-          if (pipeline.sharpen) {
-            pipeline.sharpen.edgeAmount = 0.05;
-            pipeline.sharpen.colorAmount = 1.0;
-          }
+          pipeline.sharpenEnabled = false;
           pipeline.bloomEnabled = false;
         } else if (quality === 'eco') {
           pipeline.fxaaEnabled = true;

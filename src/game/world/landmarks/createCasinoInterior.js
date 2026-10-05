@@ -5,6 +5,7 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
+import { PointLight } from '@babylonjs/core/Lights/pointLight.js';
 
 function makeMat(scene, name, hex, emissiveHex = null, specular = 0.15, specularPower = 32) {
   let m = scene.getMaterialByName(name);
@@ -15,7 +16,8 @@ function makeMat(scene, name, hex, emissiveHex = null, specular = 0.15, specular
     m.specularColor = new Color3(specular, specular, specular);
     m.specularPower = specularPower;
     if (emissiveHex) {
-      m.emissiveColor = Color3.FromHexString(emissiveHex);
+      // Colored furniture must retain shading; only lamps emit appreciably.
+      m.emissiveColor = Color3.FromHexString(emissiveHex).scale(name === 'casino-int-bulb' ? 0.45 : 0.06);
     } else {
       m.emissiveColor = Color3.Black();
     }
@@ -23,11 +25,148 @@ function makeMat(scene, name, hex, emissiveHex = null, specular = 0.15, specular
   return m;
 }
 
+function createTextSign(scene, name, text, parent, position, options = {}) {
+  const width = options.width || 3.2;
+  const height = options.height || 0.72;
+  const texture = new DynamicTexture(`${name}-texture`, { width: 768, height: 192 }, scene, true);
+  const ctx = texture.getContext();
+  ctx.fillStyle = options.background || '#173f4a';
+  ctx.fillRect(0, 0, 768, 192);
+  ctx.strokeStyle = options.border || '#ffe29a';
+  ctx.lineWidth = 12;
+  ctx.strokeRect(8, 8, 752, 176);
+  ctx.fillStyle = options.color || '#fff8e7';
+  ctx.font = '900 58px "Arial Rounded MT Bold", Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 384, 98, 700);
+  texture.update();
+
+  const material = new StandardMaterial(`${name}-material`, scene);
+  material.diffuseTexture = texture;
+  material.emissiveColor = Color3.FromHexString(options.emissive || options.color || '#fff8e7').scale(options.emissiveStrength || 0.18);
+  material.specularColor = Color3.Black();
+
+  const sign = MeshBuilder.CreatePlane(name, { width, height }, scene);
+  sign.position.copyFrom(position);
+  sign.billboardMode = options.billboard ? Mesh.BILLBOARDMODE_Y : Mesh.BILLBOARDMODE_NONE;
+  sign.material = material;
+  sign.parent = parent;
+  sign.isPickable = false;
+  return sign;
+}
+
+function createNeonStrip(scene, name, parent, position, dimensions, material) {
+  const strip = MeshBuilder.CreateBox(name, dimensions, scene);
+  strip.position.copyFrom(position);
+  strip.material = material;
+  strip.parent = parent;
+  strip.isPickable = false;
+  return strip;
+}
+
+function createFloorPod(scene, parent, name, material, diameter = 6.0) {
+  const pod = MeshBuilder.CreateCylinder(name, { diameter, height: 0.06, tessellation: 32 }, scene);
+  pod.position.y = 0.055;
+  pod.material = material;
+  pod.parent = parent;
+  pod.isPickable = false;
+  return pod;
+}
+
+function createGameSurface(scene, parent, game, width, depth, color) {
+  if (game !== 'bau-cua') {
+    const felt = MeshBuilder.CreateCylinder(`casino-felt-inset-${game}`, {
+      diameter: game === 'tai-xiu' ? 4.85 : game === 'bai-cao' ? 4.25 : 3.85,
+      height: 0.015, tessellation: 40,
+    }, scene);
+    felt.parent = parent;
+    felt.position.y = 1.355;
+    felt.material = makeMat(scene, `casino-felt-base-${game}`, color, null, 0, 16);
+    felt.isPickable = false;
+  }
+  const texture = new DynamicTexture(`casino-felt-${game}`, { width: 768, height: 512 }, scene, true);
+  const ctx = texture.getContext();
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, 768, 512);
+  ctx.strokeStyle = '#ead9ac';
+  ctx.lineWidth = 5;
+  ctx.strokeRect(24, 24, 720, 464);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '700 34px "Segoe UI", sans-serif';
+  const labels = game === 'bau-cua' ? ['BẦU', 'CUA', 'TÔM', 'CÁ', 'GÀ', 'NAI']
+    : game === 'tai-xiu' ? ['TÀI', 'CHẴN', 'XỈU', '11–17', 'BÃO', '4–10']
+      : ['♠', '♥', '♦', '♣'];
+  const columns = labels.length === 6 ? 3 : 4;
+  labels.forEach((label, index) => {
+    const px = 48 + (index % columns) * (672 / columns);
+    const py = labels.length === 6 ? 64 + Math.floor(index / columns) * 206 : 312;
+    ctx.fillStyle = '#fff6dc';
+    ctx.strokeRect(px, py, 672 / columns - 12, labels.length === 6 ? 178 : 120);
+    ctx.fillText(label, px + (672 / columns - 12) / 2, py + (labels.length === 6 ? 89 : 60));
+  });
+  texture.update();
+  texture.anisotropicFilteringLevel = 8;
+  const material = new StandardMaterial(`casino-felt-material-${game}`, scene);
+  material.diffuseTexture = texture;
+  material.specularColor = Color3.Black();
+  const surface = MeshBuilder.CreatePlane(`casino-felt-surface-${game}`, { width, height: depth }, scene);
+  surface.parent = parent;
+  surface.position.y = 1.365;
+  surface.rotation.x = Math.PI / 2;
+  surface.material = material;
+  surface.isPickable = false;
+  return surface;
+}
+
+function createArcadeCabinet(scene, parent, name, position, bodyMaterial, accentMaterial, screenMaterial, shadows, rotation = 0) {
+  const root = new TransformNode(name, scene);
+  root.position.copyFrom(position);
+  root.rotation.y = rotation;
+  root.parent = parent;
+
+  const body = MeshBuilder.CreateBox(`${name}-body`, { width: 1.28, height: 2.15, depth: 0.82 }, scene);
+  body.position.y = 1.08;
+  body.material = bodyMaterial;
+  body.parent = root;
+  body.isPickable = false;
+
+  const marquee = MeshBuilder.CreateBox(`${name}-marquee`, { width: 1.42, height: 0.34, depth: 0.88 }, scene);
+  marquee.position.set(0, 2.3, -0.02);
+  marquee.material = accentMaterial;
+  marquee.parent = root;
+  marquee.isPickable = false;
+
+  const screen = MeshBuilder.CreateBox(`${name}-screen`, { width: 0.9, height: 0.62, depth: 0.05 }, scene);
+  screen.position.set(0, 1.66, -0.44);
+  screen.material = screenMaterial;
+  screen.parent = root;
+  screen.isPickable = false;
+
+  const control = MeshBuilder.CreateBox(`${name}-control`, { width: 1.1, height: 0.12, depth: 0.48 }, scene);
+  control.position.set(0, 1.17, -0.33);
+  control.rotation.x = -0.22;
+  control.material = accentMaterial;
+  control.parent = root;
+  control.isPickable = false;
+
+  for (let i = 0; i < 2; i++) {
+    const button = MeshBuilder.CreateSphere(`${name}-button-${i}`, { diameter: 0.11, segments: 8 }, scene);
+    button.position.set(-0.23 + i * 0.3, 1.25, -0.61);
+    button.material = screenMaterial;
+    button.parent = root;
+    button.isPickable = false;
+  }
+  shadows?.addShadowCaster(body);
+  return root;
+}
+
 /**
- * Tạo Sảnh Nội Thất 3D Hoàng Gia cho Hội Quán Trò Chơi & Casino
+ * Tạo sảnh Game Lounge 3D phong cách Play Together cho Hội Quán Trò Chơi.
  * Tọa độ trung tâm: interior: { x: 210, y: 32, z: -215 }
  * Bao gồm:
- * 1. Không gian phòng hộp sang trọng: sàn gỗ bóng viền đá, tường navy/teal viền vàng kim, đèn chùm.
+ * 1. Game lounge sáng màu: sàn gỗ, tường teal, đèn panel, neon và photo spot.
  * 2. Bàn 3D Tài Xỉu Sic Bo (Bán nguyệt, nỉ đỏ, bát đĩa 3D, xúc xắc ruby).
  * 3. Bàn 3D Bầu Cua Tôm Cá (Nỉ xanh ngọc, 6 ô linh vật, đĩa lắc).
  * 4. Bàn 3D Bài Cào 3 Lá (Nỉ xanh lục, phỉnh sứ, bộ bài hoàng gia).
@@ -38,24 +177,34 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   const { x, y, z } = config.interior;
   yield;
 
-  // 1. Vật liệu nội thất sòng bài hoàng gia
-  const matFloorWood = makeMat(scene, 'casino-int-floor-wood', '#2d1810', null, 0.25, 48);
+  // 1. Bảng màu game lounge sáng kiểu Play Together: gỗ sáng, pastel và neon mềm.
+  const matFloorWood = makeMat(scene, 'casino-int-floor-wood', '#e4c9a9', null, 0.12, 32);
   matFloorWood.backFaceCulling = false;
-  const matFloorBorder = makeMat(scene, 'casino-int-floor-marble', '#d4af37', null, 0.45, 64);
-  const matWall = makeMat(scene, 'casino-int-wall-teal', '#0f292f', null, 0.1, 24);
+  const matFloorBorder = makeMat(scene, 'casino-int-floor-marble', '#f6c95b', '#f4b942', 0.45, 64);
+  const matFloorInset = makeMat(scene, 'casino-int-floor-inset', '#f0ddc3', null, 0.08, 32);
+  const matWall = makeMat(scene, 'casino-int-wall-teal', '#e0f2ee', null, 0.1, 24);
   matWall.backFaceCulling = false;
-  const matGoldTrim = makeMat(scene, 'casino-int-gold-trim', '#f59e0b', '#d97706', 0.6, 96);
-  const matRedFelt = makeMat(scene, 'casino-int-felt-red', '#991b1b', null, 0.08, 16);
-  const matGreenFelt = makeMat(scene, 'casino-int-felt-green', '#065f46', null, 0.08, 16);
-  const matBlueFelt = makeMat(scene, 'casino-int-felt-blue', '#1e3a8a', null, 0.08, 16);
-  const matDarkOak = makeMat(scene, 'casino-int-dark-oak', '#1c120c', null, 0.2, 32);
-  const matLeather = makeMat(scene, 'casino-int-leather', '#3b1d11', null, 0.15, 24);
-  const matBulb = makeMat(scene, 'casino-int-bulb', '#fffbeb', '#fef08a', 0.8, 64);
-  const matPlateGold = makeMat(scene, 'casino-int-plate-gold', '#fbbf24', '#f59e0b', 0.7, 80);
+  const matWallAccent = makeMat(scene, 'casino-int-wall-accent', '#4f8d95', '#2dd4bf', 0.12, 32);
+  const matGoldTrim = makeMat(scene, 'casino-int-gold-trim', '#ffd166', '#ffb703', 0.6, 96);
+  const matRedFelt = makeMat(scene, 'casino-int-felt-red', '#e77b83', '#c75b69', 0.08, 16);
+  const matGreenFelt = makeMat(scene, 'casino-int-felt-green', '#68c79d', '#3ba77c', 0.08, 16);
+  const matBlueFelt = makeMat(scene, 'casino-int-felt-blue', '#75b9df', '#4a91c2', 0.08, 16);
+  const matPurpleFelt = makeMat(scene, 'casino-int-felt-purple', '#b79be8', '#8966ce', 0.08, 16);
+  const matPodCoral = makeMat(scene, 'casino-pod-coral', '#d78a8f', null, 0.08, 16);
+  const matPodMint = makeMat(scene, 'casino-pod-mint', '#6da98d', null, 0.08, 16);
+  const matPodSky = makeMat(scene, 'casino-pod-sky', '#6d9fbe', null, 0.08, 16);
+  const matPodLilac = makeMat(scene, 'casino-pod-lilac', '#9277bb', null, 0.08, 16);
+  const matDarkOak = makeMat(scene, 'casino-int-dark-oak', '#9ebec7', null, 0.12, 32);
+  const matLeather = makeMat(scene, 'casino-int-leather', '#e5c6ac', null, 0.12, 24);
+  const matBulb = makeMat(scene, 'casino-int-bulb', '#fff8d6', '#ffe082', 0.8, 64);
+  const matAquaGlow = makeMat(scene, 'casino-int-aqua-glow', '#7ee8dc', '#20d9c3', 0.2, 32);
+  const matCoralGlow = makeMat(scene, 'casino-int-coral-glow', '#ff9b8f', '#ff6f61', 0.2, 32);
+  const matPurpleGlow = makeMat(scene, 'casino-int-purple-glow', '#d1b7ff', '#a979ff', 0.2, 32);
+  const matPlateGold = makeMat(scene, 'casino-int-plate-gold', '#ffd166', '#f59e0b', 0.7, 80);
   yield;
 
   // 2. Vỏ hộp cản quang tuyệt đối 90m x 42m x 90m
-  const matOuter = makeMat(scene, 'casino-outer-mat', '#080d14', '#080d14', 0, 0);
+  const matOuter = makeMat(scene, 'casino-outer-mat', '#172d36', '#173943', 0, 0);
   matOuter.backFaceCulling = false;
   matOuter.disableLighting = true;
 
@@ -66,10 +215,22 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   yield;
 
   // Sàn nhà và trần nhà
+  const floorBorder = MeshBuilder.CreateBox('casino-int-floor-border', { width: 28.8, height: 0.18, depth: 32.8 }, scene);
+  floorBorder.position.set(x, y - 0.04, z - 3);
+  floorBorder.material = matFloorBorder;
+  floorBorder.receiveShadows = true;
+  yield;
+
   const floor = MeshBuilder.CreateBox('casino-int-floor', { width: 28.0, height: 0.6, depth: 32.0 }, scene);
   floor.position.set(x, y - 0.3, z - 3);
   floor.material = matFloorWood;
   floor.receiveShadows = true;
+  yield;
+
+  const floorInset = MeshBuilder.CreateBox('casino-int-floor-inset', { width: 25.8, height: 0.08, depth: 29.8 }, scene);
+  floorInset.position.set(x, y + 0.02, z - 3);
+  floorInset.material = matFloorInset;
+  floorInset.receiveShadows = true;
   yield;
 
   const ceiling = MeshBuilder.CreateBox('casino-int-ceiling', { width: 28.0, height: 0.6, depth: 32.0 }, scene);
@@ -104,6 +265,37 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   wallFrontR.material = matWall;
   yield;
 
+  // Các dải màu giúp căn phòng có chiều sâu thay vì một khối tường phẳng.
+  const wallBands = [
+    ['back', new Vector3(x, y + 6.25, z + 12.12), { width: 24.0, height: 0.18, depth: 0.08 }, matAquaGlow],
+  ];
+  wallBands.forEach(([side, position, dimensions, material]) => createNeonStrip(scene, `casino-wall-band-${side}`, null, position, dimensions, material));
+
+  // Trần đèn panel: emissive, nhẹ hơn point light và ổn định trên mobile.
+  [-7, 0, 7].forEach((offset, index) => {
+    const panel = MeshBuilder.CreateBox(`casino-ceiling-panel-${index}`, { width: 4.6, height: 0.08, depth: 1.2 }, scene);
+    panel.position.set(x + offset, y + 7.25, z - 3);
+    panel.material = index === 1 ? matBulb : matAquaGlow;
+    panel.isPickable = false;
+  });
+
+  // Đèn cục bộ chỉ bật khi đang ở casino; FarmWorld quản lý lifecycle theo venue.
+  const loungeLights = [
+    ['casino-lounge-key', new Vector3(x, y + 6.4, z - 3), '#fff1c1', 0.9],
+    ['casino-lounge-aqua', new Vector3(x - 9, y + 3.2, z + 2), '#7ee8dc', 0.55],
+    ['casino-lounge-coral', new Vector3(x + 9, y + 3.0, z - 7), '#ff9b8f', 0.45],
+  ];
+  loungeLights.forEach(([name, position, color, intensity]) => {
+    const light = new PointLight(name, position, scene);
+    light.diffuse = Color3.FromHexString(color);
+    light.specular = light.diffuse;
+    light.intensity = intensity;
+    light.range = 24;
+    light.metadata = { interiorVenue: 'casino' };
+    light.setEnabled(false);
+  });
+  yield;
+
   // Đèn chùm pha lê trung tâm (Grand Chandelier)
   const chandelierRoot = new TransformNode('casino-int-chandelier', scene);
   chandelierRoot.position.set(x, y + 6.8, z - 2);
@@ -119,6 +311,48 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   }
   yield;
 
+  // 2b. Sảnh đón khách: một điểm chụp ảnh và bảng hiệu lớn tạo focal point ngay
+  // khi người chơi bước vào, thay cho cảm giác căn phòng trống và tối.
+  const photoRoot = new TransformNode('casino-photo-spot', scene);
+  photoRoot.position.set(x - 9, y, z - 12.0);
+
+  const photoRug = MeshBuilder.CreateCylinder('casino-photo-rug', { diameter: 7.0, height: 0.08, tessellation: 32 }, scene);
+  photoRug.position.y = 0.07;
+  photoRug.material = matPurpleGlow;
+  photoRug.parent = photoRoot;
+
+  const photoRing = MeshBuilder.CreateTorus('casino-photo-ring', { diameter: 5.8, thickness: 0.12, tessellation: 32 }, scene);
+  photoRing.position.y = 0.16;
+  photoRing.material = matGoldTrim;
+  photoRing.parent = photoRoot;
+
+  [-2.0, 2.0].forEach((offset, index) => {
+    const post = MeshBuilder.CreateBox(`casino-photo-post-${index}`, { width: 0.34, height: 3.8, depth: 0.34 }, scene);
+    post.position.set(offset, 1.9, 0.35);
+    post.material = index ? matAquaGlow : matCoralGlow;
+    post.parent = photoRoot;
+  });
+  const photoHeader = MeshBuilder.CreateBox('casino-photo-header', { width: 4.4, height: 0.36, depth: 0.38 }, scene);
+  photoHeader.position.set(0, 3.72, 0.35);
+  photoHeader.material = matGoldTrim;
+  photoHeader.parent = photoRoot;
+  createTextSign(scene, 'casino-photo-sign', 'GÓC BẠN BÈ', photoRoot, new Vector3(0, 3.0, 0.12), {
+    width: 3.6,
+    height: 0.82,
+    background: '#7545b8',
+    border: '#ffe29a',
+    color: '#fff8e7',
+    emissive: '#d1b7ff',
+  });
+  yield;
+
+  // Chỉ giữ hai máy arcade ở cuối phòng; phần giữa để trống cho camera và
+  // tạo một trục di chuyển rõ ràng từ cửa vào tới quầy Chú Lộc.
+  createArcadeCabinet(scene, null, 'casino-arcade-claw', new Vector3(x - 10.8, y, z + 7.0), matDarkOak, matCoralGlow, matPurpleGlow, shadows, Math.PI / 2);
+  yield;
+  createArcadeCabinet(scene, null, 'casino-arcade-lucky', new Vector3(x + 10.8, y, z + 7.0), matDarkOak, matAquaGlow, matCoralGlow, shadows, -Math.PI / 2);
+  yield;
+
   // Thảm đỏ và Điểm thoát cửa (Exit Pad)
   const exitPad = MeshBuilder.CreateCylinder('casino-int-exit-pad', { diameter: 3.4, height: 0.05, tessellation: 24 }, scene);
   exitPad.position.set(x, y + 0.04, z - 16.5);
@@ -127,7 +361,7 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   yield;
 
   // Quầy Lễ Tân / Đổi Thưởng của Chú Lộc
-  const counter = MeshBuilder.CreateBox('casino-int-counter', { width: 12.0, height: 2.0, depth: 2.6 }, scene);
+  const counter = MeshBuilder.CreateBox('casino-int-counter', { width: 10.0, height: 1.65, depth: 2.2 }, scene);
   counter.position.set(x, y + 1.0, z + 9.5);
   counter.material = matDarkOak;
   counter.metadata = { cityAction: 'casino', label: 'Quầy Tiếp Tân Chú Lộc' };
@@ -137,25 +371,39 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   // Biển hiệu Chú Lộc
   const keeperNameTexture = new DynamicTexture('casino-keeper-name', { width: 1024, height: 224 }, scene, true);
   const knCtx = keeperNameTexture.getContext();
-  knCtx.fillStyle = '#1c120c';
+  knCtx.fillStyle = '#356d78';
   knCtx.fillRect(0, 0, 1024, 224);
-  knCtx.fillStyle = '#f59e0b';
-  knCtx.strokeStyle = '#fef08a';
+  knCtx.fillStyle = '#fff8e7';
+  knCtx.strokeStyle = '#ffe29a';
   knCtx.lineWidth = 12;
   knCtx.strokeRect(10, 10, 1004, 204);
   knCtx.font = 'bold 64px "Baloo 2", Arial, sans-serif';
   knCtx.textAlign = 'center';
   knCtx.textBaseline = 'middle';
-  knCtx.fillText('👑 CHÚ LỘC · QUẢN LÝ HỘI QUÁN', 512, 112);
+  knCtx.fillText('CHÚ LỘC · GAME HOST', 512, 112);
   keeperNameTexture.update();
 
   const knMat = new StandardMaterial('casino-keeper-mat', scene);
   knMat.diffuseTexture = keeperNameTexture;
-  knMat.emissiveColor = Color3.FromHexString('#f59e0b').scale(0.35);
+  knMat.emissiveColor = Color3.FromHexString('#7ee8dc').scale(0.2);
 
   const keeperSign = MeshBuilder.CreatePlane('casino-keeper-sign', { width: 6.8, height: 1.5 }, scene);
   keeperSign.position.set(x, y + 4.2, z + 12.0);
   keeperSign.material = knMat;
+  yield;
+
+  const backFeature = MeshBuilder.CreateBox('casino-back-feature-panel', { width: 22.0, height: 2.25, depth: 0.16 }, scene);
+  backFeature.position.set(x, y + 5.8, z + 12.14);
+  backFeature.material = matWallAccent;
+  backFeature.isPickable = false;
+  createTextSign(scene, 'casino-hub-sign', 'GAME LOUNGE', null, new Vector3(x, y + 5.8, z + 12.0), {
+    width: 5.6,
+    height: 0.9,
+    background: '#356d78',
+    border: '#ffe29a',
+    color: '#fff8e7',
+    emissive: '#7ee8dc',
+  });
   yield;
 
   // =========================================================================
@@ -169,9 +417,9 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
     chairRoot.rotation.y = angleY;
 
     // Chân kim loại
-    const leg = MeshBuilder.CreateCylinder(`${name}-leg`, { diameter: 0.08, height: 1.0 }, scene);
+    const leg = MeshBuilder.CreateCylinder(`${name}-leg`, { diameterTop: 0.2, diameterBottom: 0.65, height: 0.95, tessellation: 16 }, scene);
     leg.position.y = 0.5;
-    leg.material = matGoldTrim;
+    leg.material = matDarkOak;
     leg.parent = chairRoot;
 
     // Đệm ngồi da đỏ
@@ -181,7 +429,8 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
     seat.parent = chairRoot;
 
     // Tựa lưng
-    const back = MeshBuilder.CreateBox(`${name}-back`, { width: 0.75, height: 0.65, depth: 0.12 }, scene);
+    const back = MeshBuilder.CreateSphere(`${name}-back`, { diameter: 1, segments: 12 }, scene);
+    back.scaling.set(0.8, 0.7, 0.22);
     back.position.set(0, 1.45, -0.38);
     back.material = matLeather;
     back.parent = chairRoot;
@@ -195,14 +444,21 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   const txTableRoot = new TransformNode('casino-table-3d-tai-xiu', scene);
   txTableRoot.position.set(x - 6.5, y, z - 3.5);
   txTableRoot.metadata = { casinoTable: 'tai-xiu', label: 'Bàn Tài Xỉu Sic Bo 3D' };
+  createFloorPod(scene, txTableRoot, 'casino-pod-tai-xiu', matPodCoral, 6.8);
 
   // Khối bàn nỉ đỏ bán nguyệt
   const txTableMesh = MeshBuilder.CreateCylinder('table-mesh-tx', { diameter: 5.2, height: 1.35, tessellation: 24 }, scene);
   txTableMesh.position.y = 0.68;
-  txTableMesh.material = matRedFelt;
+  txTableMesh.material = matDarkOak;
   txTableMesh.parent = txTableRoot;
   txTableMesh.metadata = { casinoTable: 'tai-xiu', label: 'Bàn Tài Xỉu Sic Bo 3D' };
   shadows?.addShadowCaster(txTableMesh);
+  const txTrim = MeshBuilder.CreateTorus('table-trim-tx', { diameter: 4.9, thickness: 0.1, tessellation: 24 }, scene);
+  txTrim.position.y = 1.38;
+  txTrim.material = matGoldTrim;
+  txTrim.parent = txTableRoot;
+  createGameSurface(scene, txTableRoot, 'tai-xiu', 3.55, 3.1, '#9b5063');
+  yield;
 
   // Đĩa vàng & Bát 3D trên bàn
   const txDish = MeshBuilder.CreateCylinder('tx-3d-dish', { diameter: 1.4, height: 0.08, tessellation: 24 }, scene);
@@ -210,18 +466,23 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   txDish.material = matPlateGold;
   txDish.parent = txTableRoot;
 
-  const txBowl = MeshBuilder.CreateSphere('tx-3d-bowl', { diameter: 1.2, segments: 14, slice: 0.5 }, scene);
+  const txBowl = MeshBuilder.CreateSphere('tx-3d-bowl', { diameter: 1.2, segments: 20 }, scene);
+  txBowl.scaling.y = 0.65;
   txBowl.position.set(0, 1.42, 0);
   txBowl.rotation.x = Math.PI;
-  txBowl.material = matBulb;
+  txBowl.material = makeMat(scene, 'casino-int-ceramic-bowl', '#e8dfcd', null, 0.12, 32);
   txBowl.parent = txTableRoot;
+  txBowl.metadata = { spatialBoundsMutable: true };
 
   // Biển hiệu 3D nổi trên bàn
-  const txSign = MeshBuilder.CreatePlane('tx-3d-sign', { width: 2.4, height: 0.7 }, scene);
-  txSign.position.set(0, 2.6, 0);
-  txSign.billboardMode = Mesh.BILLBOARDMODE_ALL;
-  txSign.material = makeMat(scene, 'mat-tx-sign', '#ef4444', '#dc2626');
-  txSign.parent = txTableRoot;
+  createTextSign(scene, 'tx-3d-sign-label', 'TÀI XỈU', txTableRoot, new Vector3(0, 2.6, 0), {
+    width: 2.5,
+    height: 0.68,
+    background: '#d95d6c',
+    border: '#ffe29a',
+    color: '#fff8e7',
+    emissive: '#ff9b8f',
+  });
 
   // Ghế ngồi xung quanh bàn Tài Xỉu
   [0, Math.PI / 3, (2 * Math.PI) / 3, Math.PI, (4 * Math.PI) / 3, (5 * Math.PI) / 3].forEach((ang, i) => {
@@ -235,13 +496,20 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   const bcTableRoot = new TransformNode('casino-table-3d-bau-cua', scene);
   bcTableRoot.position.set(x + 6.5, y, z - 3.5);
   bcTableRoot.metadata = { casinoTable: 'bau-cua', label: 'Bàn Bầu Cua Tôm Cá 3D' };
+  createFloorPod(scene, bcTableRoot, 'casino-pod-bau-cua', matPodMint, 6.8);
 
   const bcTableMesh = MeshBuilder.CreateBox('table-mesh-bc', { width: 4.8, height: 1.35, depth: 3.6 }, scene);
   bcTableMesh.position.y = 0.68;
-  bcTableMesh.material = matGreenFelt;
+  bcTableMesh.material = matDarkOak;
   bcTableMesh.parent = bcTableRoot;
   bcTableMesh.metadata = { casinoTable: 'bau-cua', label: 'Bàn Bầu Cua Tôm Cá 3D' };
   shadows?.addShadowCaster(bcTableMesh);
+  const bcTrim = MeshBuilder.CreateBox('table-trim-bc', { width: 4.45, height: 0.1, depth: 3.25 }, scene);
+  bcTrim.position.y = 1.38;
+  bcTrim.material = matGreenFelt;
+  bcTrim.parent = bcTableRoot;
+  createGameSurface(scene, bcTableRoot, 'bau-cua', 4.2, 3.05, '#367968').position.y = 1.44;
+  yield;
 
   // Đĩa gỗ Bầu Cua trên bàn
   const bcDish = MeshBuilder.CreateCylinder('bc-3d-dish', { diameter: 1.5, height: 0.1, tessellation: 20 }, scene);
@@ -249,11 +517,14 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   bcDish.material = matDarkOak;
   bcDish.parent = bcTableRoot;
 
-  const bcSign = MeshBuilder.CreatePlane('bc-3d-sign', { width: 2.4, height: 0.7 }, scene);
-  bcSign.position.set(0, 2.6, 0);
-  bcSign.billboardMode = Mesh.BILLBOARDMODE_ALL;
-  bcSign.material = makeMat(scene, 'mat-bc-sign', '#10b981', '#059669');
-  bcSign.parent = bcTableRoot;
+  createTextSign(scene, 'bc-3d-sign-label', 'BẦU CUA', bcTableRoot, new Vector3(0, 2.6, 0), {
+    width: 2.5,
+    height: 0.68,
+    background: '#4cae86',
+    border: '#eaffd0',
+    color: '#fff8e7',
+    emissive: '#7ee8dc',
+  });
 
   [-1.8, 0, 1.8].forEach((ox, i) => {
     createChair(`bc-chair-top-${i}`, x + 6.5 + ox, z - 3.5 - 2.5, 0);
@@ -267,19 +538,29 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   const caTableRoot = new TransformNode('casino-table-3d-bai-cao', scene);
   caTableRoot.position.set(x - 6.5, y, z + 4.5);
   caTableRoot.metadata = { casinoTable: 'bai-cao', label: 'Bàn Bài Cào 3 Lá' };
+  createFloorPod(scene, caTableRoot, 'casino-pod-bai-cao', matPodSky, 6.0);
 
   const caTableMesh = MeshBuilder.CreateCylinder('table-mesh-ca', { diameter: 4.6, height: 1.35, tessellation: 24 }, scene);
   caTableMesh.position.y = 0.68;
-  caTableMesh.material = matBlueFelt;
+  caTableMesh.material = matDarkOak;
   caTableMesh.parent = caTableRoot;
   caTableMesh.metadata = { casinoTable: 'bai-cao', label: 'Bàn Bài Cào 3 Lá' };
   shadows?.addShadowCaster(caTableMesh);
+  const caTrim = MeshBuilder.CreateTorus('table-trim-ca', { diameter: 4.3, thickness: 0.1, tessellation: 24 }, scene);
+  caTrim.position.y = 1.38;
+  caTrim.material = matGoldTrim;
+  caTrim.parent = caTableRoot;
+  createGameSurface(scene, caTableRoot, 'bai-cao', 3.1, 2.9, '#466d8f');
+  yield;
 
-  const caSign = MeshBuilder.CreatePlane('ca-3d-sign', { width: 2.4, height: 0.7 }, scene);
-  caSign.position.set(0, 2.6, 0);
-  caSign.billboardMode = Mesh.BILLBOARDMODE_ALL;
-  caSign.material = makeMat(scene, 'mat-ca-sign', '#3b82f6', '#1d4ed8');
-  caSign.parent = caTableRoot;
+  createTextSign(scene, 'ca-3d-sign-label', 'BÀI CÀO', caTableRoot, new Vector3(0, 2.6, 0), {
+    width: 2.5,
+    height: 0.68,
+    background: '#4a91c2',
+    border: '#e0f5ff',
+    color: '#fff8e7',
+    emissive: '#75b9df',
+  });
 
   [0, (Math.PI * 2) / 5, (Math.PI * 4) / 5, (Math.PI * 6) / 5, (Math.PI * 8) / 5].forEach((ang, i) => {
     createChair(`ca-chair-${i}`, x - 6.5 + Math.cos(ang) * 3.0, z + 4.5 + Math.sin(ang) * 3.0, ang + Math.PI / 2);
@@ -292,6 +573,7 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   const tlTableRoot = new TransformNode('casino-table-3d-tien-len', scene);
   tlTableRoot.position.set(x + 6.5, y, z + 4.5);
   tlTableRoot.metadata = { casinoTable: 'tien-len', label: 'Bàn Tiến Lên Miền Nam' };
+  createFloorPod(scene, tlTableRoot, 'casino-pod-tien-len', matPodLilac, 5.8);
 
   const tlTableMesh = MeshBuilder.CreateCylinder('table-mesh-tl', { diameter: 4.2, height: 1.35, tessellation: 24 }, scene);
   tlTableMesh.position.y = 0.68;
@@ -299,12 +581,21 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   tlTableMesh.parent = tlTableRoot;
   tlTableMesh.metadata = { casinoTable: 'tien-len', label: 'Bàn Tiến Lên Miền Nam' };
   shadows?.addShadowCaster(tlTableMesh);
+  const tlTrim = MeshBuilder.CreateTorus('table-trim-tl', { diameter: 3.9, thickness: 0.1, tessellation: 24 }, scene);
+  tlTrim.position.y = 1.38;
+  tlTrim.material = matGoldTrim;
+  tlTrim.parent = tlTableRoot;
+  createGameSurface(scene, tlTableRoot, 'tien-len', 2.8, 2.6, '#71628e');
+  yield;
 
-  const tlSign = MeshBuilder.CreatePlane('tl-3d-sign', { width: 2.6, height: 0.7 }, scene);
-  tlSign.position.set(0, 2.6, 0);
-  tlSign.billboardMode = Mesh.BILLBOARDMODE_ALL;
-  tlSign.material = makeMat(scene, 'mat-tl-sign', '#8b5cf6', '#6d28d9');
-  tlSign.parent = tlTableRoot;
+  createTextSign(scene, 'tl-3d-sign-label', 'TIẾN LÊN', tlTableRoot, new Vector3(0, 2.6, 0), {
+    width: 2.8,
+    height: 0.68,
+    background: '#8966ce',
+    border: '#f0e7ff',
+    color: '#fff8e7',
+    emissive: '#d1b7ff',
+  });
 
   [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].forEach((ang, i) => {
     createChair(`tl-chair-${i}`, x + 6.5 + Math.cos(ang) * 2.8, z + 4.5 + Math.sin(ang) * 2.8, ang + Math.PI / 2);

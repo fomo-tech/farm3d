@@ -58,6 +58,10 @@ const signature = scene => scene.meshes.map(mesh => {
 });
 assert.deepEqual(signature(sliced), signature(direct), 'slicing must preserve exact road geometry and transforms');
 const world = await readFile(new URL('../src/game/world/FarmWorld.js', import.meta.url), 'utf8');
+const sceneSetup = world.slice(world.indexOf('*createSceneSteps()'));
+assert.equal((world.match(/attachSceneObstacles\(/g) || []).length, 1, 'scene obstacles must be attached exactly once');
+assert.ok(sceneSetup.indexOf('this.scene = scene;') < sceneSetup.indexOf('this.collisionSystem.attachSceneObstacles(scene);'), 'obstacle registration must follow scene creation');
+assert.ok(!world.slice(0, world.indexOf('*createSceneSteps()')).includes('attachSceneObstacles('), 'constructor must not register obstacles on an uninitialized scene');
 assert.ok(world.indexOf('if (!this.bootReady && !this.bootFrameRequested)') < world.indexOf('this.scene.render();'), 'covered loading canvas must not draw partially-built world every frame');
 const pipeline = world.slice(world.indexOf('async startWorldBootPipeline()'),world.indexOf('async populateBackgroundScenery()'));
 assert.ok(pipeline.indexOf('await this.renderIndex.ready') < pipeline.indexOf('await waitForRenderedFrame();'), 'first visible draw must wait for spatial index');

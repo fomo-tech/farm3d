@@ -26,16 +26,16 @@ export const GameClock = memo(function GameClock({ compact = false, timeMode = '
   const TimeIcon = timeIcons[Math.floor((clock % 240) / 60)];
   const SeasonIcon = seasonIcons[season];
 
-  const modeBadge = timeMode === 'night' ? <span className="pt-time-tag pt-time-night">🌙 Đêm</span>
-    : timeMode === 'dusk' ? <span className="pt-time-tag pt-time-dusk">🌅 Chiều</span>
-    : timeMode === 'day' ? <span className="pt-time-tag pt-time-day">☀️ Ngày</span>
-    : timeMode === 'dawn' ? <span className="pt-time-tag pt-time-dawn">🌄 Sáng</span>
+  const modeBadge = timeMode === 'night' ? <span className="pt-time-tag pt-time-night"><Icon3dMoon size={14} /> Đêm</span>
+    : timeMode === 'dusk' ? <span className="pt-time-tag pt-time-dusk"><Icon3dSunset size={14} /> Chiều</span>
+    : timeMode === 'day' ? <span className="pt-time-tag pt-time-day"><Icon3dSun size={14} /> Ngày</span>
+    : timeMode === 'dawn' ? <span className="pt-time-tag pt-time-dawn"><Icon3dDawn size={14} /> Sáng</span>
     : null;
 
   return <div
     className="pt-clock-strip"
     onClick={onToggleTime}
-    title="Bấm để đổi thời gian: Ban Ngày ☀️ / Hoàng Hôn 🌅 / Ban Đêm 🌙 / Tự Động ⏰"
+    title="Bấm để đổi thời gian: Ban Ngày / Hoàng Hôn / Ban Đêm / Tự Động"
   >
     <span className="pt-clock-icon"><TimeIcon size={24} /></span>
     <span className="pt-clock-time">{clockText(clock)}</span>

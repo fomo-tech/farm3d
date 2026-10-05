@@ -1,0 +1,130 @@
+/* Shared cartoon lounge treatment; game rules and action handlers stay intact. */
+.cq-root-wrapper { color: #304f60; }
+.cq-root-wrapper .cq-toast-message { top: 140px; font-size: 12px; padding: 6px 14px; pointer-events: none; }
+.cq-root-wrapper .pt-ingame-top-hud,
+.cq-root-wrapper .pt-ingame-bottom-dock,
+.cq-root-wrapper .pt-lobby-bottom-kiosk { background: transparent; }
+.cq-root-wrapper :is(.pt-table-info-pill, .pt-phase-countdown-capsule,
+  .pt-player-bubble, .pt-game-spotlight-pill, .pt-screen-action-dock,
+  .pt-total-bet-pill, .pt-result-banner-pop, .pot-chip-vault) {
+  background: #fff8eb; color: #304f60; border: 2px solid #fff;
+  box-shadow: 0 3px 0 #c9d8d6, 0 5px 12px #263f501a;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.cq-root-wrapper :is(.pill-table-name, .phase-text, .pt-player-nametag strong,
+  .spotlight-text strong, .res-points, .pot-amount) { color: #304f60; }
+.cq-root-wrapper :is(.pill-stake, .pt-player-nametag small, .spotlight-text p,
+  .dock-label, .res-sub, .pot-label) { color: #607a85; }
+.cq-root-wrapper .pt-arcade-game-card {
+  background: #fff8eb !important; color: #304f60; border-color: #fff !important;
+  box-shadow: 0 4px 0 #c9d8d6, 0 6px 14px #263f5020;
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  padding: 10px; max-width: 210px;
+}
+.cq-root-wrapper .pt-arcade-game-card.is-selected { border-color: #7ebcaf !important; box-shadow: 0 4px 0 #4f9687; }
+.cq-root-wrapper .pt-casino-lobby-hud .pt-lobby-center-hint { display: none; }
+.cq-root-wrapper .pt-casino-lobby-hud .pt-lobby-bottom-kiosk { padding: 8px 16px 16px; gap: 10px; }
+.cq-root-wrapper .pt-casino-lobby-hud .pt-game-cards-carousel { max-width: 720px; gap: 8px; }
+.cq-root-wrapper .pt-casino-lobby-hud .pt-arcade-game-card { display: grid; grid-template-columns: 28px 1fr; align-items: center; gap: 5px; padding: 8px 10px; border-radius: 16px; transform: none; }
+.cq-root-wrapper .pt-casino-lobby-hud .card-center-icon { grid-column: 1; grid-row: 1 / 3; font-size: 24px; margin: 0; filter: none; }
+.cq-root-wrapper .pt-casino-lobby-hud .card-game-title { font-size: 12px; text-align: left; letter-spacing: 0; }
+.cq-root-wrapper .pt-casino-lobby-hud .card-top-row { grid-column: 2; grid-row: 2; }
+.cq-root-wrapper .pt-casino-lobby-hud :is(.card-badge, .card-type-tag) { display: none; }
+.cq-root-wrapper .pt-casino-lobby-hud .pt-kiosk-action-bar { flex-wrap: wrap; justify-content: center; gap: 8px; }
+.cq-root-wrapper .pt-casino-lobby-hud .btn-quick-play { font-size: 14px !important; padding: 8px 18px !important; }
+.cq-root-wrapper :is(.card-type-tag, .card-rooms-count) { color: #607a85; }
+.cq-root-wrapper .card-badge { background: #e8f3ed; color: #3d7465; }
+.cq-root-wrapper .pt-dedicated-game-stage {
+  width: min(680px, calc(100vw - 32px)); margin: 0 auto;
+  background: transparent; border: 0; box-shadow: none;
+  padding: 0; min-height: 0; max-height: 40vh; overflow-y: auto; gap: 6px;
+}
+.cq-root-wrapper .pt-dice-arena-pod { min-height: 0; }
+.cq-root-wrapper .pt-dice-arena-pod:not(:has(.pt-dice-trio, .pt-result-banner-pop, button)) { display: none; }
+.cq-root-wrapper .pt-golden-dish,
+.cq-root-wrapper .pt-wood-dish-base { display: none; }
+.cq-root-wrapper .pt-bowl-dish-wrap { width: auto; height: auto; min-height: 0; background: none; box-shadow: none; }
+.cq-root-wrapper .pt-dice-trio { margin-top: 0; }
+.cq-root-wrapper .pt-bet-big-card { min-height: 64px; padding: 6px 10px; border-radius: 16px; box-shadow: 0 3px 0 #263f5030; }
+.cq-root-wrapper .card-main-title { font-size: 24px; text-shadow: none; }
+.cq-root-wrapper .card-top-tag { display: none; }
+.cq-root-wrapper .card-points-range { font-size: 11px; color: #fff8e5; }
+.cq-root-wrapper .pt-sub-bet-pill { padding: 4px; min-height: 24px; }
+.cq-root-wrapper .pt-bet-middle-subcolumn { display: flex; flex-direction: row; gap: 4px; }
+.cq-root-wrapper .pt-bet-middle-subcolumn > button { flex: 1; }
+.cq-root-wrapper .pt-taixiu-felt-table { grid-template-columns: 1fr 1fr; gap: 6px; }
+.cq-root-wrapper .pt-bet-middle-subcolumn { grid-column: 1 / -1; grid-row: 2; }
+.cq-root-wrapper .pt-screen-action-dock { margin: 0; padding: 5px 10px; flex-wrap: wrap; }
+.cq-root-wrapper .pt-hud-seats-ring { inset: auto; top: 86px; left: 16px; width: 240px; pointer-events: auto; }
+.cq-root-wrapper .pt-hud-seats-ring > summary { cursor: pointer; padding: 8px 14px; background: #fff8eb; border: 2px solid white; border-radius: 14px; color: #304f60; font-weight: 800; }
+.cq-root-wrapper .pt-seat-picker-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #fff8eb; padding: 10px; border-radius: 14px; max-height: 45vh; overflow-y: auto; }
+.cq-root-wrapper .pt-seat-pod { position: static; transform: none; transition: none; }
+.cq-root-wrapper .pt-candy-sit-btn { background: #e1f0e9; color: #356a5a; border: 1px solid #9ecbbb; padding: 9px; width: 100%; backdrop-filter: none; }
+.cq-root-wrapper .pt-player-bubble { padding: 5px; gap: 4px; }
+.cq-root-wrapper .pt-player-avatar { width: 24px; height: 24px; font-size: 12px; flex-shrink: 0; }
+.cq-root-wrapper .pt-player-nametag { min-width: 0; overflow: hidden; background: transparent; box-shadow: none; }
+.cq-root-wrapper .pt-spectator-floating-ribbon { top: 82px; background: #fff8eb; color: #476477; border: 1px solid #ccddd8; font-size: 12px; box-shadow: none; }
+/* Artwork components had no matching cq-* styles: chips rendered as plain text. */
+.cq-root-wrapper .cq-chip { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 50%; background: #668eb5; border: 3px dashed #fff7df; box-shadow: 0 2px 0 #385b79; color: white; }
+.cq-root-wrapper .cq-chip-10 { background: #689e8a; }
+.cq-root-wrapper .cq-chip-50 { background: #b56e7b; }
+.cq-root-wrapper .cq-chip-100 { background: #9276ae; }
+.cq-root-wrapper .cq-chip-500 { background: #b18c48; }
+.cq-root-wrapper .cq-chip-core { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.cq-root-wrapper .cq-chip-num { font-size: 12px; font-weight: 900; }
+.cq-root-wrapper .cq-chip-label { font-size: 7px; }
+.cq-root-wrapper .cq-symbol { width: 52px; height: 52px; display: block; }
+.cq-root-wrapper .cq-die-wrap { width: 38px; height: 38px; }
+.cq-root-wrapper .cq-die-face { display: none; }
+.cq-root-wrapper .cq-face-front { display: block; border-radius: 8px; background: #fff8eb; border: 2px solid #dccca7; padding: 4px; }
+.cq-root-wrapper .cq-pips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; width: 26px; height: 26px; }
+.cq-root-wrapper .cq-pip { border-radius: 50%; background: #385461; }
+.cq-root-wrapper .cq-pip-red { background: #b96273; }
+.cq-root-wrapper .bet-tai { background: #c77380; border-color: #f2c7bf; }
+.cq-root-wrapper .bet-xiu { background: #65a79b; border-color: #c4e6d7; }
+.cq-root-wrapper .pt-sub-bet-pill { background: #fff5df; color: #425b62; border-color: #ead5ac; box-shadow: 0 2px 0 #263f5030; }
+.cq-root-wrapper .pt-folk-animal-tile { background: #fff5df; color: #425b62; border-color: #ead5ac; box-shadow: 0 3px 0 #263f5030; border-radius: 20px; }
+.cq-root-wrapper .pt-folk-animal-tile.winning { border-color: #f7c665; background: #fff0bc; }
+.cq-root-wrapper .pt-chip-btn.selected { box-shadow: none; border-color: #b28236; }
+.cq-root-wrapper button:focus-visible { outline: 3px solid #276ba0; outline-offset: 3px; }
+.cq-root-wrapper button:disabled { cursor: not-allowed; }
+.cq-root-wrapper .pt-waiting-requirement { color: #304f60; background: #fff8eb; border-radius: 10px; padding: 4px 10px; }
+/* Watching should not show a disabled betting console over the table. */
+.cq-root-wrapper .is-spectator :is(.pt-taixiu-felt-table, .pt-baucua-tiles-grid,
+  .pt-screen-action-dock, .pt-baicao-hand-stage, .pt-tienlen-hand-dock,
+  .pt-tienlen-action-bar) { display: none; }
+.cq-root-wrapper .pt-ingame-top-hud { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); padding: 12px; gap: 10px; }
+.cq-root-wrapper .pt-top-right-wallet { justify-content: flex-end; }
+.cq-root-wrapper .pt-top-left-actions { min-width: 0; gap: 6px; }
+.cq-root-wrapper .pill-table-name { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cq-root-wrapper .pt-table-info-pill { min-width: 0; padding: 6px 10px; gap: 6px; }
+.cq-root-wrapper .pt-baucua-tiles-grid { gap: 5px; }
+.cq-root-wrapper .pt-folk-animal-tile { padding: 5px; min-height: 72px; }
+.cq-root-wrapper .tile-payout-rate { display: none; }
+@media (max-width: 1000px) {
+  .cq-root-wrapper .pt-ingame-top-hud { grid-template-columns: minmax(0, 1fr) auto; }
+  .cq-root-wrapper .pt-top-center-status { grid-row: 2; grid-column: 1 / -1; }
+  .cq-root-wrapper .pill-table-name { display: none; }
+  .cq-root-wrapper .pt-phase-countdown-capsule { padding: 4px 12px; }
+  .cq-root-wrapper .pt-hud-seats-ring { top: 115px; }
+  .cq-root-wrapper .pt-spectator-floating-ribbon { top: 115px; left: auto; right: 12px; transform: none; max-width: calc(100vw - 290px); }
+}
+@media (max-width: 700px) {
+  .cq-root-wrapper .pt-dedicated-game-stage { width: calc(100% - 12px); padding: 0; margin: 0 auto; }
+  .cq-root-wrapper .pt-hud-seats-ring { top: 120px; left: 8px; width: 200px; }
+  .cq-root-wrapper .pt-spectator-floating-ribbon { top: 168px; width: max-content; max-width: calc(100vw - 24px); padding: 5px 8px; }
+  .cq-root-wrapper .pt-game-cards-carousel { justify-content: flex-start; overflow-x: auto; padding-bottom: 6px; }
+  .cq-root-wrapper .pt-arcade-game-card { flex: 0 0 145px; }
+  .cq-root-wrapper .pt-ingame-top-hud { padding: 8px; gap: 6px; flex-wrap: wrap; }
+  .cq-root-wrapper .pt-top-right-wallet { gap: 4px; }
+  .cq-root-wrapper .pt-candy-action-circle-btn { width: 30px; height: 30px; font-size: 14px; }
+  .cq-root-wrapper .pt-candy-wallet-pill { padding: 5px 8px; font-size: 12px; }
+  .cq-root-wrapper .pt-candy-pill-btn { padding: 7px 9px; font-size: 12px; }
+  .cq-root-wrapper .pt-table-info-pill { display: none; }
+  .cq-root-wrapper .pt-spectator-floating-ribbon { top: 165px; left: 8px; right: auto; max-width: calc(100vw - 24px); }
+  .cq-root-wrapper .pt-screen-action-dock { gap: 5px; }
+  .cq-root-wrapper .pt-chip-selector-group { gap: 4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cq-root-wrapper *, .cq-root-wrapper *::before, .cq-root-wrapper *::after { animation: none !important; transition: none !important; }
+}

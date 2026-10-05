@@ -8,7 +8,7 @@ import { FARM_ACTIVE_PLOTS, FARM_LOT_SPEC, farmLotPosition, validateFarmLayout }
 export const LOTS_PER_VILLAGE = 24;
 export const FARM_LAYOUT_VERSION = FARM_LOT_SPEC.version;
 const INITIAL_VILLAGE_COUNT = 12;
-const ICONS = ['🌅', '🌼', '🏞️', '🌬️', '🌾', '🌳', '🌸', '⛰️', '🍀', '🌊', '🍁', '🌻'];
+const ICONS = ['sun', 'flower', 'river', 'wind', 'wheat', 'tree', 'blossom', 'mountain', 'clover', 'wave', 'maple', 'sunflower'];
 const NAMES = ['Bình Minh', 'Hoa Mai', 'Ven Sông', 'Đồi Gió', 'An Nhiên', 'Mộc Lan', 'Thanh Hà', 'Phú Điền', 'Tân Lộc', 'Hải Vân', 'Thu Phong', 'Hướng Dương'];
 const SUFFIXES = ['Thượng', 'Hạ', 'Đông', 'Tây', 'Mới', 'Xanh', 'Bắc', 'Nam'];
 const DESCRIPTIONS = ['Đồng cỏ yên bình, phù hợp người mới.', 'Vùng quê nhiều hoa và hàng xóm nhộn nhịp.', 'Khu dân cư cạnh sông, gần tuyến xe buýt.', 'Cao nguyên thoáng đãng cạnh cối xay gió.', 'Miền đất màu mỡ dành cho những mùa vụ lớn.'];

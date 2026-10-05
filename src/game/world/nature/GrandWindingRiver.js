@@ -70,59 +70,15 @@ export const RIVER_CONTROL_POINTS = Object.freeze([
  */
 export { RIVER_WEST_SPLINE_LUT, getRiverWestBankX } from '../../../../shared/riverBank.js';
 import { getRiverWestBankX } from '../../../../shared/riverBank.js';
+import { ALL_BRIDGES } from '../../../../shared/bridgeConfig.js';
+import { buildBridge } from './BridgeSystem.js';
 
 /**
- * Metadata for the 4 Bridges spanning the river.
+ * Metadata for the 4 Bridges spanning the river (synchronized with shared/bridgeConfig.js).
  */
-export const RIVER_BRIDGES = Object.freeze([
-  {
-    id: 'bridge-highway-234',
-    name: 'Cầu Bắc Tân Lộc (QL -234)',
-    type: 'highway',
-    cx: 205,
-    cz: -234,
-    spanX: 24, // Length across river along East-West road
-    widthZ: 9.4, // Width along road corridor North-South
-    deckY: 0.10,
-    deckColor: '#334155',
-    stoneColor: '#cbd5e1',
-  },
-  {
-    id: 'bridge-highway-86',
-    name: 'Đại Cầu Bình Minh - Ven Sông (QL 86)',
-    type: 'highway',
-    cx: 212,
-    cz: 86,
-    spanX: 26,
-    widthZ: 9.6,
-    deckY: 0.10,
-    deckColor: '#334155',
-    stoneColor: '#e2e8f0',
-  },
-  {
-    id: 'bridge-vensong-pedestrian',
-    name: 'Cầu Vòm Gỗ Ven Sông',
-    type: 'pedestrian',
-    cx: 214,
-    cz: 210,
-    spanX: 20,
-    widthZ: 4.4,
-    deckY: 0.35,
-    woodColor: '#854d0e',
-  },
-  {
-    id: 'bridge-highway-406',
-    name: 'Cầu Nam Hướng Dương (Đường ven biển)',
-    type: 'highway',
-    cx: 218,
-    cz: 310,
-    spanX: 24,
-    widthZ: 9.4,
-    deckY: 0.10,
-    deckColor: '#334155',
-    stoneColor: '#e2e8f0',
-  },
-]);
+export const RIVER_BRIDGES = Object.freeze(
+  ALL_BRIDGES.filter(b => b.id.startsWith('bridge-highway-') || b.id === 'bridge-vensong-pedestrian')
+);
 
 /**
  * Pure mathematical Catmull-Rom spline evaluator.
@@ -223,155 +179,15 @@ function createRiverWaterTexture(scene, size = 512) {
 }
 
 /**
- * Builds the 4 bridges spanning the river with paved road decks, stone balustrades, and lanterns.
+ * Builds the 4 bridges spanning the river using the unified BridgeSystem architecture.
  */
 function* createBridgesSteps(scene, root, shadows) {
   const bridgeMeshes = [];
-  const matAsphalt = new StandardMaterial('bridge-asphalt-mat', scene);
-  matAsphalt.diffuseColor = Color3.FromHexString('#334155');
-  matAsphalt.specularColor = new Color3(0.04, 0.04, 0.04);
-
-  const matStoneParapet = new StandardMaterial('bridge-stone-parapet-mat', scene);
-  matStoneParapet.diffuseColor = Color3.FromHexString('#cbd5e1');
-  matStoneParapet.ambientColor = matStoneParapet.diffuseColor.scale(0.4);
-  matStoneParapet.specularColor = new Color3(0.08, 0.08, 0.08);
-
-  const matWoodDeck = new StandardMaterial('bridge-wood-deck-mat', scene);
-  matWoodDeck.diffuseColor = Color3.FromHexString('#854d0e');
-  matWoodDeck.ambientColor = matWoodDeck.diffuseColor.scale(0.35);
-
-  const matWoodRail = new StandardMaterial('bridge-wood-rail-mat', scene);
-  matWoodRail.diffuseColor = Color3.FromHexString('#a16207');
-
   for (const b of RIVER_BRIDGES) {
-    const bNode = new TransformNode(b.id, scene);
-    bNode.position.set(b.cx, 0, b.cz);
-    bNode.parent = root;
-
-    if (b.type === 'highway') {
-      // 1. Paved Road Deck: Flush with highway grade (y = 0.09m) for smooth transit
-      const deck = MeshBuilder.CreateBox(`${b.id}-deck`, {
-        width: b.spanX,
-        height: 0.18,
-        depth: b.widthZ,
-      }, scene);
-      deck.position.set(0, 0.09, 0);
-      deck.material = matAsphalt;
-      deck.parent = bNode;
-      deck.receiveShadows = true;
-      bridgeMeshes.push(deck);
-
-      // Smooth approach ramps at both ends (East and West)
-      [-b.spanX / 2 - 2.5, b.spanX / 2 + 2.5].forEach((rx, idx) => {
-        const ramp = MeshBuilder.CreateBox(`${b.id}-ramp-${idx}`, {
-          width: 5.0,
-          height: 0.12,
-          depth: b.widthZ,
-        }, scene);
-        ramp.position.set(rx, 0.06, 0);
-        ramp.material = matAsphalt;
-        ramp.parent = bNode;
-        ramp.receiveShadows = true;
-      });
-
-      // 2. Solid Stone Balustrades / Parapets along North and South edges
-      [-b.widthZ / 2, b.widthZ / 2].forEach((dz, sideIdx) => {
-        const parapet = MeshBuilder.CreateBox(`${b.id}-parapet-${sideIdx}`, {
-          width: b.spanX + 8.0,
-          height: 0.95,
-          depth: 0.55,
-        }, scene);
-        parapet.position.set(0, 0.55, dz);
-        parapet.material = matStoneParapet;
-        parapet.parent = bNode;
-        shadows?.addShadowCaster(parapet);
-
-        // Classical Baluster Posts along the parapet
-        for (let px = -b.spanX / 2 - 2.0; px <= b.spanX / 2 + 2.0; px += 2.8) {
-          const post = MeshBuilder.CreateBox(`${b.id}-post-${sideIdx}-${px}`, {
-            width: 0.38,
-            height: 1.15,
-            depth: 0.65,
-          }, scene);
-          post.position.set(px, 0.65, dz);
-          post.material = matStoneParapet;
-          post.parent = bNode;
-        }
-      });
-
-      // 3. Under-Deck Heavy Stone Piers
-      [-b.spanX * 0.28, b.spanX * 0.28].forEach((px, pIdx) => {
-        const pier = MeshBuilder.CreateBox(`${b.id}-pier-${pIdx}`, {
-          width: 2.4,
-          height: 3.5,
-          depth: b.widthZ + 1.2,
-        }, scene);
-        pier.position.set(px, -1.0, 0);
-        pier.material = matStoneParapet;
-        pier.parent = bNode;
-      });
-
-      // 4. Vintage Street Lanterns at 4 corners of the bridge
-      [[-b.spanX / 2 - 1.5, -b.widthZ / 2 - 0.6],
-       [b.spanX / 2 + 1.5, -b.widthZ / 2 - 0.6],
-       [-b.spanX / 2 - 1.5, b.widthZ / 2 + 0.6],
-       [b.spanX / 2 + 1.5, b.widthZ / 2 + 0.6]].forEach(([lx, lz], lIdx) => {
-        spawnModelSync(scene, MODEL_PATHS.town.lantern, {
-          position: new Vector3(b.cx + lx, 0.95, b.cz + lz),
-          scaling: new Vector3(1.3, 1.3, 1.3),
-          shadows,
-          parent: bNode,
-          name: `${b.id}-lamp-${lIdx}`,
-        });
-      });
-    } else {
-      // Pedestrian Romantic Arched Wooden Bridge
-      const pedDeck = MeshBuilder.CreateBox(`${b.id}-deck`, {
-        width: b.spanX,
-        height: 0.24,
-        depth: b.widthZ,
-      }, scene);
-      pedDeck.position.set(0, 0.28, 0);
-      pedDeck.material = matWoodDeck;
-      pedDeck.parent = bNode;
-      shadows?.addShadowCaster(pedDeck);
-
-      // Wooden Railings along sides
-      [-b.widthZ / 2 + 0.15, b.widthZ / 2 - 0.15].forEach((dz, sideIdx) => {
-        const rail = MeshBuilder.CreateCylinder(`${b.id}-rail-${sideIdx}`, {
-          height: b.spanX,
-          diameter: 0.15,
-        }, scene);
-        rail.rotation.z = Math.PI / 2;
-        rail.position.set(0, 1.15, dz);
-        rail.material = matWoodRail;
-        rail.parent = bNode;
-
-        for (let px = -b.spanX / 2 + 1.5; px <= b.spanX / 2 - 1.5; px += 2.2) {
-          const post = MeshBuilder.CreateCylinder(`${b.id}-wpost-${sideIdx}-${px}`, {
-            height: 1.1,
-            diameter: 0.12,
-          }, scene);
-          post.position.set(px, 0.65, dz);
-          post.material = matWoodRail;
-          post.parent = bNode;
-        }
-      });
-
-      // Warm fairy lanterns at bridge entries
-      [[-b.spanX / 2, -b.widthZ / 2 - 0.4], [b.spanX / 2, b.widthZ / 2 + 0.4]].forEach(([lx, lz], lIdx) => {
-        spawnModelSync(scene, MODEL_PATHS.town.lantern, {
-          position: new Vector3(b.cx + lx, 0, b.cz + lz),
-          scaling: new Vector3(1.2, 1.2, 1.2),
-          shadows,
-          parent: bNode,
-          name: `${b.id}-ped-lamp-${lIdx}`,
-        });
-      });
-    }
+    const bridgeNode = buildBridge(scene, b, root, shadows);
+    bridgeMeshes.push(bridgeNode);
     yield;
   }
-
   return bridgeMeshes;
 }
 
@@ -855,21 +671,20 @@ export function* createGrandWindingRiverSteps(scene, parent = null, shadows = nu
   // 6. Bọt nước rẽ sóng ở chân các trụ cầu đá (Bridge Pier Water Wakes)
   const pierWakes = [];
   for (const b of RIVER_BRIDGES) {
-    if (b.type === 'highway') {
-      [-b.spanX * 0.28, b.spanX * 0.28].forEach((px, pIdx) => {
-        const wake = createWaterRippleRingSystem(scene, root, {
-          count: 2,
-          minRadius: 0.6,
-          maxRadius: 1.9,
-          speed: 0.85,
-          y: 0.083,
-          color: '#e0f2fe',
-          center: new Vector3(b.cx + px, 0, b.cz),
-          prefix: `river-pier-wake-${b.id}-${pIdx}`,
-        });
-        pierWakes.push(wake);
+    const pierOffsets = b.type === 'highway' ? [-b.spanX * 0.40, b.spanX * 0.40] : [-b.spanX * 0.35, b.spanX * 0.35];
+    pierOffsets.forEach((px, pIdx) => {
+      const wake = createWaterRippleRingSystem(scene, root, {
+        count: 2,
+        minRadius: 0.6,
+        maxRadius: 1.9,
+        speed: 0.85,
+        y: 0.083,
+        color: '#e0f2fe',
+        center: new Vector3(b.cx + px, 0, b.cz),
+        prefix: `river-pier-wake-${b.id}-${pIdx}`,
       });
-    }
+      pierWakes.push(wake);
+    });
   }
   yield;
 

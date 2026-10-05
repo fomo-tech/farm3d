@@ -1,5 +1,8 @@
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera.js';
 import { sampleMovement } from '../network/sampleMovement.js';
+import { cameraMovementBasis } from '../player/cameraMovementBasis.js';
+import { createVehicleRigs } from '../player/createVehicleRigs.js';
+import { applyVehiclePose } from '../player/applyVehiclePose.js';
 import { CasinoTableView } from '../casino/CasinoTableView.js';
 import { Color3, Color4 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
@@ -29,6 +32,7 @@ import { FarmStreamingGrid } from './FarmStreamingGrid.js';
 import { getTextureWorkerStats } from './TextureWorkerPool.js';
 import { createPlayer, createFishingRig } from '../player/createPlayer.js';
 import { recoverTownSpawn } from '../../../shared/playerSpawn.js';
+import { normalizeVenuePosition } from '../../../shared/venuePosition.js';
 import { createPlayerNameplate } from '../player/createPlayerNameplate.js';
 import { createOpenWorldSteps, createOpenWorld } from './createOpenWorld.js';
 import { createAnimalPen } from '../livestock/createAnimalPen.js';
@@ -66,6 +70,8 @@ import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
 import { isPointInLakeOrRiver } from './WaterSafetyZone.js';
 import { WorldCollisionSystem } from '../physics/WorldCollisionSystem.js';
+import { vehicleCollisionRadius } from '../../../shared/vehicleCollision.js';
+import { CASINO_TABLE_ANCHORS } from '../../../shared/casinoTableAnchors.js';
 import { createScenicLandscapesSteps, createScenicLandscapes } from './createScenicLandscapes.js';
 import { createVillageAmenitiesAndGreenbeltsSteps, createVillageAmenitiesAndGreenbelts } from './createVillageAmenities.js';
 import { getTerrainHeight, MEADOW_KNOLLS } from './TerrainHeightSystem.js';
@@ -464,20 +470,27 @@ function remoteRootFor(mesh) {
 export class FarmWorld {
   constructor(canvas, onStatus, callbacks = {}) {
     window.__farmDebug?.mark('Creating WebGL engine');
-    Texture.DEFAULT_ANISOTROPIC_FILTERING_LEVEL = 16;
     this.canvas = canvas;
     this.onStatus = onStatus;
     this.callbacks = callbacks;
-    this.callbacks.initialLocation = recoverTownSpawn(callbacks.initialLocation);
+    this.callbacks.initialLocation = recoverTownSpawn(normalizeVenuePosition(callbacks.initialLocation));
     this.isMobile = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
     this.graphicsQuality = ['auto', 'ultra', 'balanced', 'eco'].includes(callbacks.graphicsQuality)
       ? callbacks.graphicsQuality : readGraphicsQuality();
+    // 16x anisotropic filtering is expensive when the streamed scene owns
+    // thousands of textured submeshes.  8x keeps long road/ground views crisp
+    // while leaving headroom for Babylon's draw and shadow passes.
+    this.textureAnisotropy = this.isMobile ? 2 : (this.graphicsQuality === 'ultra' ? 8 : 4);
+    Texture.DEFAULT_ANISOTROPIC_FILTERING_LEVEL = this.textureAnisotropy;
     this.resolutionController = new RenderResolutionController();
     this.autoGraphics = new AutoGraphicsController(this.isMobile);
     this.engine = new Engine(canvas, true, {
       preserveDrawingBuffer: false,
       stencil: true,
-      antialias: true,
+      // The rendering pipeline owns the MSAA resolve. Keeping the engine's
+      // default framebuffer MSAA enabled as well duplicates raster/resolve
+      // work on the full-size canvas.
+      antialias: false,
       powerPreference: 'high-performance',
     });
 
@@ -486,7 +499,9 @@ export class FarmWorld {
         nativeDpr: window.devicePixelRatio || 1,
         width: this.canvas.clientWidth || window.innerWidth,
         height: this.canvas.clientHeight || window.innerHeight,
-        mobile: this.isMobile, scale: this.graphicsQuality === 'auto' ? this.autoGraphics.scale : this.resolutionController.scale });
+        mobile: this.isMobile,
+        scale: this.graphicsQuality === 'auto' ? this.autoGraphics.scale : this.resolutionController.scale,
+        allowBelowNative: this.graphicsQuality === 'auto' });
     };
 
     // Bật độ phân giải sắc nét Native Retina 1:1 trên màn hình High-DPI
@@ -506,7 +521,7 @@ export class FarmWorld {
       this.cinematicTourActive = !this.cinematicTourActive;
       return this.cinematicTourActive;
     };
-    this.currentVenue = VENUES[callbacks.initialLocation?.venue] ? callbacks.initialLocation.venue : null;
+    this.currentVenue = VENUES[this.callbacks.initialLocation?.venue] ? this.callbacks.initialLocation.venue : null;
     this.lastVenueTransition = 0;
     const construction = this.createSceneSteps();
     construction.next();
@@ -515,6 +530,7 @@ export class FarmWorld {
     window.__farmDebug?.mark('Babylon scene created');
     this.keydown = event => {
       if (!this.player || !this.bootReady) return;
+      if (event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
       // Bỏ qua nếu người dùng đang nhập văn bản trong modal/input
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
       const tools = { Digit1: 'hand', Digit2: 'hoe', Digit3: 'seed', Digit4: 'water', Digit5: 'harvest' };
@@ -525,7 +541,7 @@ export class FarmWorld {
       if (event.code === 'KeyF') {
         const nearby = this.busRoute?.getNearbyBoardableBus(this.player?.root?.position);
         if (nearby) {
-          this.busRoute.boardBus(nearby.bus.id, this.player.root);
+          this.boardBus(nearby.bus.id);
           this.onStatus?.(`Đã lên ${nearby.bus.routeName}!`);
           return;
         }
@@ -535,13 +551,12 @@ export class FarmWorld {
         this.onStatus?.(active ? 'Chế độ Điện Ảnh 360° Đang Bật' : 'Đã tắt Chế độ Điện Ảnh');
         return;
       }
-      if (event.code === 'KeyE' || event.code === 'Space') {
+      if (event.code === 'KeyE') {
         if (event.code === 'KeyE' && this.busRoute?.isPlayerRiding()) {
           this.busRoute.alightBus(this.player.root);
           this.onStatus?.('Đã xuống xe buýt');
           return;
         }
-        if (event.code === 'Space') event.preventDefault();
         if (event.code === 'KeyE' && this.currentVenue && this.interactContext()) return;
         if (event.code === 'KeyE' && !this.currentVenue && this.player) {
           const p = this.player.root.position;
@@ -577,10 +592,15 @@ export class FarmWorld {
       this.engine.setHardwareScalingLevel(1 / dpr);
       this.engine.resize();
       if (this.cinematic?.setQuality) {
-        this.cinematic.setQuality(preset === 'auto' ? this.autoGraphics.effects : preset, preset === 'auto');
+        // An explicit preset switch may change AA once. Subsequent Auto
+        // adjustments keep it stable, rather than retaining Ultra's 4x cost.
+        this.cinematic.setQuality(preset === 'auto' ? this.autoGraphics.effects : preset, false);
       }
       if (this.shadows) {
-        this.shadows.filteringQuality = preset === 'ultra' ? ShadowGenerator.QUALITY_HIGH : ShadowGenerator.QUALITY_MEDIUM;
+        // Medium PCF is visually equivalent for this stylized low-poly scene
+        // at the close shadow distance, but avoids the high-quality kernel's
+        // extra shadow-map samples when the world is busy.
+        this.shadows.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
         const targetMapSize = preset === 'ultra' && !this.isMobile ? 2048 : (this.isMobile || preset === 'eco' ? 512 : 1024);
         if (this.shadows.mapSize !== targetMapSize) {
           this.shadows.mapSize = targetMapSize;
@@ -591,6 +611,8 @@ export class FarmWorld {
 
     this.boardBus = (busId) => {
       if (this.busRoute && this.player) {
+        const nearby=this.busRoute.getNearbyBoardableBus(this.player.root.position);
+        if(!nearby || nearby.bus.id!==busId || this.callbacks.onBusBoard?.(busId)===false)return false;
         const res = this.busRoute.boardBus(busId, this.player.root);
         if (res) this.onStatus?.('Đã lên xe buýt');
         return res;
@@ -693,13 +715,17 @@ export class FarmWorld {
         this.scene.render();
         if (this.bootReady && this.graphicsQuality === 'auto' && !document.hidden && this.autoGraphics.sample(this.engine.getDeltaTime())) {
           this.cinematic?.setQuality(this.autoGraphics.effects, true);
+          // AutoGraphicsController also changes scale. Apply it to the render
+          // target; previously only the postprocess changed, so Auto could
+          // report recovery without reducing the actual render cost.
+          this.resize();
           if (this.shadows) {
             const targetSize = this.autoGraphics.level > 0 ? 512 : (this.isMobile ? 512 : 1024);
             if (this.shadows.mapSize !== targetSize) this.shadows.mapSize = targetSize;
             if (this.shadows.filteringQuality !== ShadowGenerator.QUALITY_MEDIUM) this.shadows.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
           }
         }
-        if (this.bootReady && !['auto', 'ultra'].includes(this.graphicsQuality) && !document.hidden && this.resolutionController.sample(this.engine.getDeltaTime())) this.resize();
+        if (this.bootReady && this.graphicsQuality === 'eco' && !document.hidden && this.resolutionController.sample(this.engine.getDeltaTime())) this.resize();
         if (performance.now() - (this.lastDiagnosticsAt || 0) > 1000) {
           this.lastDiagnosticsAt = performance.now();
           window.__farmDebug?.snapshot({ ...this.getDebugState(), movement: this.player?.getDiagnostics?.() });
@@ -845,11 +871,13 @@ export class FarmWorld {
 
   *createSceneSteps() {
     const scene = new Scene(this.engine);
+    scene.metadata = { ...(scene.metadata || {}), textureAnisotropy: this.textureAnisotropy };
     installMaterialDirtyIndex(scene);
     // Several setup helpers (player home/corral) run before createScene()
     // returns. Publish the scene immediately so those helpers never receive
     // undefined through this.scene during a synchronized owned-farm boot.
     this.scene = scene;
+    this.collisionSystem.attachSceneObstacles(scene);
     // Tăng tốc độ khởi tạo: Khóa cờ kiểm tra material dirty khi tạo hàng ngàn mesh ban đầu
     scene.clearColor = new Color4(0.85, 0.93, 0.99, 1);
     scene.ambientColor = new Color3(0.24, 0.26, 0.28);
@@ -861,9 +889,9 @@ export class FarmWorld {
     scene.fogColor = Color3.FromHexString('#dbeafe');
     scene.skipPointerMovePicking = true;
 
-    // Kích hoạt Anisotropic Filtering 16x toàn diện cho 100% Textures tải về hoặc tạo mới
+    // Keep texture filtering bounded for the streamed world.
     scene.onNewTextureAddedObservable.add(tex => {
-      tex.anisotropicFilteringLevel = 16;
+      tex.anisotropicFilteringLevel = this.textureAnisotropy;
     });
 
     // Exploration view includes the horizon; farming has a separate overhead preset.
@@ -949,7 +977,7 @@ export class FarmWorld {
     yield;
     shadows.usePercentageCloserFiltering = true;
     yield;
-    shadows.filteringQuality = this.graphicsQuality === 'ultra' ? ShadowGenerator.QUALITY_HIGH : ShadowGenerator.QUALITY_MEDIUM;
+    shadows.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
     yield;
     shadows.bias = 0.0005;
     yield;
@@ -1013,7 +1041,7 @@ export class FarmWorld {
     yield 'boot: meadow texture';
     const meadowTex = createMeadowTexture(scene);
     yield;
-    meadowTex.anisotropicFilteringLevel = 16;
+    meadowTex.anisotropicFilteringLevel = this.textureAnisotropy;
     yield;
     const worldRepeat = Math.round(FARM_CONFIG.worldSize / 12);
     yield; // ~350 lần lặp (12m/lần lặp chuẩn Cozy Farmy)
@@ -1042,15 +1070,12 @@ export class FarmWorld {
       getCustomization: () => this.callbacks.getCustomization?.() || null,
       isRidingBus: () => this.busRoute?.isPlayerRiding() || false,
       getTerrainHeight: (x, z) => (this.currentVenue ? VENUES[this.currentVenue].interior.y : getTerrainHeight(x, z)),
-      resolveMovement: (cx, cz, dx, dz) => this.collisionSystem.resolveMovement(cx, cz, dx, dz, this.currentVenue),
-      getCameraBasis: () => {
-        const forward = camera.getForwardRay().direction.clone();
-        forward.y = 0;
-        if (forward.lengthSquared() < .001) forward.set(0, 0, -1);
-        forward.normalize();
-        const right = Vector3.Cross(Vector3.Up(), forward).normalize();
-        return { forward, right };
+      resolveMovement: (cx, cz, dx, dz) => {
+        const vehicle = this.player?.getVehicleId?.() || 'walk';
+        this.collisionSystem.playerRadius = vehicleCollisionRadius(vehicle);
+        return this.collisionSystem.resolveMovement(cx, cz, dx, dz, this.currentVenue);
       },
+      getCameraBasis: () => cameraMovementBasis(camera.alpha),
     });
     yield;
     this.player = player;
@@ -1186,7 +1211,7 @@ export class FarmWorld {
         onHelpNeighbor: neighborFarmId => this.callbacks.onHelpNeighbor?.(neighborFarmId),
         onMailboxInteract: mailbox => {
           if (mailbox.isOwner) {
-            this.onStatus?.('📬 Hòm thư nông trại của bạn · Đang có 3 lời nhắn chúc mừng từ bạn bè!');
+            this.onStatus?.('Hòm thư nông trại của bạn · Đang có 3 lời nhắn chúc mừng từ bạn bè!');
           } else {
             this.callbacks.onMailbox?.(mailbox);
           }
@@ -1207,6 +1232,10 @@ export class FarmWorld {
           const tilePosition = tile.getAbsolutePosition?.().clone() || tile.position.clone();
           const approach = tilePosition.subtract(this.player.root.position);
           approach.y = 0;
+          if (approach.lengthSquared() <= 9) {
+            action();
+            return;
+          }
           if (approach.lengthSquared() > 0) approach.normalize();
           const target = tilePosition.subtract(approach.scale(1.7));
           target.y = 0;
@@ -1274,6 +1303,7 @@ export class FarmWorld {
           { pos: 0, width: 9.0, side: 0 },     // Nối Đại lộ Nam x = 0
           { pos: 60, width: 7.5, side: -1 },   // Nối thẳng Trục Đông Nông trại Bình Minh
           { pos: 122, width: 7.5, side: 1 },   // Nối Trục Cửa Đông Đô Thị Trung Tâm
+          { pos: 212, width: 34, side: 0 },    // Vượt Đại Sông Hoàn Vũ (Đại Cầu Bình Minh - Bridge 86)
           { pos: 240, width: 5.5, side: -1 },  // Nối Vành Đai Tây Làng Ven Sông
           { pos: 300, width: 6.5, side: 0 },   // Cổng & Trục Giữa Làng Ven Sông
           { pos: 360, width: 5.5, side: -1 },  // Nối Vành Đai Đông Làng Ven Sông
@@ -1308,6 +1338,7 @@ export class FarmWorld {
           { pos: -300, width: 6.5, side: 0 },  // Cổng & Trục Giữa Làng Thanh Hà
           { pos: -240, width: 5.5, side: -1 }, // Nối Vành Đai Đông Làng Thanh Hà
           { pos: 0, width: 6.5, side: 0 },     // Giao cắt Trục Đô thị - Làng xã x = 0
+          { pos: 205, width: 34, side: 0 },    // Vượt Đại Sông Hoàn Vũ (Cầu Bắc Tân Lộc - Bridge -234)
           { pos: 240, width: 5.5, side: -1 },  // Nối Vành Đai Tây Làng Tân Lộc
           { pos: 300, width: 6.5, side: 0 },   // Cổng & Trục Giữa Làng Tân Lộc
           { pos: 360, width: 5.5, side: -1 },  // Nối Vành Đai Đông Làng Tân Lộc
@@ -1332,6 +1363,7 @@ export class FarmWorld {
           );
         } else if (segment.id === 'coast-east') {
           segIntersections.push(
+            { pos: 218, width: 34, side: 0 },   // Vượt Đại Sông Hoàn Vũ (Cầu Nam Hướng Dương - Bridge 406)
             { pos: 240, width: 5.5, side: -1 },  // Vành đai Tây Hướng Dương
             { pos: 300, width: 6.5, side: 0 },   // Cổng & Trục Hướng Dương
             { pos: 360, width: 5.5, side: -1 },  // Vành đai Đông Hướng Dương
@@ -1464,14 +1496,14 @@ export class FarmWorld {
           shadows,
         });
 
-        // Vạch sang đường đá ngà chuẩn Ghibli tại cổng làng
+        // Vạch sang đường đá ngà chuẩn Ghibli tại cổng làng (đồng bộ 100% với Làng Bình Minh)
         createZebraCrosswalk(scene, {
           id: `crosswalk-gate-${village.id}`,
           x: village.gate.x,
           z: village.gate.z,
           width: 7.5,
           depth: 2.8,
-          isNorthSouth: false,
+          isNorthSouth: !village.id.startsWith('phu-dien'),
         });
 
         // 7 tuyến đường ngang phân ô nội bộ mỗi làng (nối khép kín giữa Vành Đai Tây x - 60, Trục Giữa x và Vành Đai Đông x + 60)
@@ -1814,6 +1846,8 @@ export class FarmWorld {
         const angle = targetRotation - remote.rotation.y;
         const rotationDelta = Math.atan2(Math.sin(angle), Math.cos(angle));
         remote.rotation.y += rotationDelta * follow;
+        // Preserve interpolation while hidden, but don't animate invisible rigs.
+        if (!remote.isEnabled()) return;
 
         // Character LOD keeps the readable face and silhouette nearby while
         // removing only high-detail fringe ribbons for distant avatars.
@@ -1825,7 +1859,17 @@ export class FarmWorld {
           remote.metadata.characterLod = lod;
           remote.metadata.human?.setLOD?.(lod);
         }
-        remote.metadata.human?.animate(dt, isMoving, 4.0);
+        const rigs = remote.metadata.vehicleRigs;
+        if (rigs?.hasVehicle()) {
+          const speed = dt > 0 ? Math.hypot(dx, dz) * follow / dt : 0;
+          remote.metadata.pedalPhase = (remote.metadata.pedalPhase || 0) + speed * dt * 2.4;
+          remote.metadata.human?.animate(dt, false, 0);
+          rigs.update(dt, isMoving, speed, rotationDelta);
+          applyVehiclePose(remote.metadata.human, rigs.getVehicleId(), isMoving, remote.metadata.pedalPhase, rigs.getRiderOffset());
+        } else {
+          if (remote.metadata.human) { remote.metadata.human.torsoNode.position.z = 0; remote.metadata.human.root.rotation.z = 0; }
+          remote.metadata.human?.animate(dt, isMoving, 4.0);
+        }
         remote.metadata.fishingRig?.update(dt);
       });
       window.__farmDebug?.stage('Babylon draw / shadows / postprocess');
@@ -1849,7 +1893,7 @@ export class FarmWorld {
     this.player?.dispose();
     this.renderIndex?.dispose();
     this.localNameplate?.dispose();
-    this.remotePlayers?.forEach(remote => {remote.metadata?.nameplate?.dispose();remote.metadata?.fishingRig?.dispose();});
+    this.remotePlayers?.forEach(remote => {remote.metadata?.nameplate?.dispose();remote.metadata?.fishingRig?.dispose();remote.metadata?.vehicleRigs?.dispose();});
     this.atmosphere?.dispose();
     this.fogStreaming?.dispose();
     this.livingMeadow?.dispose();
@@ -1985,6 +2029,7 @@ export class FarmWorld {
       if (!active.has(id)) {
         remote.metadata?.nameplate?.dispose();
         remote.metadata?.fishingRig?.dispose();
+        remote.metadata?.vehicleRigs?.dispose();
         remote.dispose(false, false);
         this.remotePlayers.delete(id);
       }
@@ -2010,6 +2055,9 @@ export class FarmWorld {
         remote.metadata.human?.applyCustomization?.(player.customization);
       }
       remote.metadata.venue = player.venue || null;
+      const vehicle = player.vehicle || 'walk';
+      if (vehicle !== 'walk' && !remote.metadata.vehicleRigs) remote.metadata.vehicleRigs = createVehicleRigs(this.scene, remote, this.shadows);
+      remote.metadata.vehicleRigs?.setVehicle(vehicle);
       if(player.fishing && remote.metadata.fishingId!==player.fishing.id) {
         remote.metadata.fishingRig ||= createFishingRig(this.scene,remote,remote.metadata.human);
         remote.metadata.fishingId=player.fishing.id;
@@ -2042,11 +2090,19 @@ export class FarmWorld {
   }
 
   correctPlayerPosition(authoritative) {
-    authoritative = recoverTownSpawn(authoritative,{legacyDefault:false,clearance:.45});
+    authoritative = recoverTownSpawn(normalizeVenuePosition(authoritative),{legacyDefault:false,clearance:.45});
     // An accepted move echoes an older position; applying it would pull the
     // locally moving player backwards on every network round trip.
     if (authoritative?.accepted === true) return;
     if (!this.player || !Number.isFinite(authoritative?.x) || !Number.isFinite(authoritative?.z)) return;
+    // A rejected doorway move/fast-travel reply changes space as well as
+    // coordinates. Never keep the interior UI/culling on an outdoor position.
+    if (Object.hasOwn(authoritative, 'venue') && (authoritative.venue || null) !== this.currentVenue) {
+      this.player.stop();
+      this.player.root.position.set(authoritative.x, authoritative.y || 0, authoritative.z);
+      this.syncVenueFromPosition(authoritative);
+      return;
+    }
     const dx = authoritative.x - this.player.root.position.x;
     const dz = authoritative.z - this.player.root.position.z;
     const error = Math.hypot(dx, dz);
@@ -2240,23 +2296,25 @@ export class FarmWorld {
   }
 
   focusCasinoTable(gameKind = null) {
+    const changed = this.focusedCasinoTable !== gameKind;
     this.focusedCasinoTable = gameKind;
     if (!this.player || !this.currentVenue || this.currentVenue !== 'casino') return;
     const vInt = VENUES.casino.interior;
-    const tableCoords = {
-      'tai-xiu': { x: -6.5, y: 1.1, z: -3.5, seatX: -6.5, seatZ: -6.7, seatYaw: 0 },
-      'bau-cua': { x: 6.5, y: 1.1, z: -3.5, seatX: 6.5, seatZ: -6.0, seatYaw: 0 },
-      'bai-cao': { x: -6.5, y: 1.1, z: 4.5, seatX: -6.5, seatZ: 1.7, seatYaw: 0 },
-      'tien-len': { x: 6.5, y: 1.1, z: 4.5, seatX: 6.5, seatZ: 1.9, seatYaw: 0 },
-    };
+    const tableCoords = CASINO_TABLE_ANCHORS;
     const table = tableCoords[gameKind];
+    // First-person table view: the avatar must not clip through the felt.
+    this.player.root.setEnabled(!(table && this.casinoScreenActive));
     if (table) {
-      this.player.stop();
-      this.player.root.position.set(vInt.x + table.seatX, vInt.y, vInt.z + table.seatZ);
+      if (changed) {
+        this.player.stop();
+        this.player.root.position.set(vInt.x + table.seatX, vInt.y, vInt.z + table.seatZ);
+      }
       this.player.root.rotation.y = table.seatYaw;
-      this.camera.radius = 4.2;
-      this.camera.beta = 1.02;
+      this.camera.radius = 7.4;
+      this.camera.beta = 0.76;
       this.camera.alpha = -Math.PI / 2;
+      this.camera.lowerBetaLimit = 0.70;
+      this.camera.upperBetaLimit = 0.85;
     } else {
       this.camera.radius = 7.2;
       this.camera.beta = 1.12;
@@ -2269,7 +2327,7 @@ export class FarmWorld {
     if (this.casinoVisible && room && !this.casinoTable) this.casinoTable = new CasinoTableView(this.scene);
     this.casinoTable?.update(room);
     this.casinoTable?.setEnabled(this.casinoVisible && !!room);
-    if (this.casinoVisible) {
+    if (this.casinoVisible && this.casinoScreenActive) {
       this.focusCasinoTable(room?.game || null);
     }
   }
@@ -2277,11 +2335,27 @@ export class FarmWorld {
   setCasinoScreenActive(active) {
     this.casinoScreenActive = !!active;
     this.player?.setVirtualInput(0, 0);
+    if (!active) {
+      this.player?.root.setEnabled(true);
+      this.focusCasinoTable(null);
+      if (this.currentVenue === 'casino' && this.camera) {
+        this.camera.lowerBetaLimit = 0.60;
+        this.camera.upperBetaLimit = 1.35;
+      }
+    } else if (this.casinoRoom) {
+      this.focusCasinoTable(this.casinoRoom.game);
+    }
   }
 
   setVenueView(kind = null) {
     this.casinoVisible = kind === 'casino';
     this.setCasinoRoom(this.casinoRoom);
+    // Interior point lights are scene-level objects rather than meshes, so
+    // toggle them explicitly with the venue. This keeps the new game-lounge
+    // lighting isolated from the outdoor world and other interiors.
+    this.scene.lights
+      .filter(light => light.metadata?.interiorVenue)
+      .forEach(light => light.setEnabled(light.metadata.interiorVenue === kind));
     if (this.currentVenueMeshes) {
       this.currentVenueMeshes.forEach(mesh => mesh.setEnabled(false));
       this.currentVenueMeshes = null;
@@ -2350,9 +2424,9 @@ export class FarmWorld {
           this._outdoorAmbientDiffuse = this.ambient.diffuse.clone();
           this._outdoorAmbientGround = this.ambient.groundColor.clone();
         }
-        this.ambient.intensity = 0.38;
+        this.ambient.intensity = kind === 'casino' ? 0.85 : 0.68;
         this.ambient.diffuse = Color3.FromHexString('#fdf6ed');
-        this.ambient.groundColor = Color3.FromHexString('#251824');
+        this.ambient.groundColor = Color3.FromHexString('#b5bfd0');
       }
     } else {
       // 1. Restore outdoor world
@@ -2432,12 +2506,32 @@ export class FarmWorld {
     const chunk = chunkAt(position.x, position.z);
     return {
       runtimeAudit: window.__farmRuntimeAudit?.snapshot(),
+      casino: {
+        venue: this.currentVenue,
+        screenActive: !!this.casinoScreenActive,
+        joined: !!this.casinoRoom,
+        game: this.casinoRoom?.game || null,
+        phase: this.casinoRoom?.round?.phase || null,
+        deadline: this.casinoRoom?.round?.deadline || null,
+        participating: this.casinoRoom?.round?.participating || false,
+        occupied: this.casinoRoom?.seatList?.filter(Boolean).length || 0,
+        ready: this.casinoRoom?.seatList?.filter(seat => seat?.ready).length || 0,
+        propsEnabled: this.casinoTable?.root?.isEnabled() || false,
+        lastStateAgeMs: this.casinoStateReceivedAt ? Date.now() - this.casinoStateReceivedAt : null,
+        lastAction: this.casinoLastAction || null,
+        lastError: this.casinoLastError || null,
+      },
       bootTimings: this.bootTimings || null,
       fps: Math.round(this.engine.getFps()),
       graphicsQuality: this.graphicsQuality,
       renderWidth: this.engine.getRenderWidth(),
       renderHeight: this.engine.getRenderHeight(),
-      resolutionScale: (this.graphicsQuality === 'auto' ? this.autoGraphics.scale : this.graphicsQuality === 'ultra' ? 1 : this.resolutionController.scale).toFixed(2),
+      nativeDpr: window.devicePixelRatio || 1,
+      renderDpr: this.engine.getRenderWidth() / Math.max(1, this.canvas.clientWidth),
+      antialiasSamples: this.cinematic?.pipeline?.samples ?? 1,
+      fxaa: this.cinematic?.pipeline?.fxaaEnabled ?? false,
+      sharpen: this.cinematic?.pipeline?.sharpenEnabled ?? false,
+      resolutionScale: (this.graphicsQuality === 'auto' ? this.autoGraphics.scale : this.resolutionController.scale).toFixed(2),
       x: position.x.toFixed(1),
       z: position.z.toFixed(1),
       chunk: `${chunk.x}:${chunk.z}`,
@@ -2509,7 +2603,7 @@ export class FarmWorld {
   }
 
   setPlayerFarmId(farmId, spawnPoint = null) {
-    spawnPoint = recoverTownSpawn(spawnPoint);
+    spawnPoint = recoverTownSpawn(normalizeVenuePosition(spawnPoint));
     if (spawnPoint) this.callbacks.initialLocation = spawnPoint;
     this.playerFarmId = farmId;
     this.lastActiveFarmId = undefined;
@@ -2535,12 +2629,16 @@ export class FarmWorld {
     if (this.currentVenue === nextVenue) return;
     this.currentVenue = nextVenue;
     this.updateFarmZoneProximity();
-    this.setVenueView(nextVenue);
+    if (nextVenue && !this.venueMeshesMap.has(nextVenue)) {
+      this.ensureVenueBuilt(nextVenue).then(() => {
+        if (!this.scene.isDisposed && this.currentVenue === nextVenue) this.setVenueView(nextVenue);
+      }).catch(error => this.callbacks.onFatalError?.(`Không thể khôi phục nội thất: ${error.message}`));
+    } else this.setVenueView(nextVenue);
     this.callbacks.onVenueState?.(nextVenue, nextVenue ? VENUES[nextVenue].label : null);
   }
 
   restorePlayerPosition(position) {
-    position = recoverTownSpawn(position);
+    position = recoverTownSpawn(normalizeVenuePosition(position));
     if (!this.player || !position || ![position.x, position.y, position.z].every(Number.isFinite)) return;
     this.player.stop();
     this.player.root.position.set(position.x, position.y || 0, position.z);
@@ -2726,23 +2824,26 @@ export class FarmWorld {
     this.updateFarmSigns(this.remotePlayerState || []);
   }
 
-    showEmote(playerId, emoteChar) {
+  showEmote(playerId, emoteChar) {
     let targetRoot = null;
     const myId = this.callbacks.getPlayerId?.();
     const isMe = (playerId === myId || !playerId);
+    const isWave = emoteChar === 'wave' || emoteChar === 'hello';
+    const isCheer = ['party', 'celebrate', 'heart', 'sparkle', 'trophy'].includes(emoteChar);
+
     if (isMe) {
       targetRoot = this.player?.root;
-      if (emoteChar === '👋') {
+      if (isWave) {
         this.player?.playAction('wave');
-      } else if (['🎉', '💖', '✨', '🏆'].includes(emoteChar)) {
+      } else if (isCheer) {
         this.player?.playAction('harvest');
       }
     } else {
       targetRoot = this.remotePlayers.get(playerId);
       if (targetRoot?.metadata?.human) {
-        if (emoteChar === '👋') {
+        if (isWave) {
           targetRoot.metadata.human.playAction('wave');
-        } else if (['🎉', '💖', '✨', '🏆'].includes(emoteChar)) {
+        } else if (isCheer) {
           targetRoot.metadata.human.playAction('harvest');
         }
       }
@@ -2764,7 +2865,7 @@ export class FarmWorld {
     ctx.clearRect(0, 0, 256, 256);
 
     // Bo tròn bong bóng chat
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
     ctx.beginPath();
     ctx.roundRect(16, 16, 224, 190, 48);
     ctx.fill();
@@ -2775,7 +2876,7 @@ export class FarmWorld {
     ctx.stroke();
 
     // Mũi nhọn đuôi bong bóng chỉ xuống đầu
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
     ctx.beginPath();
     ctx.moveTo(112, 206);
     ctx.lineTo(128, 238);
@@ -2783,11 +2884,57 @@ export class FarmWorld {
     ctx.closePath();
     ctx.fill();
 
-    // Vẽ Emoji lớn ở giữa
-    ctx.font = '96px "Segoe UI Emoji", "Apple Color Emoji", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(emoteChar, 128, 110);
+    // Vẽ hình Vector Icon sắc nét 100% không phụ thuộc font emoji
+    ctx.save();
+    ctx.translate(128, 105);
+
+    if (emoteChar === 'heart') {
+      // Trái tim đỏ hồng pastel 3D
+      ctx.beginPath();
+      ctx.moveTo(0, 35);
+      ctx.bezierCurveTo(-50, -10, -50, -50, 0, -30);
+      ctx.bezierCurveTo(50, -50, 50, -10, 0, 35);
+      ctx.closePath();
+      const grad = ctx.createLinearGradient(0, -50, 0, 35);
+      grad.addColorStop(0, '#f43f5e');
+      grad.addColorStop(1, '#e11d48');
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.strokeStyle = '#be123c';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    } else if (emoteChar === 'trophy') {
+      // Cúp vàng chiến thắng
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.arc(0, -15, 30, 0, Math.PI);
+      ctx.lineTo(0, 20);
+      ctx.fill();
+      ctx.fillRect(-24, 20, 48, 12);
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath();
+      ctx.arc(0, -18, 22, 0, Math.PI);
+      ctx.fill();
+    } else if (emoteChar === 'party') {
+      // Pháo hoa / party starburst
+      ctx.fillStyle = '#8b5cf6';
+      ctx.beginPath();
+      ctx.arc(0, 0, 28, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fde047';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('★', 0, 2);
+    } else {
+      // Ngôi sao vàng hoàng gia 3D
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = 'bold 64px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('★', 0, 2);
+    }
+    ctx.restore();
     texture.update();
 
     const bubbleMat = new StandardMaterial(`bubble-mat-${Date.now()}`, this.scene);

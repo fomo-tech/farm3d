@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { CASINO_GAMES } from '../shared/casino/casinoConfig.js';
+const source = path => readFileSync(new URL(path, import.meta.url), 'utf8');
+const table = source('../src/components/casino/CasinoTable.jsx');
+assert.match(table, /kind: 'seat', seat: seatIndex/);
+assert.match(table, /kind: 'ready', ready: !mySeat\?\.ready/);
+assert.match(table, /kind: 'cancel', roundId:/);
+assert.match(table, /kind: 'chat', message: QUICK_CHAT.indexOf/);
+assert.match(table, /mySeat && \(!round \|\| round.phase === 'waiting'\)/);
+assert.match(source('../src/components/casino/screens/TienLenScreen.jsx'), /kind: 'play', cards:/);
+assert.match(source('../src/components/casino/screens/BaiCaoScreen.jsx'), /kind: 'ready', ready:/);
+assert.deepEqual(CASINO_GAMES['tai-xiu'].choices, ['tai', 'xiu']);
+assert.match(source('../src/components/casino/screens/TaiXiuScreen.jsx'), /choices.includes\('chan'\)/);
+assert.doesNotMatch(source('../src/game/casino/CasinoTableView.js'), /card\.endsWith/);
+assert.match(source('../src/App.jsx'), /setCasinoRoom\(state.mine \|\| null\)/, 'server snapshots reach the live 3D props');
+console.log('PASS: casino UI command contracts, null-round ready action, supported bets and numeric card rendering.');

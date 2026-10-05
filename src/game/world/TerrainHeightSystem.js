@@ -14,6 +14,7 @@
 import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
 import { beachGroundHeight } from '../../../shared/beachConfig.js';
 import { lakeGroundHeight } from '../../../shared/lakeConfig.js';
+import { getBridgeSurfaceHeight } from '../../../shared/bridgeConfig.js';
 
 export const MEADOW_KNOLLS = [];
 
@@ -22,30 +23,18 @@ const PRECOMPUTED_KNOLLS = [];
 
 /**
  * Returns exact terrain surface elevation at world coordinate (x, z).
- * Accounts for elevated central plaza disc (y = 0.12) and modern road beds (y = 0.08),
+ * Accounts for elevated central plaza disc (y = 0.12), bridges, and modern road beds (y = 0.08),
  * ensuring avatars and vehicles ride cleanly on top of surfaces without clipping into roads.
  * @param {number} x
  * @param {number} z
  * @returns {number} Surface height Y in meters
- */
-/**
- * Tính toán cao độ vòm cầu gỗ Hồ Pha Lê (Play Together Curved Timber Arch Bridge)
- * Dạng parabol liên tục O(1) từ mố đá bờ nam (174, -32) sang đảo Vọng Lâu (192, -16)
- * @param {number} x 
- * @param {number} z 
- * @returns {number|null} Cao độ Y trên mặt ván cầu hoặc null nếu ngoài cầu
  */
 export function getLakeBridgeHeight() { return null; }
 
-/**
- * Returns exact terrain surface elevation at world coordinate (x, z).
- * Accounts for elevated central plaza disc (y = 0.12) and modern road beds (y = 0.08),
- * ensuring avatars and vehicles ride cleanly on top of surfaces without clipping into roads.
- * @param {number} x
- * @param {number} z
- * @returns {number} Surface height Y in meters
- */
 export function getTerrainHeight(x, z) {
+  const bridgeHeight = getBridgeSurfaceHeight(x, z);
+  if (bridgeHeight !== null) return bridgeHeight;
+
   const beachHeight = beachGroundHeight(x, z);
   if (beachHeight !== null) return beachHeight;
 

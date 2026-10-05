@@ -1,4 +1,12 @@
 import React, { useState } from 'react';
+import {
+  Icon3dTrophyCup,
+  Icon3dCrownRibbon,
+  Icon3dStar,
+  Icon3dSprout,
+  Icon3dHouseCabin,
+  Icon3dNonLa,
+} from './icons3d/GameIcons3D.jsx';
 
 /**
  * BẢNG VINH DANH CƯ DÂN KAIA (LEADERBOARD MODAL)
@@ -37,9 +45,9 @@ export function LeaderboardModal({
   });
 
   const getRankBadge = (rank) => {
-    if (rank === 0) return { icon: '🥇', class: 'rank-gold', title: 'Hạng 1' };
-    if (rank === 1) return { icon: '🥈', class: 'rank-silver', title: 'Hạng 2' };
-    if (rank === 2) return { icon: '🥉', class: 'rank-bronze', title: 'Hạng 3' };
+    if (rank === 0) return { icon: <Icon3dCrownRibbon size={24} />, class: 'rank-gold', title: 'Hạng 1' };
+    if (rank === 1) return { icon: <span className="ld-rank-num">2</span>, class: 'rank-silver', title: 'Hạng 2' };
+    if (rank === 2) return { icon: <span className="ld-rank-num">3</span>, class: 'rank-bronze', title: 'Hạng 3' };
     return { icon: `${rank + 1}`, class: 'rank-normal', title: `Hạng ${rank + 1}` };
   };
 
@@ -55,7 +63,7 @@ export function LeaderboardModal({
         {/* Header */}
         <header className="pt-modal-header ld-header">
           <div className="ld-title-group">
-            <span className="ld-trophy-icon">🏆</span>
+            <span className="ld-trophy-icon"><Icon3dTrophyCup size={32} /></span>
             <div>
               <h2 className="pt-modal-title ld-title">BẢNG VINH DANH CƯ DÂN KAIA</h2>
               <p className="ld-subtitle">Xếp hạng nông dân và nhà thám hiểm tài ba nhất thị trấn</p>
@@ -70,19 +78,19 @@ export function LeaderboardModal({
             className={`ld-tab-btn ${tab === 'xp' ? 'active' : ''}`}
             onClick={() => setTab('xp')}
           >
-            🌾 Danh Vọng (XP)
+            <Icon3dSprout size={16} /> Danh Vọng (XP)
           </button>
           <button
             className={`ld-tab-btn ${tab === 'level' ? 'active' : ''}`}
             onClick={() => setTab('level')}
           >
-            ⭐ Cấp Độ (Level)
+            <Icon3dStar size={16} /> Cấp Độ (Level)
           </button>
           <button
             className={`ld-tab-btn ${tab === 'home' ? 'active' : ''}`}
             onClick={() => setTab('home')}
           >
-            🏡 Dinh Thự (Home)
+            <Icon3dHouseCabin size={16} /> Dinh Thự (Home)
           </button>
         </div>
 
@@ -94,7 +102,7 @@ export function LeaderboardModal({
               <div key={item.playerId || idx} className={`ld-podium-card ${badge.class}`}>
                 <div className="ld-podium-crown">{badge.icon}</div>
                 <div className="ld-podium-avatar">
-                  {idx === 0 ? '👑' : idx === 1 ? '🌟' : '⭐'}
+                  {idx === 0 ? <Icon3dCrownRibbon size={24} /> : <Icon3dStar size={24} />}
                 </div>
                 <div className="ld-podium-name" title={item.name}>{item.name}</div>
                 <div className="ld-podium-badge">Lv.{item.progress?.level || 1}</div>
@@ -150,7 +158,7 @@ export function LeaderboardModal({
         {/* My Player Footer */}
         {myPlayer && (
           <footer className="ld-my-card">
-            <div className="ld-my-avatar">🧑‍🌾</div>
+            <div className="ld-my-avatar"><Icon3dNonLa size={26} /></div>
             <div className="ld-my-info">
               <div className="ld-my-label">VỊ TRÍ CỦA BẠN</div>
               <div className="ld-my-name">{myPlayer.name || 'Nông Dân Kaia'}</div>

@@ -7,6 +7,8 @@ import { FARM_CONFIG } from '../config.js';
 import { FISHING_CONFIG } from '../../../shared/fishingConfig.js';
 import { buildHumanMesh } from './buildHumanMesh.js';
 import { createVehicleRigs } from './createVehicleRigs.js';
+import { VEHICLE_MOTION, approachVehicleSpeed } from './vehicleMotion.js';
+import { applyVehiclePose } from './applyVehiclePose.js';
 
 export function createFishingRig(scene, root, human) {
   const bobberMaterial = new StandardMaterial('local-fishing-bobber-material', scene);
@@ -72,18 +74,26 @@ export function createFishingRig(scene, root, human) {
     elapsed += delta;
     const hand = (human.toolGrip || human.rightArm).getAbsolutePosition();
     if (phase === 'cast') {
-      const progress = Math.min(1, elapsed / 0.95);
+      const progress = Math.min(1, elapsed / animationDuration('cast'));
       Vector3.LerpToRef(hand, baseTarget, progress, bobber.position);
+      bobber.position.y += Math.sin(progress*Math.PI)*1.2;
     } else {
       bobber.position.copyFrom(target);
       bobber.position.y += Math.sin(elapsed * (phase === 'bite' ? 16 : 3.4)) * (phase === 'bite' ? 0.075 : 0.025);
       if (phase === 'bite') bobber.position.x += Math.sin(elapsed * 20) * 0.045;
+      if (phase === 'bite') bobber.position.y -= .12;
+      if (phase === 'reel') {
+        const progress=Math.min(.75,elapsed/12);
+        Vector3.LerpToRef(target,hand,progress,bobber.position);
+        bobber.position.y=target.y+Math.sin(elapsed*12)*.035;
+      }
     }
     updateLine();
   };
 
   return {
     update,
+    isActive() { return phase !== 'idle'; },
     startCast(distance = 8, nextAnimationId = 'basic_cast', waterTarget = null) {
       castDistance = Math.max(3, Number(distance) || 8);
       animationId = nextAnimationId || 'basic_cast';
@@ -121,7 +131,6 @@ export function createFishingRig(scene, root, human) {
       human.playFishingAction?.('reel', () => human.setFishingPose?.(true), animationDuration('reel'));
     },
     finishCatch(success = true, fish = null) {
-      if (phase === 'idle') return;
       if (!success) { hide(); return; }
       phase = 'catch';
       elapsed = 0;
@@ -174,12 +183,17 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
   let autoTarget = null;
   let onArrive = null;
   let autoTargetStuckFrames = 0;
+  let vehicleSpeed = 0;
+  let pedalPhase = 0;
   const diagnostics = { input: false, collided: false, speed: 0, ridingBus: false };
   const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight']);
   const isEditing = target => target instanceof Element && Boolean(target.closest('input, textarea, select, [contenteditable="true"]'));
   const down = event => {
     if (isEditing(event.target) || event.altKey || event.ctrlKey || event.metaKey) return;
-    if (event.code === 'Space' && !airborne && !controls.isRidingBus?.()) {
+    if (event.target instanceof Element && event.target.closest('[role="dialog"], [aria-modal="true"]')) return;
+    // Space on a HUD button belongs to that button, not the jump action.
+    if (event.code === 'Space' && event.target instanceof Element && event.target.closest('button')) return;
+    if (event.code === 'Space' && !event.repeat && !airborne && !fishingRig.isActive() && !controls.isRidingBus?.()) {
       airborne = true;
       jumpVelocity = 6.8;
       jumpGroundY = root.position.y;
@@ -188,22 +202,25 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
     }
     if (movementKeys.has(event.code)) {
       keys.add(event.code);
-      if (event.code.startsWith('Arrow')) event.preventDefault();
+      event.preventDefault();
     }
   };
   const up = event => keys.delete(event.code);
   const clearKeys = () => keys.clear();
   const onVisibilityChange = () => { if (document.hidden) clearKeys(); };
-  window.addEventListener('keydown', down);
-  window.addEventListener('keyup', up);
+  const onFocusIn = event => { if (isEditing(event.target) || (event.target instanceof Element && event.target.closest('[role="dialog"], [aria-modal="true"]'))) clearKeys(); };
+  window.addEventListener('keydown', down, true);
+  window.addEventListener('keyup', up, true);
   window.addEventListener('blur', clearKeys);
   document.addEventListener('visibilitychange', onVisibilityChange);
+  document.addEventListener('focusin', onFocusIn);
 
 
   return {
     root,
     human,
     getDiagnostics() { return { ...diagnostics }; },
+    getVehicleId() { return vehicleRigs.getVehicleId(); },
     update(delta) {
       const frameDelta = Math.min(Math.max(Number(delta) || 0, 0), 0.1);
       if (controls.isRidingBus?.()) {
@@ -218,7 +235,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
         human.rightArm.rotation.x = -0.4;
         return;
       }
-      if (human.isFishingBusy?.()) {
+      if (fishingRig.isActive() || human.isFishingBusy?.()) {
         diagnostics.input = false;
         diagnostics.speed = 0;
         autoTarget = null;
@@ -271,9 +288,12 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       }
 
       let actualSpeed = 0;
+      let turn = 0;
+      const vehicleProfile = VEHICLE_MOTION[vehicleRigs.getVehicleId()];
+      vehicleSpeed = vehicleProfile ? approachVehicleSpeed(vehicleSpeed, isMoving ? speed : 0, frameDelta, vehicleProfile) : 0;
       if (isMoving && direction.lengthSquared() > 0.0001) {
         direction.normalize();
-        const moveDist = speed * frameDelta;
+        const moveDist = (vehicleProfile ? vehicleSpeed : speed) * frameDelta;
         const dx = direction.x * moveDist;
         const dz = direction.z * moveDist;
         const prevX = root.position.x;
@@ -304,7 +324,13 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
         }
         const moved = Math.hypot(root.position.x - prevX, root.position.z - prevZ);
         actualSpeed = frameDelta > 0 ? moved / frameDelta : 0;
-        if (moved > 0.0001) root.rotation.y = Math.atan2(direction.x, direction.z);
+        if (moved > 0.0001) {
+          const desiredYaw = Math.atan2(direction.x, direction.z);
+          const difference = Math.atan2(Math.sin(desiredYaw - root.rotation.y), Math.cos(desiredYaw - root.rotation.y));
+          turn = difference;
+          root.rotation.y += vehicleProfile ? difference * (1 - Math.exp(-18 * frameDelta)) : difference;
+        }
+        if (diagnostics.collided && moved < 0.0001) vehicleSpeed = 0;
       }
       const visiblyMoving = actualSpeed > 0.05;
       diagnostics.speed = actualSpeed;
@@ -334,19 +360,14 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
 
       // If driving a vehicle, apply driving posture and rotate wheels
       if (vehicleRigs.hasVehicle()) {
-        vehicleRigs.update(frameDelta, visiblyMoving, actualSpeed);
-        human.torsoNode.position.y = 1.15;
-        human.leftArm.rotation.x = -0.6;
-        human.rightArm.rotation.x = -0.6;
-        if (visiblyMoving) {
-          const pedCycle = (Date.now() * 0.008 * speed) / 4;
-          human.leftLeg.rotation.x = Math.sin(pedCycle) * 0.45;
-          human.rightLeg.rotation.x = -Math.sin(pedCycle) * 0.45;
-        } else {
-          human.leftLeg.rotation.x = 0.3;
-          human.rightLeg.rotation.x = -0.2;
-        }
+        // Keep face/accessory animation alive while overriding riding joints.
+        human.animate(frameDelta, false, 0);
+        vehicleRigs.update(frameDelta, visiblyMoving, actualSpeed, turn);
+        pedalPhase += actualSpeed * frameDelta * 2.4;
+        applyVehiclePose(human, vehicleRigs.getVehicleId(), visiblyMoving, pedalPhase, vehicleRigs.getRiderOffset());
       } else {
+        human.torsoNode.position.z = 0;
+        human.root.rotation.z = 0;
         // Procedural walking / breathing animation
         human.animate(frameDelta, visiblyMoving, actualSpeed);
       }
@@ -382,6 +403,9 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       human.setLOD?.(level);
     },
     setVehicle(vehicleId) {
+      if (vehicleRigs.getVehicleId() === vehicleId) return;
+      vehicleSpeed = 0;
+      pedalPhase = 0;
       vehicleRigs.setVehicle(vehicleId);
     },
     setVirtualInput(x = 0, y = 0) {
@@ -430,11 +454,13 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       return human.isPerformingAction();
     },
     dispose() {
-      window.removeEventListener('keydown', down);
-      window.removeEventListener('keyup', up);
+      window.removeEventListener('keydown', down, true);
+      window.removeEventListener('keyup', up, true);
       window.removeEventListener('blur', clearKeys);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      document.removeEventListener('focusin', onFocusIn);
       fishingRig.dispose();
+      vehicleRigs.dispose();
     },
   };
 }

@@ -3,13 +3,23 @@
  * Play Together Smart 3D Context Action Bubble.
  * 
  * Dynamically presents a tactile candy trigger button in the right thumb zone:
- * - Fishing: 🎣 "Câu cá · Hồ Pha Lê"
- * - Talk to NPC: 💬 "Trò chuyện"
- * - Farm Gate: 🚪 "Mở cổng"
- * - Land purchase: 🏡 "Xem lô đất"
+ * - Fishing: [Icon3dFishingRodBamboo] "Câu cá · Hồ Pha Lê"
+ * - Talk to NPC: [Icon3dHeartReaction] "Trò chuyện"
+ * - Farm Gate: [Icon3dVillageGate] "Mở cổng"
+ * - Land purchase: [Icon3dHouseCabin] "Xem lô đất"
  */
 
 import { farmAudio } from '../game/audio/FarmAudioSystem.js';
+import {
+  Icon3dHand,
+  Icon3dFishingRodBamboo,
+  Icon3dHouseCabin,
+  Icon3dVillageGate,
+  Icon3dHeartReaction,
+  Icon3dBasket,
+  Icon3dSeeds,
+  Icon3dBike,
+} from './icons3d/GameIcons3D.jsx';
 
 export function HudContextAction({ action }) {
   if (!action) return null;
@@ -22,14 +32,14 @@ export function HudContextAction({ action }) {
   };
 
   // Determine smart icon from action label
-  let actionEmoji = '✨';
-  if (action.label.includes('Câu cá') || action.label.includes('cá')) actionEmoji = '🎣';
-  else if (action.label.includes('lô đất') || action.label.includes('đất')) actionEmoji = '🏡';
-  else if (action.label.includes('cổng')) actionEmoji = '🚪';
-  else if (action.label.includes('Trò chuyện') || action.label.includes('Nói chuyện')) actionEmoji = '💬';
-  else if (action.label.includes('Thu hoạch')) actionEmoji = '🧺';
-  else if (action.label.includes('Gieo hạt')) actionEmoji = '🌱';
-  else if (action.label.includes('xe')) actionEmoji = '🚲';
+  let ActionIcon = Icon3dHand;
+  if (action.label.includes('Câu cá') || action.label.includes('cá')) ActionIcon = Icon3dFishingRodBamboo;
+  else if (action.label.includes('lô đất') || action.label.includes('đất')) ActionIcon = Icon3dHouseCabin;
+  else if (action.label.includes('cổng')) ActionIcon = Icon3dVillageGate;
+  else if (action.label.includes('Trò chuyện') || action.label.includes('Nói chuyện')) ActionIcon = Icon3dHeartReaction;
+  else if (action.label.includes('Thu hoạch')) ActionIcon = Icon3dBasket;
+  else if (action.label.includes('Gieo hạt')) ActionIcon = Icon3dSeeds;
+  else if (action.label.includes('xe')) ActionIcon = Icon3dBike;
 
   return (
     <div className="pt-context-action-wrap">
@@ -41,7 +51,9 @@ export function HudContextAction({ action }) {
         title={`${action.label} (Phím [E])`}
       >
         <div className="pt-context-icon-bubble">
-          <span className="pt-context-emoji">{actionEmoji}</span>
+          <span className="pt-context-emoji" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ActionIcon size={24} />
+          </span>
           <span className="pt-context-desktop-key" aria-hidden="true">E</span>
         </div>
         <div className="pt-context-text-stack">

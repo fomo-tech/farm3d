@@ -18,7 +18,7 @@ export function OnboardingHUD({
   onOpenGuide,
   onOpenOrders,
 }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const onboarding = progress?.onboarding;
   if (!onboarding || onboarding.completed) return null;
 
@@ -157,7 +157,7 @@ export function OnboardingHUD({
                 <strong className="pt-quest-name">{title}</strong>
                 {targetDistance != null && (
                   <span className={`pt-quest-gps-pill ${isNear ? 'is-arrived' : ''}`}>
-                    {isNear ? '🎯 Đã đến' : `📍 ${targetDistance}m`}
+                    {isNear ? 'ĐÃ ĐẾN' : `${targetDistance}m`}
                   </span>
                 )}
               </div>

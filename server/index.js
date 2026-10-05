@@ -11,8 +11,11 @@ import { CasinoRoomManager } from './casino/CasinoRoomManager.js';
 import { FARM_ACTIVE_PLOTS, FARM_LOT_SPEC, FARM_TILE_KEY_PATTERN, farmTilePosition as sharedFarmTilePosition } from '../shared/farmLayout.js';
 import { WORLD_VILLAGES, villageGeometry } from '../shared/villageLayout.js';
 import { VENUE_LAYOUT } from '../shared/venueLayout.js';
+import { normalizeVenuePosition } from '../shared/venuePosition.js';
 import { TOWN_SPAWN, recoverTownSpawn, insideTownFountain } from '../shared/playerSpawn.js';
 import { lakeMovementBlocked, recoverLakePosition } from '../shared/lakeConfig.js';
+import { MovementAuthority } from './MovementAuthority.js';
+import { CASINO_TABLE_ANCHORS } from '../shared/casinoTableAnchors.js';
 
 const PORT = Number(process.env.MULTIPLAYER_PORT || 8787);
 const TICK_MS = 100;
@@ -33,6 +36,7 @@ const MAX_PLAYER_SPEED = 32;
 const VALID_VENUES = new Set(['casino', 'fashion', 'vehicles', 'supplies', 'fishing']);
 const ROOM_LAYOUT = VENUE_LAYOUT;
 const clients = new Map();
+const movementAuthority = new MovementAuthority();
 let casinoManager;
 function broadcastCasinoState() {
   if (!casinoManager) return;
@@ -263,6 +267,7 @@ wss.on('connection', socket => {
         await savePosition(client.playerId, account.position);
       }
       if (account.position && account.position.villageId === assignedLot.villageId && account.position.layoutVersion === MAP_LAYOUT_VERSION) {
+        account.position = normalizeVenuePosition(account.position);
         client.x = Number.isFinite(Number(account.position.x)) ? Number(account.position.x) : client.x;
         client.y = Number(account.position.y) || 0;
         client.z = Number.isFinite(Number(account.position.z)) ? Number(account.position.z) : client.z;
@@ -314,11 +319,19 @@ wss.on('connection', socket => {
       const distance = Math.hypot(x - client.x, z - client.z);
       const requestedVenue = VALID_VENUES.has(message.venue) ? message.venue : null;
       const roomTransition = isRoomTransition(client, x, y, z, requestedVenue);
+      const casinoRoom=casinoManager.rooms.get(casinoManager.members.get(client.playerId));
+      const anchor=casinoRoom && CASINO_TABLE_ANCHORS[casinoRoom.game];
+      const seatTravel=client.venue==='casino' && requestedVenue==='casino' && anchor && Math.hypot(x-ROOM_LAYOUT.casino.interior.x-anchor.seatX,z-ROOM_LAYOUT.casino.interior.z-anchor.seatZ)<.4 && Math.abs(y-ROOM_LAYOUT.casino.interior.y)<.4;
       if (requestedVenue !== client.venue && !roomTransition) return;
-      if (!roomTransition && distance > 1.5 + elapsed * MAX_PLAYER_SPEED) {
+      if (!roomTransition && !seatTravel && distance > 1.5 + elapsed * movementAuthority.maxSpeed(client)) {
         safeSend(socket, { type: 'move_ack', accepted: false, x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, serverTime: Date.now() });
         return;
       }
+      if (!roomTransition && !seatTravel && !movementAuthority.accepts(client,{x,y,z})) {
+        safeSend(socket,{type:'move_ack',accepted:false,x:client.x,y:client.y,z:client.z,rotation:client.rotation,venue:client.venue,serverTime:Date.now()});
+        return;
+      }
+      if (roomTransition || seatTravel) movementAuthority.reset(client);
       const previousRoom = client.roomId;
       if (!requestedVenue && (insideTownFountain(x,z) || farmSecurity.blocksMovement(client, { x, z }) || lakeMovementBlocked(client, { x, z }))) {
         safeSend(socket, { type: 'move_ack', accepted: false, x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, serverTime: Date.now() });
@@ -348,12 +361,17 @@ wss.on('connection', socket => {
         // Fast travel always lands outdoors; a client must cross a validated
         // venue doorway before it may join an interior room or place bets.
         client.x = townTravel ? TOWN_SPAWN.x : x; client.y = 0; client.z = townTravel ? TOWN_SPAWN.z : z; client.venue = null; client.lastSeen = Date.now();
+        movementAuthority.reset(client);
         client.roomId = roomKey(client.villageId, client.venue);
         safeSend(socket, { type: 'move_ack', x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, serverTime: Date.now() });
         savePosition(client.playerId, { x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION });
         await publicFarmScope(client, true);
         if (previousRoom !== client.roomId) broadcastPresence(client.channelId);
       }
+    }
+    if(message.type==='bus_board') {
+      if(!movementAuthority.board(client,message.busId))safeSend(socket,{type:'move_ack',accepted:false,busRejected:true,x:client.x,y:client.y,z:client.z,rotation:client.rotation,venue:client.venue});
+      return;
     }
     if (message.type === 'farm_action') {
       const tracked = beginAction(client, message.requestId);

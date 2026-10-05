@@ -11,8 +11,8 @@ import { LANDSCAPE_ART as ART } from './LandscapeArt.js';
 /**
  * WORLD ART BIBLE & DESIGN SYSTEM
  * Bộ quy chuẩn vật liệu, màu sắc, kiểu mái và nhận diện không gian cho Farm3D.
- * Định hướng: Phong cách đồng quê ấm cúng (Warm Countryside / Ghibli Aesthetic),
- * loại bỏ hoàn toàn các khối hộp neon lòe loẹt, mang lại không gian trong lành, mộc mạc và sang trọng.
+ * Direction: bright social toy-town, cream surfaces, pastel districts and
+ * readable signage. Keep farm warmth without darkening the entire town.
  */
 
 export const WORLD_PALETTE = Object.freeze({
@@ -27,29 +27,29 @@ export const WORLD_PALETTE = Object.freeze({
   waterShallow: ART.shallows,
   waterDeep: ART.water,
   // 1. Tường & Bệ móng
-  wallPlaster: '#ede4d4',       // Vôi kem vẫn rõ chi tiết dưới nắng mạnh
-  wallPlasterWarm: '#f2e6cf',   // Vôi vàng nhạt nắng sớm
-  wallTimberStucco: '#f5e49b',  // Vữa trát vàng ấm
-  stoneFoundation: '#78716c',   // Đá cuội móng kiên cố
-  stonePlinth: '#a8a29e',       // Đá granit xám ấm
+  wallPlaster: '#eee7d9',       // Cream toy-town walls.
+  wallPlasterWarm: '#e6dbc2',   // Warm pastel frontage.
+  wallTimberStucco: '#ded4b5',  // Warm muted stucco.
+  stoneFoundation: '#a8aac2',   // Soft lavender foundations.
+  stonePlinth: '#c6c4d8',       // Light lavender plinths.
 
   // 2. Mái nhà & Hiên
-  roofTerracotta: '#eb7e59',    // Mái cam san hô tươi, nổi bật trên tường kem
-  roofRidge: '#9a3412',         // Sống ngói gốm sẫm màu
-  roofWarmTile: '#b45309',      // Ngói gốm đất nung vàng hổ phách
-  roofThatch: '#d97706',        // Mái rạ vàng quê hương
-  awningCaramel: '#d97706',     // Mái che vải bạt sọc caramel
+  roofTerracotta: '#bd8b73',    // Muted clay roofs.
+  roofRidge: '#9b7774',
+  roofWarmTile: '#c9a085',
+  roofThatch: '#b8a077',
+  awningCaramel: '#ba9a76',
 
   // 3. Gỗ cấu trúc & Trang trí
-  woodOakDark: '#5c381e',       // Gỗ sồi nâu sẫm chịu lực
-  woodOakWarm: '#78350f',       // Gỗ sồi đỏ ấm áp
-  woodTeak: '#92400e',          // Gỗ tếch bóng mộc
+  woodOakDark: '#94715e',       // Warm readable structural wood.
+  woodOakWarm: '#c39470',       // Honey wood trim.
+  woodTeak: '#c8a27d',          // Light furniture wood.
   woodFenceWhite: '#ede6dc',    // Hàng rào gỗ sơn trắng kem sữa ngọc trai mềm
   woodPlankWeathered: '#8d6e53',// Ván gỗ bến nước mộc mạc
 
   // 4. Đường dạo & Quảng trường
-  plazaMarbleWhite: '#e2ddd3',   // Đá sáng nhưng không cháy trắng
-  plazaMarbleCream: '#dfd2bc',   // Đá lát viền kem ngà hoa cúc
+  plazaMarbleWhite: '#f1ebdf',   // Cream plaza tiles.
+  plazaMarbleCream: '#dfd9eb',   // Lavender paving border.
   pathCobblestone: '#d5c7b3',   // Lối đi sỏi nhẵn màu kem bơ
   roadHoneyEarth: '#c7a391',    // Đất nện hồng cát sáng
   curbStone: '#c5bbae',         // Viền đá bó vỉa hè
@@ -62,18 +62,18 @@ export const WORLD_PALETTE = Object.freeze({
   lanternCore: '#fef08a',       // Tim đèn phát sáng dịu mắt
 
   // 6. Cây cỏ & Tự nhiên
-  foliageOakGreen: '#61965b',   // Tán lá xanh dịu, tách khỏi cỏ nhưng không neon
-  foliageMapleGold: '#f59e0b',  // Lá phong vàng rực rỡ
-  foliageSakuraPink: '#f472b6', // Hoa anh đào / mộc lan
-  waterCrystalBlue: '#61d5e8',  // Nước hồ trong vắt xanh ngọc lam
-  waterDeepBlue: '#258fc6',     // Nước hồ sâu
+  foliageOakGreen: ART.leaf,
+  foliageMapleGold: '#bea572',
+  foliageSakuraPink: '#c79aa9',
+  waterCrystalBlue: ART.shallows,
+  waterDeepBlue: ART.water,
 });
 
 /**
  * Phân chia 12 làng thành 6 nhóm nhận diện thị giác độc bản
  * Giữ nguyên 100% cấu trúc 24 lô/làng (tổng 288 lô) của server authoritative.
  */
-export const VILLAGE_THEME_GROUPS = Object.freeze({
+const VILLAGE_THEME_DEFINITIONS = Object.freeze({
   'binh-minh': {
     name: 'Bình Minh',
     groupLabel: 'Cụm Làng Ban Mai',
@@ -97,128 +97,202 @@ export const VILLAGE_THEME_GROUPS = Object.freeze({
   'ven-song': {
     name: 'Ven Sông',
     groupLabel: 'Cụm Làng Thủy Trúc',
-    accentColor: '#0ea5e9',
-    roofColor: '#9a3412',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
     treeType: 'bamboo',
-    flowerColor: '#38bdf8',
+    flowerColor: '#fde047',
     signText: 'LÀNG VEN SÔNG',
-    signBg: '#1e293b',
+    signBg: '#3d2314',
   },
   'thanh-ha': {
     name: 'Thanh Hà',
     groupLabel: 'Cụm Làng Thủy Trúc',
-    accentColor: '#0ea5e9',
-    roofColor: '#9a3412',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
     treeType: 'bamboo',
-    flowerColor: '#38bdf8',
+    flowerColor: '#fde047',
     signText: 'LÀNG THANH HÀ',
-    signBg: '#1e293b',
+    signBg: '#3d2314',
   },
   'thanh-ha-007': {
     name: 'Thanh Hà',
     groupLabel: 'Cụm Làng Thủy Trúc',
-    accentColor: '#0ea5e9',
-    roofColor: '#9a3412',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
     treeType: 'bamboo',
-    flowerColor: '#38bdf8',
+    flowerColor: '#fde047',
     signText: 'LÀNG THANH HÀ',
-    signBg: '#1e293b',
+    signBg: '#3d2314',
   },
   'doi-gio': {
     name: 'Đồi Gió',
     groupLabel: 'Cụm Làng Đồi Thông',
-    accentColor: '#8b5cf6',
-    roofColor: '#7c2d12',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
     treeType: 'pine',
-    flowerColor: '#c084fc',
+    flowerColor: '#fde047',
     signText: 'LÀNG ĐỒI GIÓ',
-    signBg: '#2e1065',
+    signBg: '#3d2314',
   },
   'hai-van': {
     name: 'Hải Vân',
     groupLabel: 'Cụm Làng Đồi Thông',
-    accentColor: '#8b5cf6',
-    roofColor: '#7c2d12',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
     treeType: 'pine',
-    flowerColor: '#c084fc',
+    flowerColor: '#fde047',
     signText: 'LÀNG HẢI VÂN',
-    signBg: '#2e1065',
+    signBg: '#3d2314',
   },
   'hai-van-010': {
     name: 'Hải Vân',
     groupLabel: 'Cụm Làng Đồi Thông',
-    accentColor: '#8b5cf6',
-    roofColor: '#7c2d12',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
     treeType: 'pine',
-    flowerColor: '#c084fc',
+    flowerColor: '#fde047',
     signText: 'LÀNG HẢI VÂN',
-    signBg: '#2e1065',
+    signBg: '#3d2314',
+  },
+  'an-nhien': {
+    name: 'An Nhiên',
+    groupLabel: 'Cụm Làng Mộc Lan',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
+    treeType: 'sakura',
+    flowerColor: '#fde047',
+    signText: 'LÀNG AN NHIÊN',
+    signBg: '#3d2314',
   },
   'an-nhien-005': {
     name: 'An Nhiên',
     groupLabel: 'Cụm Làng Mộc Lan',
-    accentColor: '#ec4899',
-    roofColor: '#b45309',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
     treeType: 'sakura',
-    flowerColor: '#f472b6',
+    flowerColor: '#fde047',
     signText: 'LÀNG AN NHIÊN',
-    signBg: '#4a044e',
+    signBg: '#3d2314',
+  },
+  'moc-lan': {
+    name: 'Mộc Lan',
+    groupLabel: 'Cụm Làng Mộc Lan',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
+    treeType: 'sakura',
+    flowerColor: '#fde047',
+    signText: 'LÀNG MỘC LAN',
+    signBg: '#3d2314',
   },
   'moc-lan-006': {
     name: 'Mộc Lan',
     groupLabel: 'Cụm Làng Mộc Lan',
-    accentColor: '#ec4899',
-    roofColor: '#b45309',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
     treeType: 'sakura',
-    flowerColor: '#f472b6',
+    flowerColor: '#fde047',
     signText: 'LÀNG MỘC LAN',
-    signBg: '#4a044e',
+    signBg: '#3d2314',
+  },
+  'phu-dien': {
+    name: 'Phú Điền',
+    groupLabel: 'Cụm Làng Mùa Gặt',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
+    treeType: 'oak',
+    flowerColor: '#fde047',
+    signText: 'LÀNG PHÚ ĐIỀN',
+    signBg: '#3d2314',
   },
   'phu-dien-008': {
     name: 'Phú Điền',
     groupLabel: 'Cụm Làng Mùa Gặt',
-    accentColor: '#ea580c',
+    accentColor: '#f59e0b',
     roofColor: '#c2410c',
     treeType: 'oak',
-    flowerColor: '#fb923c',
+    flowerColor: '#fde047',
     signText: 'LÀNG PHÚ ĐIỀN',
-    signBg: '#431407',
+    signBg: '#3d2314',
+  },
+  'tan-loc': {
+    name: 'Tân Lộc',
+    groupLabel: 'Cụm Làng Mùa Gặt',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
+    treeType: 'oak',
+    flowerColor: '#fde047',
+    signText: 'LÀNG TÂN LỘC',
+    signBg: '#3d2314',
   },
   'tan-loc-009': {
     name: 'Tân Lộc',
     groupLabel: 'Cụm Làng Mùa Gặt',
-    accentColor: '#ea580c',
+    accentColor: '#f59e0b',
     roofColor: '#c2410c',
     treeType: 'oak',
-    flowerColor: '#fb923c',
+    flowerColor: '#fde047',
     signText: 'LÀNG TÂN LỘC',
-    signBg: '#431407',
+    signBg: '#3d2314',
+  },
+  'thu-phong': {
+    name: 'Thu Phong',
+    groupLabel: 'Cụm Làng Thu Vàng',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
+    treeType: 'maple',
+    flowerColor: '#fde047',
+    signText: 'LÀNG THU PHONG',
+    signBg: '#3d2314',
   },
   'thu-phong-011': {
     name: 'Thu Phong',
     groupLabel: 'Cụm Làng Thu Vàng',
-    accentColor: '#eab308',
-    roofColor: '#b45309',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
     treeType: 'maple',
-    flowerColor: '#facc15',
+    flowerColor: '#fde047',
     signText: 'LÀNG THU PHONG',
+    signBg: '#3d2314',
+  },
+  'huong-duong': {
+    name: 'Hướng Dương',
+    groupLabel: 'Cụm Làng Thu Vàng',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
+    treeType: 'maple',
+    flowerColor: '#fde047',
+    signText: 'LÀNG HƯỚNG DƯƠNG',
     signBg: '#3d2314',
   },
   'huong-duong-012': {
     name: 'Hướng Dương',
     groupLabel: 'Cụm Làng Thu Vàng',
-    accentColor: '#eab308',
-    roofColor: '#b45309',
+    accentColor: '#f59e0b',
+    roofColor: '#c2410c',
     treeType: 'maple',
-    flowerColor: '#facc15',
+    flowerColor: '#fde047',
     signText: 'LÀNG HƯỚNG DƯƠNG',
     signBg: '#3d2314',
   },
 });
 
-/**
- * Tạo vật liệu chuẩn đồng quê nhanh chóng với bóng râm dịu
- */
+const DISTRICT_COLORS = Object.freeze({
+  'Cụm Làng Ban Mai': ['#f3b36a', '#e78c77', '#fff1d2'],
+  'Cụm Làng Thủy Trúc': ['#71cdb6', '#53a99d', '#e7f8f1'],
+  'Cụm Làng Đồi Thông': ['#84bfe9', '#659dcc', '#eaf5ff'],
+  'Cụm Làng Mộc Lan': ['#efa8c5', '#cf82ab', '#fff0f5'],
+  'Cụm Làng Mùa Gặt': ['#b2cc7b', '#89b18b', '#f4f7df'],
+  'Cụm Làng Thu Vàng': ['#c2a0e6', '#a184cd', '#f5edff'],
+});
+
+export const VILLAGE_THEME_GROUPS = Object.freeze(Object.fromEntries(
+  Object.entries(VILLAGE_THEME_DEFINITIONS).map(([id, theme]) => {
+    const [accentColor, roofColor, signBg] = DISTRICT_COLORS[theme.groupLabel];
+    return [id, Object.freeze({ ...theme, accentColor, roofColor, signBg })];
+  }),
+));
+
+/** Shared softly shaded architectural material. */
 export function createCozyMaterial(scene, name, hex, emissiveHex = null, specular = 0.08) {
   const mat = new StandardMaterial(name, scene);
   mat.diffuseColor = Color3.FromHexString(hex);
@@ -236,16 +310,17 @@ export function createRusticSignboard(scene, title, subtitle = '', accentColor =
   signMat.alpha = 1;
 
   if (typeof document !== 'undefined' || typeof OffscreenCanvas !== 'undefined') {
-    const dt = new DynamicTexture(`rustic-sign-${title}`, { width: 2048, height: 640 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+    const dt = new DynamicTexture(`rustic-sign-${title}`, { width: 1024, height: 320 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
     dt.hasAlpha = true;
-    dt.anisotropicFilteringLevel = 16;
+    dt.anisotropicFilteringLevel = 4;
     const ctx = dt.getContext();
+    ctx.scale(0.5, 0.5);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.clearRect(0, 0, 2048, 640);
 
     // Nền gỗ sồi sẫm sang trọng
-    ctx.fillStyle = '#2c1810';
+    ctx.fillStyle = '#fff7e7';
     ctx.beginPath();
     ctx.roundRect(32, 32, 1984, 576, 64);
     ctx.fill();
@@ -256,7 +331,7 @@ export function createRusticSignboard(scene, title, subtitle = '', accentColor =
     ctx.stroke();
 
     // Chỉ viền phụ bên trong
-    ctx.strokeStyle = '#78350f';
+    ctx.strokeStyle = '#e7dccb';
     ctx.lineWidth = 8;
     ctx.beginPath();
     ctx.roundRect(64, 64, 1920, 512, 40);
@@ -264,17 +339,17 @@ export function createRusticSignboard(scene, title, subtitle = '', accentColor =
 
     // Tiêu đề chữ nổi màu kem ngà
     ctx.font = '900 164px "Nunito", "Segoe UI", Arial, sans-serif';
-    ctx.fillStyle = '#fffdf0';
+    ctx.fillStyle = '#345576';
     ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0,0,0,0.35)';
-    ctx.shadowBlur = 5;
+    ctx.shadowColor = 'rgba(255,255,255,0.5)';
+    ctx.shadowBlur = 0;
     const titleY = subtitle ? 270 : 340;
     ctx.fillText(title, 1024, titleY, 1840);
 
     if (subtitle) {
       ctx.font = '800 96px "Nunito", "Segoe UI", Arial, sans-serif';
-      ctx.fillStyle = '#ffe2ae';
-      ctx.shadowBlur = 4;
+      ctx.fillStyle = '#65808d';
+      ctx.shadowBlur = 0;
       ctx.fillText(subtitle.toUpperCase(), 1024, 430, 1840);
     }
 
@@ -322,7 +397,7 @@ export function createStorefrontSignboard(scene, {
   // 1. Tấm gỗ nền sồi tối vát cạnh
   const plaque = MeshBuilder.CreateBox(`storefront-sign-plaque-${title}`, { width: width + 0.35, height: height + 0.25, depth: 0.16 }, scene);
   const plaqueMat = new StandardMaterial(`sign-plaque-mat-${title}`, scene);
-  plaqueMat.diffuseColor = Color3.FromHexString('#1c120c');
+  plaqueMat.diffuseColor = Color3.FromHexString('#fff2df');
   plaqueMat.ambientColor = plaqueMat.diffuseColor.scale(0.4);
   plaqueMat.specularColor = new Color3(0.08, 0.08, 0.08);
   plaqueMat.alpha = 1;
@@ -332,8 +407,8 @@ export function createStorefrontSignboard(scene, {
   // 2. Viền kim loại mạ vàng / đồng thau nổi
   const trim = MeshBuilder.CreateBox(`storefront-sign-trim-${title}`, { width: width + 0.12, height: height + 0.1, depth: 0.20 }, scene);
   const trimMat = new StandardMaterial(`sign-trim-mat-${title}`, scene);
-  trimMat.diffuseColor = Color3.FromHexString('#d97706');
-  trimMat.emissiveColor = Color3.FromHexString('#b45309').scale(0.35);
+  trimMat.diffuseColor = Color3.FromHexString(accentColor);
+  trimMat.emissiveColor = Color3.FromHexString(accentColor).scale(0.04);
   trimMat.specularColor = new Color3(0.5, 0.5, 0.5);
   trimMat.specularPower = 64;
   trimMat.alpha = 1;
@@ -346,18 +421,19 @@ export function createStorefrontSignboard(scene, {
   signMat.backFaceCulling = false;
 
   if (typeof document !== 'undefined' || typeof OffscreenCanvas !== 'undefined') {
-    const dt = new DynamicTexture(`storefront-sign-dt-${title}`, { width: 2048, height: 512 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
-    dt.anisotropicFilteringLevel = 16;
+    const dt = new DynamicTexture(`storefront-sign-dt-${title}`, { width: 1024, height: 256 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+    dt.anisotropicFilteringLevel = 4;
     const ctx = dt.getContext();
+    ctx.scale(0.5, 0.5);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 
     // Nền gỗ gụ sẫm sang trọng
-    ctx.fillStyle = '#160e0a';
+    ctx.fillStyle = '#fff7e7';
     ctx.fillRect(0, 0, 2048, 512);
 
     // Dải hoa văn viền vàng kép chạm khắc
-    ctx.strokeStyle = '#f59e0b';
+    ctx.strokeStyle = accentColor;
     ctx.lineWidth = 18;
     if (typeof ctx.roundRect === 'function') {
       ctx.beginPath();
@@ -378,17 +454,17 @@ export function createStorefrontSignboard(scene, {
 
     // Tiêu đề chữ nổi tiếng Việt vàng rực rỡ có đổ bóng sâu
     ctx.font = '900 130px Arial, "Nunito", "Segoe UI", sans-serif';
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#345576';
     ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0,0,0,0.95)';
-    ctx.shadowBlur = 12;
+    ctx.shadowColor = 'rgba(255,255,255,0)';
+    ctx.shadowBlur = 0;
     const titleY = subtitle ? 215 : 285;
-    ctx.fillText(`★  ${title.toUpperCase()}  ★`, 1024, titleY, 1900);
+    ctx.fillText(title.toUpperCase(), 1024, titleY, 1840);
 
     if (subtitle) {
       ctx.font = 'bold 64px Arial, "Nunito", "Segoe UI", sans-serif';
-      ctx.fillStyle = '#fde68a';
-      ctx.shadowBlur = 6;
+      ctx.fillStyle = '#65808d';
+      ctx.shadowBlur = 0;
       ctx.fillText(subtitle.toUpperCase(), 1024, 345, 1900);
     }
 

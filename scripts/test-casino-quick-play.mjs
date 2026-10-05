@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import { nextQuickPlayAction } from '../src/components/casino/quickPlay.js';
+const room = { id: 'table', seatList: [null, null], round: null };
+assert.deepEqual(nextQuickPlayAction(room, 'me'), { kind: 'seat', seat: 0, roomId: 'table' });
+room.seatList[0] = { playerId: 'me', ready: false };
+assert.deepEqual(nextQuickPlayAction(room, 'me'), { kind: 'ready', ready: true, roomId: 'table' });
+room.seatList[0].ready = true;
+assert.equal(nextQuickPlayAction(room, 'me').kind, 'complete');
+room.round = { phase: 'open', participating: true };
+assert.equal(nextQuickPlayAction(room, 'me').kind, 'complete');
+assert.equal(nextQuickPlayAction({ ...room, seatList: [null], round: { phase: 'shaking' } }, 'me'), null);
+assert.equal(nextQuickPlayAction({ id: 'full', seatList: [{ playerId: 'other' }] }, 'me').kind, 'full');
+assert.equal(nextQuickPlayAction(null, 'me'), null);
+console.log('PASS: one-click seat → ready → complete, active-round wait, full table, no auto-bets.');

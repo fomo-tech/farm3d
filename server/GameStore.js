@@ -1,4 +1,5 @@
 import { MongoClient } from 'mongodb';
+import { VEHICLES as VEHICLE_CATALOG } from '../shared/vehicleConfig.js';
 import { BEACH_CONFIG } from '../shared/beachConfig.js';
 import { advanceFishingSession, FISHING_GAME, fishingTimePhase, claimFishingMission } from '../shared/fishingSession.js';
 import { applyLivestockAction } from '../shared/livestockActions.js';
@@ -18,6 +19,8 @@ import {
   calculateFishSaleValue,
 } from '../shared/fishing.js';
 import { calculateVerifiedCustomizationCost, normalizeCustomization } from '../shared/fashionConfig.js';
+import { validateEquippedCustomization } from '../shared/fashionValidation.js';
+import { applyCommunityReward } from './CommunityRewards.js';
 
 const mongo = new MongoClient(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017', {
   serverSelectionTimeoutMS: 5000,
@@ -63,7 +66,7 @@ export async function initGameStore() {
   await collections.players.updateMany({ revision: { $exists: false } }, { $set: { revision: 0 } });
 }
 
-const VEHICLES = { walk: 0, bike: 350, scooter: 900, tractor: 2200 };
+const VEHICLES = Object.fromEntries(Object.values(VEHICLE_CATALOG).map(vehicle => [vehicle.id, vehicle.cost]));
 const OUTFITS = { starter: 0, farmer: 100, rose: 180, lake: 260, royal: 420 };
 const ORDERS = {
   starter: { items: { carrot: 1 }, coins: 65, xp: 40 },
@@ -264,12 +267,16 @@ export async function performAction(playerId, action, payload = {}, context = {}
   else if (action === 'upgrade_land') { const item = EXPANSIONS.find(v => v.plots > p.unlockedPlots); if (!item || p.level < item.level || p.coins < item.cost) return fail('Chưa đủ điều kiện mở rộng đất.'); p.coins -= item.cost; p.unlockedPlots = item.plots; }
   else if (action === 'upgrade_barn') { const cost = farmBarnUpgradeCost(p.barnLevel); if (p.coins < cost) return fail('Không đủ xu nâng kho.'); p.coins -= cost; p.barnLevel += 1; }
   else if (action === 'upgrade_home') { if (p.homeTier >= 2 || p.level < 4 || p.coins < 1800) return fail('Chưa đủ điều kiện nâng nhà.'); p.coins -= 1800; p.homeTier = 2; if (!p.ownedHomes.includes('cozy-manor')) p.ownedHomes.push('cozy-manor'); }
-  else if (action === 'buy_vehicle') { const cost = VEHICLES[payload.id]; if (cost == null) return fail('Xe không hợp lệ.'); if (!p.ownedVehicles.includes(payload.id)) { if (p.coins < cost) return fail('Không đủ xu mua xe.'); p.coins -= cost; p.ownedVehicles.push(payload.id); } p.vehicle = payload.id; }
+  else if (action === 'buy_vehicle') { if (!Object.hasOwn(VEHICLES, payload.id)) return fail('Xe không hợp lệ.'); const cost = VEHICLES[payload.id]; if (!p.ownedVehicles.includes(payload.id)) { if (p.coins < cost) return fail('Không đủ xu mua xe.'); p.coins -= cost; p.ownedVehicles.push(payload.id); } p.vehicle = payload.id; }
   else if (action === 'buy_outfit') { const cost = OUTFITS[payload.id]; if (cost == null) return fail('Trang phục không hợp lệ.'); if (!p.ownedOutfits.includes(payload.id)) { if (p.coins < cost) return fail('Không đủ xu mua trang phục.'); p.coins -= cost; p.ownedOutfits.push(payload.id); } p.outfit = payload.id; }
   else if (action === 'fashion_save_customization') {
     if (!p.ownedCustomization) p.ownedCustomization = [];
     const requestedIds = Array.isArray(payload.newOwnedItemIds) ? payload.newOwnedItemIds : [];
-    const { verifiedCost, validNewItemIds } = calculateVerifiedCustomizationCost(p.ownedCustomization, requestedIds);
+    let verifiedCost, validNewItemIds, normalized;
+    try {
+      ({verifiedCost,validNewItemIds}=calculateVerifiedCustomizationCost(p.ownedCustomization,requestedIds));
+      normalized=validateEquippedCustomization(payload.customization,[...p.ownedCustomization,...validNewItemIds]);
+    } catch(error) { return fail(error.message); }
     if (verifiedCost > 0) {
       if (p.coins < verifiedCost) return fail('Không đủ xu mua trang phục.');
       p.coins -= verifiedCost;
@@ -277,9 +284,9 @@ export async function performAction(playerId, action, payload = {}, context = {}
     validNewItemIds.forEach(id => {
       if (!p.ownedCustomization.includes(id)) p.ownedCustomization.push(id);
     });
-    const normalized = normalizeCustomization(payload.customization);
     p.customization = normalized;
     player.customization = normalized;
+    actionResult={fashionUpdated:true};
   }
   else if (action === 'fishing_buy') {
     if(!atFishingShop())return fail('Hãy đến tiệm đồ câu hoặc quầy Lão Ngư để mua.');
@@ -402,7 +409,10 @@ export async function performAction(playerId, action, payload = {}, context = {}
   else if (action === 'advance_onboarding') { const step = Number(payload.step); if (step !== 4 || p.onboarding.step !== 3) return fail('Không thể bỏ qua bước hướng dẫn.'); p.onboarding.step = 4; }
   else if (action === 'complete_onboarding') { if (p.onboarding.step !== 5) return fail('Bạn chưa hoàn thành chuỗi hướng dẫn.'); p.onboarding.completed = true; p.onboarding.step = 6; if (!p.onboarding.bicycleAwarded) { p.coins += 200; p.xp += 80; if (!p.ownedVehicles.includes('bike')) p.ownedVehicles.push('bike'); p.onboarding.bicycleAwarded = true; } p.vehicle = 'bike'; }
   else if (action === 'reset_onboarding') { p.onboarding = { ...p.onboarding, characterCreated: true, step: 1, completed: false }; }
-  else if (action === 'help_friend') { const targetId = String(payload.targetId || '').slice(0, 64); const day = new Date().toISOString().slice(0, 10); if (!p.socialRewards) p.socialRewards = {}; const key = `${day}:${targetId}`; if (!targetId || p.socialRewards[key]) return fail('Hôm nay bạn đã giúp người này rồi.'); p.socialRewards[key] = true; p.coins += 15; p.xp += 5; }
+  else if (action === 'help_friend') return fail('Hãy tưới cây trong nông trại bạn bè để nhận thưởng qua hành động đã xác thực.');
+  else if (['claim_daily_reward','redeem_giftcode'].includes(action)) {
+    try { actionResult=applyCommunityReward(p,action,payload); } catch(error) { return fail(error.message); }
+  }
   else if (action === 'roadside_buy') { const offers = { carrot: { amount: 5, price: 50 }, wheat: { amount: 4, price: 100 }, tomato: { amount: 3, price: 135 }, strawberry: { amount: 2, price: 210 } }; const offer = offers[payload.crop]; if (!offer || Number(payload.amount) !== offer.amount || Number(payload.price) !== offer.price || p.coins < offer.price || inventoryCount(p) + offer.amount > barnCapacity(p)) return fail('Giao dịch ven đường không hợp lệ.'); p.coins -= offer.price; p.inventory[payload.crop] += offer.amount; }
   else if (action === 'reset_orders') { if (p.completedOrders.length < Object.keys(ORDERS).length || p.coins < 25) return fail('Chưa thể làm mới đơn hàng.'); p.coins -= 25; p.completedOrders = []; }
   else return fail('Hành động không được hỗ trợ.');

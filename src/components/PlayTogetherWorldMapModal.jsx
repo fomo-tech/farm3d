@@ -4,103 +4,119 @@ import { farmAudio } from '../game/audio/FarmAudioSystem.js';
 import { WORLD_LAYOUT } from '../game/world/worldLayout.js';
 import { WORLD_VILLAGES } from '../../shared/villageLayout.js';
 import { TOWN_SPAWN } from '../../shared/playerSpawn.js';
+import {
+  Icon3dHouseCabin,
+  Icon3dSprout,
+  Icon3dRiceSpike,
+  Icon3dMill,
+  Icon3dFlower,
+  Icon3dTractor,
+  Icon3dGem,
+  Icon3dAutumn,
+  Icon3dSun,
+  Icon3dModernCity,
+  Icon3dFishingRodBamboo,
+  Icon3dCoast,
+  Icon3dCityBus,
+  Icon3dStar,
+} from './icons3d/GameIcons3D.jsx';
 
 const VILLAGE_THEMES = {
   'binh-minh': {
-    badge: '👑 Thủ Phủ',
+    badge: '★ Thủ Phủ',
     color: '#f59e0b',
     gradient: 'linear-gradient(135deg, #fef3c7, #fde68a)',
     highway: 'Quốc Lộ 86 · Trục Nam',
     sub: 'Đại lộ 8.5m & 24 lô nông trại trung tâm',
-    emoji: '🌾',
+    Icon: Icon3dRiceSpike,
   },
   'hoa-mai': {
-    badge: '🌸 Hoa Mai',
+    badge: '★ Hoa Mai',
     color: '#ec4899',
     gradient: 'linear-gradient(135deg, #fce7f3, #fbcfe8)',
     highway: 'Quốc Lộ 86 · Phía Tây',
     sub: 'Vườn mai rực rỡ, đất bãi bồi trù phú',
-    emoji: '🏡',
+    Icon: Icon3dFlower,
   },
   'ven-song': {
-    badge: '🌊 Ven Sông',
+    badge: '★ Ven Sông',
     color: '#06b6d4',
     gradient: 'linear-gradient(135deg, #cffafe, #a5f3fc)',
     highway: 'Quốc Lộ 86 · Phía Đông',
     sub: 'Sát bờ đại thấu sông, gió mát thanh bình',
-    emoji: '⛵',
+    Icon: Icon3dCoast,
   },
   'doi-gio': {
-    badge: '🍃 Đồi Gió',
+    badge: '★ Đồi Gió',
     color: '#8b5cf6',
     gradient: 'linear-gradient(135deg, #ede9fe, #ddd6fe)',
     highway: 'Quốc Lộ 86 · Cực Tây',
     sub: 'Đồi cỏ thảo nguyên, cối xay gió thanh bình',
-    emoji: '🪁',
+    Icon: Icon3dMill,
   },
   'an-nhien': {
-    badge: '🍀 An Nhiên',
+    badge: '★ An Nhiên',
     color: '#10b981',
     gradient: 'linear-gradient(135deg, #d1fae5, #a7f3d0)',
     highway: 'Quốc Lộ 86 · Cực Đông',
     sub: 'Thung lũng sinh thái, cỏ xanh rợp bóng',
-    emoji: '🌿',
+    Icon: Icon3dSprout,
   },
   'moc-lan': {
-    badge: '🌺 Mộc Lan',
+    badge: '★ Mộc Lan',
     color: '#f97316',
     gradient: 'linear-gradient(135deg, #ffedd5, #fed7aa)',
     highway: 'Quốc Lộ Bắc · Phía Tây',
     sub: 'Cổng làng trang nhã, hoa mộc lan ngát hương',
-    emoji: '🏮',
+    Icon: Icon3dFlower,
   },
   'thanh-ha': {
-    badge: '🌾 Thanh Hà',
+    badge: '★ Thanh Hà',
     color: '#eab308',
     gradient: 'linear-gradient(135deg, #fef9c3, #fef08a)',
     highway: 'Quốc Lộ Bắc · Trung Tây',
     sub: 'Làng gốm cổ truyền, đồng vàng trĩu hạt',
-    emoji: '🛖',
+    Icon: Icon3dHouseCabin,
   },
   'phu-dien': {
-    badge: '🌱 Phú Điền',
+    badge: '★ Phú Điền',
     color: '#16a34a',
     gradient: 'linear-gradient(135deg, #dcfce7, #bbf7d0)',
     highway: 'Trục Đô Thị - Cực Bắc',
     sub: 'Vựa lúa màu mỡ, đất đai phì nhiêu',
-    emoji: '🚜',
+    Icon: Icon3dTractor,
   },
   'tan-loc': {
-    badge: '💎 Tân Lộc',
+    badge: '★ Tân Lộc',
     color: '#0284c7',
     gradient: 'linear-gradient(135deg, #e0f2fe, #bae6fd)',
     highway: 'Quốc Lộ Bắc · Trung Đông',
     sub: 'Miền đất trù phú, đón vượng khí tài lộc',
-    emoji: '🏰',
+    Icon: Icon3dGem,
   },
   'hai-van': {
-    badge: '☁️ Hải Vân',
+    badge: '★ Hải Vân',
     color: '#6366f1',
     gradient: 'linear-gradient(135deg, #e0e7ff, #c7d2fe)',
     highway: 'Quốc Lộ Bắc · Cực Đông',
     sub: 'Mây vờn đỉnh núi, phong cảnh hùng vĩ',
-    emoji: '🏔️',
+    Icon: Icon3dStar,
   },
   'thu-phong': {
-    badge: '🍂 Thu Phong',
+    badge: '★ Thu Phong',
     color: '#ea580c',
     gradient: 'linear-gradient(135deg, #ffedd5, #fed7aa)',
     highway: 'Quốc Lộ Nam Ven Biển',
     sub: 'Lá phong nhuộm đỏ, làn gió biển dịu êm',
-    emoji: '🍁',
+    Icon: Icon3dAutumn,
   },
   'huong-duong': {
-    badge: '🌻 Hướng Dương',
+    badge: '★ Hướng Dương',
     color: '#f59e0b',
     gradient: 'linear-gradient(135deg, #fef3c7, #fde68a)',
     highway: 'Quốc Lộ Nam Ven Biển',
     sub: 'Vườn hoa hướng dương rực rỡ đón bình minh',
-    emoji: '🌞',
+    Icon: Icon3dSun,
   },
 };
 
@@ -109,24 +125,24 @@ const SPECIAL_DESTINATIONS = [
     id: 'town',
     label: 'Quảng Trường Trung Tâm',
     category: 'city',
-    badge: '🎪 Phố Thị',
+    badge: '★ Phố Thị',
     color: '#ec4899',
     gradient: 'linear-gradient(135deg, #fdf2f8, #fce7f3)',
     highway: 'Tâm Điểm Bản Đồ (x: 0, z: 0)',
     sub: 'Đài phun nước, tiệm bánh, rạp phim & hội quán',
-    emoji: '⛲',
+    Icon: Icon3dModernCity,
     ...TOWN_SPAWN,
   },
   {
     id: 'lake',
     label: 'Hồ Pha Lê & Bến Câu Cá',
     category: 'nature',
-    badge: '🎣 Bến Thuyền',
+    badge: '★ Bến Thuyền',
     color: '#0284c7',
     gradient: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
     highway: 'Đại Lộ Phía Đông (x: 128, z: 2)',
     sub: 'Tiệm đồ câu Lão Ngư, chòi dã ngoại & bến thuyền',
-    emoji: '🐟',
+    Icon: Icon3dFishingRodBamboo,
     x: 128,
     z: -2,
   },
@@ -134,12 +150,12 @@ const SPECIAL_DESTINATIONS = [
     id: 'beach',
     label: 'Bãi Biển & Cảng Steamboat',
     category: 'nature',
-    badge: '🏖️ Bờ Cát',
+    badge: '★ Bờ Cát',
     color: '#0d9488',
     gradient: 'linear-gradient(135deg, #f0fdfa, #ccfbf1)',
     highway: 'Quốc Lộ Nam (x: 0, z: 300)',
     sub: 'Ngọn hải đăng, ghế tắm nắng & bến tàu viễn dương',
-    emoji: '🌴',
+    Icon: Icon3dCoast,
     x: 0,
     z: 300,
   },
@@ -177,12 +193,12 @@ export default function PlayTogetherWorldMapModal({
     // 12 Villages
     WORLD_VILLAGES.forEach(v => {
       const theme = VILLAGE_THEMES[v.id] || {
-        badge: '🏘️ Làng Nông Trại',
+        badge: '★ Làng Nông Trại',
         color: '#10b981',
         gradient: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
         highway: 'Tuyến Giao Thông Liên Làng',
         sub: '24 lô đất nông trại khép kín',
-        emoji: '🏡',
+        Icon: Icon3dHouseCabin,
       };
 
       const isMyVillage = myFarm && myFarm.villageId === v.id;
@@ -193,12 +209,12 @@ export default function PlayTogetherWorldMapModal({
         id: v.id,
         label: v.name,
         category: 'village',
-        badge: isMyVillage ? `⭐ Lô ${myFarm.lotNumber} Của Bạn` : theme.badge,
+        badge: isMyVillage ? `★ Lô ${myFarm.lotNumber} Của Bạn` : theme.badge,
         color: theme.color,
         gradient: theme.gradient,
         highway: theme.highway,
         sub: theme.sub,
-        emoji: theme.emoji,
+        Icon: theme.Icon || Icon3dHouseCabin,
         x: v.gate.x,
         z: v.gate.z - 4,
         isMyVillage,
@@ -272,7 +288,7 @@ export default function PlayTogetherWorldMapModal({
         <header className="pt-map-header">
           <div>
             <div className="pt-map-header-ribbon">
-              <span>🚌 HỆ THỐNG XE BUÝT THUNG LŨNG 12 LÀNG</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dCityBus size={18} /> HỆ THỐNG XE BUÝT THUNG LŨNG 12 LÀNG</span>
             </div>
             <div className="pt-map-title-row">
               <h2 className="pt-map-title">BẢN ĐỒ THẾ GIỚI 3D</h2>
@@ -299,7 +315,7 @@ export default function PlayTogetherWorldMapModal({
         {myFarm && (
           <div className="pt-map-home-banner">
             <div className="pt-map-home-info">
-              <div className="pt-map-home-icon">🏠</div>
+              <div className="pt-map-home-icon"><Icon3dHouseCabin size={28} /></div>
               <div>
                 <div className="pt-map-home-title">
                   <span>Trang Trại Của Bạn</span>
@@ -316,7 +332,7 @@ export default function PlayTogetherWorldMapModal({
               onClick={handleWarpHome}
               title="Về ngay trước cổng nông trại của bạn"
             >
-              <span>⚡ VỀ NHÀ NGAY</span>
+              <span>VỀ NHÀ NGAY</span>
             </button>
           </div>
         )}
@@ -343,7 +359,7 @@ export default function PlayTogetherWorldMapModal({
               setActiveTab('all');
             }}
           >
-            🗺️ Tất Cả ({allDestinations.length})
+            Tất Cả ({allDestinations.length})
           </button>
           <button
             type="button"
@@ -353,7 +369,7 @@ export default function PlayTogetherWorldMapModal({
               setActiveTab('villages');
             }}
           >
-            🏘️ 12 Làng Nông Trại (12)
+            12 Làng Nông Trại (12)
           </button>
           <button
             type="button"
@@ -363,7 +379,7 @@ export default function PlayTogetherWorldMapModal({
               setActiveTab('city');
             }}
           >
-            🎪 Đô Thị Phồn Hoa
+            Đô Thị Phồn Hoa
           </button>
           <button
             type="button"
@@ -373,7 +389,7 @@ export default function PlayTogetherWorldMapModal({
               setActiveTab('nature');
             }}
           >
-            🏖️ Biển & Hồ Câu Cá
+            Biển & Hồ Câu Cá
           </button>
           {myFarm && (
             <button
@@ -384,7 +400,7 @@ export default function PlayTogetherWorldMapModal({
                 setActiveTab('my_farm');
               }}
             >
-              ⭐ Nông Trại Của Bạn
+              Nông Trại Của Bạn
             </button>
           )}
         </nav>
@@ -409,9 +425,12 @@ export default function PlayTogetherWorldMapModal({
                       style={{
                         background: dest.gradient || 'linear-gradient(135deg, #f1f5f9, #e2e8f0)',
                         border: `2px solid ${dest.color || '#cbd5e1'}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
                     >
-                      <span>{dest.emoji || '🏡'}</span>
+                      {dest.Icon ? <dest.Icon size={32} /> : <Icon3dHouseCabin size={32} />}
                     </div>
 
                     <div className="pt-dest-meta">
@@ -426,7 +445,7 @@ export default function PlayTogetherWorldMapModal({
                         >
                           {dest.badge}
                         </span>
-                        {isHere && <span className="pt-dest-tag badge-here">📍 Đang Ở Đây</span>}
+                        {isHere && <span className="pt-dest-tag badge-here">Đang Ở Đây</span>}
                       </div>
 
                       <h3 className="pt-dest-name">{dest.label}</h3>
@@ -436,7 +455,7 @@ export default function PlayTogetherWorldMapModal({
 
                   <div className="pt-dest-bottom">
                     <div className="pt-dest-distance">
-                      <span>🚌 {dest.highway}</span>
+                      <span>{dest.highway}</span>
                     </div>
 
                     <button
@@ -446,7 +465,7 @@ export default function PlayTogetherWorldMapModal({
                       onClick={() => handleTravelClick(dest)}
                       title={isHere ? 'Bạn đang ở ngay đây' : `Đi xe buýt tới ${dest.label}`}
                     >
-                      <span>{isHere ? '📍 ĐANG Ở ĐÂY' : '🚌 LÊN XE BUÝT'}</span>
+                      <span>{isHere ? 'ĐANG Ở ĐÂY' : 'LÊN XE BUÝT'}</span>
                     </button>
                   </div>
                 </div>

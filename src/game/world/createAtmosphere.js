@@ -9,68 +9,34 @@ import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
 import { ParticleSystem } from '@babylonjs/core/Particles/particleSystem.js';
 import { PointLight } from '@babylonjs/core/Lights/pointLight.js';
 import { WORLD_PALETTE } from './worldDesignSystem.js';
+import { FresnelParameters } from '@babylonjs/core/Materials/fresnelParameters.js';
+import { createProceduralSkyDome } from './nature/ProceduralSkyDome.js';
+import { createMilkyWaySystem } from './nature/MilkyWaySystem.js';
 
 /**
  * createAtmosphere.js - GHIBLI CHILL & COZY ATMOSPHERIC HORIZON SYSTEM
  * 
  * Nâng cấp toàn diện bầu khí quyển & vùng chân trời đạt cảm giác thư thái, mơ màng:
- * 1. Vòm trời màu nước 5 tầng (5-Stop Hermite Gradient SkyDome) với dải sáng viền chân trời (Atmospheric Haze Rim).
- * 2. Đĩa Mặt Trời Anime mềm mại (Stylized Sun Disc & Atmospheric Corona) chuyển động theo quỹ đạo chân trời.
+ * 1. Vòm trời màu nước 5 tầng (5-Stop Procedural SkyDome Shader - 6400m, 48 Segments).
+ * 2. Đĩa Mặt Trời Anime mềm mại & Quầng tán xạ Mie Scattering động tỏa nắng.
  * 3. Vầng trăng ngọc trai & Quầng hào quang dịu mắt (Glowing Pearl Moon & Soft Aura).
  * 4. Dải mây lụa tầng cao (Cirrus Ribbon Bands) trôi chậm rãi bao la + Cụm mây tích Ghibli khổng lồ (Cumulus Giants).
  * 5. Đàn chim viễn cảnh bay lượn lững lờ ngang đường chân trời (Flock of Distant Horizon Birds).
  * 6. Rèm cực quang phương Bắc (Northern Aurora Borealis) huyền ảo & Vệt sao băng rơi chậm ban đêm.
  * 7. Bụi nắng vàng, cánh hoa đào bay bổng, đom đóm dạ quang đa vùng và đèn đêm ấm cúng.
- * 8. Hiệu năng đỉnh cao 60 FPS (Texture 256x512 cập nhật nhịp nhàng, zero garbage collection).
+ * 8. Hiệu năng đỉnh cao 60 FPS (Shader GPU tính toán, zero canvas upload, zero garbage collection).
  */
 const _tmpNormDir = new Vector3();
+const _tmpSunSkyDir = new Vector3();
 
 export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, cinematic = null) {
   const atmosphereRoot = new TransformNode('world-atmosphere-root', scene);
 
   // =========================================================================
-  // 1. VÒM TRỜI MÀU NƯỚC 5 TẦNG (5-STOP PAINTERLY SKY DOME)
+  // 1. VÒM TRỜI MÀU NƯỚC 5 TẦNG PROCEDURAL GPU SHADER (6400m, 48 SEGMENTS)
   // =========================================================================
-  const skyDome = MeshBuilder.CreateSphere('ghibli-chill-skydome', {
-    diameter: 6000,
-    segments: 24,
-    sideOrientation: Mesh.BACKSIDE,
-  }, scene);
-  skyDome.position.set(0, 0, 0);
-  skyDome.parent = atmosphereRoot;
-  skyDome.infiniteDistance = true;
-  skyDome.isPickable = false;
-
-  const skyMat = new StandardMaterial('ghibli-skydome-mat', scene);
-  skyMat.disableLighting = true;
-  skyMat.diffuseColor = Color3.Black();
-  skyMat.backFaceCulling = false;
-  skyMat.fogEnabled = false;
-
-  const skyTex = new DynamicTexture('ghibli-skydome-canvas', { width: 256, height: 512 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
-  skyTex.wrapU = Texture.CLAMP_ADDRESSMODE;
-  skyTex.wrapV = Texture.CLAMP_ADDRESSMODE;
-  const sctx = skyTex.getContext();
-
-  function renderSkyGradient(cZenith, cUpper, cTrans, cHaze, cGround) {
-    sctx.clearRect(0, 0, 256, 512);
-    const grad = sctx.createLinearGradient(0, 0, 0, 512);
-    // 5 tầng hòa sắc từ đỉnh trời xuống chân trời và mặt đất
-    grad.addColorStop(0.00, cZenith);   // Đỉnh vòm (Zenith)
-    grad.addColorStop(0.42, cUpper);    // Vòm trời trên (Upper Sky)
-    grad.addColorStop(0.70, cTrans);    // Tầng mây phấn (Peach/Lilac Horizon Transition)
-    grad.addColorStop(0.88, cHaze);     // Dải sáng viền chân trời (Atmospheric Haze Rim)
-    grad.addColorStop(1.00, cGround);   // Hòa sắc viền mặt đất (Ground Blend)
-    sctx.fillStyle = grad;
-    sctx.fillRect(0, 0, 256, 512);
-    if (typeof window !== 'undefined' && window.__farmDebug) {
-      window.__farmDebug.measure('clock: sky texture upload', () => skyTex.update(false));
-    } else skyTex.update(false);
-  }
-
-  skyMat.emissiveTexture = skyTex;
-  skyMat.emissiveColor = Color3.White();
-  skyDome.material = skyMat;
+  const proceduralSky = createProceduralSkyDome(scene, atmosphereRoot);
+  const skyDome = proceduralSky.mesh;
 
   // =========================================================================
   // 2. ĐĨA MẶT TRỜI ANIME & VẦNG HÀO QUANG (STYLIZED SUN DISC & CORONA)
@@ -95,14 +61,17 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
   sunMat.opacityTexture = sunTex;
   sunMat.emissiveColor = Color3.White();
   sunMat.disableLighting = true;
+  sunMat.disableDepthWrite = true;
   sunMat.fogEnabled = false;
 
-  const sunDisc = MeshBuilder.CreateDisc('anime-sun-disc', { radius: 55, tessellation: 32 }, scene);
+  const sunDisc = MeshBuilder.CreateDisc('anime-sun-disc', { radius: 11, tessellation: 32 }, scene);
   sunDisc.parent = sunRoot;
   sunDisc.billboardMode = Mesh.BILLBOARDMODE_ALL;
   sunDisc.material = sunMat;
+  sunDisc.alwaysSelectAsActiveMesh = true;
+  sunDisc.ignoreCameraMaxZ = true;
 
-  const sunCorona = MeshBuilder.CreateDisc('anime-sun-corona', { radius: 120, tessellation: 32 }, scene);
+  const sunCorona = MeshBuilder.CreateDisc('anime-sun-corona', { radius: 24, tessellation: 32 }, scene);
   sunCorona.parent = sunRoot;
   sunCorona.billboardMode = Mesh.BILLBOARDMODE_ALL;
   const coronaMat = new StandardMaterial('anime-sun-corona-mat', scene);
@@ -111,8 +80,11 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
   coronaMat.emissiveColor = new Color3(1.0, 0.85, 0.5);
   coronaMat.alpha = 0.45;
   coronaMat.disableLighting = true;
+  coronaMat.disableDepthWrite = true;
   coronaMat.fogEnabled = false;
   sunCorona.material = coronaMat;
+  sunCorona.alwaysSelectAsActiveMesh = true;
+  sunCorona.ignoreCameraMaxZ = true;
 
   // =========================================================================
   // 3. MẶT TRĂNG DẠ QUANG NGỌC TRAI & VẦNG HÀO QUANG (3D GLOWING MOON)
@@ -120,16 +92,19 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
   const moonRoot = new TransformNode('moon-root', scene);
   moonRoot.parent = atmosphereRoot;
 
-  const moonSphere = MeshBuilder.CreateSphere('moon-sphere', { diameter: 38, segments: 16 }, scene);
+  const moonSphere = MeshBuilder.CreateSphere('moon-sphere', { diameter: 12, segments: 16 }, scene);
   moonSphere.parent = moonRoot;
   const moonMat = new StandardMaterial('moon-mat', scene);
   moonMat.diffuseColor = Color3.FromHexString('#fffbe8');
   moonMat.emissiveColor = Color3.FromHexString('#fffae0');
   moonMat.disableLighting = true;
+  moonMat.disableDepthWrite = true;
   moonMat.fogEnabled = false;
   moonSphere.material = moonMat;
+  moonSphere.alwaysSelectAsActiveMesh = true;
+  moonSphere.ignoreCameraMaxZ = true;
 
-  const moonGlow = MeshBuilder.CreateDisc('moon-glow', { radius: 46, tessellation: 24 }, scene);
+  const moonGlow = MeshBuilder.CreateDisc('moon-glow', { radius: 15, tessellation: 24 }, scene);
   moonGlow.parent = moonRoot;
   moonGlow.billboardMode = Mesh.BILLBOARDMODE_ALL;
   const moonGlowMat = new StandardMaterial('moon-glow-mat', scene);
@@ -138,11 +113,14 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
   moonGlowMat.emissiveColor = Color3.FromHexString('#fef08a');
   moonGlowMat.alpha = 0.55;
   moonGlowMat.disableLighting = true;
+  moonGlowMat.disableDepthWrite = true;
   moonGlowMat.fogEnabled = false;
   moonGlow.material = moonGlowMat;
+  moonGlow.alwaysSelectAsActiveMesh = true;
+  moonGlow.ignoreCameraMaxZ = true;
 
   // Hào quang sương mờ dịu mắt tầng rộng của vầng trăng ngọc trai (Ghibli Moon Corona)
-  const moonGlowOuter = MeshBuilder.CreateDisc('moon-glow-outer', { radius: 78, tessellation: 24 }, scene);
+  const moonGlowOuter = MeshBuilder.CreateDisc('moon-glow-outer', { radius: 25, tessellation: 24 }, scene);
   moonGlowOuter.parent = moonRoot;
   moonGlowOuter.billboardMode = Mesh.BILLBOARDMODE_ALL;
   const moonGlowOuterMat = new StandardMaterial('moon-glow-outer-mat', scene);
@@ -151,99 +129,18 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
   moonGlowOuterMat.emissiveColor = Color3.FromHexString('#c7d2fe');
   moonGlowOuterMat.alpha = 0.32;
   moonGlowOuterMat.disableLighting = true;
+  moonGlowOuterMat.disableDepthWrite = true;
   moonGlowOuterMat.fogEnabled = false;
   moonGlowOuter.material = moonGlowOuterMat;
+  moonGlowOuter.alwaysSelectAsActiveMesh = true;
+  moonGlowOuter.ignoreCameraMaxZ = true;
 
   // =========================================================================
-  // 4. VÒM SAO TRỜI ĐÊM LẤP LÁNH (TWINKLING STARFIELD DOME)
+  // 4. DẢI NGÂN HÀ, 720+ SAO NHẤP NHÁY ĐA TẦN & 16 CHÒM SAO HÀO QUANG (MILKY WAY)
   // =========================================================================
-  const starsRoot = new TransformNode('stars-root', scene);
-  starsRoot.parent = atmosphereRoot;
-  const masterStar = MeshBuilder.CreateSphere('master-star', { diameter: 1.2, segments: 4 }, scene);
-  masterStar.parent = starsRoot;
-  const starMat = new StandardMaterial('star-mat', scene);
-  starMat.diffuseColor = Color3.FromHexString('#ffffff');
-  starMat.emissiveColor = Color3.FromHexString('#fef08a');
-  starMat.disableLighting = true;
-  starMat.fogEnabled = false;
-  starMat.alpha = 0;
-  masterStar.material = starMat;
+  const milkyWaySystem = createMilkyWaySystem(scene, atmosphereRoot);
 
-  const starMatrices = [];
-  const sPos = new Vector3();
-  const sMat = Matrix.Identity();
-  for (let i = 0; i < 220; i++) {
-    const theta = (i * 0.42) % (Math.PI * 2);
-    const phi = 0.15 + ((i * 1.37) % 1) * 0.95;
-    const rad = 2300 + (i % 35);
-    const sx = Math.sin(phi) * Math.cos(theta) * rad;
-    const sy = Math.cos(phi) * rad;
-    const sz = Math.sin(phi) * Math.sin(theta) * rad;
-    const sScale = 0.8 + ((i * 7) % 10) / 10 * 1.2;
-    sPos.set(sx, sy, sz);
-    Matrix.ComposeToRef(new Vector3(sScale, sScale, sScale), Quaternion.Identity(), sPos, sMat);
-    starMatrices.push(...sMat.asArray());
-  }
-  masterStar.thinInstanceSetBuffer('matrix', new Float32Array(starMatrices), 16, true);
 
-  // =========================================================================
-  // 5. RÈM CỰC QUANG PHƯƠNG BẮC (NORTHERN AURORA BOREALIS)
-  // =========================================================================
-  const auroraRoot = new TransformNode('aurora-root', scene);
-  auroraRoot.parent = atmosphereRoot;
-
-  const auroraMat = new StandardMaterial('aurora-mat', scene);
-  auroraMat.disableLighting = true;
-  auroraMat.fogEnabled = false;
-  auroraMat.emissiveColor = Color3.FromHexString('#10b981');
-  auroraMat.alpha = 0;
-  auroraMat.backFaceCulling = false;
-
-  const auroraRibbon = MeshBuilder.CreateRibbon('aurora-ribbon', {
-    pathArray: [
-      [
-        new Vector3(-800, 160, -2100),
-        new Vector3(-400, 210, -2150),
-        new Vector3(0, 175, -2100),
-        new Vector3(400, 220, -2150),
-        new Vector3(800, 180, -2100),
-      ],
-      [
-        new Vector3(-800, 310, -2100),
-        new Vector3(-400, 360, -2150),
-        new Vector3(0, 330, -2100),
-        new Vector3(400, 370, -2150),
-        new Vector3(800, 320, -2100),
-      ],
-    ],
-    closeArray: false,
-    closePath: false,
-  }, scene);
-  auroraRibbon.parent = auroraRoot;
-  auroraRibbon.material = auroraMat;
-  auroraRibbon.freezeWorldMatrix();
-
-  // =========================================================================
-  // 6. VỆT SAO BĂNG RƠI CHẬM BAN ĐÊM (GENTLE SHOOTING STARS)
-  // =========================================================================
-  const shootingStar = MeshBuilder.CreateCylinder('shooting-star', {
-    height: 38,
-    diameterTop: 0.1,
-    diameterBottom: 1.8,
-    tessellation: 6,
-  }, scene);
-  shootingStar.parent = atmosphereRoot;
-  const shootMat = new StandardMaterial('shooting-star-mat', scene);
-  shootMat.emissiveColor = Color3.FromHexString('#fef08a');
-  shootMat.disableLighting = true;
-  shootMat.fogEnabled = false;
-  shootMat.alpha = 0;
-  shootingStar.material = shootMat;
-  shootingStar.rotation.z = Math.PI / 4;
-  shootingStar.rotation.x = Math.PI / 6;
-
-  let shootingStarTimer = 0;
-  let shootingStarProgress = -1;
 
   // =========================================================================
   // 7. MÂY LỤA TẦNG CAO (CIRRUS RIBBONS) & CỤM MÂY TÍCH KHỔNG LỒ (CUMULUS GIANTS)
@@ -256,38 +153,63 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
   cirrusMat.emissiveColor = new Color3(0.92, 0.95, 1.0);
   cirrusMat.alpha = 0.42;
   cirrusMat.disableLighting = true;
+  cirrusMat.disableDepthWrite = true;
   cirrusMat.fogEnabled = false;
 
   const cirrusBands = [];
   const cirrusConfigs = [
-    { x: -900, y: 135, z: -1600, w: 420, h: 16, speed: 0.22 },
-    { x: -300, y: 150, z: -1750, w: 520, h: 22, speed: 0.18 },
-    { x: 450, y: 140, z: -1650, w: 480, h: 18, speed: 0.20 },
-    { x: -1100, y: 130, z: 400, w: 460, h: 20, speed: 0.24 },
-    { x: 1200, y: 145, z: 200, w: 500, h: 18, speed: 0.21 },
-    { x: -200, y: 125, z: 1700, w: 540, h: 24, speed: 0.25 },
-    { x: 600, y: 138, z: 1800, w: 450, h: 18, speed: 0.22 },
+    { x: -160, y: 195, z: -250, w: 220, h: 8, speed: 0.18 },
+    { x: -50, y: 210, z: -260, w: 260, h: 10, speed: 0.15 },
+    { x: 80, y: 202, z: -245, w: 230, h: 8, speed: 0.17 },
+    { x: -180, y: 190, z: 140, w: 240, h: 9, speed: 0.19 },
+    { x: 190, y: 205, z: 110, w: 250, h: 8, speed: 0.16 },
+    { x: -40, y: 198, z: 260, w: 270, h: 10, speed: 0.20 },
+    { x: 110, y: 206, z: 265, w: 230, h: 9, speed: 0.18 },
   ];
 
   cirrusConfigs.forEach((cfg, idx) => {
-    const band = MeshBuilder.CreateBox(`cirrus-band-${idx}`, { width: cfg.w, height: cfg.h, depth: 35 }, scene);
+    const band = MeshBuilder.CreateBox(`cirrus-band-${idx}`, { width: cfg.w, height: cfg.h, depth: 8 }, scene);
     band.position.set(cfg.x, cfg.y, cfg.z);
     band.material = cirrusMat;
     band.parent = cirrusRoot;
+    band.alwaysSelectAsActiveMesh = true;
+    band.ignoreCameraMaxZ = true;
     band.freezeWorldMatrix();
     cirrusBands.push({ node: band, speed: cfg.speed, initialX: cfg.x });
   });
 
-  // 3 Cụm mây tích Ghibli khổng lồ đón hoàng hôn (Cumulus Giants)
+  // 3 Cụm mây tích Ghibli khổng lồ đón hoàng hôn (Cumulus Giants với Two-Tone shading & Rim Light)
   const cumulusRoot = new TransformNode('cumulus-giants-root', scene);
   cumulusRoot.parent = atmosphereRoot;
 
-  const cumulusMat = new StandardMaterial('cumulus-giant-mat', scene);
-  cumulusMat.diffuseColor = Color3.White();
-  cumulusMat.emissiveColor = new Color3(0.94, 0.96, 1.0);
-  cumulusMat.alpha = 0.88;
-  cumulusMat.disableLighting = true;
-  cumulusMat.fogEnabled = false;
+  // Fresnel viền sáng dịu mát phong cách Studio Ghibli (Tâm sáng rực rỡ, viền hào quang vàng ấm, KHÔNG BAO GIỜ BỊ ĐEN)
+  const cloudRimFresnel = new FresnelParameters();
+  cloudRimFresnel.bias = 0.55;
+  cloudRimFresnel.power = 1.4;
+  cloudRimFresnel.leftColor = Color3.FromHexString('#fffbeb');
+  cloudRimFresnel.rightColor = Color3.White();
+
+  // Đỉnh mây đón ánh sáng trực tiếp từ Mặt Trời
+  const cumulusTopMat = new StandardMaterial('cumulus-top-mat', scene);
+  cumulusTopMat.diffuseColor = Color3.White();
+  cumulusTopMat.emissiveColor = Color3.White();
+  cumulusTopMat.specularColor = Color3.Black();
+  cumulusTopMat.emissiveFresnelParameters = cloudRimFresnel;
+  cumulusTopMat.alpha = 0.96;
+  cumulusTopMat.disableLighting = true;
+  cumulusTopMat.disableDepthWrite = true;
+  cumulusTopMat.fogEnabled = false;
+
+  // Đáy mây chìm trong bóng râm khí quyển mộng mơ
+  const cumulusBaseMat = new StandardMaterial('cumulus-base-mat', scene);
+  cumulusBaseMat.diffuseColor = Color3.FromHexString('#f0f9ff');
+  cumulusBaseMat.emissiveColor = Color3.FromHexString('#e0f2fe');
+  cumulusBaseMat.specularColor = Color3.Black();
+  cumulusBaseMat.emissiveFresnelParameters = cloudRimFresnel;
+  cumulusBaseMat.alpha = 0.94;
+  cumulusBaseMat.disableLighting = true;
+  cumulusBaseMat.disableDepthWrite = true;
+  cumulusBaseMat.fogEnabled = false;
 
   function createCumulusGiant(name, cx, cy, cz, scale = 1.0) {
     const gNode = new TransformNode(name, scene);
@@ -295,27 +217,29 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
     gNode.parent = cumulusRoot;
 
     const puffs = [
-      { x: 0, y: 0, z: 0, d: 130 },
-      { x: -65, y: -18, z: 0, d: 95 },
-      { x: 65, y: -12, z: 0, d: 105 },
-      { x: -35, y: 35, z: 0, d: 85 },
-      { x: 35, y: 32, z: 0, d: 90 },
-      { x: 0, y: 55, z: 0, d: 75 },
+      { x: 0, y: 0, z: 0, d: 55, isTop: false },
+      { x: -28, y: -8, z: 0, d: 42, isTop: false },
+      { x: 28, y: -5, z: 0, d: 46, isTop: false },
+      { x: -15, y: 15, z: 0, d: 38, isTop: true },
+      { x: 15, y: 14, z: 0, d: 40, isTop: true },
+      { x: 0, y: 24, z: 0, d: 34, isTop: true },
     ];
     puffs.forEach((p, idx) => {
       const s = MeshBuilder.CreateSphere(`${name}-puff-${idx}`, { diameter: p.d * scale, segments: 10 }, scene);
       s.position.set(p.x * scale, p.y * scale, p.z * scale);
       s.scaling.y = 0.62;
-      s.material = cumulusMat;
+      s.material = p.isTop ? cumulusTopMat : cumulusBaseMat;
       s.parent = gNode;
+      s.alwaysSelectAsActiveMesh = true;
+      s.ignoreCameraMaxZ = true;
       s.freezeWorldMatrix();
     });
   }
 
-  // Đông (x: 1450, z: -200), Tây (x: -1450, z: 350), Bắc (x: 200, z: -1750)
-  createCumulusGiant('cumulus-east', 1450, 95, -200, 1.25);
-  createCumulusGiant('cumulus-west', -1450, 105, 350, 1.35);
-  createCumulusGiant('cumulus-north', 200, 115, -1750, 1.4);
+  // Đưa các cụm mây tích khổng lồ ra đường chân trời xa và cao (y: 125-145m, r: 450-480m)
+  createCumulusGiant('cumulus-east', 460, 125, -160, 1.6);
+  createCumulusGiant('cumulus-west', -480, 135, 180, 1.8);
+  createCumulusGiant('cumulus-north', 90, 145, -460, 2.0);
 
   // =========================================================================
   // 8B. VÀNH ĐAI SƯƠNG MÙ THUNG LŨNG BỒNG BỀNH (GHIBLI ETHEREAL VALLEY MIST)
@@ -371,8 +295,13 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
 
   const cloudMat = new StandardMaterial('stylized-cloud-mat', scene);
   cloudMat.diffuseColor = Color3.White();
-  cloudMat.emissiveColor = new Color3(0.9, 0.94, 1.0);
-  cloudMat.alpha = 0.92;
+  cloudMat.emissiveColor = Color3.White();
+  cloudMat.specularColor = Color3.Black();
+  cloudMat.emissiveFresnelParameters = cloudRimFresnel;
+  cloudMat.alpha = 0.96;
+  cloudMat.disableLighting = true;
+  cloudMat.disableDepthWrite = true;
+  cloudMat.fogEnabled = false;
 
   const clouds = [];
   function createPuffyCloud(name, x, y, z, scale) {
@@ -388,26 +317,29 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       { dx: 2.2, dy: 1.8, dz: 0, d: 5.8 },
     ];
     parts.forEach((p, idx) => {
-      const s = MeshBuilder.CreateSphere(`${name}-part-${idx}`, { diameter: p.d, segments: 8 }, scene);
+      const s = MeshBuilder.CreateSphere(`${name}-part-${idx}`, { diameter: p.d, segments: 10 }, scene);
       s.position.set(p.dx * scale, p.dy * scale, p.dz * scale);
       s.scaling.y = 0.55;
       s.material = cloudMat;
       s.parent = cloud;
+      s.alwaysSelectAsActiveMesh = true;
+      s.ignoreCameraMaxZ = true;
     });
     clouds.push({ node: cloud, speed: 1.2 + Math.random() * 0.8, initialX: x });
   }
 
+  // Tọa độ mây 3D bồng bềnh ở tầng cao (y: 135m - 165m) thoáng đãng, trôi dạt nhẹ nhàng
   const cloudPositions = [
-    { x: -620, y: 56, z: 180, s: 1.4 }, { x: -480, y: 52, z: 90, s: 1.2 }, { x: -350, y: 60, z: 220, s: 1.3 },
-    { x: -200, y: 54, z: 80, s: 1.1 }, { x: -60, y: 58, z: -40, s: 1.4 }, { x: 40, y: 50, z: 120, s: 1.2 },
-    { x: 180, y: 56, z: 60, s: 1.3 }, { x: 300, y: 52, z: 190, s: 1.5 }, { x: 450, y: 58, z: 90, s: 1.2 },
-    { x: 600, y: 54, z: 210, s: 1.4 }, { x: 720, y: 56, z: 70, s: 1.3 },
-    { x: -580, y: 62, z: -220, s: 1.4 }, { x: -420, y: 55, z: -150, s: 1.2 }, { x: -280, y: 58, z: -240, s: 1.3 },
-    { x: -120, y: 52, z: -320, s: 1.5 }, { x: 0, y: 64, z: -440, s: 1.4 }, { x: 140, y: 56, z: -250, s: 1.2 },
-    { x: 280, y: 60, z: -180, s: 1.4 }, { x: 440, y: 54, z: -260, s: 1.3 }, { x: 620, y: 58, z: -190, s: 1.5 },
-    { x: -400, y: 56, z: 420, s: 1.3 }, { x: -250, y: 60, z: 480, s: 1.4 }, { x: -80, y: 52, z: 380, s: 1.2 },
-    { x: 80, y: 58, z: 400, s: 1.3 }, { x: 250, y: 54, z: 460, s: 1.4 }, { x: 420, y: 62, z: 430, s: 1.3 },
-    { x: 580, y: 56, z: 490, s: 1.2 }, { x: -160, y: 54, z: 260, s: 1.1 }
+    { x: -620, y: 145, z: 180, s: 2.2 }, { x: -480, y: 138, z: 90, s: 2.0 }, { x: -350, y: 152, z: 220, s: 2.1 },
+    { x: -220, y: 140, z: 140, s: 1.9 }, { x: -140, y: 148, z: -160, s: 2.2 }, { x: 120, y: 135, z: 150, s: 2.0 },
+    { x: 220, y: 142, z: 80, s: 2.1 }, { x: 340, y: 138, z: 190, s: 2.3 }, { x: 480, y: 146, z: 90, s: 2.0 },
+    { x: 620, y: 140, z: 210, s: 2.2 }, { x: 740, y: 144, z: 70, s: 2.1 },
+    { x: -580, y: 155, z: -220, s: 2.2 }, { x: -420, y: 142, z: -150, s: 1.9 }, { x: -280, y: 146, z: -240, s: 2.1 },
+    { x: -120, y: 138, z: -320, s: 2.3 }, { x: 0, y: 158, z: -440, s: 2.2 }, { x: 140, y: 144, z: -250, s: 2.0 },
+    { x: 280, y: 150, z: -180, s: 2.2 }, { x: 440, y: 142, z: -260, s: 2.1 }, { x: 620, y: 148, z: -190, s: 2.3 },
+    { x: -400, y: 144, z: 420, s: 2.1 }, { x: -250, y: 150, z: 480, s: 2.2 }, { x: -80, y: 138, z: 380, s: 1.9 },
+    { x: 80, y: 146, z: 400, s: 2.1 }, { x: 250, y: 140, z: 460, s: 2.2 }, { x: 420, y: 154, z: 430, s: 2.1 },
+    { x: 580, y: 144, z: 490, s: 2.0 }, { x: -180, y: 142, z: 280, s: 1.9 }
   ];
   cloudPositions.forEach((cp, idx) => {
     createPuffyCloud(`world-cloud-${idx}`, cp.x, cp.y, cp.z, cp.s);
@@ -581,21 +513,23 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
     {
       time: 0,
       name: 'dawn',
-      clearColor: new Color4(0.98, 0.88, 0.80, 1),
-      fogColor: new Color3(0.98, 0.84, 0.72),
-      // 5-Stop Sky Gradient
-      zenith: Color3.FromHexString('#4f86c6'),
-      upper: Color3.FromHexString('#82a4d4'),
+      clearColor: new Color4(0.98, 0.88, 0.82, 1),
+      fogColor: new Color3(0.98, 0.86, 0.78),
+      // 5-Stop Sky Gradient: Bình minh pastel ngọt ngào
+      zenith: Color3.FromHexString('#0284c7'),
+      upper: Color3.FromHexString('#60a5fa'),
       trans: Color3.FromHexString('#f472b6'),
-      haze: Color3.FromHexString('#fde047'),
+      haze: Color3.FromHexString('#fde68a'),
       ground: Color3.FromHexString('#fed7aa'),
-      ambIntensity: 0.48,
+      ambIntensity: 0.52,
       ambColor: Color3.FromHexString('#fdf2e9'),
       ambGround: Color3.FromHexString('#9bb698'),
       sunIntensity: 0.54,
       sunColor: Color3.FromHexString('#ffe5bc'),
       sunDir: new Vector3(-0.82, -0.32, -0.25),
       sunDiscAlpha: 0.85,
+      sunGlowIntensity: 1.15,
+      sunGlowExponent: 16.0,
       starAlpha: 0.0,
       moonAlpha: 0.0,
       auroraAlpha: 0.0,
@@ -604,26 +538,31 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       fireflyRate: 0,
       shadowDarkness: 0.22,
       lampIntensity: 0.15,
-      cloudTint: Color3.FromHexString('#fed7aa'),
+      cloudTint: Color3.FromHexString('#fff7ed'),
+      cloudRimColor: Color3.FromHexString('#fef08a'),
+      cloudTopTint: Color3.FromHexString('#fff7ed'),
+      cloudBaseTint: Color3.FromHexString('#fbcfe8'),
     },
     {
       time: 60,
       name: 'day',
       clearColor: new Color4(0.85, 0.93, 0.99, 1),
       fogColor: new Color3(0.88, 0.94, 0.99),
-      // 5-Stop Sky Gradient: Bầu trời trong trẻo tươi mát không cháy chói
-      zenith: Color3.FromHexString('#1e40af'),
+      // 5-Stop Sky Gradient: Bầu trời trong xanh tươi mát rực rỡ phong cách Ghibli
+      zenith: Color3.FromHexString('#0284c7'),
       upper: Color3.FromHexString('#38bdf8'),
-      trans: Color3.FromHexString('#bae6fd'),
-      haze: Color3.FromHexString('#f0f9ff'),
-      ground: Color3.FromHexString('#f8fafc'),
-      ambIntensity: 0.50,
-      ambColor: Color3.FromHexString('#e0f2fe'),
+      trans: Color3.FromHexString('#7dd3fc'),
+      haze: Color3.FromHexString('#e0f2fe'),
+      ground: Color3.FromHexString('#f0f9ff'),
+      ambIntensity: 0.62,
+      ambColor: Color3.FromHexString('#edf0eb'),
       ambGround: Color3.FromHexString('#9bb698'),
-      sunIntensity: 0.60,
-      sunColor: Color3.FromHexString('#fff7ed'),
+      sunIntensity: 0.52,
+      sunColor: Color3.FromHexString('#fffbeb'),
       sunDir: new Vector3(-0.45, -0.85, -0.32),
       sunDiscAlpha: 1.0,
+      sunGlowIntensity: 0.85,
+      sunGlowExponent: 28.0,
       starAlpha: 0,
       moonAlpha: 0,
       auroraAlpha: 0.0,
@@ -633,25 +572,30 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       shadowDarkness: 0.20,
       lampIntensity: 0.0,
       cloudTint: Color3.White(),
+      cloudRimColor: Color3.FromHexString('#fef9c3'),
+      cloudTopTint: Color3.White(),
+      cloudBaseTint: Color3.FromHexString('#e0f2fe'),
     },
     {
       time: 120,
       name: 'dusk',
       clearColor: new Color4(0.98, 0.72, 0.58, 1),
       fogColor: new Color3(0.98, 0.68, 0.55),
-      // 5-Stop Sky Gradient
-      zenith: Color3.FromHexString('#4c1d95'),
-      upper: Color3.FromHexString('#7c3aed'),
-      trans: Color3.FromHexString('#f43f5e'),
-      haze: Color3.FromHexString('#fb923c'),
+      // 5-Stop Sky Gradient: Hoàng hôn tím hồng rực rỡ phong cách Makoto Shinkai
+      zenith: Color3.FromHexString('#311042'),
+      upper: Color3.FromHexString('#6b21a8'),
+      trans: Color3.FromHexString('#db2777'),
+      haze: Color3.FromHexString('#f97316'),
       ground: Color3.FromHexString('#fed7aa'),
-      ambIntensity: 0.48,
+      ambIntensity: 0.50,
       ambColor: Color3.FromHexString('#fef3c7'),
       ambGround: Color3.FromHexString('#c2aa88'),
       sunIntensity: 0.54,
       sunColor: Color3.FromHexString('#ffdab9'),
       sunDir: new Vector3(0.85, -0.22, 0.22),
       sunDiscAlpha: 0.95,
+      sunGlowIntensity: 1.35,
+      sunGlowExponent: 14.0,
       starAlpha: 0.35,
       moonAlpha: 0.55,
       auroraAlpha: 0.0,
@@ -661,17 +605,20 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       shadowDarkness: 0.22,
       lampIntensity: 0.95,
       cloudTint: Color3.FromHexString('#fbcfe8'),
+      cloudRimColor: Color3.FromHexString('#fb923c'),
+      cloudTopTint: Color3.FromHexString('#fef08a'),
+      cloudBaseTint: Color3.FromHexString('#c084fc'),
     },
     {
       time: 180,
       name: 'night',
-      clearColor: new Color4(0.06, 0.09, 0.18, 1),
-      fogColor: new Color3(0.07, 0.10, 0.20),
-      // 5-Stop Sky Gradient: Bầu trời đêm Ghibli thơ mộng (Deep Indigo -> Sapphire -> Lavender Violet)
-      zenith: Color3.FromHexString('#0a0e27'),
-      upper: Color3.FromHexString('#151b4a'),
-      trans: Color3.FromHexString('#2a1b54'),
-      haze: Color3.FromHexString('#1e3a8a'),
+      clearColor: new Color4(0.04, 0.07, 0.15, 1),
+      fogColor: new Color3(0.05, 0.08, 0.18),
+      // 5-Stop Sky Gradient: Bầu trời đêm vũ trụ sâu thẳm (Cosmic Navy & Sapphire)
+      zenith: Color3.FromHexString('#050816'),
+      upper: Color3.FromHexString('#0c1033'),
+      trans: Color3.FromHexString('#1e1b4b'),
+      haze: Color3.FromHexString('#172554'),
       ground: Color3.FromHexString('#0f172a'),
       ambIntensity: 0.50,
       ambColor: Color3.FromHexString('#b4c6ff'),
@@ -680,7 +627,8 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       sunColor: Color3.FromHexString('#dbeafe'),
       sunDir: new Vector3(-0.55, -0.65, 0.52),
       sunDiscAlpha: 0.0,
-      starAlpha: 1.0,
+      sunGlowIntensity: 0.0,
+      sunGlowExponent: 32.0,
       moonAlpha: 1.0,
       auroraAlpha: 0.65,
       sunDustRate: 0,
@@ -688,14 +636,17 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       fireflyRate: 48,
       shadowDarkness: 0.20,
       lampIntensity: 1.85,
-      cloudTint: Color3.FromHexString('#474e68'),
+      cloudTint: Color3.FromHexString('#334155'),
+      cloudRimColor: Color3.FromHexString('#93c5fd').scale(0.35),
+      cloudTopTint: Color3.FromHexString('#475569'),
+      cloudBaseTint: Color3.FromHexString('#1e293b'),
     },
   ];
 
   let lastGradFactor = -999;
   let lastPhaseName = '';
 
-  return {
+  const atmosphere = {
     setTime(clockSeconds) {
       const trace = (label, action) => typeof window !== 'undefined' && window.__farmDebug
         ? window.__farmDebug.measure(`clock: ${label}`, action) : action();
@@ -730,16 +681,42 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       // Hermite smoothstep lerp
       const s = factor * factor * (3 - 2 * factor);
 
-      // Cập nhật DynamicTexture 5-Stop Gradient khi factor thay đổi
-      if (Math.abs(factor - lastGradFactor) > 0.02 || currentPhase !== lastPhaseName) {
+      // Cập nhật Procedural Sky Shader thông số thời gian thực trên GPU (zero CPU canvas draw)
+      if (Math.abs(factor - lastGradFactor) > 0.015 || currentPhase !== lastPhaseName) {
         lastGradFactor = factor;
         lastPhaseName = currentPhase;
-        const curZenith = Color3.Lerp(k1.zenith, k2.zenith, s).toHexString();
-        const curUpper = Color3.Lerp(k1.upper, k2.upper, s).toHexString();
-        const curTrans = Color3.Lerp(k1.trans, k2.trans, s).toHexString();
-        const curHaze = Color3.Lerp(k1.haze, k2.haze, s).toHexString();
-        const curGround = Color3.Lerp(k1.ground, k2.ground, s).toHexString();
-        renderSkyGradient(curZenith, curUpper, curTrans, curHaze, curGround);
+        const curZenith = Color3.Lerp(k1.zenith, k2.zenith, s);
+        const curUpper = Color3.Lerp(k1.upper, k2.upper, s);
+        const curTrans = Color3.Lerp(k1.trans, k2.trans, s);
+        const curHaze = Color3.Lerp(k1.haze, k2.haze, s);
+        const curGround = Color3.Lerp(k1.ground, k2.ground, s);
+        const curSunColor = Color3.Lerp(k1.sunColor, k2.sunColor, s);
+        const curGlowInt = (k1.sunGlowIntensity ?? 0.75) + ((k2.sunGlowIntensity ?? 0.75) - (k1.sunGlowIntensity ?? 0.75)) * s;
+        const curGlowExp = (k1.sunGlowExponent ?? 28.0) + ((k2.sunGlowExponent ?? 28.0) - (k1.sunGlowExponent ?? 28.0)) * s;
+
+        const curFogColor = Color3.Lerp(k1.fogColor, k2.fogColor, s);
+        const curCloudTint = Color3.Lerp(k1.cloudTint, k2.cloudTint, s);
+        const curTopTint = Color3.Lerp(k1.cloudTopTint || curCloudTint, k2.cloudTopTint || curCloudTint, s);
+        const curBaseTint = Color3.Lerp(k1.cloudBaseTint || curCloudTint, k2.cloudBaseTint || curCloudTint, s);
+
+        // Vector hướng tới vị trí Mặt Trời trên vòm trời (ngược chiều vector chiếu sáng sunLight)
+        _tmpSunSkyDir.copyFrom(sunLight.direction).scaleInPlace(-1).normalize();
+
+        proceduralSky.setSkyParameters({
+          zenith: curZenith,
+          upper: curUpper,
+          trans: curTrans,
+          haze: curHaze,
+          ground: curGround,
+          fogColor: curFogColor,
+          sunDir: _tmpSunSkyDir,
+          sunColor: curSunColor,
+          sunGlowIntensity: curGlowInt,
+          sunGlowExponent: curGlowExp,
+          cloudTopColor: curTopTint,
+          cloudBaseColor: curBaseTint,
+          cloudAlpha: currentPhase === 'night' ? 0.35 : 0.85,
+        });
       }
 
       trace('clear / fog', () => {
@@ -785,22 +762,22 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       }
       const gaslightMat = scene.getMaterialByName('ghibli-lamp-glow');
       if (gaslightMat) {
-        const emissiveBoost = 0.5 + curLamp * 0.65;
+        const emissiveBoost = 0.06 + curLamp * 0.9;
         gaslightMat.emissiveColor = new Color3(1.0 * emissiveBoost, 0.72 * emissiveBoost, 0.22 * emissiveBoost);
       }
       const townGlassWarmMat = scene.getMaterialByName('town-glass-warm');
       if (townGlassWarmMat) {
-        const windowBoost = 0.4 + curLamp * 0.6;
+        const windowBoost = 0.06 + curLamp * 0.9;
         townGlassWarmMat.emissiveColor = new Color3(0.98 * windowBoost, 0.86 * windowBoost, 0.48 * windowBoost);
       }
       const lanternAmberMat = scene.getMaterialByName('town-lantern-amber');
       if (lanternAmberMat) {
-        const amberBoost = 0.5 + curLamp * 0.65;
+        const amberBoost = 0.06 + curLamp * 0.9;
         lanternAmberMat.emissiveColor = new Color3(0.98 * amberBoost, 0.62 * amberBoost, 0.12 * amberBoost);
       }
       const lanternWarmGlowMat = scene.getMaterialByName('lantern-warm-glow');
       if (lanternWarmGlowMat) {
-        const glowBoost = 0.5 + curLamp * 0.65;
+        const glowBoost = 0.06 + curLamp * 0.9;
         lanternWarmGlowMat.emissiveColor = new Color3(0.98 * glowBoost, 0.62 * glowBoost, 0.12 * glowBoost);
       }
       });
@@ -818,18 +795,29 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       moonGlowOuter.visibility = moonVisibility;
 
       const starVisibility = k1.starAlpha + (k2.starAlpha - k1.starAlpha) * s;
-      starMat.alpha = starVisibility;
-
-      // Cập nhật Cực Quang
-      const curAurora = k1.auroraAlpha + (k2.auroraAlpha - k1.auroraAlpha) * s;
-      auroraMat.alpha = curAurora;
+      milkyWaySystem.setVisibility(starVisibility);
       });
 
-      // Cập nhật mây
+      // Cập nhật mây nghệ thuật Ghibli (Two-Tone Shading & Golden Rim Light)
       const curCloudTint = Color3.Lerp(k1.cloudTint, k2.cloudTint, s);
-      cloudMat.diffuseColor = curCloudTint;
-      cirrusMat.diffuseColor = curCloudTint;
-      cumulusMat.diffuseColor = curCloudTint;
+      const curCloudRim = Color3.Lerp(k1.cloudRimColor || Color3.White(), k2.cloudRimColor || Color3.White(), s);
+      const curTopTint = Color3.Lerp(k1.cloudTopTint || curCloudTint, k2.cloudTopTint || curCloudTint, s);
+      const curBaseTint = Color3.Lerp(k1.cloudBaseTint || curCloudTint, k2.cloudBaseTint || curCloudTint, s);
+
+      cloudRimFresnel.leftColor.copyFrom(curCloudRim);
+      cloudRimFresnel.rightColor.copyFrom(curTopTint);
+
+      cumulusTopMat.diffuseColor.copyFrom(curTopTint);
+      cumulusTopMat.emissiveColor.copyFrom(curTopTint);
+
+      cumulusBaseMat.diffuseColor.copyFrom(curBaseTint);
+      cumulusBaseMat.emissiveColor.copyFrom(curBaseTint);
+
+      cloudMat.diffuseColor.copyFrom(curTopTint);
+      cloudMat.emissiveColor.copyFrom(curTopTint);
+
+      cirrusMat.diffuseColor.copyFrom(curTopTint);
+      cirrusMat.emissiveColor.copyFrom(curTopTint);
 
       // Cập nhật preset điện ảnh
       if (typeof window !== 'undefined' && window.__farmDebug) {
@@ -853,15 +841,14 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       const cam = scene.activeCamera;
       if (cam) {
         // Vòm trời bám theo camera để luôn bao bọc thế giới không bao giờ bị cắt
-        skyDome.position.x = cam.position.x;
-        skyDome.position.z = cam.position.z;
+        proceduralSky.updateCamera(cam);
 
-        // Định vị Mặt Trời Anime theo hướng ngược lại với sunLight.direction tại khoảng cách viễn cảnh 2200m
-        const sunDist = 2200;
+        // Định vị Mặt Trời Anime theo hướng ngược lại với sunLight.direction tại khoảng cách viễn cảnh 210m
+        const sunDist = 210;
         sunLight.direction.normalizeToRef(_tmpNormDir);
         sunRoot.position.set(
           cam.position.x - _tmpNormDir.x * sunDist,
-          Math.max(120, cam.position.y - _tmpNormDir.y * sunDist),
+          Math.max(45, cam.position.y - _tmpNormDir.y * sunDist),
           cam.position.z - _tmpNormDir.z * sunDist
         );
 
@@ -876,7 +863,7 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
         // Định vị Mặt Trăng ở hướng đối diện
         moonRoot.position.set(
           cam.position.x + _tmpNormDir.x * sunDist * 0.95,
-          Math.max(220, cam.position.y + _tmpNormDir.y * sunDist * 0.95),
+          Math.max(65, cam.position.y + _tmpNormDir.y * sunDist * 0.95),
           cam.position.z + _tmpNormDir.z * sunDist * 0.95
         );
       }
@@ -892,8 +879,8 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       // Trôi mây lụa viễn cảnh cực kỳ êm ái
       cirrusBands.forEach(b => {
         b.node.position.x += dt * b.speed;
-        if (b.node.position.x > 1800) {
-          b.node.position.x = -1800;
+        if (b.node.position.x > 260) {
+          b.node.position.x = -260;
         }
       });
 
@@ -902,44 +889,11 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
         m.mesh.rotation.y += dt * m.speed * 0.05;
       });
 
+      // Cập nhật mây GPU động trên vòm trời
+      proceduralSky.updateTime(dt);
 
-
-      // Sao băng rơi ban đêm
-      if (currentPhase === 'night') {
-        shootingStarTimer += dt;
-        if (shootingStarTimer > 18.0 && shootingStarProgress < 0) {
-          shootingStarTimer = 0;
-          shootingStarProgress = 0;
-          // Xuất phát ngẫu nhiên trên vòm trời cao
-          const startX = (Math.random() - 0.5) * 800;
-          const startZ = -600 - Math.random() * 600;
-          shootingStar.position.set(startX, 420, startZ);
-        }
-
-        if (shootingStarProgress >= 0) {
-          shootingStarProgress += dt * 1.35;
-          shootingStar.position.x += dt * 380;
-          shootingStar.position.y -= dt * 260;
-          shootingStar.position.z += dt * 180;
-
-          // Alpha mờ dần ở hai đầu
-          if (shootingStarProgress < 0.25) {
-            shootMat.alpha = shootingStarProgress / 0.25;
-          } else if (shootingStarProgress > 0.75) {
-            shootMat.alpha = Math.max(0, (1.0 - shootingStarProgress) / 0.25);
-          } else {
-            shootMat.alpha = 1.0;
-          }
-
-          if (shootingStarProgress >= 1.0) {
-            shootingStarProgress = -1;
-            shootMat.alpha = 0;
-          }
-        }
-      } else {
-        shootMat.alpha = 0;
-        shootingStarProgress = -1;
-      }
+      // Cập nhật Dải Ngân Hà, Sao nhấp nháy đa tần & Sao băng
+      milkyWaySystem.update(dt, cam?.position);
     },
 
     getPhase() {
@@ -951,6 +905,8 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
     },
 
     dispose() {
+      cumulusTopMat.dispose();
+      cumulusBaseMat.dispose();
       sunDust.dispose();
       fallingPetals.dispose();
       firefliesFarm.dispose();
@@ -958,7 +914,8 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       firefliesFountain.dispose();
       glowTex.dispose();
       petalTex.dispose();
-      skyTex.dispose();
+      proceduralSky.dispose();
+      milkyWaySystem.dispose();
       sunTex.dispose();
       atmosphereRoot.dispose();
       villageNightLight.dispose();
@@ -968,4 +925,9 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
       northGatewayNightLight.dispose();
     },
   };
+
+  // Khởi tạo ngay trạng thái bầu trời ban ngày mặc định (frame 0) không cần chờ timer
+  atmosphere.setTime(60);
+
+  return atmosphere;
 }

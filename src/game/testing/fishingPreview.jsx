@@ -13,7 +13,7 @@ function Preview(){
  };
  const cast=()=>{const now=Date.now();current.current.pending={id:crypto.randomUUID(),zone:'lake',x:162,z:2,phase:'waiting',rodId:'rod_bamboo',biteAt:now+2500,expiresAt:now+4900,fishId:'carp',weight:1.2};setFishing({...current.current});};
  return <main style={{height:'100dvh',background:'linear-gradient(160deg,#b9e5e2,#418baa)',fontFamily:'system-ui',position:'relative'}}>
-  <div style={{padding:24,color:'#183f50'}}><h1>Kiểm thử câu cá</h1><p>{status}</p><p>Giữ dây từ 20–80%; thả khi cá vùng vẫy.</p></div>
+  <div style={{padding:24,color:'#183f50'}}><h1>Kiểm thử câu cá</h1><p>{status}</p><p>F thả câu → chờ cá cắn → F giật cần. Cá hiếm mới cần giữ/thả để kéo.</p></div>
   <FishingHUD fishing={fishing} connected water="lake" send={send} cast={cast} serverOffset={0} caught={caught} clearCaught={()=>setCaught(null)}/>
  </main>;
 }

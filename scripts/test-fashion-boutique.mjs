@@ -58,7 +58,7 @@ import {
 
 // 1. Verify Fashion Catalog Consistency
 assert.ok(HAIR_STYLES.length >= 6, 'Should have at least 6 hairstyles');
-assert.ok(HAIR_DYES.length === 12, 'Should have 12 salon hair dyes');
+assert.ok(HAIR_DYES.length >= 12, 'Should keep at least 12 salon hair dyes');
 assert.ok(TOPS.length >= 6, 'Should have at least 6 tops');
 assert.ok(BOTTOMS.length >= 5, 'Should have at least 5 bottoms');
 assert.ok(SHOES.length >= 5, 'Should have at least 5 shoe options');

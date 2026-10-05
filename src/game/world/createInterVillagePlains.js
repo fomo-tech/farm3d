@@ -20,6 +20,8 @@ import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 import { WORLD_PALETTE, createCozyMaterial } from './worldDesignSystem.js';
 import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
+import { ALL_BRIDGES } from '../../../shared/bridgeConfig.js';
+import { buildBridge } from './nature/BridgeSystem.js';
 
 function mat(scene, name, hex, emissiveHex = null, specular = 0.08) {
   const m = new StandardMaterial(name, scene);
@@ -103,15 +105,12 @@ export function* createInterVillagePlainsSteps(scene, foliage, shadows) {
   const valleyCenter = { x: 150, z: 180 };
     yield;
 
-  // Suối đá cuội tự nhiên có cầu gỗ uốn cong
+  // Suối đá cuội tự nhiên có cầu gỗ vòm uốn cong đồng bộ
   if (!isPointOnRoadCorridor(valleyCenter.x, valleyCenter.z, 4.0) && !isPointInsideAnyFarmLot(valleyCenter.x, valleyCenter.z, 2.0)) {
-    spawnModelSync(scene, MODEL_PATHS.town.bridgeWood, {
-      position: new Vector3(valleyCenter.x, 0.05, valleyCenter.z),
-      rotation: new Vector3(0, Math.PI / 4, 0),
-      scaling: new Vector3(1.6, 1.6, 1.6),
-      parent: root,
-      name: 'valley-wood-bridge',
-    });
+    const bridgeValley = ALL_BRIDGES.find(b => b.id === 'bridge-valley-wood');
+    if (bridgeValley) {
+      buildBridge(scene, bridgeValley, root, shadows);
+    }
     foliage.createRusticBench(valleyCenter.x - 5.5, valleyCenter.z - 3.8, 0.8);
   }
     yield;

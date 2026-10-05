@@ -1,10 +1,28 @@
 import React, { useState } from 'react';
+import {
+  Icon3dMegaphoneGold,
+  Icon3dSparkleStar,
+  Icon3dGiftBoxRibbon,
+  Icon3dStamp,
+  Icon3dGoldCoin,
+  Icon3dCarrot,
+  Icon3dFertilizerBag,
+  Icon3dStrawberry,
+  Icon3dTrophyCup,
+  Icon3dCrownRibbon,
+  Icon3dStar,
+  Icon3dManager,
+  Icon3dSmartPhone,
+} from './icons3d/GameIcons3D.jsx';
 
 /**
- * BẢN TIN QUẢNG TRƯỜNG & SỰ KIỆN KAIA (PLAZA EVENT NOTICE MODAL)
+ * BẢNG TIN QUẢNG TRƯỜNG & SỰ KIỆN KAIA (PLAZA EVENT NOTICE MODAL)
  * Thiết kế phong cách Play Together Cute-Core
  */
 export function PlazaEventNoticeModal({
+  connected = false,
+  rewardState = {},
+  rewardNotice = '',
   onClaimDailyReward = null,
   onRedeemCode = null,
   onNavigateVenue = null,
@@ -13,14 +31,14 @@ export function PlazaEventNoticeModal({
   const [activeTab, setActiveTab] = useState('ads'); // 'ads' | 'events' | 'daily' | 'giftcode'
   const [giftCode, setGiftCode] = useState('');
   const [codeMessage, setCodeMessage] = useState(null);
-  const [claimedDay, setClaimedDay] = useState(false);
+  const claimedDay = rewardState?.daily?.includes(new Date().toISOString().slice(0,10));
   const [bookingForm, setBookingForm] = useState({ brand: '', contact: '', package: 'led_diamond' });
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
   const events = [
     {
       id: 'fishing',
-      title: '🎣 Đại Hội Câu Cá Hồ Pha Lê',
+      title: '★ Đại Hội Câu Cá Hồ Pha Lê',
       tag: 'HOT EVENT',
       tagColor: '#ef4444',
       venue: 'fishing',
@@ -31,7 +49,7 @@ export function PlazaEventNoticeModal({
     },
     {
       id: 'fashion',
-      title: '👗 Tuần Lễ Thời Trang Sophie',
+      title: '★ Tuần Lễ Thời Trang Sophie',
       tag: 'FASHION WEEK',
       tagColor: '#ec4899',
       venue: 'fashion',
@@ -42,7 +60,7 @@ export function PlazaEventNoticeModal({
     },
     {
       id: 'casino',
-      title: '🎰 Vòng Quay May Mắn Casino Kaia',
+      title: '★ Vòng Quay May Mắn Casino Kaia',
       tag: 'JACKPOT',
       tagColor: '#f59e0b',
       venue: 'casino',
@@ -53,7 +71,7 @@ export function PlazaEventNoticeModal({
     },
     {
       id: 'supplies',
-      title: '🌱 Lễ Hội Mùa Màng Bội Thu',
+      title: '★ Lễ Hội Mùa Màng Bội Thu',
       tag: 'FARM BOOST',
       tagColor: '#22c55e',
       venue: 'supplies',
@@ -64,18 +82,10 @@ export function PlazaEventNoticeModal({
     },
   ];
 
-  const dailyDays = [
-    { day: 1, reward: '100 Xu', icon: '🪙', done: true },
-    { day: 2, reward: '5 Hạt Cà Rốt', icon: '🥕', done: true },
-    { day: 3, reward: '200 Xu', icon: '🪙', done: claimedDay },
-    { day: 4, reward: 'Phân Bón x2', icon: '🧪', done: false },
-    { day: 5, reward: '500 Xu', icon: '💰', done: false },
-    { day: 6, reward: '5 Hạt Dâu Tây', icon: '🍓', done: false },
-    { day: 7, reward: 'Cúp Vàng Kaia', icon: '🏆', done: false },
-  ];
+  const dailyDays = [{day:1,reward:'200 Xu',icon:<Icon3dGoldCoin size={24}/>,done:claimedDay}];
 
   const handleClaim = () => {
-    setClaimedDay(true);
+    if (!connected || claimedDay) return;
     onClaimDailyReward?.({ day: 3, reward: '200 Xu' });
   };
 
@@ -84,19 +94,10 @@ export function PlazaEventNoticeModal({
     const clean = giftCode.trim().toUpperCase();
     if (!clean) return;
 
-    const validCodes = {
-      KAIAFARM: { text: 'Nhận thành công 500 Xu + 10 Hạt Cà Chua!', coins: 500 },
-      PLAYTOGETHER: { text: 'Nhận thành công Cần Câu VIP + 1000 Xu!', coins: 1000 },
-      CHAOCUDAN: { text: 'Nhận thành công 300 Xu chào đón cư dân mới!', coins: 300 },
-    };
-
-    if (validCodes[clean]) {
-      setCodeMessage({ success: true, text: validCodes[clean].text });
-      onRedeemCode?.(clean, validCodes[clean]);
-      setGiftCode('');
-    } else {
-      setCodeMessage({ success: false, text: 'Mã Giftcode không đúng hoặc đã hết hạn.' });
-    }
+    if (!connected) return;
+    if (rewardState?.codes?.includes(clean)) { setCodeMessage({success:false,text:'Bạn đã sử dụng mã này.'});return; }
+    setCodeMessage({success:false,text:'Đang gửi server xác thực — xem thông báo kết quả trong game.'});
+    onRedeemCode?.(clean);
   };
 
   return (
@@ -111,7 +112,7 @@ export function PlazaEventNoticeModal({
         {/* Header */}
         <header className="pt-modal-header bb-header">
           <div className="bb-title-group">
-            <span className="bb-megaphone-icon">📢</span>
+            <span className="bb-megaphone-icon" style={{ display: 'flex', alignItems: 'center' }}><Icon3dMegaphoneGold size={28} /></span>
             <div>
               <h2 className="pt-modal-title bb-title">BẢN TIN SỰ KIỆN QUẢNG TRƯỜNG</h2>
               <p className="bb-subtitle">Thông báo hoạt động, giải đấu & quà tặng cư dân</p>
@@ -126,25 +127,25 @@ export function PlazaEventNoticeModal({
             className={`bb-tab-btn ${activeTab === 'ads' ? 'active' : ''}`}
             onClick={() => setActiveTab('ads')}
           >
-            📢 Đặt Quảng Cáo VIP
+            <Icon3dMegaphoneGold size={16} /> Đặt Quảng Cáo VIP
           </button>
           <button
             className={`bb-tab-btn ${activeTab === 'events' ? 'active' : ''}`}
             onClick={() => setActiveTab('events')}
           >
-            🔥 Sự Kiện Hot
+            <Icon3dSparkleStar size={16} /> Sự Kiện Hot
           </button>
           <button
             className={`bb-tab-btn ${activeTab === 'daily' ? 'active' : ''}`}
             onClick={() => setActiveTab('daily')}
           >
-            🎁 Quà Đăng Nhập
+            <Icon3dGiftBoxRibbon size={16} /> Quà Đăng Nhập
           </button>
           <button
             className={`bb-tab-btn ${activeTab === 'giftcode' ? 'active' : ''}`}
             onClick={() => setActiveTab('giftcode')}
           >
-            🎟️ Nhập Giftcode
+            <Icon3dStamp size={16} /> Nhập Giftcode
           </button>
         </div>
 
@@ -184,14 +185,14 @@ export function PlazaEventNoticeModal({
         {activeTab === 'daily' && (
           <div className="bb-daily-container">
             <div className="bb-daily-banner">
-              <h4>Điểm Danh 7 Ngày Nhận Thưởng Lớn!</h4>
-              <p>Mỗi ngày online nhận thưởng xu, phân bón và hạt giống hiếm.</p>
+              <h4>Điểm danh hằng ngày · 200 Xu</h4>
+              <p>Mỗi tài khoản nhận một lần/ngày UTC. Trạng thái được lưu trên server.</p>
             </div>
 
             <div className="bb-daily-grid">
               {dailyDays.map((d) => (
-                <div key={d.day} className={`bb-day-card ${d.done ? 'claimed' : d.day === 3 && !claimedDay ? 'today' : ''}`}>
-                  <div className="bb-day-num">Ngày {d.day}</div>
+                <div key={d.day} className={`bb-day-card ${d.done ? 'claimed' : 'today'}`}>
+                  <div className="bb-day-num">Hôm nay</div>
                   <div className="bb-day-icon">{d.icon}</div>
                   <div className="bb-day-reward">{d.reward}</div>
                   {d.done && <div className="bb-day-check">✓ Đã nhận</div>}
@@ -203,9 +204,9 @@ export function PlazaEventNoticeModal({
               <button
                 className={`bb-claim-btn ${claimedDay ? 'claimed' : ''}`}
                 onClick={handleClaim}
-                disabled={claimedDay}
+                disabled={!connected || claimedDay}
               >
-                {claimedDay ? '✓ Bạn đã nhận thưởng hôm nay' : '🎁 Nhận Thưởng Ngày 3 (+200 Xu)'}
+                {claimedDay ? '✓ Server đã ghi nhận hôm nay' : 'Nhận thưởng hôm nay (+200 Xu)'}
               </button>
             </div>
           </div>
@@ -215,9 +216,9 @@ export function PlazaEventNoticeModal({
         {activeTab === 'giftcode' && (
           <div className="bb-giftcode-container">
             <div className="bb-giftcode-box">
-              <div className="bb-giftcode-icon">🎟️</div>
+              <div className="bb-giftcode-icon"><Icon3dStamp size={36} /></div>
               <h4>Nhập Giftcode Kaia Nhận Quà Tân Thủ</h4>
-              <p>Nhập các mã quà tặng để nhận hàng trăm Xu, hạt giống và vật phẩm VIP!</p>
+              <p>Server xác thực quà tặng. Mỗi mã chỉ nhận một lần; điểm danh tính theo ngày UTC.</p>
 
               <form onSubmit={handleApplyCode} className="bb-giftcode-form">
                 <input
@@ -227,14 +228,14 @@ export function PlazaEventNoticeModal({
                   onChange={(e) => setGiftCode(e.target.value)}
                   className="bb-giftcode-input"
                 />
-                <button type="submit" className="bb-giftcode-submit">
+                <button type="submit" disabled={!connected} className="bb-giftcode-submit">
                   Kích hoạt
                 </button>
               </form>
 
               {codeMessage && (
                 <div className={`bb-code-alert ${codeMessage.success ? 'success' : 'error'}`}>
-                  {codeMessage.text}
+                  {rewardNotice || codeMessage.text}
                 </div>
               )}
 
@@ -275,11 +276,11 @@ export function PlazaEventNoticeModal({
               </div>
             </div>
 
-            <h4 className="bb-ads-packages-title">💎 Các Gói Quảng Cáo & Tài Trợ Doanh Nghiệp</h4>
+            <h4 className="bb-ads-packages-title">Các Gói Quảng Cáo & Tài Trợ Doanh Nghiệp</h4>
             <div className="bb-packages-grid">
               <div className={`bb-package-card ${bookingForm.package === 'led_diamond' ? 'selected' : ''}`} onClick={() => setBookingForm(prev => ({ ...prev, package: 'led_diamond' }))}>
                 <div className="bb-pkg-header">
-                  <span className="bb-pkg-icon">👑</span>
+                  <span className="bb-pkg-icon"><Icon3dCrownRibbon size={24} /></span>
                   <div>
                     <h5>Gói Kim Cương (Màn LED 15m)</h5>
                     <span className="bb-pkg-badge hot">ĐẮC ĐỊA NHẤT</span>
@@ -294,7 +295,7 @@ export function PlazaEventNoticeModal({
 
               <div className={`bb-package-card ${bookingForm.package === 'gold_sponsor' ? 'selected' : ''}`} onClick={() => setBookingForm(prev => ({ ...prev, package: 'gold_sponsor' }))}>
                 <div className="bb-pkg-header">
-                  <span className="bb-pkg-icon">⭐</span>
+                  <span className="bb-pkg-icon"><Icon3dStar size={24} /></span>
                   <div>
                     <h5>Gói Nhà Tài Trợ Vàng</h5>
                     <span className="bb-pkg-badge best">TƯƠNG TÁC CAO</span>
@@ -309,7 +310,7 @@ export function PlazaEventNoticeModal({
 
               <div className={`bb-package-card ${bookingForm.package === 'exclusive_npc' ? 'selected' : ''}`} onClick={() => setBookingForm(prev => ({ ...prev, package: 'exclusive_npc' }))}>
                 <div className="bb-pkg-header">
-                  <span className="bb-pkg-icon">🤖</span>
+                  <span className="bb-pkg-icon"><Icon3dManager size={24} /></span>
                   <div>
                     <h5>Gói Đại Sứ Thương Hiệu 3D</h5>
                     <span className="bb-pkg-badge vip">ĐỘC QUYỀN</span>
@@ -325,7 +326,7 @@ export function PlazaEventNoticeModal({
 
             <div className="bb-ads-contact-card">
               <div className="bb-contact-header">
-                <span className="bb-contact-icon">☎</span>
+                <span className="bb-contact-icon"><Icon3dSmartPhone size={24} /></span>
                 <div>
                   <h4>Liên Hệ Booking & Hợp Đồng Tài Trợ</h4>
                   <p>Hỗ trợ thiết kế hình ảnh 3D miễn phí cho mọi doanh nghiệp & cá nhân</p>
@@ -349,7 +350,7 @@ export function PlazaEventNoticeModal({
 
               {bookingSuccess ? (
                 <div className="bb-booking-success-msg">
-                  🎉 Cảm ơn quý khách! Ban Quản Trị Kaia đã tiếp nhận yêu cầu và sẽ liên hệ tư vấn qua Zalo / Số điện thoại trong vòng 15 phút.
+                  Cảm ơn quý khách! Ban Quản Trị Kaia đã tiếp nhận yêu cầu và sẽ liên hệ tư vấn qua Zalo / Số điện thoại trong vòng 15 phút.
                 </div>
               ) : (
                 <form
@@ -378,7 +379,7 @@ export function PlazaEventNoticeModal({
                     />
                   </div>
                   <button type="submit" className="bb-ads-submit-btn">
-                    📩 Gửi Yêu Cầu Tư Vấn & Nhận Ưu Đãi 30%
+                    Gửi Yêu Cầu Tư Vấn & Nhận Ưu Đãi 30%
                   </button>
                 </form>
               )}

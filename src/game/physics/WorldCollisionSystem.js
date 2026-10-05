@@ -80,6 +80,26 @@ export class WorldCollisionSystem {
     else this.farmGateStates.delete(farmId);
   }
 
+  attachSceneObstacles(scene) {
+    const pending = [];
+    const known = new WeakSet();
+    const queue = mesh => {
+      if (!known.has(mesh) && /^(?:c-)?lamp-base-/.test(mesh.name)) { known.add(mesh); pending.push(mesh); }
+    };
+    scene.meshes.forEach(queue);
+    scene.onNewMeshAddedObservable.add(queue);
+    this.flushSceneObstacles = () => {
+      for (const mesh of pending.splice(0)) {
+        if (mesh.isDisposed()) continue;
+        mesh.computeWorldMatrix(true);
+        const bounds = mesh.getBoundingInfo().boundingBox;
+        const center = bounds.centerWorld;
+        const extent = bounds.extendSizeWorld;
+        this.addCircle(mesh.name, center.x, center.z, Math.max(extent.x, extent.z));
+      }
+    };
+  }
+
   /**
    * Initializes static landmark and municipal building colliders.
    */
@@ -87,11 +107,6 @@ export class WorldCollisionSystem {
     // 0. Đài phun nước trung tâm (Central Fountain) tại (0, 0)
     // Đường kính hồ 18m, vành đá torus dày 0.7m => bán kính r = 9.35m
     this.addCircle('plaza-central-fountain', TOWN_FOUNTAIN.x, TOWN_FOUNTAIN.z, TOWN_FOUNTAIN.radius);
-
-    // Four low flower islands in the town plaza; keep the cardinal walkways open.
-    [[-14, -14], [14, -14], [-14, 14], [14, 14]].forEach(([x, z], index) => {
-      this.addCircle(`plaza-flowerbed-${index}`, x, z, 2.1);
-    });
     // 1. Tòa Thị Chính (Town Hall) tại (-38, -98): khối đế & thân nhà
     this.addBox('town-hall-main', -50.5, -25.5, -106.0, -92.5);
     this.addBox('town-hall-tower', -42.0, -34.0, -104.0, -96.0);
@@ -428,6 +443,7 @@ export class WorldCollisionSystem {
    * @returns {{ x: number, z: number, collided: boolean }} Resolved safe position
    */
   resolveMovement(curX, curZ, dx, dz, venue = null) {
+    this.flushSceneObstacles?.();
     if (!venue) for (const [id, open] of this.farmGateStates) {
       if (farmBoundaryBlocked(id, open, { x: curX, z: curZ }, { x: curX + dx, z: curZ + dz })) return { x: curX, z: curZ, collided: true };
     }

@@ -7,6 +7,14 @@ import { createToyMaterial } from '../src/game/rendering/PlayTogetherTheme.js';
 assert.equal(readGraphicsQuality(), 'auto');
 assert.equal(calculateRenderDpr({ nativeDpr: 2, width: 1280, height: 720 }), 2);
 assert.equal(calculateRenderDpr({ quality: 'ultra', nativeDpr: 1, width: 1920, height: 1080, scale: .75 }), 1);
+for (const quality of ['ultra', 'balanced']) {
+  assert.equal(calculateRenderDpr({ quality, nativeDpr: 1.5, width: 1920, height: 1080, scale: .85, allowBelowNative: true }), 1.5, 'manual quality preserves native pixels under pressure');
+}
+const comfortable = new AutoGraphicsController();
+for (let i = 0; i < 800; i++) comfortable.sample(30);
+assert.equal(comfortable.scale, 1, 'stable 33 FPS must not blur Auto');
+assert.equal(comfortable.effects, 'balanced');
+assert.equal(calculateRenderDpr({ quality: 'eco', nativeDpr: 2, width: 1280, height: 720, scale: .85 }), .85, 'weak PCs retain a lightweight adaptive preset');
 for (const quality of ['ultra', 'balanced', 'eco']) {
   const dpr = calculateRenderDpr({ quality, nativeDpr: 3, width: 1920, height: 1080 });
   assert.ok(dpr >= .5 && dpr <= 2);

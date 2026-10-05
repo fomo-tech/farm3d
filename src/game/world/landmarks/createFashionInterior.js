@@ -428,7 +428,7 @@ export function* createFashionBoutiqueInterior(scene, config, shadows) {
   nCtx.textAlign = 'center';
   nCtx.textBaseline = 'middle';
   nCtx.font = 'bold 64px "Baloo 2", Segoe UI, sans-serif';
-  nCtx.fillText('👗 CÔ SOPHIE · THỜI TRANG & SALON', 512, 112, 950);
+  nCtx.fillText('★ CÔ SOPHIE · THỜI TRANG & SALON ★', 512, 112, 950);
   nameTexture.update();
 
   const nameMat = new StandardMaterial('fashion-sophie-name-mat', scene);

@@ -122,7 +122,26 @@ export class FarmingSystem {
 
   setTool(tool) {
     this.tool = tool;
-    this.notify?.(`Đã chọn ${({ hand: 'tay', hoe: 'cuốc', seed: 'hạt cà rốt', water: 'bình tưới', harvest: 'giỏ thu hoạch' })[tool]}`);
+    this.notify?.(`Đã chọn ${({ hand: 'thao tác tự động', hoe: 'cuốc', seed: `hạt ${(CROPS[this.getCrop()] || CROPS.carrot).name}`, water: 'bình tưới', harvest: 'giỏ thu hoạch' })[tool]}`);
+  }
+
+  // Reserve before the animation, not at its hit frame. Repeated input must
+  // never replace an animation callback or purchase the same seed twice.
+  runTileAction(tile, animation, commit) {
+    const pendingKey = `${tile.metadata.farmId || this.playerFarmId}:${this.rawTileKey(tile)}`;
+    const player = this.controls.getPlayer?.();
+    this.pendingActions.add(pendingKey);
+    let committed = false;
+    const hit = () => {
+      if (committed || !this.pendingActions.has(pendingKey)) return;
+      committed = true;
+      commit();
+    };
+    if (player) {
+      player.setActiveTool?.(({ till: 'hoe', seed: 'seed', water: 'water', harvest: 'harvest' })[animation]);
+      player.playAction(animation, hit);
+    }
+    else hit();
   }
 
   setPlayerFarmId(farmId) {
@@ -216,6 +235,11 @@ export class FarmingSystem {
   }
 
   applyTool(tile) {
+    if (!tile?.metadata?.interactive || tile.isDisposed?.() || tile.isEnabled?.() === false) return;
+    if (this.controls.getPlayer?.()?.isBusy?.()) {
+      this.notify?.('Đang thao tác · chờ nhân vật hoàn tất rồi chọn ô tiếp theo');
+      return;
+    }
     const isOwner = !tile.metadata?.farmId || tile.metadata.farmId === this.playerFarmId;
     const key = this.key(tile);
     const rawKey = this.rawTileKey(tile);
@@ -234,13 +258,14 @@ export class FarmingSystem {
       : data.state === 'tilled' ? 'seed'
         : data.state === 'planted' ? 'water'
           : data.state === 'watered' ? 'harvest' : null;
-    if (activeTool === 'hand' || (isOwner && expectedTool && activeTool !== expectedTool)) {
+    if (activeTool === 'hand' || (isOwner && expectedTool)) {
       const smart = this.determineSmartTool(tile);
       if (smart === 'inspect') {
         const cropType = CROPS[data.crop] || CROPS.carrot;
         const growMs = data.tutorialFastGrowth ? FARM_CONFIG.care.tutorialGrowMs : cropType.growMs;
         const progress = Math.min(100, Math.round(((Date.now() - data.wateredAt) / growMs) * 100));
-        this.notify?.(`🌱 ${cropType.name} đang lớn (${progress}%) · hãy chờ cây chín để thu hoạch`);
+        const seconds = Math.max(0, Math.ceil((growMs - (Date.now() - data.wateredAt)) / 1000));
+        this.notify?.(`${cropType.name} · ${progress}% · còn ${Math.floor(seconds / 60)} phút ${seconds % 60} giây`);
         return;
       }
       if (smart) {
@@ -266,11 +291,11 @@ export class FarmingSystem {
         return;
       }
       if (activeTool === 'hoe' || activeTool === 'seed') {
-        this.notify?.('⚠️ Đây là đất của hàng xóm · bạn không thể cuốc hoặc gieo hạt!');
+        this.notify?.('Đây là đất của hàng xóm · bạn không thể cuốc hoặc gieo hạt!');
         return;
       }
       if (activeTool === 'harvest') {
-        this.notify?.('🔒 Chỉ chủ nông trại mới có thể thu hoạch nông sản của họ!');
+        this.notify?.('Chỉ chủ nông trại mới có thể thu hoạch nông sản của họ!');
         return;
       }
       // Khách ghé thăm tưới nước giúp (Water Aid)
@@ -284,18 +309,14 @@ export class FarmingSystem {
           this.notify?.('Đang chờ server xác nhận tưới giúp hàng xóm…');
         };
 
-        if (player) {
-          player.playAction('water', () => doNeighborWater());
-        } else {
-          doNeighborWater();
-        }
+        this.runTileAction(tile, 'water', doNeighborWater);
         return;
       }
       if (data.state === 'watered') {
-        this.notify?.('🌱 Vườn của hàng xóm đã được tưới đủ nước và đang lớn nhanh!');
+        this.notify?.('Vườn của hàng xóm đã được tưới đủ nước và đang lớn nhanh!');
         return;
       }
-      this.notify?.('🏡 Đang ghé thăm nông trại hàng xóm · hãy giúp tưới nước khi đất khô!');
+      this.notify?.('Đang ghé thăm nông trại hàng xóm · hãy giúp tưới nước khi đất khô!');
       return;
     }
 
@@ -314,11 +335,7 @@ export class FarmingSystem {
         this.notify?.('Đang chờ server xác nhận cuốc đất…');
       };
 
-      if (player) {
-        player.playAction('till', () => doTill());
-      } else {
-        doTill();
-      }
+      this.runTileAction(tile, 'till', doTill);
     } else if (activeTool === 'seed' && data.state === 'tilled') {
       const crop = CROPS[this.getCrop()] || CROPS.carrot;
       const freeSeeds = this.controls.getFreeSeeds?.() || 0;
@@ -336,11 +353,7 @@ export class FarmingSystem {
         this.notify?.(`Đang chờ server xác nhận gieo ${crop.name}…`);
       };
 
-      if (player) {
-        player.playAction('seed', () => doPlant());
-      } else {
-        doPlant();
-      }
+      this.runTileAction(tile, 'seed', doPlant);
     } else if (activeTool === 'water' && data.state === 'planted') {
       const wateredAt = Date.now();
       const doWater = () => {
@@ -351,11 +364,7 @@ export class FarmingSystem {
         this.notify?.(`Đang chờ server xác nhận tưới ${CROPS[data.crop]?.name || 'cây'}…`);
       };
 
-      if (player) {
-        player.playAction('water', () => doWater());
-      } else {
-        doWater();
-      }
+      this.runTileAction(tile, 'water', doWater);
     } else {
       const growMs = data.tutorialFastGrowth ? FARM_CONFIG.care.tutorialGrowMs : (CROPS[data.crop]?.growMs || CROPS.carrot.growMs);
       if ((activeTool === 'hand' || activeTool === 'harvest') && data.state === 'watered' && Date.now() - data.wateredAt >= growMs) {
@@ -370,11 +379,7 @@ export class FarmingSystem {
           this.notify?.(`Đang chờ server xác nhận thu hoạch ${CROPS[data.crop]?.name || 'cà rốt'}…`);
         };
 
-        if (player) {
-          player.playAction('harvest', () => doHarvest());
-        } else {
-          doHarvest();
-        }
+        this.runTileAction(tile, 'harvest', doHarvest);
       } else {
         this.notify?.('Công cụ này chưa phù hợp với trạng thái ô đất');
       }
@@ -385,6 +390,10 @@ export class FarmingSystem {
     let nearest = null;
     let nearestDistance = Infinity;
     for (const tile of this.tiles) {
+      if (!tile.metadata?.interactive || tile.isDisposed?.() || tile.isEnabled?.() === false) continue;
+      const owner = !tile.metadata.farmId || tile.metadata.farmId === this.playerFarmId;
+      if (owner && tile.metadata.index >= this.getUnlockedPlots()) continue;
+      if (!this.determineSmartTool(tile)) continue;
       const tilePosition = worldPosition(tile);
       const distance = Math.hypot(tilePosition.x - position.x, tilePosition.z - position.z);
       if (distance < nearestDistance) {

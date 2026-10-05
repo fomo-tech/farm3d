@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CASINO_SYMBOLS } from '../../../../shared/casino/casinoConfig.js';
+import { CASINO_GAMES, CASINO_CONFIG } from '../../../../shared/casino/casinoConfig.js';
 import { Die, Chip } from '../CasinoArt.jsx';
 
 export function TaiXiuScreen({
@@ -18,7 +18,7 @@ export function TaiXiuScreen({
   onOpenHistory,
 }) {
   const [squeezing, setSqueezing] = useState(false);
-  const CHIP_VALUES = [10, 20, 50, 100, 500];
+  const CHIP_VALUES = CASINO_CONFIG.chips;
 
   const result = round?.result;
   const dice = result?.dice || null;
@@ -65,7 +65,7 @@ export function TaiXiuScreen({
               className="pt-candy-squeeze-btn"
               onClick={() => setSqueezing(true)}
             >
-              🔍 NẶN BÁT MỞ QUÀ
+              NẶN BÁT MỞ QUÀ
             </button>
           )}
 
@@ -75,7 +75,7 @@ export function TaiXiuScreen({
               className="pt-open-all-btn"
               onClick={() => setSqueezing(false)}
             >
-              MỞ HẾT ⚡
+              MỞ HẾT
             </button>
           )}
         </div>
@@ -87,7 +87,7 @@ export function TaiXiuScreen({
             <span className={`res-badge ${result.winner === 'tai' ? 'badge-tai' : result.winner === 'xiu' ? 'badge-xiu' : 'badge-bao'}`}>
               {result.winner === 'tai' ? 'TÀI' : result.winner === 'xiu' ? 'XỈU' : 'BÃO'}
             </span>
-            <span className="res-sub">({result.even ? 'Chẵn' : 'Lẻ'})</span>
+            <span className="res-sub">({result.isEven ? 'Chẵn' : 'Lẻ'})</span>
           </div>
         )}
       </div>
@@ -113,7 +113,7 @@ export function TaiXiuScreen({
         </button>
 
         {/* CỘT CƯỢC PHỤ Ở GIỮA (CHẴN / BÃO / LẺ) */}
-        <div className="pt-bet-middle-subcolumn">
+        {CASINO_GAMES['tai-xiu'].choices.includes('chan') && <div className="pt-bet-middle-subcolumn">
           <button
             type="button"
             className={`pt-sub-bet-pill ${myBets.chan ? 'has-bet' : ''}`}
@@ -122,7 +122,7 @@ export function TaiXiuScreen({
           >
             <span className="sub-title">CHẴN</span>
             <small className="sub-ratio">1:1</small>
-            {myBets.chan > 0 && <span className="sub-chip">🪙 {myBets.chan}</span>}
+            {myBets.chan > 0 && <span className="sub-chip">{myBets.chan} xu</span>}
           </button>
 
           <button
@@ -131,9 +131,9 @@ export function TaiXiuScreen({
             disabled={!isOpen}
             onClick={() => putBet('any_triple')}
           >
-            <span className="sub-title">⭐ BÃO ⭐</span>
+            <span className="sub-title">★ BÃO ★</span>
             <small className="sub-ratio">1:30</small>
-            {myBets.any_triple > 0 && <span className="sub-chip">🪙 {myBets.any_triple}</span>}
+            {myBets.any_triple > 0 && <span className="sub-chip">{myBets.any_triple} xu</span>}
           </button>
 
           <button
@@ -144,10 +144,11 @@ export function TaiXiuScreen({
           >
             <span className="sub-title">LẺ</span>
             <small className="sub-ratio">1:1</small>
-            {myBets.le > 0 && <span className="sub-chip">🪙 {myBets.le}</span>}
+            {myBets.le > 0 && <span className="sub-chip">{myBets.le} xu</span>}
           </button>
         </div>
 
+        }
         {/* CỬA XỈU (XANH NGỌC) */}
         <button
           type="button"

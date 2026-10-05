@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { CasinoLobby } from './casino/CasinoLobby.jsx';
 import { CasinoTable } from './casino/CasinoTable.jsx';
 import './casino.css';
+import './casino/lounge.css';
+import { nextQuickPlayAction } from './casino/quickPlay.js';
 
 export function CasinoGames({
   state,
@@ -20,6 +22,14 @@ export function CasinoGames({
   const anchor = useRef({ server: Date.now(), local: Date.now() });
   const audio = useRef(null);
   const focus = useRef(null);
+  const quickPlay = useRef(null);
+  const [quickPlaying, setQuickPlaying] = useState(false);
+  const [visibleMessage, setVisibleMessage] = useState(message);
+  useEffect(() => {
+    setVisibleMessage(message);
+    const timeout = window.setTimeout(() => setVisibleMessage(''), 2500);
+    return () => window.clearTimeout(timeout);
+  }, [message]);
 
   const room = state?.mine;
   const round = room?.round;
@@ -37,15 +47,20 @@ export function CasinoGames({
   };
 
   const handleReturnLobby = () => {
+    quickPlay.current = null;
+    setQuickPlaying(false);
     if (room) {
       act({ kind: 'leave' });
     }
   };
 
   const handleQuickPlay = targetGame => {
+    if (!enabled || quickPlay.current) return;
     const selectedGame = targetGame || 'tai-xiu';
+    quickPlay.current = { game: selectedGame, sent: null };
+    setQuickPlaying(true);
     const availableRooms = (state?.rooms || []).filter(
-      r => r.game === selectedGame && !r.private && (r.occupied || 0) < (r.seats || 4)
+      r => r.game === selectedGame && !r.private && r.phase === 'waiting' && (r.occupied || 0) < (r.seats || 4)
     );
     if (availableRooms.length > 0) {
       act({ kind: 'join', roomId: availableRooms[0].id });
@@ -60,6 +75,27 @@ export function CasinoGames({
       });
     }
   };
+
+  useEffect(() => {
+    const intent = quickPlay.current;
+    if (!intent || !enabled || room?.game !== intent.game) return;
+    const next = nextQuickPlayAction(room, state?.viewerId);
+    if (!next) return;
+    if (next.kind === 'complete' || next.kind === 'full') {
+      quickPlay.current = null;
+      setQuickPlaying(false);
+      if (next.kind === 'full') setVisibleMessage('Bàn đã đầy. Hãy chọn bàn khác.');
+      return;
+    }
+    const signature = `${next.roomId}:${next.kind}`;
+    if (intent.sent === signature) return;
+    intent.sent = signature;
+    onAction(next);
+  }, [state, enabled, room, onAction]);
+
+  useEffect(() => {
+    if (message || !enabled) { quickPlay.current = null; setQuickPlaying(false); }
+  }, [message, enabled]);
 
   const toggleSound = () => {
     if (!audio.current) {
@@ -93,7 +129,8 @@ export function CasinoGames({
 
   return (
     <div className="cq-root-wrapper" ref={focus} tabIndex={-1}>
-      {message && <div className="cq-toast-message">{message}</div>}
+      {!enabled && <div className="cq-toast-message" role="status">{!connected ? 'Mất kết nối server · chưa thể vào bàn hoặc chơi. Đang kết nối lại…' : 'Bạn chưa vào bên trong hội quán.'}</div>}
+      {visibleMessage && <div className="cq-toast-message">{visibleMessage}</div>}
 
       {room ? (
         <CasinoTable
@@ -107,9 +144,12 @@ export function CasinoGames({
           onAct={act}
           onReturnLobby={handleReturnLobby}
           seconds={seconds}
+          quickPlaying={quickPlaying}
+          onQuickPlay={() => handleQuickPlay(room.game)}
         />
       ) : (
         <CasinoLobby
+          quickPlaying={quickPlaying}
           coins={coins}
           rooms={state?.rooms || []}
           connected={connected}

@@ -3952,7 +3952,7 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
   }
 }
 
-/* 🌾 Floating Farm Zone Badge */
+/* Floating Farm Zone Badge */
 .farm-zone-badge {
   position: absolute;
   top: 72px;
@@ -4494,7 +4494,7 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
 .land-start-prompt { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); border: 0; border-radius: 18px; padding: 12px 18px; background: #fff6d9; color: #61411d; cursor: pointer; z-index: 15; max-width: 85vw; }
 
 /* ==========================================================================
-   🎮 PLAY TOGETHER STANDARD HUD (TOY & CANDY CHIBI UI SYSTEM)
+   PLAY TOGETHER STANDARD HUD (TOY & CANDY CHIBI UI SYSTEM)
    100% Thuần 3D Game Icons · Hiệu ứng nổi xúc giác 3D Depth
    ========================================================================== */
 
@@ -4924,6 +4924,30 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
 .pt-candy-btn.pt-notice-btn:hover {
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 6px 0 #d97706, 0 10px 20px rgba(217, 119, 6, 0.4);
+}
+
+.pt-candy-btn.pt-fashion-btn {
+  gap: 6px;
+  padding: 0 14px 0 10px;
+  height: 44px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fdf2f8 0%, #fce7f3 100%);
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 4px 0 #db2777, 0 6px 16px rgba(219, 39, 119, 0.3);
+  position: relative;
+  cursor: pointer;
+}
+
+.pt-candy-btn.pt-fashion-btn .pt-btn-label {
+  font-family: 'Baloo 2', 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  color: #9d174d;
+}
+
+.pt-candy-btn.pt-fashion-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 0 #db2777, 0 10px 20px rgba(219, 39, 119, 0.4);
 }
 
 .pt-candy-btn.pt-phone-btn {
@@ -8323,7 +8347,7 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
 @keyframes farm-theft-countdown { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* ==========================================================================
-   🎮 PLAY TOGETHER STANDARD HUD UPGRADE (DESKTOP & MOBILE RESPONSIVE ENGINE)
+   PLAY TOGETHER STANDARD HUD UPGRADE (DESKTOP & MOBILE RESPONSIVE ENGINE)
    Safe Area Insets · 360 GPS Radar · Smart Context Action · Ergonomic Thumb Zones
    ========================================================================== */
 
@@ -8772,7 +8796,7 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
 }
 
 /* ==========================================================================
-   📱 RESPONSIVE BREAKPOINTS (DESKTOP · TABLET · MOBILE · SMALL PHONES)
+   RESPONSIVE BREAKPOINTS (DESKTOP · TABLET · MOBILE · SMALL PHONES)
    ========================================================================== */
 
 /* Tablet & Laptop (768px - 1023px) */
@@ -10884,6 +10908,109 @@ body .pt-start-screen-backdrop .pt-start-footer {
   font-weight: 800;
   line-height: 1.5;
   text-align: center;
+}
+
+/* Shared toy-town UI: quiet surfaces, one accent and readable scene space. */
+.pt-game-shell .venue-banner {
+  background: #fff8edf5;
+  color: #345576;
+  border: 3px solid #fff;
+  border-radius: 24px;
+  box-shadow: 0 5px 0 #c9d8e2, 0 12px 24px #34557618;
+  backdrop-filter: none;
+}
+.pt-game-shell .venue-banner span { color: #6b8597; font-size: 11px; }
+.pt-game-shell .venue-banner b { font-size: 18px; }
+.pt-game-shell .venue-banner-actions button {
+  background: #e9f1fb;
+  color: #345576;
+  border: 2px solid #fff;
+  border-radius: 16px;
+  box-shadow: 0 3px 0 #c7d5e4;
+}
+.pt-game-shell .venue-banner-actions button:first-child { background: #a8e1cf; color: #286b65; }
+.pt-game-shell.in-venue .pt-candy-quest-tracker { display: none; }
+.pt-game-shell .pt-candy-btn { filter: none; }
+.pt-game-shell .pt-profile-card {
+  background: #fff7e7;
+  box-shadow: 0 4px 0 #d3dbe3, 0 10px 22px #34557618;
+}
+.pt-game-shell .pt-quest-card-frame {
+  background: #fffdf5;
+  box-shadow: 0 4px 0 #d3dbe3, 0 10px 22px #34557618;
+}
+
+/* Compact gameplay HUD: edge docks, one contextual action, no center banner. */
+.pt-game-shell .topbar.pt-topbar { inset: 12px 14px auto; width: auto; min-width: 0; min-height: 52px; gap: 12px; }
+.pt-game-shell .pt-profile-card { min-width: 0; width: 208px; padding: 5px 10px 5px 5px; gap: 8px; border-radius: 18px; border-width: 2px; }
+.pt-game-shell .pt-avatar-ring { width: 42px; height: 42px; min-width: 42px; border-width: 2px; box-shadow: none; }
+.pt-game-shell .pt-profile-info { min-width: 0; flex: 1; }
+.pt-game-shell .pt-player-name { font-size: 13px; max-width: 140px; }
+.pt-game-shell .pt-role-pill, .pt-game-shell .pt-exp-val, .pt-game-shell .pt-seed-pill { display: none; }
+.pt-game-shell .pt-exp-track { height: 5px; }
+.pt-game-shell .pt-island-capsule { min-width: 0; max-width: 220px; padding: 9px 14px; border-radius: 16px; box-shadow: 0 3px 12px #34557618; }
+.pt-game-shell .pt-island-badge { cursor: pointer; font-size: 12px; list-style: none; }
+.pt-game-shell .pt-island-badge::-webkit-details-marker { display: none; }
+.pt-game-shell .pt-island-capsule:not([open]) .pt-clock-strip { display: none; }
+.pt-game-shell .pt-island-capsule[open] .pt-clock-strip { margin-top: 10px; }
+.pt-game-shell .pt-currency-dock { gap: 6px; }
+.pt-game-shell .pt-candy-pill { min-height: 34px; padding: 3px 7px; gap: 5px; border-width: 2px; box-shadow: 0 3px 10px #34557618; }
+.pt-game-shell .pt-pill-icon, .pt-game-shell .pt-pill-icon .pt-hud-img-icon { width: 26px; height: 26px; flex-basis: 26px; }
+.pt-game-shell .pt-pill-val { font-size: 13px; }
+.pt-game-shell .pt-pill-plus { display: none; }
+.pt-game-shell .pt-phone-btn { width: 42px; height: 42px; min-width: 42px; padding: 6px; border-width: 2px; box-shadow: 0 3px 10px #34557618; }
+.pt-game-shell .pt-phone-btn .pt-btn-label { display: none; }
+.pt-game-shell .pt-candy-quest-tracker { top: 80px; left: 14px; }
+.pt-game-shell .pt-quest-collapsed-bubble { max-width: 245px; padding: 6px 10px; border: 2px solid #fff; border-radius: 16px; background: #fff8edee; box-shadow: 0 3px 12px #34557618; }
+.pt-game-shell .pt-collapsed-avatar { width: 30px; height: 30px; min-width: 30px; box-shadow: none; }
+.pt-game-shell .pt-collapsed-avatar svg { width: 26px; height: 26px; }
+.pt-game-shell .pt-collapsed-text b { font-size: 12px; }
+.pt-game-shell .pt-collapsed-text small { font-size: 10px; }
+.pt-game-shell .pt-quest-card-frame { width: min(320px, calc(100vw - 28px)); }
+.hud-map-button { position: absolute; z-index: 8; top: 76px; right: 14px; width: 42px; height: 42px; border: 2px solid #fff; border-radius: 15px; background: #fff8ed; font-size: 23px; box-shadow: 0 3px 12px #34557618; cursor: pointer; }
+.pt-game-shell .pt-joystick { left: 18px; bottom: 22px; width: 100px !important; height: 100px !important; border-width: 2px !important; box-shadow: none !important; opacity: .8; }
+.pt-game-shell .pt-joystick-knob { width: 42px !important; height: 42px !important; }
+.pt-game-shell .pt-action-bubbles { right: 16px; bottom: 20px; gap: 10px; }
+.pt-game-shell .pt-action-bubble { width: 62px !important; height: 62px !important; border-width: 2px; box-shadow: 0 3px 10px #34557620; }
+.pt-game-shell .pt-action-bubble i, .pt-game-shell .pt-action-bubble .pt-hud-img-icon { width: 30px; height: 30px; }
+.pt-game-shell .pt-context-action-wrap { right: auto; left: 50%; bottom: 26px; transform: translateX(-50%); max-width: calc(100% - 260px); }
+.pt-game-shell .pt-context-glow-ring { display: none; }
+.pt-game-shell .venue-banner { display: contents; }
+.pt-game-shell .venue-banner-content b { position: absolute; z-index: 8; top: 76px; left: 50%; transform: translateX(-50%); padding: 6px 12px; background: #fff8eddf; border-radius: 14px; font-size: 12px; }
+.pt-game-shell .venue-banner-content span { display: none; }
+.pt-game-shell .venue-banner-actions { display: contents; }
+.pt-game-shell .venue-banner-actions button:first-child { position: absolute; z-index: 8; bottom: 26px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 260px); padding: 10px 14px; font-size: 12px; }
+.pt-game-shell .venue-banner-actions button:last-child { position: absolute; z-index: 8; top: 76px; right: 14px; padding: 8px 12px; font-size: 12px; }
+.pt-game-shell .debug-panel { top: auto; bottom: 132px; left: 14px; max-width: 160px; font-size: 10px; opacity: .85; }
+.pt-game-shell .status { left: 50%; bottom: 94px; transform: translateX(-50%); max-width: min(440px, 70vw); font-size: 11px; padding: 5px 10px; }
+.pt-game-shell.hud-modal-open :is(.pt-topbar, .pt-candy-quest-tracker, .pt-joystick, .pt-action-bubbles, .hud-map-button, .pt-context-action-wrap, .pt-hotbar, .farm-gate-action, .livestock-card, .farm-zone-badge, .dismount-vehicle-btn, .venue-banner-content, .venue-banner-actions) { display: none; }
+.pt-game-shell.hud-modal-open .player-name-label,
+.pt-game-shell:has(.pt-photo-mode-controller) .player-name-label { display: none; }
+@media (max-width: 700px) {
+  .pt-game-shell .topbar.pt-topbar { inset: 8px 8px auto; gap: 4px; }
+  .pt-game-shell .pt-profile-card { width: 110px; padding: 4px; gap: 5px; }
+  .pt-game-shell .pt-avatar-ring { width: 32px; height: 32px; min-width: 32px; }
+  .pt-game-shell .pt-player-name { font-size: 11px; max-width: 63px; }
+  .pt-game-shell .pt-island-capsule { display: block; position: absolute; top: 61px; left: 50%; transform: translateX(-50%); padding: 6px 10px; }
+  .pt-game-shell .pt-island-badge { font-size: 11px; }
+  .pt-game-shell .pt-candy-pill { gap: 3px; padding: 3px 4px; }
+  .pt-game-shell .pt-pill-val { font-size: 11px; }
+  .pt-game-shell .pt-pill-icon, .pt-game-shell .pt-pill-icon .pt-hud-img-icon { width: 20px; height: 20px; flex-basis: 20px; }
+  .pt-game-shell .pt-phone-btn { width: 36px; height: 36px; min-width: 36px; }
+  .pt-game-shell .pt-candy-quest-tracker { top: 112px; left: 8px; }
+  .pt-game-shell .pt-quest-collapsed-bubble { max-width: 205px; }
+  .hud-map-button { top: 110px; right: 8px; }
+  .pt-game-shell .pt-context-action-wrap, .pt-game-shell .venue-banner-actions button:first-child { max-width: calc(100% - 190px); bottom: 24px; }
+  .pt-game-shell .pt-context-action-btn { min-width: 0; max-width: 100%; padding: 7px 9px; }
+  .pt-game-shell .pt-context-title { font-size: 11px; white-space: normal; }
+  .pt-game-shell .pt-context-hint { display: none; }
+  .pt-game-shell .venue-banner-content b { top: 108px; }
+  .pt-game-shell .venue-banner-actions button:last-child { top: 150px; right: 8px; }
+  .pt-game-shell .pt-joystick { width: 84px !important; height: 84px !important; left: 8px; }
+}
+@media (max-width: 360px) {
+  .pt-game-shell .pt-profile-card { width: 68px; }
+  .pt-game-shell .pt-player-name { max-width: 24px; }
 }
 
 

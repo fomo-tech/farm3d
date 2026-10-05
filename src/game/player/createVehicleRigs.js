@@ -3,31 +3,40 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
-import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
+import { createToyMaterial } from '../rendering/PlayTogetherTheme.js';
+import { createSocialVehicle } from './createSocialVehicle.js';
+import { VEHICLES } from '../../../shared/vehicleConfig.js';
+import { VEHICLE_MOTION } from './vehicleMotion.js';
 
 /**
  * Tạo hệ thống phương tiện đồ chơi 3D cho người chơi phong cách Play Together
  * (Ván trượt Skateboard, Scooter điện Chibi, Xe đạp giỏ hoa, Máy cày nông trại)
  */
 export function createVehicleRigs(scene, parentNode, shadows) {
-  const materials = {
-    bikeFrame: createToyMaterial(scene, 'veh-toy-bike-frame', PLAY_TOGETHER_PALETTE.pastels.strawberryPink, { specularPower: 80 }),
-    bikeMetal: createToyMaterial(scene, 'veh-toy-bike-metal', '#e2e8f0', { specularPower: 96, specularLevel: 0.6 }),
-    basket: createToyMaterial(scene, 'veh-toy-basket', PLAY_TOGETHER_PALETTE.farm.honeyWood),
-    tire: createToyMaterial(scene, 'veh-toy-tire-rubber', '#1e293b', { specularPower: 32 }),
-    whiteWall: createToyMaterial(scene, 'veh-toy-whitewall', PLAY_TOGETHER_PALETTE.farm.fenceWhite, { specularPower: 80 }),
-    rim: createToyMaterial(scene, 'veh-toy-rim-chrome', '#f8fafc', { specularPower: 110, specularLevel: 0.7 }),
-    scooterBody: createToyMaterial(scene, 'veh-toy-scooter-mint', PLAY_TOGETHER_PALETTE.pastels.mintGreen, { specularPower: 96, specularLevel: 0.55 }),
-    scooterSeat: createToyMaterial(scene, 'veh-toy-scooter-seat', PLAY_TOGETHER_PALETTE.farm.caramelWood),
-    tractorBody: createToyMaterial(scene, 'veh-toy-tractor-body', '#ef4444', { specularPower: 80 }),
-    tractorSeat: createToyMaterial(scene, 'veh-toy-tractor-seat', '#334155'),
-    headlight: createToyMaterial(scene, 'veh-toy-headlight', '#fffbeb', { emissiveHex: '#facc15', specularPower: 128 }),
-    skateDeck: createToyMaterial(scene, 'veh-toy-skate-deck', PLAY_TOGETHER_PALETTE.pastels.bananaYellow, { specularPower: 80 }),
-    skateStripe: createToyMaterial(scene, 'veh-toy-skate-stripe', PLAY_TOGETHER_PALETTE.pastels.strawberryPink),
-    neonWheel: createToyMaterial(scene, 'veh-toy-neon-wheel', '#38bdf8', { emissiveHex: '#0ea5e9', specularPower: 128 }),
-    daisyPetal: createToyMaterial(scene, 'veh-toy-daisy-petal', '#ffffff'),
-    daisyCenter: createToyMaterial(scene, 'veh-toy-daisy-center', '#facc15', { emissiveHex: '#fbbf24' }),
+  const materialSpecs = {
+    bikeFrame: [VEHICLES.bike.color, { specularPower: 64, specularLevel: 0.25 }],
+    bikeMetal: ['#e2e8f0', { specularPower: 96, specularLevel: 0.6 }],
+    tire: ['#1e293b', { specularPower: 32 }],
+    whiteWall: ['#b7c2c8', { specularPower: 64, specularLevel: 0.2 }],
+    rim: ['#8799a4', { specularPower: 80, specularLevel: 0.35 }],
+    scooterBody: [VEHICLES.scooter.color, { specularPower: 64, specularLevel: 0.25 }],
+    scooterSeat: ['#303d46'],
+    tractorBody: [VEHICLES.tractor.color, { specularPower: 64, specularLevel: 0.25 }],
+    tractorSeat: ['#334155'],
+    headlight: ['#e5edf0', { specularPower: 64, specularLevel: 0.2 }],
+    skateDeck: [VEHICLES.skateboard.color, { specularPower: 48, specularLevel: 0.15 }],
+    skateStripe: ['#bf7845'],
+    neonWheel: ['#709dad', { specularPower: 64, specularLevel: 0.2 }],
   };
+  const materials = new Proxy({}, {
+    get(target, key) {
+      if (!Object.hasOwn(target, key) && Object.hasOwn(materialSpecs, key)) {
+        const [color, options] = materialSpecs[key];
+        target[key] = createToyMaterial(scene, `veh-toy-${key}`, color, options);
+      }
+      return target[key];
+    },
+  });
 
   const rigContainer = new TransformNode('player-vehicle-container', scene);
   rigContainer.parent = parentNode;
@@ -35,19 +44,46 @@ export function createVehicleRigs(scene, parentNode, shadows) {
   let currentVehicleId = 'walk';
   let activeVehicleNode = null;
   let rotatingWheels = [];
+  let steeringPivots = [];
+  let elapsed = 0;
+  let wheelContacts = [];
+  const cache = new Map();
+  const riderOffset = { height: 0, lean: 0 };
 
   return {
     setVehicle(vehicleId) {
-      if (currentVehicleId === vehicleId && activeVehicleNode) return;
+      vehicleId = Object.hasOwn(VEHICLES, vehicleId) ? vehicleId : 'walk';
+      if (currentVehicleId === vehicleId) return;
+      if (activeVehicleNode) activeVehicleNode.setEnabled(false);
       currentVehicleId = vehicleId;
-
-      if (activeVehicleNode) {
-        activeVehicleNode.dispose();
-        activeVehicleNode = null;
-        rotatingWheels = [];
+      activeVehicleNode = null;
+      rotatingWheels = [];
+      steeringPivots = [];
+      wheelContacts = [];
+      riderOffset.height = 0;
+      riderOffset.lean = 0;
+      if (vehicleId === 'walk') {
+        cache.forEach(entry => entry.node.dispose());
+        cache.clear();
+        return;
+      }
+      const cached = cache.get(vehicleId);
+      if (cached) {
+        activeVehicleNode = cached.node;
+        rotatingWheels = cached.wheels;
+        steeringPivots = cached.steering;
+        wheelContacts = cached.contacts;
+        riderOffset.height = activeVehicleNode.position.y;
+        riderOffset.lean = activeVehicleNode.rotation.z;
+        activeVehicleNode.setEnabled(true);
+        cache.delete(vehicleId);
+        cache.set(vehicleId, cached);
+        return;
       }
 
-      if (vehicleId === 'skateboard') {
+      if (['kart', 'convertible', 'hoverboard'].includes(vehicleId)) {
+        activeVehicleNode = createSocialVehicle(scene, vehicleId, rigContainer, materials, rotatingWheels, steeringPivots);
+      } else if (vehicleId === 'skateboard') {
         // ==========================================
         // 0. CHIBI PLAY TOGETHER SKATEBOARD
         // ==========================================
@@ -113,15 +149,11 @@ export function createVehicleRigs(scene, parentNode, shadows) {
         bike.parent = rigContainer;
 
         // Khung cong bo tròn mềm mại phong cách Chibi
-        const frameTube = MeshBuilder.CreateTorus('bike-curved-frame', {
-          diameter: 1.1,
-          thickness: 0.08,
-          tessellation: 18,
-        }, scene);
-        frameTube.rotation.z = Math.PI / 2;
-        frameTube.position.set(0, 0.68, -0.05);
-        frameTube.material = materials.bikeFrame;
-        frameTube.parent = bike;
+        const framePoints = [new Vector3(0, .44, -.65), new Vector3(0, .44, -.10), new Vector3(0, .90, -.32), new Vector3(0, .96, .46), new Vector3(0, .44, .65)];
+        [[0,1],[0,2],[1,2],[2,3],[1,3],[3,4]].forEach(([a,b], index) => {
+          const tube = MeshBuilder.CreateTube(`bike-trail-frame-${index}`, { path: [framePoints[a], framePoints[b]], radius: 0.045, tessellation: 10 }, scene);
+          tube.material = materials.bikeFrame; tube.parent = bike;
+        });
 
         // Cột yên & Yên da nâu bo phồng
         const seatPost = MeshBuilder.CreateCylinder('bike-seat-post', { height: 0.5, diameter: 0.06 }, scene);
@@ -151,19 +183,10 @@ export function createVehicleRigs(scene, parentNode, shadows) {
         bar.material = materials.bikeMetal;
         bar.parent = bike;
 
-        // Giỏ hoa mây phía trước
-        const basket = MeshBuilder.CreateBox('bike-basket', { width: 0.5, height: 0.35, depth: 0.35 }, scene);
-        basket.position.set(0, 1.05, 0.72);
-        basket.material = materials.basket;
-        basket.parent = bike;
-
-        // Bông hoa cúc trong giỏ
-        [-0.12, 0.12].forEach((fx, i) => {
-          const flwCore = MeshBuilder.CreateSphere(`basket-flw-${i}`, { diameter: 0.12, segments: 6 }, scene);
-          flwCore.position.set(fx, 1.25, 0.72);
-          flwCore.material = materials.daisyCenter;
-          flwCore.parent = bike;
-        });
+        const bikeLight = MeshBuilder.CreateBox('bike-trail-light', { width: .18, height: .10, depth: .10 }, scene);
+        bikeLight.position.set(0, 1.10, .59); bikeLight.material = materials.headlight; bikeLight.parent = bike;
+        const rack = MeshBuilder.CreateBox('bike-rear-rack', { width: .30, height: .04, depth: .38 }, scene);
+        rack.position.set(0, .94, -.64); rack.material = materials.tire; rack.parent = bike;
 
         // 2 Bánh xe lốp viền trắng (White-wall Tires)
         function createChibiBikeWheel(isFront) {
@@ -178,7 +201,7 @@ export function createVehicleRigs(scene, parentNode, shadows) {
             tessellation: 18,
           }, scene);
           tire.rotation.z = Math.PI / 2;
-          tire.material = materials.whiteWall;
+          tire.material = materials.tire;
           tire.parent = wheelNode;
 
           const rim = MeshBuilder.CreateCylinder(`bike-rim-${isFront ? 'f' : 'r'}`, {
@@ -188,6 +211,14 @@ export function createVehicleRigs(scene, parentNode, shadows) {
           rim.rotation.z = Math.PI / 2;
           rim.material = materials.bikeFrame;
           rim.parent = wheelNode;
+
+          // Visible spokes make rotation readable instead of a featureless disc.
+          for (let spoke = 0; spoke < 6; spoke++) {
+            const bar = MeshBuilder.CreateBox(`bike-spoke-${isFront}-${spoke}`, { width: 0.15, height: 0.025, depth: 0.66 }, scene);
+            bar.rotation.x = spoke * Math.PI / 6;
+            bar.material = materials.rim;
+            bar.parent = wheelNode;
+          }
 
           return wheelNode;
         }
@@ -236,6 +267,19 @@ export function createVehicleRigs(scene, parentNode, shadows) {
         headlight.material = materials.headlight;
         headlight.parent = scooter;
 
+        const handlebar = MeshBuilder.CreateCylinder('scooter-handlebar', { height: 0.86, diameter: 0.07, tessellation: 12 }, scene);
+        handlebar.rotation.z = Math.PI / 2;
+        handlebar.position.set(0, 1.25, 0.58);
+        handlebar.material = materials.bikeMetal;
+        handlebar.parent = scooter;
+        for (const x of [-0.36, 0.36]) {
+          const grip = MeshBuilder.CreateCylinder(`scooter-grip-${x}`, { height: 0.18, diameter: 0.10, tessellation: 12 }, scene);
+          grip.rotation.z = Math.PI / 2;
+          grip.position.set(x, 1.25, 0.58);
+          grip.material = materials.scooterSeat;
+          grip.parent = scooter;
+        }
+
         // Gương chiếu hậu tròn 2 bên tay lái
         [-0.42, 0.42].forEach((mx, i) => {
           const mirror = MeshBuilder.CreateCylinder(`scooter-mirror-${i}`, {
@@ -282,6 +326,9 @@ export function createVehicleRigs(scene, parentNode, shadows) {
           wheelCover.rotation.z = Math.PI / 2;
           wheelCover.material = materials.whiteWall;
           wheelCover.parent = wNode;
+          const accent = MeshBuilder.CreateBox(`scooter-wheel-accent-${i}`, { width: 0.27, height: 0.035, depth: 0.32 }, scene);
+          accent.material = materials.scooterBody;
+          accent.parent = wNode;
 
           rotatingWheels.push(wNode);
         });
@@ -299,6 +346,17 @@ export function createVehicleRigs(scene, parentNode, shadows) {
         hood.position.set(0, 0.85, 0.45);
         hood.material = materials.tractorBody;
         hood.parent = tractor;
+
+        const bumper = MeshBuilder.CreateBox('tractor-front-bumper', { width: 1.5, height: 0.18, depth: 0.18 }, scene);
+        bumper.position.set(0, 0.48, 1.43);
+        bumper.material = materials.bikeMetal;
+        bumper.parent = tractor;
+        for (const x of [-0.43, 0.43]) {
+          const lamp = MeshBuilder.CreateSphere(`tractor-front-lamp-${x}`, { diameter: 0.22, segments: 12 }, scene);
+          lamp.position.set(x, 1.05, 1.39);
+          lamp.material = materials.headlight;
+          lamp.parent = tractor;
+        }
 
         // Vertical Exhaust Pipe with Flapper
         const exhaust = MeshBuilder.CreateCylinder('tractor-exhaust-pipe', { height: 1.35, diameter: 0.14 }, scene);
@@ -339,6 +397,13 @@ export function createVehicleRigs(scene, parentNode, shadows) {
           tire.rotation.z = Math.PI / 2;
           tire.material = materials.tire;
           tire.parent = rearNode;
+          const hub = MeshBuilder.CreateCylinder(`tractor-rear-hub-${i}`, { height: 0.48, diameter: 0.66, tessellation: 12 }, scene);
+          hub.rotation.z = Math.PI / 2;
+          hub.material = materials.tractorBody;
+          hub.parent = rearNode;
+          const spoke = MeshBuilder.CreateBox(`tractor-rear-spoke-${i}`, { width: 0.49, height: 0.065, depth: 0.48 }, scene);
+          spoke.material = materials.rim;
+          spoke.parent = rearNode;
 
           rotatingWheels.push(rearNode);
         });
@@ -363,14 +428,54 @@ export function createVehicleRigs(scene, parentNode, shadows) {
 
         activeVehicleNode = tractor;
       }
+      // Tire contact comes from geometry, including torus tube thickness.
+      // Save it once; no vertex/bounding-box scans in the render loop.
+      wheelContacts = rotatingWheels.map(wheel => {
+        const tire = wheel.getChildMeshes().find(mesh => /tire|skate-wheel/.test(mesh.name));
+        const bounds = tire.getBoundingInfo().boundingBox;
+        const halfWidth = (bounds.maximum.y - bounds.minimum.y) / 2;
+        const radius = Math.max(bounds.maximum.x - bounds.minimum.x, bounds.maximum.z - bounds.minimum.z) / 2;
+        const center = wheel.parent === activeVehicleNode ? wheel.position : wheel.parent.position;
+        return { x: center.x, y: center.y, radius, halfWidth };
+      });
+      const contactLift = Math.max(0, ...wheelContacts.map(contact => contact.radius - contact.y));
+      activeVehicleNode.position.y = contactLift;
+      riderOffset.height = contactLift;
+      cache.set(vehicleId, { node: activeVehicleNode, wheels: rotatingWheels, steering: steeringPivots, contacts: wheelContacts });
+      // At most the active vehicle and one recently-used vehicle stay resident.
+      while (cache.size > 2) {
+        const oldest = cache.keys().next().value;
+        cache.get(oldest).node.dispose();
+        cache.delete(oldest);
+      }
     },
 
-    update(delta, isMoving, speed) {
-      if (!activeVehicleNode || rotatingWheels.length === 0) return;
+    update(delta, isMoving, speed, turn = 0) {
+      if (!activeVehicleNode) return;
+      elapsed += delta;
+      const lean = VEHICLE_MOTION[currentVehicleId]?.lean || 0.10;
+      const targetLean = isMoving ? -Math.max(-1, Math.min(1, turn)) * lean : 0;
+      activeVehicleNode.rotation.z += (targetLean - activeVehicleNode.rotation.z) * (1 - Math.exp(-12 * delta));
+      if (currentVehicleId === 'hoverboard') {
+        activeVehicleNode.position.y = Math.sin(elapsed * 2.8) * 0.055;
+      } else {
+        const sin = Math.sin(activeVehicleNode.rotation.z), cos = Math.cos(activeVehicleNode.rotation.z);
+        let lift = 0;
+        for (const contact of wheelContacts) lift = Math.max(lift,
+          contact.radius * Math.abs(cos) + contact.halfWidth * Math.abs(sin) - contact.x * sin - contact.y * cos);
+        // Suspension may lift the body, never push a tire below the surface.
+        activeVehicleNode.position.y = lift + (isMoving ? (1 + Math.sin(elapsed * 12)) * 0.006 : 0);
+      }
+      riderOffset.height = activeVehicleNode.position.y;
+      riderOffset.lean = activeVehicleNode.rotation.z;
+      steeringPivots.forEach(pivot => {
+        const steering = isMoving ? Math.max(-0.35, Math.min(0.35, turn)) : 0;
+        pivot.rotation.y += (steering - pivot.rotation.y) * (1 - Math.exp(-12 * delta));
+      });
       if (isMoving) {
-        const rotAmount = delta * speed * 2.2;
         rotatingWheels.forEach(w => {
-          w.rotation.x += rotAmount;
+          // Distance / radius: small wheels spin faster than large ones.
+          w.rotation.x += delta * speed / Math.max(0.13, w.metadata?.radius || w.position.y);
         });
       }
     },
@@ -378,9 +483,19 @@ export function createVehicleRigs(scene, parentNode, shadows) {
     getVehicleId() {
       return currentVehicleId;
     },
+    getRiderOffset() {
+      return riderOffset;
+    },
 
     hasVehicle() {
       return currentVehicleId !== 'walk' && activeVehicleNode !== null;
+    },
+    dispose() {
+      rigContainer.dispose();
+      Object.values(materials).forEach(material => material.dispose());
+      activeVehicleNode = null;
+      rotatingWheels = [];
+      cache.clear();
     },
   };
 }

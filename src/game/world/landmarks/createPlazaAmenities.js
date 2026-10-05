@@ -920,7 +920,7 @@ export function createDowntownSkatePark(scene, shadows, position = { x: -34, y: 
  * 6. BẢNG CHỈ DẪN KIOSK HOLOGRAPHIC TOWN DIRECTORY
  * - Trụ đứng kim loại đen than chì viền LED Cyan Neon
  * - Màn hình cảm ứng lớn hiển thị bản đồ định vị thị trấn với các biểu tượng Venue rực rỡ:
- *   👗 Fashion · 🎰 Casino · 🛒 Agri-Mart · 🏎️ Showroom · 🎣 Fishing Wharf · 🏛️ City Hall
+ *   ★ Fashion · ★ Casino · ★ Agri-Mart · ★ Showroom · ★ Fishing Wharf · ★ City Hall
  */
 export function createTownDirectoryKiosk(scene, shadows, position = { x: -6.4, y: 0, z: 42 }) {
   const root = new TransformNode('pt-directory-kiosk-root', scene);
@@ -977,12 +977,12 @@ export function createTownDirectoryKiosk(scene, shadows, position = { x: -6.4, y
 
   // Danh sách các địa điểm
   const venues = [
-    { name: '👗 FASHION MALL', color: '#f43f5e' },
-    { name: '🎰 GAME & CASINO', color: '#fbbf24' },
-    { name: '🛒 AGRI-MART', color: '#22c55e' },
-    { name: '🏎️ MOTOR SHOWROOM', color: '#38bdf8' },
-    { name: '🎣 FISHING WHARF', color: '#06b6d4' },
-    { name: '🏛️ CIVIC CITY HALL', color: '#c084fc' },
+    { name: '★ FASHION MALL', color: '#f43f5e' },
+    { name: '★ GAME & CASINO', color: '#fbbf24' },
+    { name: '★ AGRI-MART', color: '#22c55e' },
+    { name: '★ MOTOR SHOWROOM', color: '#38bdf8' },
+    { name: '★ FISHING WHARF', color: '#06b6d4' },
+    { name: '★ CIVIC CITY HALL', color: '#c084fc' },
   ];
 
   ctx.font = 'bold 24px Arial';

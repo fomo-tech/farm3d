@@ -16,7 +16,7 @@ try{
  assert.ok((await store.performAction('angler','fishing_cast',{},ctx)).error);
  assert.ok((await store.performAction('angler','fishing_reel',{sessionId:id},ctx)).error);
  // Only the isolated test database is advanced to avoid real-time sleeps.
- await players.updateOne({playerId:'angler'},{$set:{'progress.fishing.pending.biteAt':Date.now()-20,'progress.fishing.pending.expiresAt':Date.now()+2000}});
+ await players.updateOne({playerId:'angler'},{$set:{'progress.fishing.pending.fishId':'golden_carp','progress.fishing.pending.biteAt':Date.now()-20,'progress.fishing.pending.expiresAt':Date.now()+2000}});
  const hook=await store.performAction('angler','fishing_reel',{sessionId:id},ctx);assert.ok(!hook.error);assert.equal(hook.player.progress.fishing.stats.totalCaught,0);
  await players.updateOne({playerId:'angler'},{$set:{'progress.fishing.pending.pull':99,'progress.fishing.pending.lastPulseAt':Date.now()-450}});
  const finishes=await Promise.all([1,2].map(()=>store.performAction('angler','fishing_pull',{sessionId:id,sequence:1,holding:true},ctx)));
@@ -30,6 +30,13 @@ try{
  const sold=await store.performAction('angler','fishing_sell_all',{},{venue:'fishing'});assert.ok(!sold.error);assert.equal(sold.result.fishSold.count,1);
  assert.equal((await store.loadPlayer('angler')).progress.fishing.collection[finish.result.fishCaught].count,1);
  assert.ok((await store.performAction('angler','fishing_sell_all',{},{venue:'fishing'})).error);
+ const normalCast=await store.performAction('angler','fishing_cast',{},ctx);
+ assert.ok(!normalCast.error);const normalId=normalCast.player.progress.fishing.pending.id;
+ await players.updateOne({playerId:'angler'},{$set:{'progress.fishing.pending.fishId':'carp','progress.fishing.pending.biteAt':Date.now()-20,'progress.fishing.pending.expiresAt':Date.now()+2000}});
+ const normalFinishes=await Promise.all([1,2].map(()=>store.performAction('angler','fishing_reel',{sessionId:normalId},ctx)));
+ assert.equal(normalFinishes.filter(result=>!result.error).length,1,'timed hook cannot award twice');
+ assert.equal(normalFinishes.find(result=>!result.error).result.fishCaught,'carp');
+ assert.equal((await store.loadPlayer('angler')).progress.fishing.stats.totalCaught,2);
  await players.updateOne({playerId:'angler'},{$set:{'progress.fishing.fish.carp':{count:10,totalWeight:10,maxWeight:1}}});
  assert.ok((await store.performAction('angler','fishing_cast',{},ctx)).error);
  console.log('PASS Mongo: buy/cast/hook/pull/catch/save/sell, duplicate reward blocked, collection retained');

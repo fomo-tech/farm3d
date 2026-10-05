@@ -2,12 +2,19 @@ import React, { useState, useMemo } from 'react';
 import { CASINO_CONFIG, CASINO_GAMES } from '../../../shared/casino/casinoConfig.js';
 import { Die, PlayingCard, SymbolArt } from './CasinoArt.jsx';
 import { casinoAudio } from '../../game/casino/casinoAudio.js';
+import {
+  Icon3dDice,
+  Icon3dGoldCoin,
+  Icon3dCrownRibbon,
+  Icon3dAudioOn,
+  Icon3dAudioOff,
+} from '../icons3d/GameIcons3D.jsx';
 
 const GAME_META = {
   'tai-xiu': {
     name: 'TÀI XỈU SIC BO',
-    icon: '🎲',
-    badge: '⭐ HOT NHẤT · 3 XÚC XẮC',
+    icon: <Icon3dDice size={32} />,
+    badge: 'HOT NHẤT · 3 XÚC XẮC',
     colorGrad: 'linear-gradient(135deg, rgba(220, 38, 38, 0.85) 0%, rgba(234, 88, 12, 0.85) 100%)',
     borderCol: '#fca5a5',
     subDesc: 'Đoán Tài / Xỉu / Chẵn / Lẻ / Bão 1:30 · Nặn bát 3D hồi hộp',
@@ -15,8 +22,8 @@ const GAME_META = {
   },
   'bau-cua': {
     name: 'BẦU CUA TÔM CÁ',
-    icon: '🦀',
-    badge: '🎉 DÂN GIAN · 6 LINH VẬT',
+    icon: <SymbolArt symbol="crab" size={32} />,
+    badge: 'DÂN GIAN · 6 LINH VẬT',
     colorGrad: 'linear-gradient(135deg, rgba(5, 150, 105, 0.85) 0%, rgba(13, 148, 136, 0.85) 100%)',
     borderCol: '#6ee7b7',
     subDesc: 'Bầu, Cua, Tôm, Cá, Gà, Nai · Thưởng đậm tới 3x tiền cược',
@@ -24,8 +31,8 @@ const GAME_META = {
   },
   'bai-cao': {
     name: 'BÀI CÀO 3 LÁ',
-    icon: '🃏',
-    badge: '🃏 BÀI TÂY · ĐỐI KHÁNG',
+    icon: <PlayingCard rank="A" suit="♠" small />,
+    badge: 'BÀI TÂY · ĐỐI KHÁNG',
     colorGrad: 'linear-gradient(135deg, rgba(37, 99, 235, 0.85) 0%, rgba(79, 70, 229, 0.85) 100%)',
     borderCol: '#93c5fd',
     subDesc: '3 lá so nút với Nhà cái · Sáp, Liêng, Ba Tây ăn trọn ván',
@@ -33,8 +40,8 @@ const GAME_META = {
   },
   'tien-len': {
     name: 'TIẾN LÊN MIỀN NAM',
-    icon: '👑',
-    badge: '👑 CHIẾN THUẬT · 4 NGƯỜI',
+    icon: <Icon3dCrownRibbon size={32} />,
+    badge: 'CHIẾN THUẬT · 4 NGƯỜI',
     colorGrad: 'linear-gradient(135deg, rgba(124, 45, 18, 0.85) 0%, rgba(153, 27, 27, 0.85) 100%)',
     borderCol: '#fbcfe8',
     subDesc: '13 lá sát phạt · Chặt heo ăn tiền tươi · Xếp bài thông minh',
@@ -55,6 +62,7 @@ export function CasinoLobby({
   onQuickPlay,
   onSelectGame,
   defaultGame = null,
+  quickPlaying = false,
 }) {
   const [selectedGame, setSelectedGame] = useState(defaultGame || 'tai-xiu');
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -137,14 +145,14 @@ export function CasinoLobby({
           </button>
 
           <div className="pt-table-info-pill">
-            <span className="pill-badge-game">👑 HỘI QUÁN KAIA</span>
+            <span className="pill-badge-game">HỘI QUÁN KAIA</span>
             <span className="pill-table-name">Chọn trò chơi hoặc tiến lại gần 4 bàn 3D</span>
           </div>
         </div>
 
         <div className="pt-top-right-wallet">
           <div className="pt-candy-wallet-pill">
-            <span className="pt-coin-icon">🪙</span>
+            <span className="pt-coin-icon"><Icon3dGoldCoin size={20} /></span>
             <strong>{Number(coins || 0).toLocaleString('vi-VN')}</strong>
             <small>Xu</small>
           </div>
@@ -158,7 +166,7 @@ export function CasinoLobby({
             }}
             title={sound ? 'Tắt âm' : 'Bật âm'}
           >
-            {sound ? '🔊' : '🔇'}
+            {sound ? <Icon3dAudioOn size={20} /> : <Icon3dAudioOff size={20} />}
           </button>
         </div>
       </header>
@@ -182,7 +190,9 @@ export function CasinoLobby({
             const count = rooms.filter(r => r.game === key).length;
 
             return (
-              <div
+              <button
+                type="button"
+                aria-pressed={isSelected}
                 key={key}
                 className={`pt-arcade-game-card ${isSelected ? 'is-selected' : ''}`}
                 style={{
@@ -193,12 +203,12 @@ export function CasinoLobby({
               >
                 <div className="card-top-row">
                   <span className="card-badge">{meta.badge}</span>
-                  <span className="card-rooms-count">👥 {count} bàn</span>
+                  <span className="card-rooms-count">{count} bàn</span>
                 </div>
                 <div className="card-center-icon">{meta.icon}</div>
                 <h3 className="card-game-title">{meta.name}</h3>
                 <small className="card-type-tag">{meta.typeTag}</small>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -209,8 +219,9 @@ export function CasinoLobby({
             type="button"
             className="pt-candy-cta-btn btn-quick-play"
             onClick={handleQuickPlayClick}
+            disabled={!connected || !inside || quickPlaying}
           >
-            ⚡ VÀO BÀN CHƠI NGAY
+            {quickPlaying ? 'Đang vào bàn…' : 'CHƠI NGAY'}
           </button>
 
           <button
@@ -221,7 +232,7 @@ export function CasinoLobby({
               setDrawerOpen(v => !v);
             }}
           >
-            📋 Danh Sách Bàn ({filteredRooms.length})
+            Danh Sách Bàn ({filteredRooms.length})
           </button>
 
           <button
@@ -232,7 +243,7 @@ export function CasinoLobby({
               setCreateModalOpen(true);
             }}
           >
-            ➕ Tạo Bàn Riêng
+            Tạo Bàn Riêng
           </button>
         </div>
       </footer>
@@ -272,9 +283,9 @@ export function CasinoLobby({
                   <div className="room-row-info">
                     <strong>{r.name}</strong>
                     <div className="room-row-meta">
-                      <span>🪙 Cược: {r.stake} xu</span>
-                      <span>👥 {r.occupied || 1}/{r.seats || 4} người</span>
-                      {r.private && <span className="room-private-lock">🔒 Có mật khẩu</span>}
+                      <span>Cược: {r.stake} xu</span>
+                      <span>{r.occupied || 1}/{r.seats || 4} người</span>
+                      {r.private && <span className="room-private-lock">Có mật khẩu</span>}
                     </div>
                   </div>
                   <button
@@ -350,7 +361,7 @@ export function CasinoLobby({
         <div className="pt-sub-modal-backdrop" onClick={() => setJoinModalRoom(null)}>
           <div className="pt-sub-modal-dialog" onClick={e => e.stopPropagation()}>
             <header className="pt-sub-modal-header">
-              <h3>🔒 NHẬP MẬT KHẨU PHÒNG</h3>
+              <h3>NHẬP MẬT KHẨU PHÒNG</h3>
               <button type="button" onClick={() => setJoinModalRoom(null)}>✕</button>
             </header>
             <form onSubmit={handleJoinSubmit} className="pt-create-room-form">

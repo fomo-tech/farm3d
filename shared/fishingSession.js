@@ -21,6 +21,23 @@ export function publicFishingProgress(progress) {
 export function fishResistance(pending, now) {
   return Math.floor((now - pending.hookedAt) / 1800) % 3 === 1;
 }
+function awardFish(fishing, session, now) {
+  if (fishingInventoryCount(fishing) >= fishingCapacity(fishing)) { fishing.pending = null; return { fishEscaped: 'Thùng cá đã đầy.' }; }
+  const fish = FISHING_CONFIG.fish[session.fishId];
+  if (!fish) throw new Error('Loài cá không hợp lệ.');
+  const entry = fishing.fish[session.fishId] ||= {count:0,totalWeight:0,maxWeight:0};
+  entry.count++; entry.totalWeight += session.weight; entry.maxWeight = Math.max(entry.maxWeight,session.weight);
+  const value = calculateFishSaleValue(session.fishId,session.weight);
+  const record = {id:session.fishId,weight:session.weight,value,rarity:fish.rarity,caughtAt:now};
+  fishing.catchLog.push(record); fishing.catchLog = fishing.catchLog.slice(-FISHING_CONFIG.defaults.maxCatchLog);
+  fishing.collection ||= {};
+  const collection = fishing.collection[session.fishId] ||= {count:0,maxWeight:0};
+  collection.count++; collection.maxWeight = Math.max(collection.maxWeight,session.weight);
+  fishing.stats.totalCaught++; if(fish.rarity!=='common')fishing.stats.rareCaught++;
+  fishing.stats.largestFish = Math.max(fishing.stats.largestFish,session.weight);
+  fishing.pending = null;
+  return {fishCaught:session.fishId,weight:session.weight,value,rarity:fish.rarity,zone:session.zone,xp:fish.xp};
+}
 export function advanceFishingSession(fishing, action, payload, context, now = Date.now()) {
   const session = fishing.pending;
   if (!session || payload.sessionId !== session.id) throw new Error('Phiên câu không còn hợp lệ.');
@@ -32,6 +49,8 @@ export function advanceFishingSession(fishing, action, payload, context, now = D
   if (action === 'fishing_reel') {
     if (session.phase === 'fighting') throw new Error('Đang kéo cá.');
     if (now < session.biteAt) throw new Error('Cá chưa cắn.');
+    const rarity = FISHING_CONFIG.fish[session.fishId]?.rarity;
+    if (rarity === 'common' || rarity === 'uncommon') return awardFish(fishing, session, now);
     session.phase = 'fighting'; session.hookedAt = now; session.lastPulseAt = now;
     session.expiresAt = now + FISHING_GAME.fightMs; session.tension = 40; session.pull = 0; session.sequence = 0;
     return {};
@@ -49,19 +68,5 @@ export function advanceFishingSession(fishing, action, payload, context, now = D
   session.lastPulseAt = now; session.sequence = payload.sequence;
   if (session.tension >= 100 || session.tension <= 0) { fishing.pending = null; return { fishEscaped: session.tension>=100 ? 'Dây căng quá, cá đã tuột!' : 'Dây chùng quá, cá đã thoát!' }; }
   if (session.pull < FISHING_GAME.goal) return {};
-  if (fishingInventoryCount(fishing) >= fishingCapacity(fishing)) { fishing.pending = null; return { fishEscaped: 'Thùng cá đã đầy.' }; }
-  const fish = FISHING_CONFIG.fish[session.fishId];
-  if (!fish) throw new Error('Loài cá không hợp lệ.');
-  const entry = fishing.fish[session.fishId] ||= {count:0,totalWeight:0,maxWeight:0};
-  entry.count++; entry.totalWeight += session.weight; entry.maxWeight = Math.max(entry.maxWeight,session.weight);
-  const value = calculateFishSaleValue(session.fishId,session.weight);
-  const record = {id:session.fishId,weight:session.weight,value,rarity:fish.rarity,caughtAt:now};
-  fishing.catchLog.push(record); fishing.catchLog = fishing.catchLog.slice(-FISHING_CONFIG.defaults.maxCatchLog);
-  fishing.collection ||= {};
-  const collection = fishing.collection[session.fishId] ||= {count:0,maxWeight:0};
-  collection.count++; collection.maxWeight = Math.max(collection.maxWeight,session.weight);
-  fishing.stats.totalCaught++; if(fish.rarity!=='common')fishing.stats.rareCaught++;
-  fishing.stats.largestFish = Math.max(fishing.stats.largestFish,session.weight);
-  fishing.pending = null;
-  return {fishCaught:session.fishId,weight:session.weight,value,rarity:fish.rarity,zone:session.zone,xp:fish.xp};
+  return awardFish(fishing, session, now);
 }

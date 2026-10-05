@@ -10,15 +10,24 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Icon3dMap } from './icons3d/GameIcons3D.jsx';
+import {
+  Icon3dMap,
+  Icon3dHouseCabin,
+  Icon3dWardrobe,
+  Icon3dDice,
+  Icon3dShopCart,
+  Icon3dFishingRodBamboo,
+  Icon3dCoast,
+  Icon3dStar,
+} from './icons3d/GameIcons3D.jsx';
 
 const LANDMARKS = [
-  { id: 'plaza', name: 'Quảng Trường', x: 0, z: 0, color: '#f59e0b', icon: '⛲' },
-  { id: 'lake', name: 'Hồ Pha Lê', x: 167, z: 2, color: '#0ea5e9', icon: '🎣' },
-  { id: 'fashion', name: 'Thời Trang', x: 29, z: -25, color: '#ec4899', icon: '👗' },
-  { id: 'casino', name: 'Hội Quán', x: -29, z: -25, color: '#8b5cf6', icon: '🎰' },
-  { id: 'supplies', name: 'Nông Cụ', x: 29, z: 25, color: '#10b981', icon: '🛒' },
-  { id: 'beach', name: 'Bờ Biển', x: 0, z: 360, color: '#06b6d4', icon: '🏖️' },
+  { id: 'plaza', name: 'Quảng Trường', x: 0, z: 0, color: '#f59e0b', Icon: Icon3dStar },
+  { id: 'lake', name: 'Hồ Pha Lê', x: 167, z: 2, color: '#0ea5e9', Icon: Icon3dFishingRodBamboo },
+  { id: 'fashion', name: 'Thời Trang', x: 29, z: -25, color: '#ec4899', Icon: Icon3dWardrobe },
+  { id: 'casino', name: 'Hội Quán', x: -29, z: -25, color: '#8b5cf6', Icon: Icon3dDice },
+  { id: 'supplies', name: 'Nông Cụ', x: 29, z: 25, color: '#10b981', Icon: Icon3dShopCart },
+  { id: 'beach', name: 'Bờ Biển', x: 0, z: 360, color: '#06b6d4', Icon: Icon3dCoast },
 ];
 
 export function ChibiRadarMinimap({ worldRef, playerFarmTarget, onOpenMap }) {
@@ -98,7 +107,7 @@ export function ChibiRadarMinimap({ worldRef, playerFarmTarget, onOpenMap }) {
                 }}
                 title={lm.name}
               >
-                <span className="pt-blip-emoji">{lm.icon}</span>
+                <span className="pt-blip-emoji"><lm.Icon size={12} /></span>
               </div>
             );
           })}
@@ -119,7 +128,7 @@ export function ChibiRadarMinimap({ worldRef, playerFarmTarget, onOpenMap }) {
                 style={{ transform: `translate(${px}px, ${py}px)` }}
                 title="Vườn Nhà Bạn"
               >
-                <span className="pt-blip-emoji">🏡</span>
+                <span className="pt-blip-emoji"><Icon3dHouseCabin size={12} /></span>
               </div>
             );
           })()}

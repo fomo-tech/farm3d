@@ -1,6 +1,7 @@
 import React from 'react';
-import { CASINO_SYMBOLS } from '../../../../shared/casino/casinoConfig.js';
+import { CASINO_SYMBOLS, CASINO_CONFIG } from '../../../../shared/casino/casinoConfig.js';
 import { SymbolArt, Chip } from '../CasinoArt.jsx';
+import { Icon3dSparkleStar } from '../../icons3d/GameIcons3D.jsx';
 
 export function BauCuaScreen({
   room,
@@ -17,7 +18,7 @@ export function BauCuaScreen({
   round,
   onOpenHistory,
 }) {
-  const CHIP_VALUES = [10, 20, 50, 100, 500];
+  const CHIP_VALUES = CASINO_CONFIG.chips;
 
   const result = round?.result;
   const symbols = result?.symbols || null;
@@ -81,8 +82,8 @@ export function BauCuaScreen({
               onClick={() => putBet(key)}
             >
               {isWinning && winCount > 0 && (
-                <div className="winning-badge-star">
-                  ⭐ ×{winCount}
+                <div className="winning-badge-star" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                  <Icon3dSparkleStar size={14} /> ×{winCount}
                 </div>
               )}
 

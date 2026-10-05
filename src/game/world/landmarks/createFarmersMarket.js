@@ -140,7 +140,7 @@ function* createProduceStallSteps(scene, position, parent, shadows) {
   const { stallRoot } = yield* createBaseStallSteps(scene, 'produce-stall', '#ef4444', parent, shadows);
   stallRoot.position.set(position.x, position.y, position.z);
 
-  createStallSign(scene, '🍎 NÔNG SẢN TƯƠI SẠCH 🥕', '#ef4444', stallRoot, 3.8, 0.75, 3.4);
+  createStallSign(scene, '★ NÔNG SẢN TƯƠI SẠCH ★', '#ef4444', stallRoot, 3.8, 0.75, 3.4);
   yield;
 
   // Thùng 1: Táo đỏ căng bóng
@@ -218,7 +218,7 @@ function* createFlowerStallSteps(scene, position, parent, shadows) {
   const { stallRoot } = yield* createBaseStallSteps(scene, 'flower-stall', '#eab308', parent, shadows);
   stallRoot.position.set(position.x, position.y, position.z);
 
-  createStallSign(scene, '🌸 HOA TƯƠI & HẠT GIỐNG 🌻', '#eab308', stallRoot, 3.8, 0.75, 3.4);
+  createStallSign(scene, '★ HOA TƯƠI & HẠT GIỐNG ★', '#eab308', stallRoot, 3.8, 0.75, 3.4);
   yield;
 
   const matPot = makeMat(scene, 'mat-flower-pot', '#c2410c');
@@ -268,7 +268,7 @@ function* createBakeryStallSteps(scene, position, parent, shadows) {
   const { stallRoot } = yield* createBaseStallSteps(scene, 'bakery-stall', '#d97706', parent, shadows);
   stallRoot.position.set(position.x, position.y, position.z);
 
-  createStallSign(scene, '🥖 BÁNH MÌ & BƠ SỮA 🧀', '#d97706', stallRoot, 3.8, 0.75, 3.4);
+  createStallSign(scene, '★ BÁNH MÌ & BƠ SỮA ★', '#d97706', stallRoot, 3.8, 0.75, 3.4);
   yield;
 
   const matBread = makeMat(scene, 'mat-bread-crust', '#b45309');

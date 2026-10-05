@@ -7,6 +7,13 @@ import { BauCuaScreen } from './screens/BauCuaScreen.jsx';
 import { BaiCaoScreen } from './screens/BaiCaoScreen.jsx';
 import { TienLenScreen } from './screens/TienLenScreen.jsx';
 import { casinoAudio } from '../../game/casino/casinoAudio.js';
+import {
+  Icon3dGoldCoin,
+  Icon3dNoticeBoard,
+  Icon3dHeartBubble,
+  Icon3dAudioOn,
+  Icon3dAudioOff,
+} from '../icons3d/GameIcons3D.jsx';
 
 const PHASES = {
   waiting: 'Chờ người chơi sẵn sàng',
@@ -22,15 +29,6 @@ const PHASES = {
 };
 
 // Vị trí các ghế ngồi quanh chu vi màn hình 3D (Play Together Seated HUD Ring)
-const SEAT_POSITIONS = [
-  [8, 22],   // Ghế 1: Trái trên
-  [8, 52],   // Ghế 2: Trái giữa
-  [30, 14],  // Ghế 3: Giữa trên lệch trái
-  [70, 14],  // Ghế 4: Giữa trên lệch phải
-  [92, 22],  // Ghế 5: Phải trên
-  [92, 52],  // Ghế 6: Phải giữa
-];
-
 export function CasinoTable({
   room,
   state,
@@ -42,6 +40,8 @@ export function CasinoTable({
   onAct,
   onReturnLobby,
   seconds = 0,
+  quickPlaying = false,
+  onQuickPlay,
 }) {
   const [chip, setChip] = useState(10);
   const [selectedCards, setSelectedCards] = useState([]);
@@ -81,7 +81,7 @@ export function CasinoTable({
   const cancelBet = () => {
     if (isOpen) {
       casinoAudio.playChip();
-      onAct({ kind: 'unbet', roundId: round?.id });
+      onAct({ kind: 'cancel', roundId: round?.id });
     }
   };
 
@@ -130,23 +130,23 @@ export function CasinoTable({
   // Sẵn sàng (Ready)
   const handleToggleReady = () => {
     casinoAudio.playChip();
-    onAct({ kind: 'ready' });
+    onAct({ kind: 'ready', ready: !mySeat?.ready });
   };
 
   // Ngồi vào ghế
   const handleSit = seatIndex => {
     casinoAudio.playChip();
-    onAct({ kind: 'sit', seatIndex });
+    onAct({ kind: 'seat', seat: seatIndex });
   };
 
   // Gửi tin nhắn nhanh
   const sendChat = text => {
-    onAct({ kind: 'chat', text });
+    onAct({ kind: 'chat', message: QUICK_CHAT.indexOf(text) });
     setChatDrawerOpen(false);
   };
 
   return (
-    <div className="pt-casino-in-game-hud">
+    <div className={`pt-casino-in-game-hud ${isSpectator ? 'is-spectator' : 'is-seated'}`}>
       {/* 1. PLAY TOGETHER TOP IN-GAME HUD BAR */}
       <header className="pt-ingame-top-hud">
         <div className="pt-top-left-actions">
@@ -166,7 +166,7 @@ export function CasinoTable({
           <div className="pt-table-info-pill">
             <span className="pill-badge-game">{gameCfg.name || 'SÒNG BÀI'}</span>
             <span className="pill-table-name">{room?.name}</span>
-            <span className="pill-stake">🪙 {room?.stake} xu/cược</span>
+            <span className="pill-stake">{room?.stake} xu/cược</span>
           </div>
         </div>
 
@@ -174,16 +174,16 @@ export function CasinoTable({
         <div className="pt-top-center-status">
           <div className={`pt-phase-countdown-capsule phase-${round?.phase || 'waiting'}`}>
             {round?.phase === 'open' && <span className="pt-countdown-dot-pulse" />}
-            <span className="phase-text">{PHASES[round?.phase] || 'Đang diễn ra'}</span>
-            {seconds > 0 && round?.phase === 'open' && (
-              <span className="timer-badge">⏱️ {seconds}s</span>
+            <span className="phase-text">{PHASES[round?.phase || 'waiting'] || 'Đang đồng bộ ván'}</span>
+            {seconds > 0 && round && (
+              <span className="timer-badge">{seconds}s</span>
             )}
           </div>
         </div>
 
         <div className="pt-top-right-wallet">
           <div className="pt-candy-wallet-pill">
-            <span className="pt-coin-icon">🪙</span>
+            <span className="pt-coin-icon"><Icon3dGoldCoin size={20} /></span>
             <strong>{Number(coins || 0).toLocaleString('vi-VN')}</strong>
             <small>Xu</small>
           </div>
@@ -197,7 +197,7 @@ export function CasinoTable({
             }}
             title="Xem Lịch Sử & Soi Cầu"
           >
-            📊
+            <Icon3dNoticeBoard size={20} />
           </button>
 
           <button
@@ -209,7 +209,7 @@ export function CasinoTable({
             }}
             title="Chat Nhanh Biểu Cảm"
           >
-            💬
+            <Icon3dHeartBubble size={20} />
           </button>
 
           <button
@@ -221,7 +221,7 @@ export function CasinoTable({
             }}
             title={sound ? 'Tắt âm' : 'Bật âm'}
           >
-            {sound ? '🔊' : '🔇'}
+            {sound ? <Icon3dAudioOn size={20} /> : <Icon3dAudioOff size={20} />}
           </button>
         </div>
       </header>
@@ -229,7 +229,7 @@ export function CasinoTable({
       {/* Spectator Notification Toast */}
       {isSpectator && (
         <div className="pt-spectator-floating-ribbon">
-          <span>👁️ Bạn đang ở <strong>Chế Độ Xem</strong>. Nhấp vào ghế trống <strong>[+ Ngồi]</strong> để tham gia chơi!</span>
+          <span>Đang xem · Chọn chỗ ngồi để tham gia</span>
         </div>
       )}
 
@@ -256,9 +256,10 @@ export function CasinoTable({
       )}
 
       {/* 2. CHU VI GHẾ NGỒI XUNG QUANH BÀN 3D (PLAY TOGETHER SEAT RING) */}
-      <div className="pt-hud-seats-ring">
+      <details className="pt-hud-seats-ring">
+        <summary>Chỗ ngồi · {(room?.seatList || []).filter(Boolean).length}/{room?.seatList?.length || 0}</summary>
+        <div className="pt-seat-picker-list">
         {(room?.seatList || []).map((seat, idx) => {
-          const pos = SEAT_POSITIONS[idx % SEAT_POSITIONS.length];
           const isMe = seat?.playerId === player;
           const isTurn = round?.turn === seat?.playerId;
 
@@ -266,25 +267,27 @@ export function CasinoTable({
             <div
               key={idx}
               className={`pt-seat-pod ${seat ? 'occupied' : 'empty'} ${isMe ? 'is-me' : ''} ${isTurn ? 'is-turn' : ''}`}
-              style={{ left: `${pos[0]}%`, top: `${pos[1]}%` }}
             >
               {seat ? (
                 <div className="pt-player-bubble">
                   <div className="pt-player-avatar">
-                    <span className="avatar-letter">{seat.name ? seat.name.charAt(0).toUpperCase() : '👤'}</span>
+                    <span className="avatar-letter">{seat.name ? seat.name.charAt(0).toUpperCase() : 'P'}</span>
                     {seat.ready && <span className="pt-ready-stamp" title="Đã sẵn sàng">✓</span>}
                     {isTurn && <div className="pt-turn-glow" />}
                   </div>
                   <div className="pt-player-nametag">
                     <strong>{isMe ? 'Bạn' : seat.name}</strong>
-                    {seat.coins !== undefined && <small>🪙 {seat.coins}</small>}
+                    {seat.coins !== undefined && <small>{seat.coins} xu</small>}
                   </div>
                 </div>
               ) : (
                 <button
                   type="button"
                   className="pt-candy-sit-btn"
-                  onClick={() => handleSit(idx)}
+                  onClick={event => {
+                    handleSit(idx);
+                    event.currentTarget.closest('details')?.removeAttribute('open');
+                  }}
                   title={`Ngồi vào ghế số ${idx + 1}`}
                 >
                   <span>+ Ngồi ghế {idx + 1}</span>
@@ -293,10 +296,24 @@ export function CasinoTable({
             </div>
           );
         })}
-      </div>
+        </div>
+      </details>
 
       {/* 3. DOCK ĐIỀU KHIỂN & ĐẶT CƯỢC RIÊNG CHO TỪNG GAME (DOCK ĐÁY MÀN HÌNH) */}
       <div className="pt-ingame-bottom-dock">
+        {isSpectator && (
+          <button type="button" className="pt-ready-action-btn" onClick={onQuickPlay} disabled={!connected || !inside || quickPlaying}>
+            {quickPlaying ? 'Đang tìm chỗ…' : 'Tham gia chơi'}
+          </button>
+        )}
+        {mySeat && (!round || round.phase === 'waiting') && (
+          <button type="button" className="pt-ready-action-btn" onClick={handleToggleReady} disabled={!connected || !inside}>
+            {mySeat.ready ? '✓ Đã sẵn sàng · Chờ người chơi' : 'Sẵn sàng chơi'}
+          </button>
+        )}
+        {mySeat && (!round || round.phase === 'waiting') && (
+          <small className="pt-waiting-requirement">Cần {gameCfg.minPlayers} người sẵn sàng để bắt đầu · Hiện có {(room?.seatList || []).filter(seat => seat?.ready).length}</small>
+        )}
         {game === 'tai-xiu' && (
           <TaiXiuScreen
             room={room}

@@ -16,14 +16,15 @@ export function saveGraphicsQuality(quality) {
   try { localStorage.setItem('farm.graphics.quality', quality); } catch { /* Storage may be disabled. */ }
 }
 
-export function calculateRenderDpr({ quality = 'ultra', nativeDpr = 1, width = 1, height = 1, mobile = false, scale = 1 }) {
+export function calculateRenderDpr({ quality = 'ultra', nativeDpr = 1, width = 1, height = 1, mobile = false, scale = 1, allowBelowNative = false }) {
   const preset = GRAPHICS_PRESETS[quality] || GRAPHICS_PRESETS.balanced;
   const limit = mobile ? preset.mobileDpr : preset.maxDpr;
   const pixelLimit = Math.sqrt(preset.pixels / Math.max(1, width * height));
   // Ultra and Balanced prioritize crisp native 1:1 pixel mapping on High-DPI screens.
   const targetDpr = Math.min(Math.max(1, nativeDpr), limit, pixelLimit);
-  const minDpr = (mobile || quality === 'eco') ? 0.75 : 1.0;
-  const effectiveScale = quality === 'ultra' ? 1 : scale;
+  const minDpr = (mobile || quality === 'eco' || allowBelowNative) ? 0.75 : 1.0;
+  // Manual high-quality modes never quietly lose pixels under load.
+  const effectiveScale = quality === 'ultra' || quality === 'balanced' ? 1 : scale;
   return Math.max(minDpr, targetDpr * effectiveScale);
 }
 
@@ -60,10 +61,10 @@ export class AutoGraphicsController {
     const average = this.elapsed / this.frames;
     this.elapsed = 0; this.frames = 0;
     const previous = `${this.level}:${this.scale}`;
-    if (average > (this.mobile ? 36 : 22)) {
+    if (average > 36) {
       if (this.level < 1) this.level++;
       else this.scale = Math.max(.85, this.scale - .05);
-    } else if (average < (this.mobile ? 27 : 17)) {
+    } else if (average < 27) {
       if (this.scale < 1) this.scale = Math.min(1, this.scale + .05);
       else if (this.level > 0) this.level--;
     }

@@ -9,6 +9,9 @@ import {
   Icon3dOrdersBox,
   Icon3dHoe,
   Icon3dSparkleStar,
+  Icon3dBackpack,
+  Icon3dShopCart,
+  Icon3dDeliveryTruck,
 } from './icons3d/GameIcons3D.jsx';
 
 export function ElderDialogueModal({
@@ -140,9 +143,9 @@ export function ElderDialogueModal({
 
                 {/* 3 Quick Benefit Chips */}
                 <div className="pt-systems-chips-row">
-                  <span className="pt-sys-tag">📦 Kho 20 chỗ</span>
-                  <span className="pt-sys-tag">🏪 Shop hạt giống</span>
-                  <span className="pt-sys-tag highlight">🚚 Đơn hàng x3 Xu & XP</span>
+                  <span className="pt-sys-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Icon3dBackpack size={16} /> Kho 20 chỗ</span>
+                  <span className="pt-sys-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Icon3dShopCart size={16} /> Shop hạt giống</span>
+                  <span className="pt-sys-tag highlight" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Icon3dDeliveryTruck size={16} /> Đơn hàng x3 Xu & XP</span>
                 </div>
 
                 <div className="pt-dialogue-actions">

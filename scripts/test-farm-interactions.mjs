@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import { FarmingSystem } from '../src/game/farming/FarmingSystem.js';
+
+const farm = Object.create(FarmingSystem.prototype);
+const tile = { metadata: { interactive: true, farmId: 'mine', column: 0, row: 0, index: 0 }, isEnabled: () => true };
+let hit;
+let commits = 0;
+let tool;
+farm.playerFarmId = 'mine';
+farm.pendingActions = new Set();
+farm.controls = { getPlayer: () => ({ setActiveTool: value => { tool = value; }, playAction: (_, callback) => { hit = callback; } }) };
+farm.runTileAction(tile, 'till', () => { commits++; });
+assert.equal(tool, 'hoe');
+assert.ok(farm.pendingActions.has('mine:0:0'), 'reserve before animation');
+hit(); hit();
+assert.equal(commits, 1, 'hit callback commits only once');
+farm.pendingActions.clear();
+farm.runTileAction(tile, 'water', () => { commits++; });
+farm.pendingActions.clear();
+hit();
+assert.equal(commits, 1, 'cancelled action cannot send late callback');
+
+const hidden = { ...tile, isEnabled: () => false };
+const locked = { ...tile, metadata: { ...tile.metadata, index: 12 } };
+farm.tiles = [hidden, locked, tile];
+farm.getUnlockedPlots = () => 1;
+farm.determineSmartTool = () => 'hoe';
+tile.getAbsolutePosition = () => ({ clone: () => ({ x: 1, z: 0 }) });
+let selected;
+farm.applyTool = value => { selected = value; };
+farm.interactNearest({ x: 0, z: 0 });
+assert.equal(selected, tile, 'E ignores hidden and locked plots');
+console.log('Farm interactions: reservation, cancellation, tools and nearest plot passed');

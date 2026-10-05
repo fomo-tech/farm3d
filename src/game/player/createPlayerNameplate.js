@@ -5,8 +5,12 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js'
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
+import { createScreenNameplate } from './createScreenNameplate.js';
 
 export function createPlayerNameplate(scene, parent, id, initialName) {
+  if ((id === 'local' || parent.name?.startsWith('remote-player-')) && typeof document !== 'undefined' && scene.getEngine().getRenderingCanvas()?.parentElement) {
+    return createScreenNameplate(scene, parent, initialName, { local: id === 'local' });
+  }
   const texture = new DynamicTexture(
     `player-name-texture-${id}`,
     { width: 1024, height: 224 },

@@ -91,7 +91,7 @@ export function createHarvestStar(scene, parent, key, options = {}) {
 }
 
 // =============================================================================
-// 1. 🥕 CÀ RỐT (CARROT) — Cây thân củ mọc ngầm, lá lông chim xòe mềm
+// 1. CÀ RỐT (CARROT) — Cây thân củ mọc ngầm, lá lông chim xòe mềm
 // =============================================================================
 export function createChibiCarrotMesh(scene, key, progress, options = {}) {
   const root = new TransformNode(`crop-carrot-root-${key}`, scene);
@@ -281,7 +281,7 @@ export function createChibiCarrotMesh(scene, key, progress, options = {}) {
 }
 
 // =============================================================================
-// 2. 🌾 LÚA MÌ (WHEAT) — Bó lúa vàng uốn cong trĩu hạt, đung đưa theo gió
+// 2. LÚA MÌ (WHEAT) — Bó lúa vàng uốn cong trĩu hạt, đung đưa theo gió
 // =============================================================================
 export function createChibiWheatMesh(scene, key, progress, options = {}) {
   const root = new TransformNode(`crop-wheat-root-${key}`, scene);
@@ -426,7 +426,7 @@ export function createChibiWheatMesh(scene, key, progress, options = {}) {
 }
 
 // =============================================================================
-// 3. 🍅 CÀ CHUA (TOMATO) — Cọc tre đỡ thân leo, chùm quả đỏ mọng có cuống sao
+// 3. CÀ CHUA (TOMATO) — Cọc tre đỡ thân leo, chùm quả đỏ mọng có cuống sao
 // =============================================================================
 export function createChibiTomatoMesh(scene, key, progress, options = {}) {
   const root = new TransformNode(`crop-tomato-root-${key}`, scene);
@@ -604,7 +604,7 @@ export function createChibiTomatoMesh(scene, key, progress, options = {}) {
 }
 
 // =============================================================================
-// 4. 🍓 DÂU TÂY (STRAWBERRY) — Bụi hoa thị 3 thùy bò sát đất, quả nón hạt vàng
+// 4. DÂU TÂY (STRAWBERRY) — Bụi hoa thị 3 thùy bò sát đất, quả nón hạt vàng
 // =============================================================================
 export function createChibiStrawberryMesh(scene, key, progress, options = {}) {
   const root = new TransformNode(`crop-strawberry-root-${key}`, scene);
@@ -778,7 +778,7 @@ function sproutShape(mesh, lx, i) {
 }
 
 // =============================================================================
-// 5. 🎃 BÍ NGÔ (PUMPKIN) — Dây leo bò, quả múi dẹt có khía rãnh + cuống xoắn
+// 5. BÍ NGÔ (PUMPKIN) — Dây leo bò, quả múi dẹt có khía rãnh + cuống xoắn
 // =============================================================================
 export function createChibiPumpkinMesh(scene, key, progress, options = {}) {
   const root = new TransformNode(`crop-pumpkin-root-${key}`, scene);
@@ -950,7 +950,7 @@ export function createChibiPumpkinMesh(scene, key, progress, options = {}) {
 }
 
 // =============================================================================
-// 6. 🍉 DƯA HẤU (MELON) — Quả bầu dục căng bóng có sọc lượn sóng & dây leo
+// 6. DƯA HẤU (MELON) — Quả bầu dục căng bóng có sọc lượn sóng & dây leo
 // =============================================================================
 export function createChibiMelonMesh(scene, key, progress, options = {}) {
   const root = new TransformNode(`crop-melon-root-${key}`, scene);
@@ -1088,7 +1088,7 @@ export function createChibiMelonMesh(scene, key, progress, options = {}) {
 }
 
 // =============================================================================
-// 7. 🍠 CỦ CẢI ĐƯỜNG / CỦ CẢI TÍM (TURNIP) — Củ tròn chuyển sắc, chùm lá cải thìa
+// 7. CỦ CẢI ĐƯỜNG / CỦ CẢI TÍM (TURNIP) — Củ tròn chuyển sắc, chùm lá cải thìa
 // =============================================================================
 export function createChibiTurnipMesh(scene, key, progress, options = {}) {
   const root = new TransformNode(`crop-turnip-root-${key}`, scene);

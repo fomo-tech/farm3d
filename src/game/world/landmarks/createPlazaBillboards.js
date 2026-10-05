@@ -19,7 +19,7 @@ function makeMat(scene, name, hex, emissiveHex = null, specular = 0.35, specular
   m.ambientColor = m.diffuseColor.scale(0.5);
   m.specularColor = new Color3(specular, specular, specular);
   m.specularPower = specularPower;
-  if (emissiveHex) m.emissiveColor = Color3.FromHexString(emissiveHex);
+  if (emissiveHex) m.emissiveColor = Color3.FromHexString(emissiveHex).scale(0.05);
   return m;
 }
 
@@ -58,7 +58,7 @@ export const PLAZA_BILLBOARD_SPONSOR = {
   contactHotline: 'HOTLINE / ZALO BOOKING: 0988.888.XXX',
   brandName: 'THƯƠNG HIỆU CỦA BẠN',
   promoBadge: 'GIẢM 30% HÔM NAY',
-  tickerNotice: '📢 LIÊN HỆ ĐẶT QUẢNG CÁO THEO HOTLINE & ZALO TRÊN BẢNG · CHÀO MỪNG CÁC THƯƠNG HIỆU & DOANH NGHIỆP TÀI TRỢ 📢',
+  tickerNotice: '★ LIÊN HỆ ĐẶT QUẢNG CÁO THEO HOTLINE & ZALO TRÊN BẢNG · CHÀO MỪNG CÁC THƯƠNG HIỆU & DOANH NGHIỆP TÀI TRỢ ★',
 };
 
 // =============================================================================
@@ -201,10 +201,15 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
   adScreenMat.specularColor = Color3.Black();
 
   if (typeof document !== 'undefined' || typeof OffscreenCanvas !== 'undefined') {
-    const sdtAd = new DynamicTexture('portal-ad-texture', { width: 2048, height: 1152 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
-    sdtAd.anisotropicFilteringLevel = 16;
+    // Keep the logical artwork at 2048x1152 but upload a 1024x576 texture;
+    // the old pair of large canvas uploads caused a synchronous 60-70ms boot
+    // hitch before the first playable frame.
+    const sdtAd = new DynamicTexture('portal-ad-texture', { width: 1024, height: 576 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+    sdtAd.anisotropicFilteringLevel = 4;
     sdtAd.hasAlpha = false;
     const ctx = sdtAd.getContext();
+    ctx.save();
+    ctx.scale(0.5, 0.5);
 
     // Nền Dark Sapphire & Sunset Modern sang trọng
     const bgGrad = ctx.createLinearGradient(0, 0, 0, 1152);
@@ -249,7 +254,7 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     ctx.textBaseline = 'middle';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
     ctx.shadowBlur = 8;
-    ctx.fillText(`📢  ${adConfig.headerTag}  📢`, 1024, 82);
+    ctx.fillText(`★  ${adConfig.headerTag}  ★`, 1024, 82);
 
     ctx.font = '800 24px Arial, "Nunito", sans-serif';
     ctx.fillStyle = '#fef08a';
@@ -326,7 +331,7 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
 
     ctx.font = '700 24px Arial, "Nunito", sans-serif';
     ctx.fillStyle = '#451a03';
-    ctx.fillText('✉ TELEGRAM: @KaiaAdsMedia · FANPAGE: fb.com/KaiaOnline3D · BQT KAIA', 715, 915);
+    ctx.fillText('TELEGRAM: @KaiaAdsMedia · FANPAGE: fb.com/KaiaOnline3D · BQT KAIA', 715, 915);
 
     // 2. Khung Poster Mockup / QR Code Bên Phải (Width: 590px)
     ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
@@ -407,6 +412,7 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     ctx.fillText(adConfig.tickerNotice, 1024, 1056);
 
     sdtAd.update();
+    ctx.restore();
     adScreenMat.diffuseTexture = sdtAd;
     adScreenMat.emissiveTexture = sdtAd;
   }
@@ -439,10 +445,12 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
   ldScreenMat.specularColor = Color3.Black();
 
   if (typeof document !== 'undefined' || typeof OffscreenCanvas !== 'undefined') {
-    const sdtLd = new DynamicTexture('portal-ld-texture', { width: 2048, height: 1152 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
-    sdtLd.anisotropicFilteringLevel = 16;
+    const sdtLd = new DynamicTexture('portal-ld-texture', { width: 1024, height: 576 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+    sdtLd.anisotropicFilteringLevel = 4;
     sdtLd.hasAlpha = false;
     const ctx = sdtLd.getContext();
+    ctx.save();
+    ctx.scale(0.5, 0.5);
 
     // Nền Dark Royal Sapphire
     const bgGrad = ctx.createLinearGradient(0, 0, 0, 1152);
@@ -486,23 +494,23 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     ctx.textBaseline = 'middle';
     ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
     ctx.shadowBlur = 8;
-    ctx.fillText('👑 BẢNG VINH DANH TOP CƯ DÂN & ĐẠI PHÚ HÀO KAIA 👑', 1024, 98);
+    ctx.fillText('★ BẢNG VINH DANH TOP CƯ DÂN & ĐẠI PHÚ HÀO KAIA ★', 1024, 98);
     ctx.shadowBlur = 0;
 
     // CỘT TRÁI: TOP 3 HUYỀN THOẠI (Width: 940px)
     const top3 = [
       {
-        rank: '🥇 HẠNG 1', crown: '👑', name: 'ĐẠI PHÚ HÀO KAIA',
+        rank: '[1] HẠNG 1', crown: '★', name: 'ĐẠI PHÚ HÀO KAIA',
         lv: 'Cấp 50 · Dinh Thự Hoàng Gia · Thần Nông VIP', xp: '2,850,000 XP',
         border: '#f59e0b', h: 240,
       },
       {
-        rank: '🥈 HẠNG 2', crown: '🌟', name: 'NÔNG TRẠI VUI VẺ',
+        rank: '[2] HẠNG 2', crown: '✦', name: 'NÔNG TRẠI VUI VẺ',
         lv: 'Cấp 46 · Biệt Thự Gỗ Sang Trọng', xp: '2,180,000 XP',
         border: '#cbd5e1', h: 200,
       },
       {
-        rank: '🥉 HẠNG 3', crown: '⭐', name: 'THẦN NÔNG XỨ SỞ',
+        rank: '[3] HẠNG 3', crown: '◆', name: 'THẦN NÔNG XỨ SỞ',
         lv: 'Cấp 43 · Trang Trại Cây Ăn Quả', xp: '1,790,000 XP',
         border: '#d97706', h: 200,
       },
@@ -608,9 +616,10 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     ctx.font = '800 30px Arial, "Nunito", sans-serif';
     ctx.fillStyle = '#fef08a';
     ctx.textAlign = 'center';
-    ctx.fillText('🏆 DỮ LIỆU ĐỒNG BỘ TRỰC TIẾP · BƯỚC LẠI GẦN VÀ NHẤN [E] HOẶC CHẠM ĐỂ MỞ BẢNG CHI TIẾT 🏆', 1024, 1056);
+    ctx.fillText('★ DỮ LIỆU ĐỒNG BỘ TRỰC TIẾP · BƯỚC LẠI GẦN VÀ NHẤN [E] HOẶC CHẠM ĐỂ MỞ BẢNG CHI TIẾT ★', 1024, 1056);
 
     sdtLd.update();
+    ctx.restore();
     ldScreenMat.diffuseTexture = sdtLd;
     ldScreenMat.emissiveTexture = sdtLd;
   }

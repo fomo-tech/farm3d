@@ -18,6 +18,12 @@ import {
   Icon3dWateringCan,
   Icon3dBasket,
   Icon3dCompass,
+  Icon3dCub50,
+  Icon3dTractor,
+  Icon3dRiceSpike,
+  Icon3dTomato,
+  Icon3dStrawberry,
+  Icon3dWarningAlert,
 } from './icons3d/GameIcons3D.jsx';
 
 const GUIDE_TABS = [
@@ -278,7 +284,7 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial, onNavigateS
           {activeTab === 'barn' && (
             <div className="pt-guide-content-view">
               <div className="pt-guide-callout warning">
-                <div className="pt-callout-icon">⚠️</div>
+                <div className="pt-callout-icon"><Icon3dWarningAlert size={28} /></div>
                 <div>
                   <strong>Chú ý quan trọng: Khi Kho Đầy!</strong>
                   <p>
@@ -321,28 +327,28 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial, onNavigateS
                   <span>Giá Bán Kho</span>
                 </div>
                 <div className="pt-crop-row">
-                  <span>🥕 Cà rốt</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dCarrot size={18} /> Cà rốt</span>
                   <span>Cấp 1</span>
                   <span>5 xu</span>
                   <span>1 phút (Vụ 1: 8s)</span>
                   <span>12 xu</span>
                 </div>
                 <div className="pt-crop-row">
-                  <span>🌾 Lúa mì</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dRiceSpike size={18} /> Lúa mì</span>
                   <span>Cấp 2</span>
                   <span>12 xu</span>
                   <span>3 phút</span>
                   <span>30 xu</span>
                 </div>
                 <div className="pt-crop-row">
-                  <span>🍅 Cà chua</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dTomato size={18} /> Cà chua</span>
                   <span>Cấp 3</span>
                   <span>20 xu</span>
                   <span>5 phút</span>
                   <span>52 xu</span>
                 </div>
                 <div className="pt-crop-row">
-                  <span>🍓 Dâu tây</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dStrawberry size={18} /> Dâu tây</span>
                   <span>Cấp 5</span>
                   <span>45 xu</span>
                   <span>10 phút</span>
@@ -356,7 +362,9 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial, onNavigateS
           {activeTab === 'orders' && (
             <div className="pt-guide-content-view">
               <div className="pt-guide-callout success">
-                <div className="pt-callout-icon">📦</div>
+                <div className="pt-callout-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon3dOrdersBox size={28} />
+                </div>
                 <div>
                   <strong>Bí Kíp Làm Giàu: Xe Tải Đơn Hàng</strong>
                   <p>Giao đơn hàng xe tải đem lại <strong>nhiều Xu và XP hơn gấp 3 lần</strong> so với việc bán lẻ từng món nông sản vào kho!</p>
@@ -404,15 +412,15 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial, onNavigateS
             <div className="pt-guide-content-view">
               <div className="pt-guide-grid-details">
                 <div className="pt-detail-card highlight-vehicle">
-                  <b>🚲 Xe Đạp Thể Thao Play Together</b>
+                  <b style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dBike size={18} /> Xe Đạp Thể Thao Play Together</b>
                   <p>Tốc độ: <strong>10 m/s</strong> (Nhanh hơn 43% so với đi bộ!). Nhận miễn phí khi hoàn thành toàn bộ nhiệm vụ tân thủ!</p>
                 </div>
                 <div className="pt-detail-card">
-                  <b>🛵 Xe Máy Cub 50 Classic</b>
+                  <b style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dCub50 size={18} /> Xe Máy Cub 50 Classic</b>
                   <p>Tốc độ: <strong>14 m/s</strong>. Tiếng máy nổ hoài niệm, di chuyển siêu nhanh trên đường nhựa.</p>
                 </div>
                 <div className="pt-detail-card">
-                  <b>🚜 Máy Cày FarmTrac 3000</b>
+                  <b style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dTractor size={18} /> Máy Cày FarmTrac 3000</b>
                   <p>Tốc độ: <strong>8 m/s</strong>. Phương tiện chuyên dụng cho người làm nông chuyên nghiệp.</p>
                 </div>
               </div>

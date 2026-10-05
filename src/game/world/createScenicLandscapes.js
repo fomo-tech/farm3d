@@ -23,6 +23,8 @@ import { beachOceanHalfWidth, beachResourceWaterAt, beachGroundHeight } from '..
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
 import { WORLD_VILLAGES } from '../../../shared/villageLayout.js';
 import { WORLD_PALETTE, VILLAGE_THEME_GROUPS, createCozyMaterial } from './worldDesignSystem.js';
+import { ALL_BRIDGES } from '../../../shared/bridgeConfig.js';
+import { buildBridge } from './nature/BridgeSystem.js';
 import { createGlobalDenseFlora } from './createGlobalDenseFlora.js';
 import { FoliageInstancingEngine } from './FoliageInstancingEngine.js';
 import { createProceduralMountainRange } from './nature/ProceduralMountainRange.js';
@@ -743,17 +745,12 @@ function createCentralBotanicalPark(scene, parent, foliage, shadows) {
   brookMesh.material = matBrookWater;
   brookMesh.parent = root;
 
-  // Cầu đá nhỏ bắc qua suối (x = 88, z = 48)
-  const footbridge = MeshBuilder.CreateBox('park-stone-footbridge', {
-    width: 7.5,
-    height: 0.26,
-    depth: 3.2,
-  }, scene);
-  footbridge.rotation.y = -0.16 + Math.PI / 2;
-  footbridge.position.set(88, 0.26, 48);
-  footbridge.material = makeMat(scene, 'park-bridge-stone', '#cbd5e1', null, 0.1);
-  footbridge.parent = root;
-  shadows?.addShadowCaster(footbridge);
+  // Cầu đá hoa viên nhỏ bắc qua suối (x = 88, z = 48) đồng bộ theo BridgeSystem
+  const bridgePark = ALL_BRIDGES.find(b => b.id === 'bridge-park-stone');
+  if (bridgePark) {
+    const footbridgeNode = buildBridge(scene, bridgePark, root, shadows);
+    footbridgeNode.rotation.y = -0.16 + Math.PI / 2;
+  }
 
   // Hồ hoa súng nhỏ tại điểm cuối dòng suối thung lũng (x = 84, z = 68)
   const pond = MeshBuilder.CreateCylinder('park-brook-end-pond', {

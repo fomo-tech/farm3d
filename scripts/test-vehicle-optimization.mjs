@@ -1,0 +1,36 @@
+import assert from 'node:assert/strict';
+import { NullEngine } from '@babylonjs/core/Engines/nullEngine.js';
+import { Scene } from '@babylonjs/core/scene.js';
+import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
+import { createVehicleRigs } from '../src/game/player/createVehicleRigs.js';
+import { PreviewFrameGate } from '../src/game/rendering/PreviewFrameGate.js';
+const engine = new NullEngine(); const scene = new Scene(engine);
+const root = new TransformNode('test', scene);
+const rig = createVehicleRigs(scene, root);
+assert.equal(scene.materials.length, 0, 'walking creates no vehicle materials');
+rig.setVehicle('bike');
+const bike = scene.getTransformNodeByName('vehicle-bike-root');
+rig.setVehicle('scooter');
+const counts = [scene.meshes.length, scene.materials.length];
+for (let index = 0; index < 30; index++) {
+  rig.setVehicle('bike');
+  assert.equal(scene.getTransformNodeByName('vehicle-bike-root'), bike, 'reuse geometry');
+  rig.setVehicle('scooter');
+  assert.deepEqual([scene.meshes.length, scene.materials.length], counts);
+}
+rig.setVehicle('kart');
+assert.equal(bike.isDisposed(), true, 'bounded LRU evicts oldest model');
+rig.setVehicle('walk');
+assert.equal(scene.meshes.length, 0, 'dismount releases cached geometry');
+rig.dispose(); assert.equal(scene.materials.length, 0);
+const clock = new PreviewFrameGate(30);
+let rendered = 0;
+for (let time = 0; time < 1000; time += 1000 / 120) if (clock.tick(time, { visible: true, animate: true })) rendered++;
+assert.ok(rendered >= 29 && rendered <= 31, `preview budget: ${rendered}`);
+assert.equal(clock.tick(1100, { visible: true, animate: false }), null);
+assert.ok(clock.tick(1200, { visible: true, animate: false, dirty: true }));
+assert.equal(clock.tick(1300, { visible: false, animate: true }), null);
+const resume = clock.tick(10000, { visible: true, animate: true });
+assert.ok(resume.delta < 0.1, 'resume never fast-forwards hidden animation');
+scene.dispose(); engine.dispose();
+console.log('PASS: lazy materials, warm model reuse, bounded cache, dismount cleanup, 30 FPS budget, pause/hidden/resume');

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { suggestTienLenPlay, smartSortTienLen } from '../../../../shared/casino/tienLenRules.js';
 import { PlayingCard } from '../CasinoArt.jsx';
+import { Icon3dSparkleStar, Icon3dLightningBolt } from '../../icons3d/GameIcons3D.jsx';
 
 export function TienLenScreen({
   room,
@@ -41,7 +42,7 @@ export function TienLenScreen({
 
   const handlePlayCards = () => {
     if (selectedCards.length > 0) {
-      onAct({ kind: 'play_cards', cards: selectedCards, roundId: round?.id });
+      onAct({ kind: 'play', cards: selectedCards, roundId: round?.id });
       setSelectedCards([]);
       setCustomHand(null);
     }
@@ -52,7 +53,7 @@ export function TienLenScreen({
     setSelectedCards([]);
   };
 
-  const trick = round?.trick;
+  const trick = round?.table;
 
   return (
     <div className="pt-dedicated-game-stage pt-stage-tienlen">
@@ -74,7 +75,7 @@ export function TienLenScreen({
           </div>
         ) : (
           <div className="pt-empty-trick-pod">
-            <span className="trick-sparkle">✨</span>
+            <span className="trick-sparkle"><Icon3dSparkleStar size={18} /></span>
             <span>Vòng đánh mới · Bạn có quyền đánh bất kỳ bộ nào</span>
           </div>
         )}
@@ -83,8 +84,8 @@ export function TienLenScreen({
       {/* 2. DOCK QUẠT 13 LÁ BÀI DƯỚI ĐÁY MÀN HÌNH */}
       <div className="pt-tienlen-hand-dock">
         {myTurn && (
-          <div className="pt-turn-notification-badge animate-pulse">
-            ⚡ ĐẾN LƯỢT BẠN ĐÁNH BÀI
+          <div className="pt-turn-notification-badge animate-pulse" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Icon3dLightningBolt size={18} /> ĐẾN LƯỢT BẠN ĐÁNH BÀI
           </div>
         )}
 
@@ -119,8 +120,9 @@ export function TienLenScreen({
               className="pt-tool-btn btn-smart-sort"
               onClick={handleSmartSort}
               title="Tự động xếp bài theo sảnh, đôi, ba cây, rác"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
             >
-              ⚡ XẾP BÀI
+              <Icon3dLightningBolt size={16} /> XẾP BÀI
             </button>
             <button
               type="button"
@@ -129,7 +131,7 @@ export function TienLenScreen({
               disabled={!myTurn}
               title="Gợi ý bộ bài đè được tụ giữa bàn"
             >
-              💡 GỢI Ý
+              GỢI Ý
             </button>
           </div>
 
@@ -148,7 +150,7 @@ export function TienLenScreen({
               onClick={handlePlayCards}
               disabled={!myTurn || selectedCards.length === 0}
             >
-              💥 ĐÁNH BÀI ({selectedCards.length} lá)
+              ĐÁNH BÀI ({selectedCards.length} lá)
             </button>
           </div>
         </div>

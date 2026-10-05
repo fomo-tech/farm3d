@@ -4,6 +4,7 @@ import {
   Icon3dHeartBubble,
   Icon3dSparkleStar,
   Icon3dGoldenCarrot,
+  Icon3dHeartReaction,
 } from './icons3d/GameIcons3D.jsx';
 
 export function MascotDiorama3D({ isReady = false, statusMsg = '' }) {
@@ -28,8 +29,8 @@ export function MascotDiorama3D({ isReady = false, statusMsg = '' }) {
           {petted
             ? 'Chíp chíp! Cảm ơn bạn xoa đầu nha! (˶ᵔ ᵕ ᵔ˶) ♡'
             : isReady
-            ? 'Thị trấn đã sẵn sàng! Chạm để vào chơi nào! ✨'
-            : statusMsg || 'Chào mừng bạn đến với nông trại Chibi! 🌸'}
+            ? 'Thị trấn đã sẵn sàng! Chạm để vào chơi nào!'
+            : statusMsg || 'Chào mừng bạn đến với nông trại Chibi!'}
         </span>
         <div className="bubble-anchor" />
       </div>
@@ -54,9 +55,9 @@ export function MascotDiorama3D({ isReady = false, statusMsg = '' }) {
         {/* Tap Reaction Heart/Star Burst */}
         {petted && (
           <div className="pt-tap-heart-burst" aria-hidden="true">
-            <span className="burst-heart h1">💖</span>
-            <span className="burst-heart h2">✨</span>
-            <span className="burst-heart h3">🌸</span>
+            <span className="burst-heart h1"><Icon3dHeartReaction size={16} /></span>
+            <span className="burst-heart h2"><Icon3dSparkleStar size={16} /></span>
+            <span className="burst-heart h3"><Icon3dHeartReaction size={14} /></span>
           </div>
         )}
 
@@ -65,7 +66,7 @@ export function MascotDiorama3D({ isReady = false, statusMsg = '' }) {
           <div className="pt-mascot-sparkle-burst" aria-hidden="true">
             <span className="burst-sparkle s1"><Icon3dSparkleStar size={20} /></span>
             <span className="burst-sparkle s2"><Icon3dSparkleStar size={18} /></span>
-            <span className="burst-sparkle s3">⭐</span>
+            <span className="burst-sparkle s3"><Icon3dSparkleStar size={16} /></span>
           </div>
         )}
       </div>

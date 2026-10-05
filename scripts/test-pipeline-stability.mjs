@@ -3,17 +3,25 @@ import { NullEngine } from '@babylonjs/core/Engines/nullEngine.js';
 import { Scene } from '@babylonjs/core/scene.js';
 import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
-import { createCinematicRenderingPipeline } from '../src/game/rendering/CinematicRenderingPipeline.js';
+import { createCinematicRenderingPipeline, resolveAntialiasSamples } from '../src/game/rendering/CinematicRenderingPipeline.js';
+
+assert.equal(resolveAntialiasSamples('ultra', 8), 4);
+assert.equal(resolveAntialiasSamples('balanced', 8), 2);
+assert.equal(resolveAntialiasSamples('eco', 8), 1);
+assert.equal(resolveAntialiasSamples('ultra', 1), 1);
 
 const engine = new NullEngine();
 const scene = new Scene(engine);
 const camera = new FreeCamera('test', Vector3.Zero(), scene);
 const cinematic = createCinematicRenderingPipeline(scene, camera, { quality: 'balanced' });
 assert.ok(cinematic.pipeline);
+assert.equal(cinematic.pipeline.sharpenEnabled, false);
 const initial = cinematic.pipeline.imageProcessing;
 for (let i = 0; i < 20; i++) cinematic.setQuality('balanced');
 assert.equal(cinematic.pipeline.imageProcessing, initial, 'resolution-only updates must not recreate grading');
 cinematic.setQuality('eco');
+assert.equal(cinematic.pipeline.sharpenEnabled, false);
+assert.equal(cinematic.pipeline.fxaaEnabled, true, 'fallback AA for low-end hardware');
 const eco = cinematic.pipeline.imageProcessing;
 for (let i = 0; i < 20; i++) cinematic.setQuality('eco');
 assert.equal(cinematic.pipeline.imageProcessing, eco);

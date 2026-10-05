@@ -275,9 +275,10 @@ export async function loadModelContainer(scene, idOrUrl, options = {}) {
           return null;
         }
         if (container.textures) {
-          container.textures.forEach(tex => {
-            tex.anisotropicFilteringLevel = 16;
-          });
+          const requestedAnisotropy = scene.metadata?.textureAnisotropy || 8;
+          const maxAnisotropy = scene.getEngine?.().getCaps?.().maxAnisotropy || requestedAnisotropy;
+          const anisotropy = Math.min(requestedAnisotropy, maxAnisotropy);
+          container.textures.forEach(tex => { tex.anisotropicFilteringLevel = anisotropy; });
         }
         cache.containers.set(asset.url, container);
         // glTF loader owns sRGB/linear decoding; never gamma-convert textures twice.

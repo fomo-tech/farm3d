@@ -103,8 +103,8 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
     }
 
     // 3. ĐÔI MẮT THEO BIỂU CẢM & LOẠI MẮT
-    if (expression === 'blink') {
-      // Mắt nhắm vòng cung (⌒ ⌒)
+    if (expression === 'blink' || expression === 'shy') {
+      // Mắt nhắm vòng cung dễ thương (⌒ ⌒)
       drawBlinkEyes(ctx, eyeLeftX, eyeRightX, eyeY);
     } else if (expression === 'wink') {
       drawBlinkEye(ctx, eyeLeftX, eyeY, -1);

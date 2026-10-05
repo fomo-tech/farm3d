@@ -50,7 +50,7 @@ export function getBlockedRoadResourcesCount() {
 export function recordBlockedRoadResource(resourceName, x, z) {
   blockedResourcesCount += 1;
   if (ROAD_SAFETY_CONFIG.debugLogBlocked && typeof console !== 'undefined') {
-    console.warn(`[RoadSafetyZone] ⛔ ĐÃ CHẶN tài nguyên '${resourceName}' tại (${x.toFixed(1)}, ${z.toFixed(1)}) vì xâm lấn hành lang đường giao thông.`);
+    console.warn(`[RoadSafetyZone] [BLOCKED] Đã chặn tài nguyên '${resourceName}' tại (${x.toFixed(1)}, ${z.toFixed(1)}) vì xâm lấn hành lang đường giao thông.`);
   }
 }
 

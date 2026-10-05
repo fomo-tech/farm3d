@@ -31,27 +31,31 @@ export function createVillageGate(scene, position, villageName = 'LÀNG HOA MAI'
     // QL 86: làng nằm ở phía Nam -> lùi vào vỉa hè lối vào làng z = 93.5
     gateZ = 93.5;
   } else if (Math.abs(position.z - (-234)) < 6.0) {
-    // QL Bắc: lùi ra vỉa hè lối vào làng z = -242.0
-    gateZ = -242.0;
+    // QL Bắc: lùi vào lối vào làng phía Nam z = -226.5
+    gateZ = -226.5;
   } else if (Math.abs(position.z - 406) < 6.0) {
-    // QL Nam: lùi vào lối vào làng z = 414.0
-    gateZ = 414.0;
+    // QL Nam: lùi vào lối vào làng phía Nam z = 413.5
+    gateZ = 413.5;
   } else if (Math.abs(position.x) < 4.0 && position.z < -350) {
-    // Phú Điền: lùi vào trước khuôn viên làng z = -402.0
-    gateZ = -402.0;
+    // Phú Điền: lùi vào lối vào làng phía Nam z = -386.5
+    gateZ = -386.5;
   }
 
   const root = new TransformNode(`village-named-gate-${villageId || villageName}`, scene);
   root.position.set(gateX, position.y || 0, gateZ);
   root.rotation.y = gateRot;
 
-  const theme = (villageId && VILLAGE_THEME_GROUPS[villageId]) ? VILLAGE_THEME_GROUPS[villageId] : {
-    accentColor: '#f59e0b',
-    roofColor: '#c2410c',
-    treeType: 'maple',
-    flowerColor: '#fde047',
-    groupLabel: 'Làng Quê',
-  };
+  const normId = villageId ? villageId.replace(/-\d{3}$/, '') : null;
+  const theme = (villageId && VILLAGE_THEME_GROUPS[villageId])
+    || (normId && VILLAGE_THEME_GROUPS[normId])
+    || {
+      accentColor: '#f59e0b',
+      roofColor: '#c2410c',
+      treeType: 'maple',
+      flowerColor: '#fde047',
+      groupLabel: 'Cụm Làng Ban Mai',
+      signBg: '#3d2314',
+    };
 
   const mats = {
     woodPillar: createCozyMaterial(scene, `gate-wood-${villageId}`, WORLD_PALETTE.woodOakDark),
@@ -169,7 +173,7 @@ export function createVillageGate(scene, position, villageName = 'LÀNG HOA MAI'
     ctx.clearRect(0, 0, 2048, 440);
 
     // Nền gỗ sồi sẫm sang trọng
-    ctx.fillStyle = theme.signBg || '#2c1810';
+    ctx.fillStyle = theme.signBg || '#3d2314';
     ctx.beginPath();
     ctx.roundRect(28, 28, 1992, 384, 56);
     ctx.fill();
@@ -209,7 +213,7 @@ export function createVillageGate(scene, position, villageName = 'LÀNG HOA MAI'
   if (foliage) {
     const treeX1 = gateX - halfSpan - 2.8;
     const treeX2 = gateX + halfSpan + 2.8;
-    const treeZOffset = (gateZ > 0 ? 3.5 : -3.5);
+    const treeZOffset = 4.0;
     const treeZ = gateZ + treeZOffset;
 
     if (theme.treeType === 'maple') {
@@ -226,8 +230,8 @@ export function createVillageGate(scene, position, villageName = 'LÀNG HOA MAI'
       foliage.createCloudTree(treeX2, treeZ, 1.2);
     }
 
-    foliage.createFlowerPatch(treeX1, treeZ + (gateZ > 0 ? 1.5 : -1.5), 8, 2.0);
-    foliage.createFlowerPatch(treeX2, treeZ + (gateZ > 0 ? 1.5 : -1.5), 8, 2.0);
+    foliage.createFlowerPatch(treeX1, treeZ + 1.5, 8, 2.0);
+    foliage.createFlowerPatch(treeX2, treeZ + 1.5, 8, 2.0);
   }
 
   return {

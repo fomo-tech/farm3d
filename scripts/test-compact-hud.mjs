@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const app = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
+const css = readFileSync(new URL('../src/components/CompactGameHud.css', import.meta.url), 'utf8');
+assert.ok(app.includes('compact-game-hud'));
+assert.ok(!app.includes('className="dismount-vehicle-btn'), 'one vehicle control instead of duplicate dismount');
+assert.ok(!app.includes('className="farm-gate-action"'), 'gate uses shared context action');
+assert.ok(app.includes('label: nearbyFarmGate.open'));
+assert.ok(app.includes('world.farming?.interactNearest'));
+assert.ok(css.includes('(hover:hover) and (pointer:fine)'), 'desktop joystick is hidden');
+assert.ok(css.includes('width:44px; height:44px'), 'touch targets retain 44px');
+assert.ok(css.includes('.compact-game-hud.hud-modal-open'), 'modal hides gameplay controls');
+console.log('PASS compact HUD: consolidated vehicle/gate controls, contextual farming, desktop/touch and modal rules');
