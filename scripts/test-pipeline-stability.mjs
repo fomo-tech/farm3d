@@ -40,3 +40,22 @@ for (let i = 0; i < 20; i++) {
 }
 autoScene.dispose(); autoEngine.dispose();
 console.log('PASS: repeated Auto effect levels preserve pipeline identity and isolated grading');
+
+const mobileEngine = new NullEngine();
+const mobileScene = new Scene(mobileEngine);
+const mobileCamera = new FreeCamera('mobile', Vector3.Zero(), mobileScene);
+const mobile = createCinematicRenderingPipeline(mobileScene, mobileCamera, { quality: 'ultra', lightweight: true });
+assert.equal(mobile.pipeline, null, 'mobile must not allocate a full-screen render target');
+assert.equal(mobileScene.imageProcessingConfiguration.applyByPostProcess, false);
+const mobileConfig = mobileScene.imageProcessingConfiguration;
+const mobileUpdates = [];
+mobileConfig.onUpdateParameters.add(() => mobileUpdates.push(1));
+for (const quality of ['balanced', 'ultra', 'eco']) {
+  mobile.setQuality(quality);
+  mobile.setCinematicPreset('night');
+  assert.equal(mobile.pipeline, null);
+  assert.equal(mobileScene.imageProcessingConfiguration, mobileConfig);
+}
+assert.equal(mobileUpdates.length, 0, 'mobile quality/day-night updates must not dirty world materials');
+mobileScene.dispose(); mobileEngine.dispose();
+console.log('PASS: mobile uses direct grading without render targets or recurring material invalidation');

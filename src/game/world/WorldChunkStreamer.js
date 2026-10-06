@@ -63,8 +63,10 @@ export class WorldChunkStreamer {
         entry.unload?.();
         entry.showLod?.();
         entry.state = 'unloaded';
+        detailed--;
       }
     }
+    if (detailed >= this.maxDetailed) return;
     if (this.loading || !queued.length) return;
     queued.sort((a, b) => a.score - b.score);
     const entry = queued[0].entry;
@@ -114,7 +116,8 @@ export class WorldChunkStreamer {
 export function getWorldChunkStreamer(scene) {
   let streamer = streamers.get(scene);
   if (streamer) return streamer;
-  streamer = new WorldChunkStreamer();
+  streamer = new WorldChunkStreamer(scene.metadata?.mobile
+    ? { detailRadius: 1, keepRadius: 2, maxDetailed: 72 } : {});
   streamers.set(scene, streamer);
   let lastX = 0;
   let lastZ = 0;

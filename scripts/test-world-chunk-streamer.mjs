@@ -79,3 +79,21 @@ metres.update({ x: 35, z: 0 }, undefined, 2000);
 assert.equal(metres.entries.get('flowers').state, 'unloaded');
 metres.dispose();
 console.log('PASS: chunk detail, far LOD, eviction and return traversal');
+
+// Dense nearby objects previously bypassed the detail cap indefinitely.
+const bounded = new WorldChunkStreamer({ detailRadius: 1, keepRadius: 2, maxDetailed: 2 });
+let live = 0, peak = 0;
+for (let i = 0; i < 12; i++) bounded.register(`dense-${i}`, i, 0, {
+  load: () => { live++; peak = Math.max(peak, live); return true; },
+  unload: () => { if (bounded.entries.get(`dense-${i}`)?.state === 'ready') live--; },
+});
+for (let i = 0; i < 50; i++) {
+  bounded.update({ x: 0, z: 0 }, undefined, 1000 + i * 200);
+  await flush();
+  assert.ok(bounded.getStats().ready <= 2);
+}
+assert.equal(peak, 2, 'nearby detail loads must honor the hard memory cap');
+bounded.update({ x: 1000, z: 1000 }, undefined, 12000);
+assert.equal(bounded.getStats().ready, 0, 'travel releases detailed objects');
+bounded.dispose();
+console.log('PASS: dense neighbourhood stays bounded over repeated updates');

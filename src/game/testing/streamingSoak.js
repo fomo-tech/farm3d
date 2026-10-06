@@ -7,6 +7,8 @@ const metrics = document.querySelector('#metrics');
 const start = document.querySelector('#start');
 const canvas = document.querySelector('#game');
 const params = new URLSearchParams(location.search);
+// Clean scene captures for art review, using the same world and mobile profile.
+if (params.get('view') === 'scene') document.querySelector('aside').hidden = true;
 const report = { revision: 'streaming-audit-v2', mode: 'isolated-world', startedAt: null, durationSeconds: 900,
   samples: [], failures: [], transitions: 0, cycles: 0, ready: false, completed: false, gaps: [], longTasks: [] };
 let running = false;
@@ -138,6 +140,16 @@ document.querySelector('#export').onclick = () => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 document.querySelector('#show-report').onclick = () => {
+  const groups = new Map();
+  for (const mesh of world.scene.meshes) {
+    let root = mesh;
+    while (root.parent) root = root.parent;
+    const entry = groups.get(root.name) || { name: root.name, meshes: 0, vertices: 0 };
+    entry.meshes++; entry.vertices += mesh.getTotalVertices(); groups.set(root.name, entry);
+  }
+  report.resources = { roots: [...groups.values()].sort((a,b) => b.meshes-a.meshes).slice(0,30),
+    textures: world.scene.textures.map(t => ({name:t.name, ...t.getSize(), mipmaps:!!t.getInternalTexture()?.generateMipMaps}))
+      .sort((a,b) => b.width*b.height-a.width*a.height) };
   report.coastalAudit = auditCoastalMeshes(world.scene);
   report.runtime = window.__farmDebug?.getReport();
   const output = document.querySelector('#report');

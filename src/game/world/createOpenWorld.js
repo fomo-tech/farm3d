@@ -96,6 +96,7 @@ function createSteppingStoneTrail(scene, startPos, endPos, materials, count = 7)
 
 function citizen(scene, x, z, hex, shadows) {
   const human = buildHumanMesh(scene, `citizen-${x}-${z}`, {
+    fixedAppearance: !!scene.metadata?.mobile,
     outfitColor: hex,
     skinColor: '#fcd5b5',
     hairColor: '#76503b',
@@ -221,10 +222,12 @@ function zoneGate(scene, x, z, rotation, label, color, materials, shadows) {
 }
 
 function worldLabel(scene, text, parent, color, posY = 3.5) {
-  const texture = new DynamicTexture(`label-${text}`, { width: 2048, height: 512 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  const signScale = scene.metadata?.mobile ? 0.5 : 1;
+  const texture = new DynamicTexture(`label-${text}`, { width: 2048 * signScale, height: 512 * signScale }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
   texture.anisotropicFilteringLevel = 16;
   texture.hasAlpha = true;
   const context = texture.getContext();
+  context.scale(signScale, signScale);
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = 'high';
   context.clearRect(0, 0, 2048, 512);
@@ -236,7 +239,11 @@ function worldLabel(scene, text, parent, color, posY = 3.5) {
   context.strokeStyle = color;
   context.lineWidth = 24;
   context.stroke();
-  texture.drawText(text, null, 304, 'bold 128px "Nunito", "Segoe UI", Arial, sans-serif', '#fffdf0', null, true, true);
+  context.font = 'bold 128px "Nunito", "Segoe UI", Arial, sans-serif';
+  context.textAlign = 'center';
+  context.fillStyle = '#fffdf0';
+  context.fillText(text, 1024, 304);
+  texture.update();
 
   const labelMaterial = new StandardMaterial(`label-material-${text}`, scene);
   labelMaterial.diffuseTexture = texture;

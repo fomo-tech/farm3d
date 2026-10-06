@@ -18,6 +18,8 @@ foliage.loadedPrototypes = new Set(['oak']);
 foliage.chunks = new Map();
 foliage.dirtyChunks = new Set();
 foliage.lastChunkUpdate = 0;
+foliage.mobileProxyRadius = 4;
+foliage.center = null;
 for (let i = 0; i < 100; i++) foliage._queueChunkInstance('oak', {
   x: 1 + i % 10, y: 0, z: 1 + Math.floor(i / 10), scale: 1, rotY: 0, withShadow: false,
 });
@@ -75,6 +77,17 @@ assert.ok([...foliage.chunks.values()].filter(chunk => [...chunk.groups.values()
 assert.equal(group.requests.length, 101, 'eviction preserves tree placements');
 assert.equal(foliage.getStats().missingRepresentations, 0,
   'after pending work finishes every group retains a detail or LOD representation');
+// Mobile trims cold GPU geometry more aggressively while retaining LOD proxies.
+foliage.mobile = true;
+for (let step = 0; step < 100; step++) { foliage.lastChunkUpdate = -1000; foliage.updateChunks(); }
+assert.ok([...foliage.chunks.values()].filter(chunk => [...chunk.groups.values()].some(g => g.meshes.length)).length <= 12,
+  'mobile keeps at most twelve cold foliage chunks');
+assert.equal(group.proxy, null, 'mobile releases far-away LOD meshes outside its fog-visible ring');
+assert.equal(group.meshes.length, 0, 'mobile releases cached detail geometry outside its fog-visible ring');
+scene.activeCamera.target.set(0, 0, 0);
+for (let step = 0; step < 8; step++) { foliage.lastChunkUpdate = -1000; foliage.updateChunks(); }
+assert.ok(group.meshes.some(mesh => mesh.isEnabled()), 'mobile reconstructs nearby detail after eviction');
+assert.equal(group.meshes[0].thinInstanceCount, 101, 'mobile eviction retains every tree placement');
 scene.activeCamera = null;
 scene.dispose();
 engine.dispose();

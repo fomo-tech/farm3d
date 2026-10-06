@@ -30,7 +30,7 @@ function pseudoRandom(seedX, seedZ, salt = 1.0) {
 /**
  * Generates the global dense flora across the entire world map using GPU Hardware Instancing.
  */
-export function createGlobalDenseFlora(scene, foliage, shadows, foliageInstancing = null) {
+export function* createGlobalDenseFloraSteps(scene, foliage, shadows, foliageInstancing = null) {
   if (!foliageInstancing) foliageInstancing = new FoliageInstancingEngine(scene, shadows);
   const root = new TransformNode('global-dense-flora', scene);
 
@@ -46,6 +46,8 @@ export function createGlobalDenseFlora(scene, foliage, shadows, foliageInstancin
 
   for (let gx = xStart; gx <= xEnd; gx += step) {
     for (let gz = zStart; gz <= zEnd; gz += step) {
+      if (scene.isDisposed) return root;
+      yield;
       // Deterministic pseudo-random position inside this cell
       const rand1 = pseudoRandom(gx, gz, 1.1);
       const rand2 = pseudoRandom(gx, gz, 2.2);
@@ -149,4 +151,12 @@ export function createGlobalDenseFlora(scene, foliage, shadows, foliageInstancin
 
   console.log(`[GlobalDenseFlora] Deployed: ${treeCount} trees, ${flowerCount} flowerbeds/bushes.`);
   return root;
+}
+
+// Keep synchronous preview callers compatible; live world construction uses steps.
+export function createGlobalDenseFlora(...args) {
+  const steps = createGlobalDenseFloraSteps(...args);
+  let result = steps.next();
+  while (!result.done) result = steps.next();
+  return result.value;
 }

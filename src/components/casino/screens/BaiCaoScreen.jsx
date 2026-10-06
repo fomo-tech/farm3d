@@ -116,7 +116,7 @@ export function BaiCaoScreen({
           )}
           {isSpectator && (
             <span className="spectator-tip">
-              Đang xem · Bấm vào ghế trống [+] trên bàn để vào chơi ván tiếp theo
+              Đang xem · Bấm Tham gia chơi để tự vào bàn
             </span>
           )}
         </div>

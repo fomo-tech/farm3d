@@ -139,9 +139,11 @@ export function createConcertStage(scene, shadows, position = { x: 28, y: 0, z: 
   topBeamBack.parent = root;
 
   // 3. MÀN HÌNH LED CONG KHỔNG LỒ PHÍA SAU SÂN KHẤU (CURVED LED BACKDROP SCREEN - 2048x1024 High-Res)
-  const ledTex = new DynamicTexture('stage-led-screen-tex', { width: 2048, height: 1024 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  const ledScale = scene.metadata?.mobile ? 0.5 : 1;
+  const ledTex = new DynamicTexture('stage-led-screen-tex', { width: 2048 * ledScale, height: 1024 * ledScale }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
   ledTex.anisotropicFilteringLevel = 16;
   const ledCtx = ledTex.getContext();
+  ledCtx.scale(ledScale, ledScale);
   ledCtx.imageSmoothingEnabled = true;
   ledCtx.imageSmoothingQuality = 'high';
 

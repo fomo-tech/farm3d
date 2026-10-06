@@ -12,17 +12,17 @@ import {
 
 const GAME_META = {
   'tai-xiu': {
-    name: 'TÀI XỈU SIC BO',
+    name: 'TÀI XỈU',
     icon: <Icon3dDice size={32} />,
     badge: 'HOT NHẤT · 3 XÚC XẮC',
     colorGrad: 'linear-gradient(135deg, rgba(220, 38, 38, 0.85) 0%, rgba(234, 88, 12, 0.85) 100%)',
     borderCol: '#fca5a5',
-    subDesc: 'Đoán Tài / Xỉu / Chẵn / Lẻ / Bão 1:30 · Nặn bát 3D hồi hộp',
+    subDesc: 'Ba xúc xắc · Chọn Tài hoặc Xỉu · Mở kết quả cùng bạn',
     typeTag: 'Xúc xắc Sic Bo 3D',
   },
   'bau-cua': {
     name: 'BẦU CUA TÔM CÁ',
-    icon: <SymbolArt symbol="crab" size={32} />,
+    icon: <SymbolArt symbol="cua" size={32} />,
     badge: 'DÂN GIAN · 6 LINH VẬT',
     colorGrad: 'linear-gradient(135deg, rgba(5, 150, 105, 0.85) 0%, rgba(13, 148, 136, 0.85) 100%)',
     borderCol: '#6ee7b7',
@@ -35,7 +35,7 @@ const GAME_META = {
     badge: 'BÀI TÂY · ĐỐI KHÁNG',
     colorGrad: 'linear-gradient(135deg, rgba(37, 99, 235, 0.85) 0%, rgba(79, 70, 229, 0.85) 100%)',
     borderCol: '#93c5fd',
-    subDesc: '3 lá so nút với Nhà cái · Sáp, Liêng, Ba Tây ăn trọn ván',
+    subDesc: 'Ba lá so nút với nhà cái · Ba lá hình cao nhất',
     typeTag: 'Bài Tây 3 lá 3D',
   },
   'tien-len': {
@@ -44,7 +44,7 @@ const GAME_META = {
     badge: 'CHIẾN THUẬT · 4 NGƯỜI',
     colorGrad: 'linear-gradient(135deg, rgba(124, 45, 18, 0.85) 0%, rgba(153, 27, 27, 0.85) 100%)',
     borderCol: '#fbcfe8',
-    subDesc: '13 lá sát phạt · Chặt heo ăn tiền tươi · Xếp bài thông minh',
+    subDesc: '13 lá · Chơi tính điểm · Xếp bài và gợi ý nước đánh',
     typeTag: 'Tiến Lên đếm lá 3D',
   },
 };
@@ -145,7 +145,7 @@ export function CasinoLobby({
           </button>
 
           <div className="pt-table-info-pill">
-            <span className="pill-badge-game">HỘI QUÁN KAIA</span>
+            <span className="pill-badge-game">HỘI QUÁN VUI VẺ</span>
             <span className="pill-table-name">Chọn trò chơi hoặc tiến lại gần 4 bàn 3D</span>
           </div>
         </div>

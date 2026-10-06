@@ -3096,6 +3096,19 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   neck.position.y = 0.51;
   neck.material = materials.skin;
 
+  if (options.fixedAppearance) {
+    // Decorative citizens never change outfits. Keeping the entire hidden
+    // wardrobe for each one multiplies geometry and material memory on iOS.
+    for (const mesh of root.getChildMeshes()) {
+      if (!mesh.isEnabled()) mesh.dispose(false, false);
+    }
+    const usedMaterials = new Set(scene.meshes.map(mesh => mesh.material));
+    for (const material of Object.values(materials)) {
+      if (!usedMaterials.has(material)) material.dispose(false, false);
+    }
+    root.metadata.fixedAppearance = true;
+  }
+
   // ========================================================
   // 6. CÔNG CỤ NÔNG TRẠI 3D (Handheld Tool Props)
   // ========================================================

@@ -23,9 +23,9 @@ import {
   Icon3dStar,
 } from './icons3d/GameIcons3D.jsx';
 
-const VILLAGE_THEMES = {
+const RAW_VILLAGE_THEMES = {
   'binh-minh': {
-    badge: '★ Thủ Phủ',
+    badge: 'Thủ Phủ',
     color: '#f59e0b',
     gradient: 'linear-gradient(135deg, #fef3c7, #fde68a)',
     highway: 'Quốc Lộ 86 · Trục Nam',
@@ -33,7 +33,7 @@ const VILLAGE_THEMES = {
     Icon: Icon3dRiceSpike,
   },
   'hoa-mai': {
-    badge: '★ Hoa Mai',
+    badge: 'Hoa Mai',
     color: '#ec4899',
     gradient: 'linear-gradient(135deg, #fce7f3, #fbcfe8)',
     highway: 'Quốc Lộ 86 · Phía Tây',
@@ -41,7 +41,7 @@ const VILLAGE_THEMES = {
     Icon: Icon3dFlower,
   },
   'ven-song': {
-    badge: '★ Ven Sông',
+    badge: 'Ven Sông',
     color: '#06b6d4',
     gradient: 'linear-gradient(135deg, #cffafe, #a5f3fc)',
     highway: 'Quốc Lộ 86 · Phía Đông',
@@ -49,7 +49,7 @@ const VILLAGE_THEMES = {
     Icon: Icon3dCoast,
   },
   'doi-gio': {
-    badge: '★ Đồi Gió',
+    badge: 'Đồi Gió',
     color: '#8b5cf6',
     gradient: 'linear-gradient(135deg, #ede9fe, #ddd6fe)',
     highway: 'Quốc Lộ 86 · Cực Tây',
@@ -57,7 +57,7 @@ const VILLAGE_THEMES = {
     Icon: Icon3dMill,
   },
   'an-nhien': {
-    badge: '★ An Nhiên',
+    badge: 'An Nhiên',
     color: '#10b981',
     gradient: 'linear-gradient(135deg, #d1fae5, #a7f3d0)',
     highway: 'Quốc Lộ 86 · Cực Đông',
@@ -65,7 +65,7 @@ const VILLAGE_THEMES = {
     Icon: Icon3dSprout,
   },
   'moc-lan': {
-    badge: '★ Mộc Lan',
+    badge: 'Mộc Lan',
     color: '#f97316',
     gradient: 'linear-gradient(135deg, #ffedd5, #fed7aa)',
     highway: 'Quốc Lộ Bắc · Phía Tây',
@@ -73,7 +73,7 @@ const VILLAGE_THEMES = {
     Icon: Icon3dFlower,
   },
   'thanh-ha': {
-    badge: '★ Thanh Hà',
+    badge: 'Thanh Hà',
     color: '#eab308',
     gradient: 'linear-gradient(135deg, #fef9c3, #fef08a)',
     highway: 'Quốc Lộ Bắc · Trung Tây',
@@ -81,7 +81,7 @@ const VILLAGE_THEMES = {
     Icon: Icon3dHouseCabin,
   },
   'phu-dien': {
-    badge: '★ Phú Điền',
+    badge: 'Phú Điền',
     color: '#16a34a',
     gradient: 'linear-gradient(135deg, #dcfce7, #bbf7d0)',
     highway: 'Trục Đô Thị - Cực Bắc',
@@ -89,7 +89,7 @@ const VILLAGE_THEMES = {
     Icon: Icon3dTractor,
   },
   'tan-loc': {
-    badge: '★ Tân Lộc',
+    badge: 'Tân Lộc',
     color: '#0284c7',
     gradient: 'linear-gradient(135deg, #e0f2fe, #bae6fd)',
     highway: 'Quốc Lộ Bắc · Trung Đông',
@@ -97,7 +97,7 @@ const VILLAGE_THEMES = {
     Icon: Icon3dGem,
   },
   'hai-van': {
-    badge: '★ Hải Vân',
+    badge: 'Hải Vân',
     color: '#6366f1',
     gradient: 'linear-gradient(135deg, #e0e7ff, #c7d2fe)',
     highway: 'Quốc Lộ Bắc · Cực Đông',
@@ -105,7 +105,7 @@ const VILLAGE_THEMES = {
     Icon: Icon3dStar,
   },
   'thu-phong': {
-    badge: '★ Thu Phong',
+    badge: 'Thu Phong',
     color: '#ea580c',
     gradient: 'linear-gradient(135deg, #ffedd5, #fed7aa)',
     highway: 'Quốc Lộ Nam Ven Biển',
@@ -113,7 +113,7 @@ const VILLAGE_THEMES = {
     Icon: Icon3dAutumn,
   },
   'huong-duong': {
-    badge: '★ Hướng Dương',
+    badge: 'Hướng Dương',
     color: '#f59e0b',
     gradient: 'linear-gradient(135deg, #fef3c7, #fde68a)',
     highway: 'Quốc Lộ Nam Ven Biển',
@@ -122,12 +122,25 @@ const VILLAGE_THEMES = {
   },
 };
 
+// Aliases covering both standard names and suffixed layout IDs (e.g. an-nhien-005)
+const VILLAGE_THEMES = {
+  ...RAW_VILLAGE_THEMES,
+  'an-nhien-005': RAW_VILLAGE_THEMES['an-nhien'],
+  'moc-lan-006': RAW_VILLAGE_THEMES['moc-lan'],
+  'thanh-ha-007': RAW_VILLAGE_THEMES['thanh-ha'],
+  'phu-dien-008': RAW_VILLAGE_THEMES['phu-dien'],
+  'tan-loc-009': RAW_VILLAGE_THEMES['tan-loc'],
+  'hai-van-010': RAW_VILLAGE_THEMES['hai-van'],
+  'thu-phong-011': RAW_VILLAGE_THEMES['thu-phong'],
+  'huong-duong-012': RAW_VILLAGE_THEMES['huong-duong'],
+};
+
 const SPECIAL_DESTINATIONS = [
   {
     id: 'town',
     label: 'Quảng Trường Trung Tâm',
     category: 'city',
-    badge: '★ Phố Thị',
+    badge: 'Phố Thị',
     color: '#ec4899',
     gradient: 'linear-gradient(135deg, #fdf2f8, #fce7f3)',
     highway: 'Tâm Điểm Bản Đồ (x: 0, z: 0)',
@@ -139,7 +152,7 @@ const SPECIAL_DESTINATIONS = [
     id: 'lake',
     label: 'Hồ Pha Lê & Bến Câu Cá',
     category: 'nature',
-    badge: '★ Bến Thuyền',
+    badge: 'Bến Thuyền',
     color: '#0284c7',
     gradient: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
     highway: 'Đại Lộ Phía Đông (x: 128, z: 2)',
@@ -152,7 +165,7 @@ const SPECIAL_DESTINATIONS = [
     id: 'beach',
     label: 'Bãi biển & Bến tàu',
     category: 'nature',
-    badge: '★ Bờ Cát',
+    badge: 'Bờ Cát',
     color: '#0d9488',
     gradient: 'linear-gradient(135deg, #f0fdfa, #ccfbf1)',
     highway: 'Quốc Lộ Nam (x: 0, z: 300)',
@@ -197,7 +210,7 @@ export default function PlayTogetherWorldMapModal({
     // 12 Villages
     WORLD_VILLAGES.forEach(v => {
       const theme = VILLAGE_THEMES[v.id] || {
-        badge: '★ Làng Nông Trại',
+        badge: 'Làng Nông Trại',
         color: '#10b981',
         gradient: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
         highway: 'Tuyến Giao Thông Liên Làng',
@@ -213,7 +226,7 @@ export default function PlayTogetherWorldMapModal({
         id: v.id,
         label: v.name,
         category: 'village',
-        badge: isMyVillage ? `★ Lô ${myFarm.lotNumber} Của Bạn` : theme.badge,
+        badge: isMyVillage ? `Lô ${myFarm.lotNumber} Của Bạn` : theme.badge,
         color: theme.color,
         gradient: theme.gradient,
         highway: theme.highway,
@@ -315,102 +328,206 @@ export default function PlayTogetherWorldMapModal({
           </button>
         </header>
 
-        <section className="world-map-overview" aria-label="Bản đồ thế giới"><WorldMapSurface playerCoord={playerCoord} myFarm={myFarm} destinations={allDestinations} selectedId={selectedDestination?.id} onSelect={setSelectedDestination} zoom={mapZoom}/><div className="map-zoom-controls"><button type="button" aria-label="Thu nhỏ bản đồ" disabled={mapZoom<=1} onClick={()=>setMapZoom(z=>Math.max(1,z-.5))}>−</button><button type="button" onClick={()=>setMapZoom(1)}>Toàn cảnh</button><button type="button" aria-label="Phóng to bản đồ" disabled={mapZoom>=3} onClick={()=>setMapZoom(z=>Math.min(3,z+.5))}>+</button></div>{selectedDestination&&<aside className="map-destination-preview"><b>{selectedDestination.label}</b><span>{Math.round(Math.hypot(selectedDestination.x-playerCoord.x,selectedDestination.z-playerCoord.z))} m · Phí được xác nhận trước khi đi</span><button type="button" onClick={()=>handleTravelClick(selectedDestination)}>Dịch chuyển</button><button type="button" aria-label="Bỏ chọn điểm đến" onClick={()=>setSelectedDestination(null)}>×</button></aside>}</section>
-        {/* Home Farm Quick-Warp Banner (Play Together Recall VIP Card) */}
-        {myFarm && (
-          <div className="pt-map-home-banner">
-            <div className="pt-map-home-info">
-              <div className="pt-map-home-icon"><Icon3dHouseCabin size={28} /></div>
-              <div>
-                <div className="pt-map-home-title">
-                  <span>Trang Trại Của Bạn</span>
-                  <span className="pt-map-home-badge">Lô {myFarm.lotNumber}</span>
-                </div>
-                <div className="pt-map-home-sub">
-                  Thuộc {myFarm.villageName} · Sân nhà khép kín hướng thẳng ra Quốc Lộ
-                </div>
-              </div>
+        {/* 3D Interactive Map Overview Section */}
+        <section className="world-map-overview" aria-label="Bản đồ thế giới">
+          <WorldMapSurface
+            playerCoord={playerCoord}
+            myFarm={myFarm}
+            destinations={allDestinations}
+            selectedId={selectedDestination?.id}
+            onSelect={dest => {
+              farmAudio?.playPop?.();
+              setSelectedDestination(dest);
+            }}
+            zoom={mapZoom}
+          />
+
+          {/* Floating Top Controls Bar: Zoom (Left) & Category Filters (Right) */}
+          <div className="map-top-hud">
+            {/* Candy Zoom Buttons */}
+            <div className="map-zoom-controls">
+              <button
+                type="button"
+                className="map-zoom-btn"
+                aria-label="Thu nhỏ bản đồ"
+                disabled={mapZoom <= 1}
+                onClick={() => {
+                  farmAudio?.playPop?.();
+                  setMapZoom(z => Math.max(1, +(z - 0.5).toFixed(1)));
+                }}
+              >
+                −
+              </button>
+              <button
+                type="button"
+                className="map-zoom-btn map-zoom-reset"
+                onClick={() => {
+                  farmAudio?.playPop?.();
+                  setMapZoom(1);
+                }}
+                title="Đặt lại toàn cảnh"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <span>{Math.round(mapZoom * 100)}%</span>
+              </button>
+              <button
+                type="button"
+                className="map-zoom-btn"
+                aria-label="Phóng to bản đồ"
+                disabled={mapZoom >= 3}
+                onClick={() => {
+                  farmAudio?.playPop?.();
+                  setMapZoom(z => Math.min(3, +(z + 0.5).toFixed(1)));
+                }}
+              >
+                +
+              </button>
             </div>
-            <button
-              type="button"
-              className="pt-map-home-warp-btn"
-              onClick={handleWarpHome}
-              title="Về ngay trước cổng nông trại của bạn"
-            >
-              <span>VỀ NHÀ NGAY</span>
-            </button>
-          </div>
-        )}
 
-        {/* Radar Location Summary */}
-        <div className="pt-map-radar-strip">
-          <div className="pt-map-radar-title">
-            <span className="pt-map-radar-dot" />
-            <span>Vị trí hiện tại: <strong>{currentZone?.label || 'Quảng Trường Trung Tâm'}</strong></span>
+            {/* Floating Category Filter Pills */}
+            <nav className="map-floating-tabs" aria-label="Bộ lọc địa danh">
+              <button
+                type="button"
+                className={`map-floating-tab ${activeTab === 'all' ? 'active' : ''}`}
+                onClick={() => {
+                  farmAudio?.playPop?.();
+                  setActiveTab('all');
+                }}
+              >
+                Tất Cả ({allDestinations.length})
+              </button>
+              <button
+                type="button"
+                className={`map-floating-tab ${activeTab === 'villages' ? 'active' : ''}`}
+                onClick={() => {
+                  farmAudio?.playPop?.();
+                  setActiveTab('villages');
+                }}
+              >
+                12 Làng (12)
+              </button>
+              <button
+                type="button"
+                className={`map-floating-tab ${activeTab === 'city' ? 'active' : ''}`}
+                onClick={() => {
+                  farmAudio?.playPop?.();
+                  setActiveTab('city');
+                }}
+              >
+                Đô Thị
+              </button>
+              <button
+                type="button"
+                className={`map-floating-tab ${activeTab === 'nature' ? 'active' : ''}`}
+                onClick={() => {
+                  farmAudio?.playPop?.();
+                  setActiveTab('nature');
+                }}
+              >
+                Biển & Hồ
+              </button>
+            </nav>
           </div>
-          <div className="pt-map-radar-summary">
-            <span>Tọa độ: ({Math.round(playerCoord.x)}, {Math.round(playerCoord.z)})</span>
-            <span>Bấm điểm đến để xem lựa chọn dịch chuyển</span>
-          </div>
-        </div>
 
-        {/* Filter Navigation Tabs */}
-        <nav className="pt-map-tabs">
-          <button
-            type="button"
-            className={`pt-map-tab ${activeTab === 'all' ? 'active' : ''}`}
-            onClick={() => {
-              farmAudio?.playPop?.();
-              setActiveTab('all');
-            }}
-          >
-            Tất Cả ({allDestinations.length})
-          </button>
-          <button
-            type="button"
-            className={`pt-map-tab ${activeTab === 'villages' ? 'active' : ''}`}
-            onClick={() => {
-              farmAudio?.playPop?.();
-              setActiveTab('villages');
-            }}
-          >
-            12 Làng Nông Trại (12)
-          </button>
-          <button
-            type="button"
-            className={`pt-map-tab ${activeTab === 'city' ? 'active' : ''}`}
-            onClick={() => {
-              farmAudio?.playPop?.();
-              setActiveTab('city');
-            }}
-          >
-            Đô Thị Phồn Hoa
-          </button>
-          <button
-            type="button"
-            className={`pt-map-tab ${activeTab === 'nature' ? 'active' : ''}`}
-            onClick={() => {
-              farmAudio?.playPop?.();
-              setActiveTab('nature');
-            }}
-          >
-            Biển & Hồ Câu Cá
-          </button>
-          {myFarm && (
-            <button
-              type="button"
-              className={`pt-map-tab ${activeTab === 'my_farm' ? 'active' : ''}`}
-              onClick={() => {
-                farmAudio?.playPop?.();
-                setActiveTab('my_farm');
-              }}
-            >
-              Nông Trại Của Bạn
-            </button>
+          {/* Play Together Floating Destination Preview Card */}
+          {selectedDestination && (
+            <aside className="map-destination-preview">
+              <div
+                className="map-preview-icon-frame"
+                style={{ background: selectedDestination.gradient || 'linear-gradient(135deg, #e0f2fe, #bae6fd)' }}
+              >
+                {selectedDestination.Icon ? (
+                  <selectedDestination.Icon size={30} />
+                ) : (
+                  <Icon3dHouseCabin size={30} />
+                )}
+              </div>
+              <div className="map-preview-info">
+                <div className="map-preview-tag-row">
+                  <span className="map-preview-badge">{selectedDestination.badge}</span>
+                  <span className="map-preview-distance" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <Icon3dCityBus size={13} />
+                    <span>{Math.round(Math.hypot(selectedDestination.x - playerCoord.x, selectedDestination.z - playerCoord.z))}m</span>
+                  </span>
+                </div>
+                <div className="map-preview-title">{selectedDestination.label}</div>
+                <div className="map-preview-sub">{selectedDestination.sub || selectedDestination.highway}</div>
+              </div>
+              <div className="map-preview-actions">
+                <button
+                  type="button"
+                  className="map-preview-warp-btn"
+                  onClick={() => handleTravelClick(selectedDestination)}
+                  title="Dịch chuyển ngay đến địa điểm này"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Icon3dCityBus size={18} />
+                  <span>DỊCH CHUYỂN NGAY</span>
+                </button>
+                <button
+                  type="button"
+                  className="map-preview-close-btn"
+                  aria-label="Bỏ chọn điểm đến"
+                  onClick={() => {
+                    farmAudio?.playPop?.();
+                    setSelectedDestination(null);
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            </aside>
           )}
-        </nav>
+        </section>
 
-        <div className="map-destination-list" aria-label="Điểm đến">{filteredDestinations.map(dest=><button type="button" key={dest.id} aria-pressed={selectedDestination?.id===dest.id} onClick={()=>setSelectedDestination(dest)}>{dest.Icon&&<dest.Icon size={20}/>}<span>{dest.label}</span><small>{Math.round(Math.hypot(dest.x-playerCoord.x,dest.z-playerCoord.z))} m</small></button>)}</div>
+        {/* Unified Bottom Game Dock: Location, Quick Home Warp & Landmark Strip */}
+        <footer className="pt-map-bottom-dock">
+          <div className="pt-map-radar-strip">
+            <div className="pt-map-radar-title">
+              <span className="pt-map-radar-dot" />
+              <span>Vị trí hiện tại: <strong>{currentZone?.label || 'Thị Trấn Vibe City'}</strong></span>
+              <span className="pt-map-coord-badge">({Math.round(playerCoord.x)}, {Math.round(playerCoord.z)})</span>
+            </div>
+
+            {myFarm && (
+              <button
+                type="button"
+                className="pt-map-home-warp-btn"
+                onClick={handleWarpHome}
+                title={`Về ngay trước cổng nông trại của bạn (${myFarm.villageName} - Lô ${myFarm.lotNumber})`}
+              >
+                <Icon3dHouseCabin size={18} />
+                <span>VỀ NHÀ (LÔ {myFarm.lotNumber})</span>
+              </button>
+            )}
+          </div>
+
+          {/* Quick-Travel Landmark Capsule Strip (Compact Horizontal Row) */}
+          <div className="map-capsule-strip" aria-label="Điểm đến nhanh">
+            {filteredDestinations.map(dest => {
+              const isSelected = selectedDestination?.id === dest.id;
+              const dist = Math.round(Math.hypot(dest.x - playerCoord.x, dest.z - playerCoord.z));
+
+              return (
+                <button
+                  type="button"
+                  key={dest.id}
+                  className={`map-capsule-item ${isSelected ? 'is-selected' : ''} ${dest.isHere ? 'is-here' : ''} ${dest.isMyVillage ? 'is-my-farm' : ''}`}
+                  onClick={() => {
+                    farmAudio?.playPop?.();
+                    setSelectedDestination(dest);
+                  }}
+                >
+                  <span className="map-capsule-name">{dest.label.replace('Làng ', '')}</span>
+                  <span className="map-capsule-dist">{dist}m</span>
+                </button>
+              );
+            })}
+          </div>
+        </footer>
       </div>
     </div>
   );

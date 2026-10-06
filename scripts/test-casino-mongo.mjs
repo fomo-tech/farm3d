@@ -11,7 +11,7 @@ const players=[0,1,2,3].map(i=>({playerId:`test_${i}`,name:`Tester ${i}`,revisio
 let manager=new CasinoRoomManager(db,options);
 const act=(p,payload,id=`request_${++seq}`)=>manager.action(players[p],payload,id);
 const balance=async p=>(await db.collection('players').findOne({playerId:players[p].playerId})).progress.coins;
-async function join(game,count=2) {const room=[...manager.rooms.values()].find(r=>r.game===game&&r.system);for(let p=0;p<count;p++){await act(p,{kind:'join',roomId:room.id});await act(p,{kind:'seat',seat:p});await act(p,{kind:'ready',ready:true});}await manager.tick();return room;}
+async function join(game,count=2) {const room=[...manager.rooms.values()].find(r=>r.game===game&&r.system);for(let p=0;p<count;p++){await act(p,{kind:'join',roomId:room.id});assert.equal(manager.view(players[p].playerId).mine.seatList[p]?.playerId,players[p].playerId,'joining automatically assigns a unique place');await act(p,{kind:'ready',ready:true});}await manager.tick();return room;}
 async function finish(room){for(let i=0;i<500&&room.round?.phase!=='result';i++){now+=11;await manager.tick();}assert.equal(room.round?.phase,'result');}
 async function leave(count=2){for(let p=0;p<count;p++)await act(p,{kind:'leave'});}
 try {

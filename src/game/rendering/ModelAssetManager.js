@@ -339,6 +339,22 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
   root.metadata = { ...(root.metadata || {}), asset: idOrUrl, assetStatus: 'loading' };
   let activeInstance = null;
   let loadEpoch = 0;
+  const ownedTintMaterials = new Set();
+  const releaseInstance = () => {
+    const instance = activeInstance;
+    activeInstance = null;
+    if (instance?.dispose) instance.dispose();
+    else {
+      instance?.rootNodes?.forEach(node => node.dispose?.(false, false));
+      instance?.animationGroups?.forEach(group => group.dispose());
+      instance?.skeletons?.forEach(skeleton => skeleton.dispose());
+    }
+    // Tint clones belong to this placement, but their textures belong to the
+    // shared asset container. Never dispose those textures with the clone.
+    for (const material of ownedTintMaterials) material.dispose(false, false);
+    ownedTintMaterials.clear();
+  };
+  root.onDisposeObservable.addOnce(releaseInstance);
 
   // Do not let a large GLB enter Babylon's synchronous parser during play.
   // The generated low-poly silhouettes keep the object readable and preserve
@@ -397,6 +413,7 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
         }
         if (colorTint && mesh.material) {
           mesh.material = mesh.material.clone(`${mesh.name}_tintMat`);
+          ownedTintMaterials.add(mesh.material);
           if (mesh.material.albedoColor) mesh.material.albedoColor = colorTint;
           else if (mesh.material.diffuseColor) mesh.material.diffuseColor = colorTint;
         }
@@ -406,7 +423,7 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
       onLoaded?.({ root, instance, childMeshes });
       return true;
     } catch (error) {
-      instance?.rootNodes?.forEach(node => node.dispose?.(false, true));
+      releaseInstance();
       root.metadata.assetStatus = 'failed';
       const fallback = showFallback ? createFallback(scene, root, `${name}_${instanceId}`) : null;
       console.warn(`[ModelAssetManager] Không thể tạo instance ${idOrUrl}:`, error);
@@ -428,8 +445,7 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
       load: materialize,
       unload: () => {
         loadEpoch++;
-        activeInstance?.rootNodes?.forEach(node => node.dispose?.());
-        activeInstance = null;
+        releaseInstance();
         root.metadata.assetStatus = 'lod';
       },
       showLod: () => proxy.setEnabled(true),

@@ -1,32 +1,331 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { WORLD_LAYOUT, zoneAtPosition } from '../game/world/worldLayout.js';
+import { farmAudio } from '../game/audio/FarmAudioSystem.js';
+import { Icon3dMap, Icon3dHouseCabin } from './icons3d/GameIcons3D.jsx';
 import './FarmMinimap.css';
 
-export function FarmMinimap({worldRef,farmTarget,onOpenMap}) {
-  const [position,setPosition]=useState(null);
-  useEffect(()=>{
-    const sample=()=>{const p=worldRef.current?.getPlayerState?.();if(p&&Number.isFinite(p.x)&&Number.isFinite(p.z))setPosition({x:p.x,z:p.z,yaw:p.yaw||0});};
-    sample();const timer=setInterval(sample,250);return()=>clearInterval(timer);
-  },[worldRef]);
-  const p=position||{x:0,z:0,yaw:0};
-  const project=(x,z)=>[60+(x-p.x)*.28,60-(z-p.z)*.28];
-  const visible=([x,y])=>x>=7&&x<=113&&y>=7&&y<=113;
-  const landmarks=[...Object.values(WORLD_LAYOUT.zones).map(z=>({...z,color:z.id==='crystal-lake'?'#66bdd6':'#dfb35b',symbol:z.id==='crystal-lake'?'≈':z.id==='city-center'?'★':'●'})),...(farmTarget?[{...farmTarget,label:'Nông trại của bạn',color:'#6ee0b0',symbol:'⌂'}]:[])];
-  const zone=zoneAtPosition(p.x,p.z);
-  return <button type="button" className="farm-minimap" onClick={onOpenMap} aria-label="Mở bản đồ · vị trí hiện tại" title="Mở bản đồ · M">
-    <svg viewBox="0 0 120 120" role="img" aria-label="Bản đồ nhỏ, bạn ở giữa">
-      <defs><clipPath id="farm-map-clip"><rect x="4" y="4" width="112" height="112" rx="8"/></clipPath></defs>
-      <g clipPath="url(#farm-map-clip)"><rect width="120" height="120" fill="#31483c"/>
-      {WORLD_LAYOUT.villages.map(v=>{const [x,y]=project(v.gate.x,v.gate.z);const [,endY]=project(v.gate.x,v.gate.z+190);return <path key={v.id} d={`M${x} ${y}V${endY}`} stroke="#bac4ae" strokeWidth="3"/>;})}
-      <circle cx={project(0,0)[0]} cy={project(0,0)[1]} r="14" fill="#c4b58c" stroke="#e5d9b7" strokeWidth="2"/>
-      <ellipse cx={project(165,2)[0]} cy={project(165,2)[1]} rx="13" ry="9" fill="#4e9eb2"/>
-      {WORLD_LAYOUT.farms.map(farm=>{const [x,y]=project(farm.x,farm.z);return visible([x,y])?<rect key={farm.id} x={x-3} y={y-3} width="6" height="6" rx="1" fill="#7d9871"/>:null;})}
-      {landmarks.map(l=>{const [x,y]=project(l.x,l.z);return visible([x,y])?<g key={l.label}><title>{l.label}</title><circle cx={x} cy={y} r="7" fill="#172e3b" stroke={l.color} strokeWidth="1"/><text x={x} y={y+3} textAnchor="middle" fontSize="10" fill={l.color}>{l.symbol}</text></g>:null;})}
-      <circle cx="60" cy="60" r="11" fill="#70d7ee" opacity=".18"/><path d="M60 52 L65 66 L60 63 L55 66 Z" fill="#fff" stroke="#152632" strokeWidth="1.5" transform={`rotate(${p.yaw*180/Math.PI} 60 60)`}/></g>
-      <text x="60" y="14" textAnchor="middle" fill="#fff" fontSize="9">B</text><text x="108" y="63" fill="#fff" fontSize="8">Đ</text><text x="8" y="63" fill="#fff" fontSize="8">T</text><text x="60" y="111" fill="#fff" fontSize="8">N</text>
-    </svg>
-    <span className="farm-map-zone">{position?(typeof zone==='string'?zone:zone?.label||'Thế giới'):'Đang định vị'}</span>
-    <small>{position?`${Math.round(p.x)}, ${Math.round(p.z)} · M`:'Bản đồ · M'}</small>
-    <span className="farm-map-legend">▲ Bạn · ⌂ Nông trại</span>
-  </button>;
+// Key Landmarks across Vibe City (Play Together Theme)
+const POIS = [
+  { id: 'plaza', label: 'Quảng Trường', x: 0, z: 0, color: '#f59e0b', symbol: '★', icon: '🌟' },
+  { id: 'lake', label: 'Hồ Pha Lê', x: 165, z: 2, color: '#0ea5e9', symbol: '🎣', icon: '🎣' },
+  { id: 'fashion', label: 'Thời Trang', x: 29, z: -25, color: '#ec4899', symbol: '👗', icon: '👗' },
+  { id: 'casino', label: 'Hội Quán', x: -29, z: -25, color: '#8b5cf6', symbol: '🎲', icon: '🎲' },
+  { id: 'supplies', label: 'Chợ Nông Sản', x: 29, z: 25, color: '#10b981', symbol: '🛒', icon: '🛒' },
+  { id: 'elder', label: 'Trưởng Làng', x: -7.4, z: 76, color: '#14b8a6', symbol: '🏡', icon: '🏡' },
+  { id: 'pen', label: 'Khu Nuôi Bò', x: 88, z: 112, color: '#d97706', symbol: '🐮', icon: '🐮' },
+  { id: 'beach', label: 'Biển Bình Minh', x: 0, z: 340, color: '#06b6d4', symbol: '🏖️', icon: '🏖️' },
+];
+
+export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
+  const [position, setPosition] = useState({ x: 0, z: 0, yaw: 0 });
+  const [minimized, setMinimized] = useState(false);
+
+  useEffect(() => {
+    let animId;
+    let frame = 0;
+    const update = () => {
+      frame++;
+      // Sample 20 FPS (every 3 frames) for silky smooth tracking with 0 lag
+      if (frame % 3 === 0 && worldRef.current) {
+        const state = worldRef.current.getPlayerState?.();
+        if (state && Number.isFinite(state.x) && Number.isFinite(state.z)) {
+          const yaw = worldRef.current.player?.root?.rotation?.y ?? state.rotation ?? state.yaw ?? 0;
+          setPosition({ x: state.x, z: state.z, yaw });
+        }
+      }
+      animId = requestAnimationFrame(update);
+    };
+    animId = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(animId);
+  }, [worldRef]);
+
+  const px = position.x;
+  const pz = position.z;
+  const yaw = position.yaw;
+  const yawDeg = (yaw * 180) / Math.PI;
+
+  // Scale: 1 meter = 0.22px inside viewBox 0 0 100 100 (center 50,50)
+  // Outer glass radius = 43px (covers ~185 meters)
+  const SCALE = 0.22;
+  const CLAMP_RADIUS = 39;
+
+  const projectPoint = (wx, wz) => {
+    const dx = (wx - px) * SCALE;
+    const dy = (wz - pz) * SCALE;
+    const dist = Math.hypot(dx, dy);
+    if (dist <= CLAMP_RADIUS) {
+      return { x: 50 + dx, y: 50 + dy, isClamped: false, distWorld: Math.round(Math.hypot(wx - px, wz - pz)) };
+    }
+    const ratio = CLAMP_RADIUS / dist;
+    return { x: 50 + dx * ratio, y: 50 + dy * ratio, isClamped: true, distWorld: Math.round(Math.hypot(wx - px, wz - pz)) };
+  };
+
+  const zoneInfo = zoneAtPosition(px, pz);
+  const zoneName = typeof zoneInfo === 'string' ? zoneInfo : zoneInfo?.label || 'Thị Trấn Vibe City';
+
+  const zoneIcon = useMemo(() => {
+    if (zoneInfo?.key === 'city') return '⛲';
+    if (zoneInfo?.key === 'lake') return '🎣';
+    if (zoneInfo?.key === 'beach') return '🏖️';
+    if (zoneInfo?.key === 'countryside') return '🌾';
+    return '🗺️';
+  }, [zoneInfo?.key]);
+
+  // Player's Owned Farm Home Blip
+  const homeTarget = farmTarget ? {
+    id: 'my-farm',
+    label: farmTarget.label || 'Vườn Nhà Bạn',
+    x: farmTarget.x,
+    z: farmTarget.z,
+    color: '#22c55e',
+    symbol: '⌂',
+    icon: '🏡',
+    isHome: true,
+  } : null;
+
+  const allPOIs = homeTarget ? [...POIS, homeTarget] : POIS;
+
+  // Relative terrain feature positions
+  const plazaTerrain = projectPoint(0, 0);
+  const lakeTerrain = projectPoint(165, 2);
+  const beachTerrainY = 50 + (320 - pz) * SCALE;
+
+  const handleOpenMap = (e) => {
+    e.stopPropagation();
+    try {
+      farmAudio.playPop?.();
+    } catch {}
+    onOpenMap?.();
+  };
+
+  return (
+    <aside
+      className={`pt-chibi-minimap-root ${minimized ? 'is-minimized' : ''}`}
+      aria-label="Radar Bản Đồ Nhỏ Play Together"
+    >
+      {/* 1. Radar Glass Dial Container */}
+      <div
+        className="pt-minimap-disc"
+        onClick={handleOpenMap}
+        role="button"
+        tabIndex={0}
+        title="Bấm để mở Bản Đồ Thế Giới (Phím M)"
+      >
+        {/* Candy Bezel Gloss & Specular Sheen */}
+        <div className="pt-minimap-candy-bezel">
+          <div className="pt-bezel-highlight" />
+
+          {/* SVG Map Projection Viewport */}
+          <svg className="pt-radar-svg" viewBox="0 0 100 100">
+            <defs>
+              <clipPath id="ptRadarClip">
+                <circle cx="50" cy="50" r="43" />
+              </clipPath>
+              {/* Radial Ambient Grass Gradient */}
+              <radialGradient id="ptGrassGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#bbf7d0" />
+                <stop offset="65%" stopColor="#86efac" />
+                <stop offset="100%" stopColor="#4ade80" />
+              </radialGradient>
+              {/* Lake Water Shimmer Gradient */}
+              <radialGradient id="ptLakeGrad" cx="40%" cy="35%" r="60%">
+                <stop offset="0%" stopColor="#7dd3fc" />
+                <stop offset="70%" stopColor="#38bdf8" />
+                <stop offset="100%" stopColor="#0284c7" />
+              </radialGradient>
+              {/* Sweeping Radar Radar Beam */}
+              <linearGradient id="ptSweepGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
+                <stop offset="100%" stopColor="transparent" />
+              </linearGradient>
+            </defs>
+
+            {/* Clipped Terrain Landscape Layer */}
+            <g clipPath="url(#ptRadarClip)">
+              {/* Lush Green Lawn Ground */}
+              <circle cx="50" cy="50" r="45" fill="url(#ptGrassGrad)" />
+
+              {/* Ocean & Beach in the South */}
+              {beachTerrainY < 95 && (
+                <g>
+                  <rect x="-10" y={beachTerrainY} width="120" height="70" fill="#0284c7" />
+                  <rect x="-10" y={beachTerrainY - 5} width="120" height="7" fill="#fef08a" />
+                  <ellipse cx="50" cy={beachTerrainY + 2} rx="40" ry="3" fill="rgba(255,255,255,0.5)" />
+                </g>
+              )}
+
+              {/* Main Golden Pathway Network */}
+              <line
+                x1={plazaTerrain.x}
+                y1={plazaTerrain.y}
+                x2={plazaTerrain.x}
+                y2={plazaTerrain.y + 110}
+                stroke="#fed7aa"
+                strokeWidth="6"
+                strokeLinecap="round"
+              />
+              <line
+                x1={plazaTerrain.x - 70}
+                y1={plazaTerrain.y}
+                x2={plazaTerrain.x + 70}
+                y2={plazaTerrain.y}
+                stroke="#fed7aa"
+                strokeWidth="5"
+                strokeLinecap="round"
+              />
+
+              {/* Central Plaza Round Pavement */}
+              <circle
+                cx={plazaTerrain.x}
+                cy={plazaTerrain.y}
+                r="13"
+                fill="#fef08a"
+                stroke="#ffffff"
+                strokeWidth="1.6"
+              />
+              <circle
+                cx={plazaTerrain.x}
+                cy={plazaTerrain.y}
+                r="4.5"
+                fill="#38bdf8"
+                stroke="#ffffff"
+                strokeWidth="1"
+              />
+
+              {/* Crystal Lake Water Body */}
+              <ellipse
+                cx={lakeTerrain.x}
+                cy={lakeTerrain.y}
+                rx="15"
+                ry="12"
+                fill="url(#ptLakeGrad)"
+                stroke="#ffffff"
+                strokeWidth="1.5"
+              />
+              <ellipse
+                cx={lakeTerrain.x - 2}
+                cy={lakeTerrain.y - 1}
+                rx="8"
+                ry="5"
+                fill="#bae6fd"
+                opacity="0.6"
+              />
+
+              {/* Concentric GPS Distance Rings */}
+              <circle cx="50" cy="50" r="16" fill="none" stroke="#ffffff" strokeWidth="0.8" strokeDasharray="2 3" opacity="0.45" />
+              <circle cx="50" cy="50" r="30" fill="none" stroke="#ffffff" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.35" />
+
+              {/* Rotating Radar Sweep Beam */}
+              <g className="pt-radar-sweep-anim">
+                <path d="M50 50 L50 6 A44 44 0 0 1 82 22 Z" fill="url(#ptSweepGrad)" />
+              </g>
+
+              {/* Landmark POI Icons */}
+              {allPOIs.map(poi => {
+                const proj = projectPoint(poi.x, poi.z);
+                return (
+                  <g
+                    key={poi.id}
+                    className={`pt-poi-node ${poi.isHome ? 'is-home-poi' : ''}`}
+                    transform={`translate(${proj.x}, ${proj.y})`}
+                  >
+                    {/* Pulsing Aura if Home */}
+                    {poi.isHome && (
+                      <circle cx="0" cy="0" r="8" fill="#22c55e" opacity="0.35" className="pt-home-beacon-pulse" />
+                    )}
+                    {/* Clamped Edge Arrow Pointer */}
+                    {proj.isClamped && (
+                      <polygon
+                        points="0,-6 4,-1 -4,-1"
+                        fill={poi.color}
+                        transform={`rotate(${Math.atan2(proj.y - 50, proj.x - 50) * 180 / Math.PI + 90})`}
+                      />
+                    )}
+                    {/* Blip Circle */}
+                    <circle cx="0" cy="0" r="5" fill={poi.color} stroke="#ffffff" strokeWidth="1.2" />
+                    <text
+                      x="0"
+                      y="2.4"
+                      textAnchor="middle"
+                      fontSize="6"
+                      fontWeight="900"
+                      fill="#ffffff"
+                      fontFamily="Baloo 2, sans-serif"
+                    >
+                      {poi.symbol}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* Central Player Marker & Beacon Pulse */}
+              <circle cx="50" cy="50" r="7.5" fill="#38bdf8" opacity="0.28" className="pt-player-beacon-ping" />
+              {/* Rotating Player Direction Arrow (Heading) */}
+              <g transform={`rotate(${yawDeg} 50 50)`}>
+                <polygon
+                  points="50,40 56,54 50,50.5 44,54"
+                  fill="#ff6b00"
+                  stroke="#ffffff"
+                  strokeWidth="1.6"
+                  strokeLinejoin="round"
+                />
+              </g>
+
+              {/* True North Cardinal Compass Indicator */}
+              <g transform={`rotate(${-yawDeg} 50 50)`}>
+                <g transform="translate(50, 9)">
+                  <circle cx="0" cy="0" r="4.2" fill="#ef4444" stroke="#ffffff" strokeWidth="1" />
+                  <text
+                    x="0"
+                    y="2.2"
+                    textAnchor="middle"
+                    fontSize="5"
+                    fontWeight="900"
+                    fill="#ffffff"
+                    fontFamily="Nunito, sans-serif"
+                  >
+                    N
+                  </text>
+                </g>
+              </g>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      {/* 2. Tactile Location Pill Badge (Docked Under Radar) */}
+      {!minimized && (
+        <div
+          className="pt-radar-location-pill"
+          onClick={handleOpenMap}
+          title="Bấm để mở Bản Đồ Toàn Cảnh (Phím M)"
+        >
+          <span className="pt-location-badge-icon" aria-hidden="true">{zoneIcon}</span>
+          <span className="pt-location-badge-name">{zoneName}</span>
+          <span className="pt-location-badge-tag">
+            <Icon3dMap size={12} />
+            <small>M</small>
+          </span>
+        </div>
+      )}
+
+      {/* 3. Sleek Toggle Minimize / Expand Button */}
+      <button
+        type="button"
+        className="pt-radar-minimize-toggle"
+        onClick={(e) => {
+          e.stopPropagation();
+          try { farmAudio.playPop?.(); } catch {}
+          setMinimized(v => !v);
+        }}
+        title={minimized ? 'Mở rộng Radar' : 'Thu nhỏ Radar'}
+        aria-label={minimized ? 'Mở rộng Radar' : 'Thu nhỏ Radar'}
+      >
+        <span>{minimized ? '🗺️' : '−'}</span>
+      </button>
+    </aside>
+  );
 }
+
+// Named alias export to preserve backward compatibility with both import styles
+export default FarmMinimap;

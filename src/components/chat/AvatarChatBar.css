@@ -16,9 +16,14 @@
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Đẩy nhẹ thanh chat lên khi đang hiển thị thanh công cụ nông trại hotbar */
-body:has(.pt-hotbar) .avatar-chat-bar-container {
+/* Đẩy nhẹ thanh chat lên khi đang hiển thị thanh công cụ nông trại hotbar ở màn hình dọc */
+body:not(.mobile-landscape):has(.pt-hotbar) .avatar-chat-bar-container {
   bottom: 104px;
+}
+@media (orientation: landscape) and (max-height: 540px) {
+  body:has(.pt-hotbar) .avatar-chat-bar-container {
+    bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
+  }
 }
 
 .avatar-chat-form {
@@ -285,11 +290,12 @@ body:has(.pt-hotbar) .avatar-chat-bar-container {
 }
 
 /* Responsive trên Mobile */
-@media (max-width: 780px) {
+@media (max-width: 780px) and (orientation: portrait) {
   .avatar-chat-bar-container {
     left: 12px;
     bottom: 16px;
     width: 280px;
+    transform: none;
   }
 
   .avatar-chat-form {
@@ -314,5 +320,58 @@ body:has(.pt-hotbar) .avatar-chat-bar-container {
   .avatar-quick-chat-popover,
   .avatar-emoji-popover {
     width: 300px;
+  }
+}
+
+@media screen and (orientation: landscape), (max-height: 560px) {
+  .avatar-chat-bar-container {
+    left: calc(max(18px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) + 104px);
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    width: 190px;
+    max-width: calc(100vw - 320px);
+    transform: none;
+  }
+
+  .avatar-chat-bar-container.focused {
+    width: min(320px, calc(100vw - 200px));
+  }
+
+  .avatar-chat-form {
+    padding: 3px 6px;
+    border-radius: 12px;
+  }
+
+  .chat-addon-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .avatar-chat-input {
+    font-size: 11px;
+    padding: 2px 4px;
+  }
+
+  .chat-send-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .avatar-quick-chat-popover,
+  .avatar-emoji-popover {
+    width: 280px;
+    max-height: calc(100dvh - 65px);
+    bottom: calc(100% + 6px);
+    left: 0;
+  }
+
+  .popover-scroll-body {
+    max-height: calc(100dvh - 120px);
+  }
+
+  .emoji-grid {
+    grid-template-columns: repeat(4, 1fr);
+    max-height: calc(100dvh - 120px);
+    overflow-y: auto;
   }
 }

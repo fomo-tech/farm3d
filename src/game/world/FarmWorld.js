@@ -1,3 +1,4 @@
+import { FrameSafeResize } from '../rendering/FrameSafeResize.js';
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera.js';
 import { sampleMovement } from '../network/sampleMovement.js';
 import { cameraMovementBasis } from '../player/cameraMovementBasis.js';
@@ -476,13 +477,13 @@ export class FarmWorld {
     // 16x anisotropic filtering is expensive when the streamed scene owns
     // thousands of textured submeshes.  8x keeps long road/ground views crisp
     // while leaving headroom for Babylon's draw and shadow passes.
-    this.textureAnisotropy = this.isMobile ? 2 : (this.graphicsQuality === 'ultra' ? 8 : 4);
+    this.textureAnisotropy = this.isMobile ? 4 : (this.graphicsQuality === 'ultra' ? 8 : 4);
     Texture.DEFAULT_ANISOTROPIC_FILTERING_LEVEL = this.textureAnisotropy;
     this.resolutionController = new RenderResolutionController();
     this.autoGraphics = new AutoGraphicsController(this.isMobile);
-    this.engine = new Engine(canvas, true, {
+    this.engine = new Engine(canvas, false, {
       preserveDrawingBuffer: false,
-      stencil: true,
+      stencil: !this.isMobile,
       // The rendering pipeline owns the MSAA resolve. Keeping the engine's
       // default framebuffer MSAA enabled as well duplicates raster/resolve
       // work on the full-size canvas.
@@ -496,7 +497,8 @@ export class FarmWorld {
         width: this.canvas.clientWidth || window.innerWidth,
         height: this.canvas.clientHeight || window.innerHeight,
         mobile: this.isMobile,
-        scale: this.graphicsQuality === 'auto' ? this.autoGraphics.scale : this.resolutionController.scale,
+        scale: (this.graphicsQuality === 'auto' || this.isMobile)
+          ? this.autoGraphics.scale : this.resolutionController.scale,
         allowBelowNative: this.graphicsQuality === 'auto' });
     };
 
@@ -584,9 +586,7 @@ export class FarmWorld {
       saveGraphicsQuality(preset);
       this.resolutionController = new RenderResolutionController();
       this.autoGraphics = new AutoGraphicsController(this.isMobile);
-      const dpr = this.getQualityDpr();
-      this.engine.setHardwareScalingLevel(1 / dpr);
-      this.engine.resize();
+      this.resize();
       if (this.cinematic?.setQuality) {
         // An explicit preset switch may change AA once. Subsequent Auto
         // adjustments keep it stable, rather than retaining Ultra's 4x cost.
@@ -597,7 +597,7 @@ export class FarmWorld {
         // at the close shadow distance, but avoids the high-quality kernel's
         // extra shadow-map samples when the world is busy.
         this.shadows.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
-        const targetMapSize = preset === 'ultra' && !this.isMobile ? 2048 : (this.isMobile || preset === 'eco' ? 512 : 1024);
+        const targetMapSize = preset === 'ultra' && !this.isMobile ? 2048 : (preset === 'eco' ? 512 : 1024);
         if (this.shadows.mapSize !== targetMapSize) {
           this.shadows.mapSize = targetMapSize;
         }
@@ -643,14 +643,36 @@ export class FarmWorld {
       });
     };
 
+    this.frameResize = new FrameSafeResize(this.engine, this.canvas, this.getQualityDpr);
     this.resize = () => {
-      if (this.engine && this.canvas) {
-        const dpr = this.getQualityDpr();
-        this.engine.setHardwareScalingLevel(1 / dpr);
-        this.engine.resize();
-      }
+      if (this.disposed || this.contextLost) return;
+      this.frameResize.request();
     };
-    window.addEventListener('resize', this.resize);
+    this.handleOrientationOrResize = () => {
+      this.resize();
+      if (typeof window.scrollTo === 'function' && (window.scrollX !== 0 || window.scrollY !== 0)) {
+        window.scrollTo(0, 0);
+      }
+      this.resizeTimers?.forEach(clearTimeout);
+      this.resizeTimers = [
+        setTimeout(() => {
+          this.resize();
+          if (typeof window.scrollTo === 'function' && (window.scrollX !== 0 || window.scrollY !== 0)) {
+            window.scrollTo(0, 0);
+          }
+        }, 150),
+        setTimeout(() => {
+          this.resize();
+          if (typeof window.scrollTo === 'function' && (window.scrollX !== 0 || window.scrollY !== 0)) {
+            window.scrollTo(0, 0);
+          }
+        }, 450),
+      ];
+    };
+    this.canvasResizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(this.resize) : null;
+    this.canvasResizeObserver?.observe(this.canvas);
+    window.addEventListener('resize', this.handleOrientationOrResize);
+    window.addEventListener('orientationchange', this.handleOrientationOrResize);
     window.addEventListener('keydown', this.keydown);
 
     // Xử lý chạm/click trực tiếp vào Bảng Xếp Hạng, Cửa tiệm 3D, Bàn chơi Casino, Cửa thoát
@@ -687,16 +709,15 @@ export class FarmWorld {
 
     // Gọi resize ngay lập tức và sau khi DOM ổn định để xóa bỏ hoàn toàn hiện tượng vỡ hạt pixel
     this.resize();
-    setTimeout(() => this.resize(), 60);
-    setTimeout(() => this.resize(), 300);
+    this.resizeTimers = [60, 300].map(delay => setTimeout(() => this.resize(), delay));
     let renderFailed = false;
     this.engine.renderEvenInBackground = false;
     this.engine.runRenderLoop(() => {
-      if (renderFailed) return;
+      if (renderFailed || this.disposed || this.contextLost || document.hidden) return;
       try {
         if (!this.scene.activeCamera) throw new Error('Cảnh 3D không có camera hoạt động.');
         window.__farmDebug?.stage('scheduler.update');
-        this.scheduler.update(this.bootReady ? 2.5 : 6);
+        this.scheduler.update(this.isMobile ? (this.bootReady ? 1 : 3) : (this.bootReady ? 2.5 : 6));
         // The opaque start screen covers this canvas. Rendering thousands of
         // half-built meshes here starves construction and keeps boot at 7fps.
         // Only draw once the pipeline explicitly requests its first frame.
@@ -708,12 +729,13 @@ export class FarmWorld {
           return;
         }
         window.__farmDebug?.stage('scene.render');
+        this.frameResize.flush();
         this.scene.render();
-        if (this.bootReady && this.graphicsQuality === 'auto' && !document.hidden && this.autoGraphics.sample(this.engine.getDeltaTime())) {
-          this.cinematic?.setQuality(this.autoGraphics.effects, true);
-          // AutoGraphicsController also changes scale. Apply it to the render
-          // target; previously only the postprocess changed, so Auto could
-          // report recovery without reducing the actual render cost.
+        if (this.bootReady && (this.graphicsQuality === 'auto' || (this.isMobile && this.graphicsQuality !== 'eco')) &&
+          !document.hidden && this.autoGraphics.sample(this.engine.getDeltaTime())) {
+          if (this.graphicsQuality === 'auto') this.cinematic?.setQuality(this.autoGraphics.effects, true);
+          // Apply the mobile safety scale even for a manually selected preset;
+          // sustained low frame rate on iOS must lower GPU memory pressure.
           this.resize();
           if (this.shadows) {
             const targetSize = this.autoGraphics.level > 0 ? 512 : (this.isMobile ? 512 : 1024);
@@ -739,12 +761,14 @@ export class FarmWorld {
       }
     });
     this.engine.onContextLostObservable.add(() => {
+      this.contextLost = true;
       window.__farmRuntimeAudit?.record('context-lost');
       window.__farmDebug?.stopFrames();
       window.__farmDebug?.report(new Error('WebGL context lost'), 'WEBGL');
       this.callbacks.onFatalError?.('WebGL đã mất kết nối đồ họa. Hãy đóng các tab nặng rồi tải lại game.');
     });
     this.engine.onContextRestoredObservable.add(() => {
+      this.contextLost = false;
       window.__farmRuntimeAudit?.record('context-restored');
       this.callbacks.onFatalError?.('Đồ họa đã phục hồi. Hãy tải lại game để đồng bộ cảnh; vị trí được server lưu giữ.');
     });
@@ -789,9 +813,9 @@ export class FarmWorld {
       await this.renderIndex.ready;
       if (this.scene.isDisposed) return;
       report('first-frame', 90, 'Đang xác nhận khung hình đầu tiên…', 3);
+      this.resize();
       await waitForRenderedFrame();
       if (this.scene.isDisposed) return;
-      this.resize();
       this.bootReady = true;
       this.bootTimings = { playableMs: Math.round(performance.now() - bootStartedAt), sceneryComplete: false };
       report('ready', 100, 'Thế giới đã sẵn sàng!', 4);
@@ -804,6 +828,7 @@ export class FarmWorld {
       this.bootTimings.sceneryComplete = true;
       this.bootTimings.sceneryMs = Math.round(performance.now() - bootStartedAt);
     } catch (err) {
+      if (this.disposed) return;
       console.error('[FarmWorld] Lỗi trong pipeline khởi động thế giới:', err);
       if (!this.renderFailure && !this.scene.isDisposed) {
         if (this.bootReady) window.__farmDebug?.report(err, 'BACKGROUND SCENERY');
@@ -819,10 +844,16 @@ export class FarmWorld {
       await new Promise(resolve => setTimeout(resolve, 0));
       await this.scheduleConstruction(createVillageAmenitiesAndGreenbeltsSteps(this.scene, this.foliage, this.shadows, this.foliageInstancing), 'village amenities');
       window.__farmDebug?.mark(`Village amenities: ${this.scene.meshes.length} meshes`);
-      await new Promise(resolve => setTimeout(resolve, 0));
-      await this.scheduleConstruction(createInterVillagePlainsSteps(this.scene, this.foliage, this.shadows), 'distant scenery');
-      this.roadsideMeadows = await this.scheduleConstruction(createRoadsideMeadowsSteps(this.scene, this.foliageInstancing), 'roadside meadow');
-      await this.scheduleConstruction(createVillageWoodlandsSteps(this.foliageInstancing), 'village woodland');
+      if (this.isMobile) {
+        // Keep authored town landmarks and the playable district; these broad
+        // far-field layers add many more foliage batches after the first frame.
+        this.roadsideMeadows = null;
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 0));
+        await this.scheduleConstruction(createInterVillagePlainsSteps(this.scene, this.foliage, this.shadows), 'distant scenery');
+        this.roadsideMeadows = await this.scheduleConstruction(createRoadsideMeadowsSteps(this.scene, this.foliageInstancing), 'roadside meadow');
+        await this.scheduleConstruction(createVillageWoodlandsSteps(this.foliageInstancing), 'village woodland');
+      }
       // Đã loại bỏ hoàn toàn các tài nguyên rải vụn trên đất trống (cỏ/hoa diamond spikes), chỉ giữ cây cối và bụi rậm
       this.livingMeadow = null;
       window.__farmDebug?.mark(`Distance scenery: ${this.scene.meshes.length} meshes`);
@@ -867,7 +898,7 @@ export class FarmWorld {
 
   *createSceneSteps() {
     const scene = new Scene(this.engine);
-    scene.metadata = { ...(scene.metadata || {}), textureAnisotropy: this.textureAnisotropy };
+    scene.metadata = { ...(scene.metadata || {}), textureAnisotropy: this.textureAnisotropy, mobile: this.isMobile };
     installMaterialDirtyIndex(scene);
     // Several setup helpers (player home/corral) run before createScene()
     // returns. Publish the scene immediately so those helpers never receive
@@ -943,7 +974,7 @@ export class FarmWorld {
     sun.diffuse = Color3.FromHexString('#fff7ed');
     yield;
     // Frustum bóng đổ cố định 56m bám theo người chơi: 36.5 texels/m với 2048px map (chuẩn sắc nét Cozy Farmy)
-    sun.shadowFrustumSize = 56;
+    sun.shadowFrustumSize = this.isMobile ? 40 : 56;
     yield;
     sun.shadowMinZ = 1;
     yield;
@@ -967,7 +998,7 @@ export class FarmWorld {
     // 4. Tầng 4: Shadow Generator mờ 30% mềm mại (PCF High/Medium)
     const shadowMapResolution = this.graphicsQuality === 'ultra' && !this.isMobile
       ? 2048
-      : (this.isMobile || this.graphicsQuality === 'eco' ? 512 : 1024);
+      : (this.graphicsQuality === 'eco' ? 512 : 1024);
     yield;
     const shadows = new ShadowGenerator(shadowMapResolution, sun);
     yield;
@@ -986,7 +1017,7 @@ export class FarmWorld {
     this.shadows = shadows;
     // Limit shadow draw calls during construction too, not only after boot.
     this.getNearbyShadowCount = installNearbyShadows(shadows, () => this.player?.root.position, {
-      radius: this.isMobile ? 28 : 36,
+      radius: this.isMobile ? 22 : 36,
       maxCasters: this.isMobile ? 16 : (this.graphicsQuality === 'ultra' ? 32 : 24),
     });
     yield;
@@ -1799,10 +1830,11 @@ export class FarmWorld {
           });
           // Active selection follows distance, not the number of old detailed
           // roots. Keep a bounded cold LRU cache and the player's own estate.
-          const cached = [...this.farmChunks.values()].filter(chunk => chunk.detailReady && chunk.farmId !== this.playerFarmId);
-          if (cached.length > 8) {
+          const cached = [...this.farmChunks.values()].filter(chunk => (chunk.detailReady || chunk.buildingInProgress) && !chunk.evicting && chunk.farmId !== this.playerFarmId);
+          const cacheLimit = this.isMobile ? selected.size + 2 : 8;
+          if (cached.length > cacheLimit) {
             const victim = cached.filter(chunk => !chunk.wantsDetail && !chunk.evicting &&
-              Math.hypot(chunk.farm.x - player.root.position.x, chunk.farm.z - player.root.position.z) > 260)
+              (this.isMobile || Math.hypot(chunk.farm.x - player.root.position.x, chunk.farm.z - player.root.position.z) > 260))
               .sort((a, b) => a.lastUsed - b.lastUsed)[0];
             if (victim) this.evictFarmCache(victim);
           }
@@ -1873,10 +1905,18 @@ export class FarmWorld {
   }
 
   dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
+    this.engine.stopRenderLoop();
+    this.resizeTimers?.forEach(clearTimeout);
+    this.rejectPendingRender?.(new Error('World disposed'));
+    this.rejectPendingRender = null;
     window.__farmRuntimeAudit?.record('world-disposed');
     this.scheduler?.clear();
     window.__farmDebug?.stopFrames();
-    window.removeEventListener('resize', this.resize);
+    this.canvasResizeObserver?.disconnect();
+    window.removeEventListener('resize', this.handleOrientationOrResize);
+    window.removeEventListener('orientationchange', this.handleOrientationOrResize);
     window.removeEventListener('keydown', this.keydown);
     if (this.pointerObserver && this.scene?.onPointerObservable) {
       this.scene.onPointerObservable.remove(this.pointerObserver);
@@ -2541,6 +2581,9 @@ export class FarmWorld {
       z: position.z.toFixed(1),
       chunk: `${chunk.x}:${chunk.z}`,
       meshes: this.scene.meshes.length,
+      textures: this.scene.textures.length,
+      materials: this.scene.materials.length,
+      geometries: this.scene.geometries.length,
       activeMeshes: this.scene.getActiveMeshes().length,
       nearbyShadowCasters: this.getNearbyShadowCount?.() ?? null,
       streamingScheduler: this.scheduler?.getStats(),
@@ -2691,6 +2734,11 @@ export class FarmWorld {
 
   evictFarmCache(chunk) {
     chunk.evicting = true;
+    // Stop obsolete construction before disposing its partially built meshes.
+    this.scheduler.cancel(`farm-build-${chunk.farmId}`);
+    this.scheduler.cancel(`farm-gate-${chunk.farmId}`);
+    this.scheduler.cancel(`farm-buildings-${chunk.farmId}`);
+    chunk.gatePending = false;
     const world = this;
     this.scheduler.enqueue((function* () {
       world.farming?.removeFarmTiles(chunk.farmId, { preserveState: true });
@@ -2702,7 +2750,7 @@ export class FarmWorld {
       if (gateIndex >= 0) world.farmGates.splice(gateIndex, 1)[0].dispose?.();
       yield;
       yield* chunk.evictDetail();
-    })(), -1, `farm-evict-${chunk.farmId}`);
+    })(), this.isMobile ? 20 : -1, `farm-evict-${chunk.farmId}`);
   }
 
   ensurePlayerHome() {

@@ -18,19 +18,33 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
   let stableSamples = !!options.stableSamples;
   const engine = scene.getEngine();
   const supportedSamples = engine.webGLVersion >= 2 ? Math.max(1, engine.getCaps().maxMSAASamples || 1) : 1;
-  const resolveSamples = quality => resolveAntialiasSamples(quality, supportedSamples);
+  const resolveSamples = quality => options.lightweight ? 1 : resolveAntialiasSamples(quality, supportedSamples);
+
+  // Mobile grades each material directly. A full-screen postprocess allocates
+  // an additional color/depth target at Retina resolution even with MSAA off.
+  if (options.lightweight) {
+    const config = scene.imageProcessingConfiguration;
+    config.applyByPostProcess = false;
+    config.isEnabled = true;
+    config.toneMappingEnabled = true;
+    config.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_KHR_PBR_NEUTRAL;
+    applyColorPreset(config, 'day');
+    return { pipeline: null, ssao: null, updateFocus: () => {}, setQuality: () => {},
+      // Avoid dirtying every world material during the mobile day/night loop.
+      setCinematicPreset: () => {} };
+  }
 
   try {
-    pipeline = new DefaultRenderingPipeline('cinematic-pipeline', true, scene, [camera]);
+    pipeline = new DefaultRenderingPipeline('cinematic-pipeline', !options.lightweight, scene, [camera]);
     
     const quality = options.quality || (options.lightweight ? 'balanced' : 'ultra');
 
-    // 1. Khử răng cưa phần cứng siêu sắc nét (4x Hardware MSAA trên desktop, 2x trên mobile)
-    // MSAA khử răng cưa hình học trực tiếp ở rasterizer phần cứng, giữ nguyên 100% độ nét của texture & text
+    // Desktop uses hardware AA. Mobile keeps single-sample LDR targets to
+    // reserve GPU memory for world geometry rather than HDR/MSAA buffers.
     pipeline.samples = resolveSamples(quality);
 
     // Tắt hoàn toàn FXAA khi có MSAA phần cứng để triệt tiêu hiện tượng mờ nhòe (FXAA làm mờ texture & viền)
-    pipeline.fxaaEnabled = pipeline.samples < 2;
+    pipeline.fxaaEnabled = !options.lightweight && pipeline.samples < 2;
 
     // Babylon's sharpen is an edge filter, not CAS. Native pixels and MSAA
     // provide clarity without enhancing aliasing or adding a full-screen pass.
@@ -54,6 +68,8 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     pipeline.imageProcessing.vignetteEnabled = false;
     isolateColorGrading(scene, pipeline.imageProcessing);
   } catch (err) {
+    pipeline?.dispose();
+    pipeline = null;
     console.warn('[CinematicPipeline] Fallback to direct scene processing:', err);
     if (scene.imageProcessingConfiguration) {
       scene.imageProcessingConfiguration.isEnabled = true;
@@ -81,15 +97,15 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
         if (pipeline.samples !== nextSamples) pipeline.samples = nextSamples;
 
         if (quality === 'ultra') {
-          pipeline.fxaaEnabled = nextSamples < 2;
+          pipeline.fxaaEnabled = !options.lightweight && nextSamples < 2;
           pipeline.sharpenEnabled = false;
           pipeline.bloomEnabled = false;
         } else if (quality === 'balanced') {
-          pipeline.fxaaEnabled = nextSamples < 2;
+          pipeline.fxaaEnabled = !options.lightweight && nextSamples < 2;
           pipeline.sharpenEnabled = false;
           pipeline.bloomEnabled = false;
         } else if (quality === 'eco') {
-          pipeline.fxaaEnabled = true;
+          pipeline.fxaaEnabled = !options.lightweight;
           pipeline.sharpenEnabled = false;
           pipeline.bloomEnabled = false;
         }

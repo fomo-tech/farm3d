@@ -3,6 +3,7 @@ import { CasinoLobby } from './casino/CasinoLobby.jsx';
 import { CasinoTable } from './casino/CasinoTable.jsx';
 import './casino.css';
 import './casino/lounge.css';
+import { casinoAudio } from '../game/casino/casinoAudio.js';
 import { nextQuickPlayAction } from './casino/quickPlay.js';
 
 export function CasinoGames({
@@ -96,6 +97,14 @@ export function CasinoGames({
   useEffect(() => {
     if (message || !enabled) { quickPlay.current = null; setQuickPlaying(false); }
   }, [message, enabled]);
+
+  useEffect(() => { casinoAudio.enabled = sound; return () => { casinoAudio.enabled = false; }; }, [sound]);
+
+  useEffect(() => {
+    if (round?.phase === 'shaking') casinoAudio.playDiceShake();
+    if (round?.phase === 'reveal') casinoAudio.playBowlOpen();
+    if (round?.phase === 'dealing') casinoAudio.playCardFlip();
+  }, [round?.id, round?.phase]);
 
   const toggleSound = () => {
     if (!audio.current) {

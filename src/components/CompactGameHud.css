@@ -123,3 +123,176 @@
   .compact-game-hud .farm-herd-compact { top:144px !important; right:10px !important; max-width:190px !important; }
   .compact-game-hud .pt-context-action-wrap { bottom:90px !important; max-width:220px; }
 }
+
+/* ==========================================================================
+   DEDICATED LANDSCAPE / HORIZONTAL GAMING HUD SYSTEM (Play Together Ergonomics)
+   ========================================================================== */
+@media screen and (orientation: landscape), (max-height: 560px) {
+  .compact-game-hud {
+    --hud-edge-side: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))));
+    --hud-edge-l: var(--hud-edge-side);
+    --hud-edge-r: var(--hud-edge-side);
+    --hud-edge-b: max(8px, var(--safe-bottom, var(--sab, env(safe-area-inset-bottom, 0px))));
+    --hud-edge-t: max(8px, var(--safe-top, var(--sat, env(safe-area-inset-top, 0px))));
+  }
+  .compact-game-hud .pt-topbar {
+    left: var(--hud-edge-l) !important;
+    right: var(--hud-edge-r) !important;
+    top: var(--hud-edge-t) !important;
+    gap: 8px !important;
+  }
+  .compact-game-hud .pt-profile-card {
+    max-width: 160px !important;
+    padding: 3px 8px !important;
+    min-height: 38px !important;
+    border-radius: 10px !important;
+  }
+  .compact-game-hud .pt-avatar-ring {
+    width: 28px !important;
+    height: 28px !important;
+    flex: 0 0 28px !important;
+  }
+  .compact-game-hud .pt-player-name {
+    font-size: 11px !important;
+    max-width: 95px !important;
+  }
+  .compact-game-hud .pt-island-capsule {
+    display: none !important;
+  }
+  .compact-game-hud .pt-currency-dock {
+    gap: 5px !important;
+  }
+  .compact-game-hud .pt-candy-pill {
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 2px 7px !important;
+    border-radius: 9px !important;
+    gap: 4px !important;
+  }
+  .compact-game-hud .pt-pill-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+  .compact-game-hud .pt-pill-val {
+    font-size: 11px !important;
+  }
+  .compact-game-hud .pt-phone-btn {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 9px !important;
+  }
+  .compact-game-hud .pt-candy-quest-tracker {
+    top: 48px !important;
+    left: var(--hud-edge-l) !important;
+    width: 190px !important;
+  }
+  .compact-game-hud .pt-quest-collapsed-bubble {
+    min-height: 36px !important;
+    padding: 4px 8px !important;
+  }
+  .compact-game-hud .pt-collapsed-avatar {
+    width: 22px !important;
+    height: 22px !important;
+  }
+  .compact-game-hud .pt-collapsed-text b {
+    font-size: 10.5px !important;
+  }
+  .compact-game-hud .pt-collapsed-text small {
+    display: none !important;
+  }
+  .compact-game-hud .hud-map-button {
+    top: 46px !important;
+    left: auto !important;
+    right: var(--hud-edge-r) !important;
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 10px !important;
+  }
+  .compact-game-hud .farm-zone-badge {
+    top: 48px !important;
+    left: auto !important;
+    right: calc(var(--hud-edge-r) + 44px) !important;
+    max-width: 180px !important;
+    padding: 3px 6px !important;
+    font-size: 9.5px !important;
+  }
+  .compact-game-hud .pt-joystick {
+    left: var(--hud-edge-l) !important;
+    bottom: var(--hud-edge-b) !important;
+    width: 92px !important;
+    height: 92px !important;
+  }
+  .compact-game-hud .pt-action-bubbles {
+    right: var(--hud-edge-r) !important;
+    bottom: var(--hud-edge-b) !important;
+    gap: 7px !important;
+  }
+  .compact-game-hud .pt-action-bubble {
+    width: 50px !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    border-radius: 13px !important;
+  }
+  .compact-game-hud .pt-context-action-wrap {
+    right: calc(var(--hud-edge-r) + 64px) !important;
+    bottom: var(--hud-edge-b) !important;
+    max-width: 210px !important;
+  }
+  .compact-game-hud .pt-context-action-btn {
+    min-height: 44px !important;
+    padding: 5px 10px !important;
+  }
+  .compact-game-hud .pt-context-title {
+    font-size: 12px !important;
+  }
+  .compact-game-hud .pt-context-hint {
+    font-size: 9px !important;
+  }
+  .compact-game-hud .vehicle-quick-menu {
+    right: var(--hud-edge-r) !important;
+    bottom: calc(var(--hud-edge-b) + 60px) !important;
+  }
+  .compact-game-hud .vehicle-quick-trigger {
+    width: 44px !important;
+    min-height: 44px !important;
+  }
+  .compact-game-hud .avatar-chat-bar-container {
+    left: calc(var(--hud-edge-l) + 102px) !important;
+    bottom: var(--hud-edge-b) !important;
+    width: 190px !important;
+    max-width: calc(100vw - 310px) !important;
+  }
+  .compact-game-hud .avatar-chat-bar-container.focused {
+    width: min(320px, calc(100vw - 190px)) !important;
+  }
+  .compact-game-hud .avatar-chat-input {
+    font-size: 11px !important;
+  }
+  .compact-game-hud .pt-hotbar {
+    left: 50% !important;
+    bottom: var(--hud-edge-b) !important;
+    transform: translateX(-50%) !important;
+    padding: 3px 5px !important;
+    border-radius: 10px !important;
+  }
+  .compact-game-hud .pt-tool-slot {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 8px !important;
+  }
+  .compact-game-hud .pt-tool-icon-frame {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  .compact-game-hud .pt-tool-icon-frame svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+  .compact-game-hud .farm-herd-compact {
+    top: 90px !important;
+    right: var(--hud-edge-r) !important;
+    max-width: 170px !important;
+  }
+}
+

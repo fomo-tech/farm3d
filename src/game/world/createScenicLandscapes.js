@@ -25,7 +25,7 @@ import { WORLD_VILLAGES } from '../../../shared/villageLayout.js';
 import { WORLD_PALETTE, VILLAGE_THEME_GROUPS, createCozyMaterial } from './worldDesignSystem.js';
 import { ALL_BRIDGES } from '../../../shared/bridgeConfig.js';
 import { buildBridge } from './nature/BridgeSystem.js';
-import { createGlobalDenseFlora } from './createGlobalDenseFlora.js';
+import { createGlobalDenseFloraSteps } from './createGlobalDenseFlora.js';
 import { FoliageInstancingEngine } from './FoliageInstancingEngine.js';
 import { createProceduralMountainRange } from './nature/ProceduralMountainRange.js';
 
@@ -462,8 +462,13 @@ export function* createScenicLandscapesSteps(scene, foliage, shadows, foliageIns
   // 12. HỆ THỐNG PHỦ CÂY & HOA TOÀN CẦU DÀY ĐẶC (GLOBAL DENSE FLORA ENGINE)
   // Phủ 1,400+ cây xanh qua GPU Instancing, 2,800+ khóm hoa & 48 đồi cỏ không lag
   // =========================================================================
-  createGlobalDenseFlora(scene, foliage, shadows, foliageInstancing);
+  // The map-wide 1,400-tree / 2,800-flower layer adds thousands of distinct
+  // GPU resources. Phones keep the handcrafted road and village landscaping;
+  // the far-field blanket is reserved for desktop memory budgets.
+  if (!scene.metadata?.mobile) {
+    yield* createGlobalDenseFloraSteps(scene, foliage, shadows, foliageInstancing);
     yield;
+  }
 
   return root;
 }

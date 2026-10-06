@@ -18,8 +18,8 @@ export function TienLenScreen({
   const [customHand, setCustomHand] = useState(null);
 
   const rawHand = round?.hand || [];
-  const hand = customHand || rawHand;
-  const myTurn = round?.turn === player;
+  const hand = customHand ? customHand.filter(card => rawHand.includes(card)) : rawHand;
+  const myTurn = round?.phase === 'playing' && round?.turn === player;
 
   const toggleCard = cardId => {
     setSelectedCards(prev =>
@@ -33,7 +33,7 @@ export function TienLenScreen({
   };
 
   const handleSuggest = () => {
-    const trick = round?.trick?.cards || [];
+    const trick = round?.table?.cards || [];
     const suggestion = suggestTienLenPlay(hand, trick);
     if (suggestion && suggestion.length > 0) {
       setSelectedCards(suggestion);
@@ -76,7 +76,7 @@ export function TienLenScreen({
         ) : (
           <div className="pt-empty-trick-pod">
             <span className="trick-sparkle"><Icon3dSparkleStar size={18} /></span>
-            <span>Vòng đánh mới · Bạn có quyền đánh bất kỳ bộ nào</span>
+            <span>Vòng mới · Người đến lượt mở bài theo luật bàn</span>
           </div>
         )}
       </div>

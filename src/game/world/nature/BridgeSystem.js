@@ -70,79 +70,85 @@ function createBridgeSignMonument(scene, bridge, parent, position, rotationY = 0
   frameMesh.parent = monumentNode;
 
   // 3. Texture chữ siêu nét độ phân giải 2048x1024
-  const dt = new DynamicTexture(
-    `${bridge.id}-dt-sign`,
-    { width: 2048, height: 1024 },
+  const signTextureName = `${bridge.id}-dt-sign`;
+  const existingSign = scene.textures.find(texture => texture.name === signTextureName);
+  const signScale = scene.metadata?.mobile ? 0.5 : 1;
+  const dt = existingSign || new DynamicTexture(
+    signTextureName,
+    { width: 2048 * signScale, height: 1024 * signScale },
     scene,
     false,
     Texture.TRILINEAR_SAMPLINGMODE
   );
   dt.anisotropicFilteringLevel = 16;
-  const ctx = dt.getContext();
+  if (!existingSign) {
+    const ctx = dt.getContext();
+    ctx.scale(signScale, signScale);
 
-  // Nền bảng sang trọng, độ tương phản cực cao
-  const grad = ctx.createLinearGradient(0, 0, 2048, 1024);
-  if (isTimber) {
-    grad.addColorStop(0.0, '#2d1305');
-    grad.addColorStop(0.5, '#4a210a');
-    grad.addColorStop(1.0, '#2d1305');
-  } else if (isStone) {
-    grad.addColorStop(0.0, '#1e293b');
-    grad.addColorStop(0.5, '#334155');
-    grad.addColorStop(1.0, '#1e293b');
-  } else {
-    // Đại cầu xa lộ: Xanh navy sẫm kết hợp đen sang trọng chuẩn biển chỉ dẫn cao cấp
-    grad.addColorStop(0.0, '#091e3a');
-    grad.addColorStop(0.5, '#0f2b48');
-    grad.addColorStop(1.0, '#091e3a');
+    // Nền bảng sang trọng, độ tương phản cực cao
+    const grad = ctx.createLinearGradient(0, 0, 2048, 1024);
+    if (isTimber) {
+      grad.addColorStop(0.0, '#2d1305');
+      grad.addColorStop(0.5, '#4a210a');
+      grad.addColorStop(1.0, '#2d1305');
+    } else if (isStone) {
+      grad.addColorStop(0.0, '#1e293b');
+      grad.addColorStop(0.5, '#334155');
+      grad.addColorStop(1.0, '#1e293b');
+    } else {
+      // Đại cầu xa lộ: Xanh navy sẫm kết hợp đen sang trọng chuẩn biển chỉ dẫn cao cấp
+      grad.addColorStop(0.0, '#091e3a');
+      grad.addColorStop(0.5, '#0f2b48');
+      grad.addColorStop(1.0, '#091e3a');
+    }
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 2048, 1024);
+
+    // Viền bo góc đôi mạ vàng hoàng gia
+    ctx.strokeStyle = isTimber ? '#fbbf24' : '#f59e0b';
+    ctx.lineWidth = 28;
+    ctx.strokeRect(36, 36, 1976, 952);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(60, 60, 1928, 904);
+
+    // Header huy hiệu nhận diện
+    ctx.fillStyle = isTimber ? '#fde68a' : '#38bdf8';
+    ctx.font = 'bold 54px Arial, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.9)';
+    ctx.shadowBlur = 10;
+    const badgeText = isTimber ? '★ CẦU VÒM GỖ CẢNH QUAN ★' : (isStone ? '★ CẦU ĐÁ TIỂU CẢNH ★' : '★ ĐẠI CẦU GIAO THÔNG XA LỘ ★');
+    ctx.fillText(badgeText, 1024, 180);
+
+    // Tên cầu chính (Font to 132px, cực đậm, viền đen dày chống chìm màu)
+    ctx.font = '900 132px Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.lineWidth = 26;
+    ctx.strokeStyle = '#000000';
+    ctx.strokeText(bridge.name.toUpperCase(), 1024, 480);
+    ctx.fillStyle = isTimber ? '#fef08a' : '#ffffff';
+    ctx.fillText(bridge.name.toUpperCase(), 1024, 480);
+
+    // Dải phân cách trang trí
+    ctx.strokeStyle = isTimber ? '#d97706' : '#0284c7';
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.moveTo(350, 620);
+    ctx.lineTo(1698, 620);
+    ctx.stroke();
+
+    // Tuyến đường / phụ đề (Font to 74px rõ ràng)
+    ctx.font = 'bold 74px Arial, -apple-system, sans-serif';
+    ctx.lineWidth = 16;
+    ctx.strokeStyle = '#000000';
+    ctx.strokeText(bridge.subtitle || '', 1024, 760);
+    ctx.fillStyle = isTimber ? '#fed7aa' : '#e0f2fe';
+    ctx.fillText(bridge.subtitle || '', 1024, 760);
+
+    dt.update();
   }
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 2048, 1024);
-
-  // Viền bo góc đôi mạ vàng hoàng gia
-  ctx.strokeStyle = isTimber ? '#fbbf24' : '#f59e0b';
-  ctx.lineWidth = 28;
-  ctx.strokeRect(36, 36, 1976, 952);
-
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-  ctx.lineWidth = 8;
-  ctx.strokeRect(60, 60, 1928, 904);
-
-  // Header huy hiệu nhận diện
-  ctx.fillStyle = isTimber ? '#fde68a' : '#38bdf8';
-  ctx.font = 'bold 54px Arial, -apple-system, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.shadowColor = 'rgba(0,0,0,0.9)';
-  ctx.shadowBlur = 10;
-  const badgeText = isTimber ? '★ CẦU VÒM GỖ CẢNH QUAN ★' : (isStone ? '★ CẦU ĐÁ TIỂU CẢNH ★' : '★ ĐẠI CẦU GIAO THÔNG XA LỘ ★');
-  ctx.fillText(badgeText, 1024, 180);
-
-  // Tên cầu chính (Font to 132px, cực đậm, viền đen dày chống chìm màu)
-  ctx.font = '900 132px Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.lineWidth = 26;
-  ctx.strokeStyle = '#000000';
-  ctx.strokeText(bridge.name.toUpperCase(), 1024, 480);
-  ctx.fillStyle = isTimber ? '#fef08a' : '#ffffff';
-  ctx.fillText(bridge.name.toUpperCase(), 1024, 480);
-
-  // Dải phân cách trang trí
-  ctx.strokeStyle = isTimber ? '#d97706' : '#0284c7';
-  ctx.lineWidth = 10;
-  ctx.beginPath();
-  ctx.moveTo(350, 620);
-  ctx.lineTo(1698, 620);
-  ctx.stroke();
-
-  // Tuyến đường / phụ đề (Font to 74px rõ ràng)
-  ctx.font = 'bold 74px Arial, -apple-system, sans-serif';
-  ctx.lineWidth = 16;
-  ctx.strokeStyle = '#000000';
-  ctx.strokeText(bridge.subtitle || '', 1024, 760);
-  ctx.fillStyle = isTimber ? '#fed7aa' : '#e0f2fe';
-  ctx.fillText(bridge.subtitle || '', 1024, 760);
-
-  dt.update();
 
   const matSign = new StandardMaterial(`${bridge.id}-sign-mat`, scene);
   matSign.diffuseTexture = dt;

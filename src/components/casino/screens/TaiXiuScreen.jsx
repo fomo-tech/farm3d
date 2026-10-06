@@ -29,8 +29,8 @@ export function TaiXiuScreen({
   const totalMyBet = Object.values(myBets).reduce((a, b) => a + b, 0);
 
   // Thống kê soi cầu mini từ lịch sử bàn
-  const miniHistory = (room?.history || []).slice(-12).map(h => {
-    const d = h.dice || [];
+  const miniHistory = (room?.history || []).filter(h => h.result?.dice).slice(0, 12).reverse().map(h => {
+    const d = h.result?.dice || [];
     const sum = d.reduce((a, b) => a + b, 0);
     const isTriple = d.length === 3 && d[0] === d[1] && d[1] === d[2];
     return {
@@ -49,6 +49,7 @@ export function TaiXiuScreen({
             <div className="dish-inner-ring" />
           </div>
 
+          {isShaking && <div className="pt-shaker-capsule" aria-label="Đang lắc">🎲<span>Đang lắc…</span></div>}
           {dice && isReveal && (
             <div className={`pt-dice-trio ${squeezing ? 'squeezing' : 'revealed'}`}>
               {dice.map((d, i) => (

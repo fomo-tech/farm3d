@@ -32,6 +32,7 @@ let instanceCounter = 0;
 export class FoliageInstancingEngine {
   constructor(scene, shadows = null) {
     this.scene = scene;
+    this.mobile = !!scene.metadata?.mobile;
     this.shadows = shadows;
     this.rootNode = new TransformNode('foliage-instancing-root', scene);
 
@@ -42,6 +43,11 @@ export class FoliageInstancingEngine {
     this.chunks = new Map();
     this.dirtyChunks = new Set();
     this.lastChunkUpdate = -1000;
+    // Far scenery is hidden by the mobile fog. Keeping a full, unique LOD mesh
+    // for every species in every world chunk grows WebGL resources with the
+    // entire map even though only a small ring can be seen on a phone.
+    this.mobileProxyRadius = 4;
+    this.center = null;
     this.scene.onBeforeRenderObservable.add(() => this.updateChunks());
 
     this.treeTypes = {
@@ -66,15 +72,20 @@ export class FoliageInstancingEngine {
 
   getStats() {
     let placements = 0, detailBatches = 0, enabledBatches = 0, lodBatches = 0, missingRepresentations = 0;
-    for (const chunk of this.chunks.values()) for (const group of chunk.groups.values()) {
-      placements += group.requests.length;
-      detailBatches += group.meshes.length;
-      enabledBatches += group.meshes.filter(mesh => mesh.isEnabled() && mesh.isVisible).length;
-      const lodVisible = group.proxy?.isEnabled() && group.proxy.isVisible;
-      if (lodVisible) lodBatches++;
-      if (!lodVisible && !group.meshes.some(mesh => mesh.isEnabled() && mesh.isVisible)) missingRepresentations++;
+    for (const chunk of this.chunks.values()) {
+      const distance = this.center ? Math.max(Math.abs(chunk.x - this.center.x), Math.abs(chunk.z - this.center.z)) : 0;
+      for (const group of chunk.groups.values()) {
+        placements += group.requests.length;
+        detailBatches += group.meshes.length;
+        enabledBatches += group.meshes.filter(mesh => mesh.isEnabled() && mesh.isVisible).length;
+        const lodVisible = group.proxy?.isEnabled() && group.proxy.isVisible;
+        if (lodVisible) lodBatches++;
+        if ((!this.mobile || distance <= this.mobileProxyRadius) && !lodVisible &&
+          !group.meshes.some(mesh => mesh.isEnabled() && mesh.isVisible)) missingRepresentations++;
+      }
     }
     return { placements, detailBatches, enabledBatches, lodBatches, missingRepresentations,
+      visibleChunkRadius: this.mobile ? this.mobileProxyRadius : null,
       pending: this.dirtyChunks.size, species: this.loadedPrototypes.size };
   }
 
@@ -82,19 +93,21 @@ export class FoliageInstancingEngine {
     const mat = new StandardMaterial(name, this.scene);
     mat.diffuseColor = Color3.FromHexString(hex);
     mat.ambientColor = mat.diffuseColor.scale(ambientScale);
-    mat.specularColor = new Color3(0.04, 0.04, 0.04);
-    mat.specularPower = 16;
+    mat.specularColor = new Color3(0.07, 0.07, 0.07);
+    mat.specularPower = 24;
     mat.backFaceCulling = true;
     mat.freeze();
     return mat;
   }
 
   /**
-   * Creates faceted low-poly tree prototypes matching the Cozy Farmy aesthetic.
+   * Creates shared rounded tree prototypes; distant proxies keep inexpensive faceted silhouettes.
    */
   _createFacetedPrototype(typeKey) {
     const scene = this.scene;
     const result = [];
+    // Smooth normals improve shading without extra mobile vertices.
+    const crownSubdivisions = this.mobile ? 2 : 3;
 
     const finish = (mesh, mat) => {
       mesh.material = mat;
@@ -106,7 +119,7 @@ export class FoliageInstancingEngine {
     };
 
     if (typeKey === 'oak') {
-      // 1. Classic Cozy Farmy Forest Oak (Caramel trunk + Dual-tone lime green faceted canopy)
+      // 1. Classic Cozy Farmy Forest Oak (Caramel trunk + Dual-tone green rounded canopy)
       const trunkMat = this._makeFacetedMaterial('oak-trunk-mat', ART.trunk);
       const lowerMat = this._makeFacetedMaterial('oak-lower-mat', ART.leaf);
       const topMat = this._makeFacetedMaterial('oak-top-mat', ART.leafLight);
@@ -117,23 +130,23 @@ export class FoliageInstancingEngine {
       trunk.position.y = 1.1;
       finish(trunk, trunkMat);
 
-      const p1 = MeshBuilder.CreateIcoSphere('oak-p1', { radius: 1.35, subdivisions: 2, flat: true }, scene);
+      const p1 = MeshBuilder.CreateIcoSphere('oak-p1', { radius: 1.35, subdivisions: crownSubdivisions, flat: false }, scene);
       p1.position.set(-0.4, 2.3, 0.1);
       p1.bakeCurrentTransformIntoVertices();
 
-      const p2 = MeshBuilder.CreateIcoSphere('oak-p2', { radius: 1.5, subdivisions: 2, flat: true }, scene);
+      const p2 = MeshBuilder.CreateIcoSphere('oak-p2', { radius: 1.5, subdivisions: crownSubdivisions, flat: false }, scene);
       p2.position.set(0.45, 2.5, -0.15);
       p2.bakeCurrentTransformIntoVertices();
 
       const lower = Mesh.MergeMeshes([p1, p2], true, true, undefined, false, true);
       finish(lower || p1, lowerMat);
 
-      const top = MeshBuilder.CreateIcoSphere('oak-top', { radius: 1.25, subdivisions: 2, flat: true }, scene);
+      const top = MeshBuilder.CreateIcoSphere('oak-top', { radius: 1.25, subdivisions: crownSubdivisions, flat: false }, scene);
       top.position.set(0, 3.3, 0);
       finish(top, topMat);
 
     } else if (typeKey === 'sakura') {
-      // 2. Cozy Farmy Cherry Blossom (Cherry wood trunk + Pastel pink blossom canopy)
+      // 2. Cozy Farmy Cherry Blossom (Cherry wood trunk + Smooth pastel pink blossom canopy)
       const trunkMat = this._makeFacetedMaterial('sakura-trunk-mat', '#5c3a21');
       const lowerMat = this._makeFacetedMaterial('sakura-lower-mat', '#CE85A5');
       const topMat = this._makeFacetedMaterial('sakura-top-mat', '#EBAFC6');
@@ -144,18 +157,18 @@ export class FoliageInstancingEngine {
       trunk.position.y = 1.1;
       finish(trunk, trunkMat);
 
-      const p1 = MeshBuilder.CreateIcoSphere('sakura-p1', { radius: 1.35, subdivisions: 2, flat: true }, scene);
+      const p1 = MeshBuilder.CreateIcoSphere('sakura-p1', { radius: 1.35, subdivisions: crownSubdivisions, flat: false }, scene);
       p1.position.set(-0.4, 2.3, 0.1);
       p1.bakeCurrentTransformIntoVertices();
 
-      const p2 = MeshBuilder.CreateIcoSphere('sakura-p2', { radius: 1.5, subdivisions: 2, flat: true }, scene);
+      const p2 = MeshBuilder.CreateIcoSphere('sakura-p2', { radius: 1.5, subdivisions: crownSubdivisions, flat: false }, scene);
       p2.position.set(0.45, 2.5, -0.15);
       p2.bakeCurrentTransformIntoVertices();
 
       const lower = Mesh.MergeMeshes([p1, p2], true, true, undefined, false, true);
       finish(lower || p1, lowerMat);
 
-      const top = MeshBuilder.CreateIcoSphere('sakura-top', { radius: 1.25, subdivisions: 2, flat: true }, scene);
+      const top = MeshBuilder.CreateIcoSphere('sakura-top', { radius: 1.25, subdivisions: crownSubdivisions, flat: false }, scene);
       top.position.set(0, 3.3, 0);
       finish(top, topMat);
 
@@ -193,7 +206,7 @@ export class FoliageInstancingEngine {
       finish(c3, topMat);
 
     } else if (typeKey === 'birch') {
-      // 4. White Birch (Crisp white trunk + Chartreuse faceted canopy)
+      // 4. White Birch (Crisp white trunk + Chartreuse rounded canopy)
       const trunkMat = this._makeFacetedMaterial('birch-trunk-mat', ART.birch);
       const canopyMat = this._makeFacetedMaterial('birch-canopy-mat', ART.leafLight);
 
@@ -203,7 +216,7 @@ export class FoliageInstancingEngine {
       trunk.position.y = 1.6;
       finish(trunk, trunkMat);
 
-      const puff = MeshBuilder.CreateIcoSphere('birch-canopy', { radius: 1.35, subdivisions: 2, flat: true }, scene);
+      const puff = MeshBuilder.CreateIcoSphere('birch-canopy', { radius: 1.35, subdivisions: crownSubdivisions, flat: false }, scene);
       puff.scaling.set(1.0, 1.35, 1.0);
       puff.position.set(0, 3.6, 0);
       finish(puff, canopyMat);
@@ -220,18 +233,18 @@ export class FoliageInstancingEngine {
       trunk.position.y = 1.1;
       finish(trunk, trunkMat);
 
-      const p1 = MeshBuilder.CreateIcoSphere('maple-p1', { radius: 1.35, subdivisions: 2, flat: true }, scene);
+      const p1 = MeshBuilder.CreateIcoSphere('maple-p1', { radius: 1.35, subdivisions: crownSubdivisions, flat: false }, scene);
       p1.position.set(-0.4, 2.3, 0.1);
       p1.bakeCurrentTransformIntoVertices();
 
-      const p2 = MeshBuilder.CreateIcoSphere('maple-p2', { radius: 1.5, subdivisions: 2, flat: true }, scene);
+      const p2 = MeshBuilder.CreateIcoSphere('maple-p2', { radius: 1.5, subdivisions: crownSubdivisions, flat: false }, scene);
       p2.position.set(0.45, 2.5, -0.15);
       p2.bakeCurrentTransformIntoVertices();
 
       const lower = Mesh.MergeMeshes([p1, p2], true, true, undefined, false, true);
       finish(lower || p1, lowerMat);
 
-      const top = MeshBuilder.CreateIcoSphere('maple-top', { radius: 1.25, subdivisions: 2, flat: true }, scene);
+      const top = MeshBuilder.CreateIcoSphere('maple-top', { radius: 1.25, subdivisions: crownSubdivisions, flat: false }, scene);
       top.position.set(0, 3.3, 0);
       finish(top, topMat);
 
@@ -248,18 +261,18 @@ export class FoliageInstancingEngine {
       trunk.position.y = 1.1;
       finish(trunk, trunkMat);
 
-      const p1 = MeshBuilder.CreateIcoSphere('fruit-p1', { radius: 1.35, subdivisions: 2, flat: true }, scene);
+      const p1 = MeshBuilder.CreateIcoSphere('fruit-p1', { radius: 1.35, subdivisions: crownSubdivisions, flat: false }, scene);
       p1.position.set(-0.4, 2.3, 0.1);
       p1.bakeCurrentTransformIntoVertices();
 
-      const p2 = MeshBuilder.CreateIcoSphere('fruit-p2', { radius: 1.5, subdivisions: 2, flat: true }, scene);
+      const p2 = MeshBuilder.CreateIcoSphere('fruit-p2', { radius: 1.5, subdivisions: crownSubdivisions, flat: false }, scene);
       p2.position.set(0.45, 2.5, -0.15);
       p2.bakeCurrentTransformIntoVertices();
 
       const lower = Mesh.MergeMeshes([p1, p2], true, true, undefined, false, true);
       finish(lower || p1, lowerMat);
 
-      const top = MeshBuilder.CreateIcoSphere('fruit-top', { radius: 1.25, subdivisions: 2, flat: true }, scene);
+      const top = MeshBuilder.CreateIcoSphere('fruit-top', { radius: 1.25, subdivisions: crownSubdivisions, flat: false }, scene);
       top.position.set(0, 3.3, 0);
       finish(top, topMat);
 
@@ -269,7 +282,7 @@ export class FoliageInstancingEngine {
         [0.4, 2.8, -1.0], [-0.7, 2.9, -0.6], [0.2, 3.4, 0.8]
       ];
       applePositions.forEach((pos, idx) => {
-        const a = MeshBuilder.CreateIcoSphere(`fruit-apple-${idx}`, { radius: 0.18, subdivisions: 1, flat: true }, scene);
+        const a = MeshBuilder.CreateIcoSphere(`fruit-apple-${idx}`, { radius: 0.18, subdivisions: 2, flat: false }, scene);
         a.position.set(pos[0], pos[1], pos[2]);
         a.bakeCurrentTransformIntoVertices();
         apples.push(a);
@@ -304,11 +317,11 @@ export class FoliageInstancingEngine {
     } else {
       // 8. Low-Poly Garden Bush (2 faceted puffs close to ground)
       const bushMat = this._makeFacetedMaterial('bush-mat', '#65ba28');
-      const b1 = MeshBuilder.CreateIcoSphere('bush-b1', { radius: 0.85, subdivisions: 2, flat: true }, scene);
+      const b1 = MeshBuilder.CreateIcoSphere('bush-b1', { radius: 0.85, subdivisions: crownSubdivisions, flat: false }, scene);
       b1.position.set(-0.35, 0.45, 0);
       b1.bakeCurrentTransformIntoVertices();
 
-      const b2 = MeshBuilder.CreateIcoSphere('bush-b2', { radius: 0.95, subdivisions: 2, flat: true }, scene);
+      const b2 = MeshBuilder.CreateIcoSphere('bush-b2', { radius: 0.95, subdivisions: crownSubdivisions, flat: false }, scene);
       b2.position.set(0.35, 0.5, 0.05);
       b2.bakeCurrentTransformIntoVertices();
 
@@ -517,11 +530,37 @@ export class FoliageInstancingEngine {
     const target = streamingPosition(this.scene);
     if (!target) return;
     const center = chunkAt(target.x, target.z);
+    this.center = center;
 
     // Full detail nearby; retain original low-poly silhouettes farther away.
     let evicted = 0;
     for (const chunk of this.chunks.values()) {
       const distance = Math.max(Math.abs(chunk.x - center.x), Math.abs(chunk.z - center.z));
+      const shouldHaveProxy = !this.mobile || distance <= this.mobileProxyRadius;
+      if (chunk.proxyEligible !== shouldHaveProxy) {
+        chunk.proxyEligible = shouldHaveProxy;
+        for (const group of chunk.groups.values()) {
+          if (!shouldHaveProxy) {
+            if (group.proxy) {
+              group.proxy.setEnabled(false);
+              this.shadows?.removeShadowCaster(group.proxy);
+              group.proxy.dispose(false, true);
+              group.proxy = null;
+            }
+            // Detail geometry is only retained in the existing small cache;
+            // discard it immediately when a chunk leaves the visible mobile ring.
+            for (const mesh of group.meshes) {
+              this.shadows?.removeShadowCaster(mesh);
+              mesh.dispose(false, false);
+            }
+            group.meshes = [];
+            group.dirty = false;
+          } else {
+            group.dirty = true;
+            this.dirtyChunks.add(`${chunk.x}:${chunk.z}`);
+          }
+        }
+      }
       // Nearby batches are already distance-managed. Protect this bounded ring
       // from camera/submesh rejection while mutable thin-instance bounds settle.
       // Far chunks continue using normal frustum culling.
@@ -533,12 +572,18 @@ export class FoliageInstancingEngine {
           for (const mesh of group.meshes) mesh.alwaysSelectAsActiveMesh = protect;
         }
       }
-      const shouldDetail = distance <= (chunk.detailed ? 3 : 2);
+      const keepDetailRadius = this.mobile ? 1 : 3;
+      const detailRadius = this.mobile ? 1 : 2;
+      const shouldDetail = distance <= (chunk.detailed ? keepDetailRadius : detailRadius);
       if (shouldDetail) chunk.lastUsed = now;
       if (shouldDetail === chunk.detailed) continue;
       if (!shouldDetail && evicted >= 2) continue;
       chunk.detailed = shouldDetail;
       for (const group of chunk.groups.values()) {
+        if (!shouldHaveProxy) {
+          group.dirty = false;
+          continue;
+        }
         if (!shouldDetail) {
           // A pending group must first construct a usable proxy. Never clear
           // its build request just because the player left the cell.
@@ -582,6 +627,12 @@ export class FoliageInstancingEngine {
     for (const key of pending) {
       const chunk = this.chunks.get(key);
       if (!chunk) continue;
+      const distance = Math.max(Math.abs(chunk.x - center.x), Math.abs(chunk.z - center.z));
+      if (this.mobile && distance > this.mobileProxyRadius && !chunk.detailed) {
+        for (const group of chunk.groups.values()) group.dirty = false;
+        this.dirtyChunks.delete(key);
+        continue;
+      }
       const next = [...chunk.groups].find(([, group]) => group.dirty);
       if (next) this._buildGroup(chunk, next[0], next[1]);
       if (next) {
@@ -596,9 +647,9 @@ export class FoliageInstancingEngine {
     // Cache retention: only cold detail beyond the retained detail ring is trimmed.
     const cached = [...this.chunks.values()].filter(chunk =>
       [...chunk.groups.values()].some(group => group.meshes.length));
-    if (cached.length > 32 && performance.now() - now < 8) {
+    if (cached.length > (this.mobile ? 12 : 32) && performance.now() - now < 8) {
       const victim = cached.filter(chunk => !chunk.detailed &&
-        Math.max(Math.abs(chunk.x - center.x), Math.abs(chunk.z - center.z)) > 3)
+        Math.max(Math.abs(chunk.x - center.x), Math.abs(chunk.z - center.z)) > (this.mobile ? 1 : 3))
         .sort((a, b) => (a.lastUsed || 0) - (b.lastUsed || 0))[0];
       if (victim) {
         const group = [...victim.groups.values()].find(group => group.meshes.length);

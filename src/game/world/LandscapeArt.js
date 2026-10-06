@@ -1,10 +1,10 @@
 // Shared outdoor art direction. Decorative variation never changes collisions.
 export const LANDSCAPE_ART = Object.freeze({
-  grass: '#92B87A', grassMid: '#789F68', grassLight: '#B1CA96',
-  leaf: '#7FA88A', leafLight: '#A7C5A4', leafShade: '#61866F',
-  trunk: '#A77B62', trunkShade: '#82634F', birch: '#F4EAD6',
+  grass: '#8BC56B', grassMid: '#66A651', grassLight: '#B1DD8C',
+  leaf: '#63AA73', leafLight: '#94CD8A', leafShade: '#40835B',
+  trunk: '#A97349', trunkShade: '#80563D', birch: '#F4EAD6',
   path: '#C0BDCF', pathLight: '#E4D9C8',
-  water: '#70ADBE', shallows: '#ACD0D0',
+  water: '#3EBBCD', shallows: '#95DDD9',
 });
 
 export function landscapeVariation(x, z, salt = 0) {

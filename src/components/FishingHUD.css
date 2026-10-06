@@ -15,3 +15,37 @@
 .fish-state-bite{border-color:#e9b84c}.fish-state-fighting{border-color:#75bcb0}
 .fish-result{width:min(280px,calc(100vw - 36px));padding:18px;border-radius:16px;border-width:2px;background:#f4f7f8;box-shadow:0 4px 0 #294956,0 8px 24px #18384930}
 .fish-result .fish-cancel{background:transparent;color:#425d6c;box-shadow:none;margin-top:8px;padding:7px}
+
+@media screen and (orientation: landscape), (max-height: 560px) {
+  .fish-hud {
+    right: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+    bottom: max(12px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+    width: min(240px, calc(100vw - 160px)) !important;
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+  }
+  .fish-hud p {
+    margin: 4px 0 !important;
+    font-size: 11px !important;
+  }
+  .fish-hud button {
+    padding: 7px 10px !important;
+    font-size: 12px !important;
+  }
+  .fish-tension-track {
+    height: 12px !important;
+    margin: 4px 0 !important;
+  }
+  .fish-result {
+    width: min(260px, calc(100vw - 32px)) !important;
+    padding: 12px !important;
+  }
+  .fish-result-art {
+    font-size: 48px !important;
+  }
+  .fish-result h2 {
+    margin: 4px 0 !important;
+    font-size: 16px !important;
+  }
+}
+

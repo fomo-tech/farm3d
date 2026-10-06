@@ -421,9 +421,11 @@ export function createStorefrontSignboard(scene, {
   signMat.backFaceCulling = false;
 
   if (typeof document !== 'undefined' || typeof OffscreenCanvas !== 'undefined') {
-    const dt = new DynamicTexture(`storefront-sign-dt-${title}`, { width: 2048, height: 512 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+    const signScale = scene.metadata?.mobile ? 0.5 : 1;
+    const dt = new DynamicTexture(`storefront-sign-dt-${title}`, { width: 2048 * signScale, height: 512 * signScale }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
     dt.anisotropicFilteringLevel = 4;
     const ctx = dt.getContext();
+    ctx.scale(signScale, signScale);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
 

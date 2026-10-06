@@ -60,3 +60,24 @@ console.log('PASS: Auto preserves native DPR first, effects-first pressure and s
 const overloaded = new AutoGraphicsController();
 for (let i = 0; i < 80; i++) overloaded.sample(120);
 assert.equal(overloaded.effects, 'eco', 'sustained sub-10 FPS must still trigger adaptation');
+
+const overloadedPhone = new AutoGraphicsController(true);
+for (let i = 0; i < 250; i++) overloadedPhone.sample(33.3);
+assert.equal(overloadedPhone.effects, 'eco', '30 FPS mobile rendering triggers the safety profile');
+for (let i = 0; i < 250; i++) overloadedPhone.sample(33.3);
+assert.equal(overloadedPhone.scale, .95, 'mobile safety profile reduces render scale after sustained low FPS');
+
+for (const quality of ['auto', 'ultra', 'balanced', 'eco']) {
+  const width = 2400, height = 1080;
+  const dpr = calculateRenderDpr({ quality, nativeDpr: 3, width, height, mobile: true });
+  assert.ok(dpr <= 2, 'mobile DPR remains capped even in Ultra');
+  assert.ok(width * height * dpr * dpr <= 1800001, 'mobile framebuffer stays within memory budget');
+}
+console.log('PASS: mobile framebuffer budget across quality presets');
+
+assert.equal(calculateRenderDpr({ quality: 'auto', nativeDpr: 3, width: 390, height: 844, mobile: true }), 2, 'iPhone portrait retains Retina-sharp rendering');
+assert.equal(calculateRenderDpr({ quality: 'auto', nativeDpr: 3, width: 844, height: 390, mobile: true }), 2, 'rotation keeps the same pixel density');
+
+assert.equal(calculateRenderDpr({ quality: 'auto', nativeDpr: 3, width: 844, height: 390, mobile: true, scale: .85 }), 1.7, 'mobile Auto may lower render scale to protect the GPU');
+
+assert.equal(calculateRenderDpr({ quality: "auto", nativeDpr: 3, width: 844, height: 390, mobile: true, scale: .7 }), 1.6, "mobile preserves foreground clarity under sustained pressure");

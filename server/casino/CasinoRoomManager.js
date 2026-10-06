@@ -87,6 +87,11 @@ export class CasinoRoomManager {
         }
         const spectators=[...this.members].filter(([id,r])=>r===room.id&&!room.seats.some(s=>s?.playerId===id)).length;
         if(!current&&spectators>=this.config.maxSpectators) throw new Error('Bàn đã đủ người xem.');
+        // Assign the first available place under the room lock; users never pick seats.
+        if(index<0&&!active(room.round)&&room.round?.phase!=='result') {
+          const target=room.seats.findIndex(value=>!value);
+          if(target>=0)room.seats[target]={playerId:player.playerId,name:player.name,ready:false,offlineAt:null};
+        }
         this.members.set(player.playerId,room.id);if(seat)seat.offlineAt=null;
       } else {
         if(this.members.get(player.playerId)!==room.id) throw new Error('Bạn chưa vào bàn này.');

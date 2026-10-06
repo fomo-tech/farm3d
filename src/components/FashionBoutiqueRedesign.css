@@ -895,8 +895,8 @@
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   }
 
-  /* Responsive */
-  @media (max-width: 900px) {
+  /* Responsive trên Màn hình dọc */
+  @media (max-width: 900px) and (orientation: portrait) {
     .fashion-modal-body {
       grid-template-columns: 1fr;
       overflow-y: auto;
@@ -906,10 +906,110 @@
       border-bottom: 2px solid #e2e8f0;
     }
     .fashion-viewport-container {
-      height: 320px;
+      height: 300px;
     }
     .fashion-grid-items {
       grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* Chuẩn Màn Hình Ngang (Landscape Split-Screen 2 Cột) */
+  @media screen and (orientation: landscape), (max-height: 560px) {
+    .fashion-modal-card {
+      width: min(980px, calc(100vw - 20px));
+      height: calc(100dvh - 12px);
+      max-height: calc(100dvh - 12px);
+      border-radius: 18px;
+    }
+    .fashion-modal-header {
+      padding: 6px 16px;
+      gap: 8px;
+      border-bottom-width: 2px;
+    }
+    .fashion-brand h2 {
+      font-size: 16px;
+    }
+    .fashion-brand small {
+      display: none;
+    }
+    .fashion-brand-icon {
+      width: 26px;
+      height: 26px;
+    }
+    .fashion-mode-btn {
+      padding: 4px 10px;
+      font-size: 11px;
+    }
+    .fashion-modal-body {
+      grid-template-columns: 240px 1fr !important;
+      height: calc(100dvh - 54px);
+      overflow: hidden;
+    }
+    .fashion-preview-column {
+      padding: 6px 10px;
+      height: 100%;
+      border-right: 2px solid #e2e8f0;
+      border-bottom: none;
+      overflow-y: auto;
+      gap: 6px;
+    }
+    .fashion-viewport-container {
+      height: 160px !important;
+      min-height: 160px !important;
+      border-radius: 12px;
+    }
+    .fashion-preview-item-name {
+      font-size: 12px;
+    }
+    .fashion-preview-item-category {
+      font-size: 9px;
+    }
+    .fashion-items-column {
+      padding: 6px 12px;
+      height: 100%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .fashion-category-tabs {
+      gap: 4px;
+      margin-bottom: 6px;
+      overflow-x: auto;
+    }
+    .fashion-category-tab {
+      padding: 4px 10px;
+      font-size: 11px;
+      border-radius: 10px;
+    }
+    .fashion-grid-items {
+      grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)) !important;
+      gap: 6px;
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px;
+    }
+    .fashion-item-card {
+      padding: 6px;
+      border-radius: 12px;
+    }
+    .fashion-item-thumbnail {
+      height: 48px;
+    }
+    .fashion-item-title {
+      font-size: 10.5px;
+    }
+    .fashion-item-price {
+      font-size: 10px;
+    }
+    .fashion-checkout-bar {
+      padding: 5px 10px;
+      margin-top: 4px;
+      border-radius: 10px;
+    }
+    .fashion-checkout-btn {
+      padding: 5px 12px;
+      font-size: 11.5px;
+      min-height: 32px;
     }
   }
 }

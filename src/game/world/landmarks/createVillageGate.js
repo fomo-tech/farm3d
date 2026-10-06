@@ -139,7 +139,8 @@ export function createVillageGate(scene, position, villageName = 'LÀNG HOA MAI'
 
   // 4. Bảng tên làng bằng gỗ sồi chạm chữ nổi viền vàng hổ phách
   // 4. Bảng tên làng sơn son thếp vàng truyền thống Việt Nam (2048x440 Ultra High-Res Sharp Texture)
-  const texture = new DynamicTexture(`village-gate-sign-${villageId || villageName}`, { width: 2048, height: 440 }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
+  const signScale = scene.metadata?.mobile ? 0.5 : 1;
+  const texture = new DynamicTexture(`village-gate-sign-${villageId || villageName}`, { width: 2048 * signScale, height: 440 * signScale }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
   texture.anisotropicFilteringLevel = 16;
   const signMat = new StandardMaterial(`village-gate-sign-mat-${villageId}`, scene);
   signMat.diffuseTexture = texture;
@@ -169,6 +170,7 @@ export function createVillageGate(scene, position, villageName = 'LÀNG HOA MAI'
 
   const renderName = name => {
     const ctx = texture.getContext();
+    ctx.setTransform(signScale, 0, 0, signScale, 0, 0);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.clearRect(0, 0, 2048, 440);

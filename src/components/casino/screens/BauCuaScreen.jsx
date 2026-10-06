@@ -43,12 +43,13 @@ export function BauCuaScreen({
             <div className="wood-grain-rim" />
           </div>
 
+          {isShaking && <div className="pt-shaker-capsule" aria-label="Đang lắc">🎲<span>Đang lắc…</span></div>}
           {symbols && isReveal && (
             <div className="pt-baucua-trio-results">
               {symbols.map((sym, i) => (
                 <div key={i} className="baucua-result-tile animate-pop-in">
                   <SymbolArt symbol={sym} size={54} />
-                  <span className="res-sym-name">{CASINO_SYMBOLS[sym]?.name}</span>
+                  <span className="res-sym-name">{CASINO_SYMBOLS[sym]}</span>
                 </div>
               ))}
             </div>
@@ -59,7 +60,7 @@ export function BauCuaScreen({
           <div className="pt-baucua-result-summary">
             {Object.entries(symbolCounts).map(([sym, count]) => (
               <span key={sym} className="sym-match-chip">
-                {CASINO_SYMBOLS[sym]?.name} ×{count}
+                {CASINO_SYMBOLS[sym]} ×{count}
               </span>
             ))}
           </div>
@@ -92,7 +93,7 @@ export function BauCuaScreen({
               </div>
 
               <div className="tile-text-info">
-                <strong className="tile-vietnamese-name">{CASINO_SYMBOLS[key].name}</strong>
+                <strong className="tile-vietnamese-name">{CASINO_SYMBOLS[key]}</strong>
                 <small className="tile-payout-rate">Ăn theo số mặt về</small>
               </div>
 

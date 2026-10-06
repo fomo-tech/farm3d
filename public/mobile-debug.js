@@ -13,6 +13,7 @@
   let lastFrameWarningAt = 0;
   let worldRunning = false;
   let runtimeStage = 'not started';
+  let constructionStage = '';
   let runtimeSnapshot = {};
   let lastTickAt = Date.now();
   let lastPerformanceWarningAt = 0;
@@ -66,8 +67,46 @@
     try { return JSON.stringify(value); } catch { return String(value); }
   }
 
+  function displayReport() {
+    const viewport = window.visualViewport;
+    const measure = selector => {
+      const element = document.querySelector?.(selector);
+      if (!element?.getBoundingClientRect) return null;
+      const rect = element.getBoundingClientRect();
+      const css = getComputedStyle(element);
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height,
+        pixels: element.tagName === 'CANVAS' ? [element.width, element.height] : undefined,
+        pixelRatio: element.tagName === 'CANVAS' ? element.width / Math.max(1, rect.width) : undefined,
+        padding: css.padding, margin: css.margin, transform: css.transform,
+        zoom: css.zoom, position: css.position };
+    };
+    return { version: 'ios-layout-20261005-v6',
+      visualViewport: viewport ? { width: viewport.width, height: viewport.height,
+        left: viewport.offsetLeft, top: viewport.offsetTop, scale: viewport.scale } : null,
+      root: measure('#root'), shell: measure('.game-shell'), canvas: measure('.game-canvas'),
+      quality: runtimeSnapshot.graphicsQuality, renderDpr: runtimeSnapshot.renderDpr };
+  }
+
+  // Preserve a small last-known sample even if iOS kills the process without an error event.
+  let diagnosticUploadPending = false;
+  let diagnosticUploadEnabled = isLan || forced;
+  function uploadSample(sample) {
+    if (!diagnosticUploadEnabled || diagnosticUploadPending || typeof fetch !== 'function') return;
+    diagnosticUploadPending = true;
+    fetch('/__mobile-diagnostics', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sample), keepalive: true }).then(response => {
+      if (response.status === 404) diagnosticUploadEnabled = false;
+    }).catch(() => {}).finally(() => { diagnosticUploadPending = false; });
+  }
+  try {
+    const previous = JSON.parse(localStorage.getItem('farm.mobileCheckpoint') || 'null');
+    if (previous) uploadSample({ ...previous, previousSession: true });
+  } catch { /* No previous checkpoint. */ }
+
+
   function systemReport() {
     return [
+      `Display: ${textOf(displayReport())}`,
       `URL: ${location.href}`,
       `Stage: ${currentStage}`,
       `Runtime stage: ${runtimeStage}`,
@@ -88,7 +127,7 @@
     if (panel || !document.body) return;
     const style = document.createElement('style');
     style.textContent = `
-      #farm-debug-badge{position:fixed;z-index:2147483646;left:8px;bottom:8px;border:1px solid #67e8f9;border-radius:9px;padding:6px 9px;background:#07151ee8;color:#a5f3fc;font:700 10px/1 system-ui;box-shadow:0 4px 15px #0008}
+      #farm-debug-badge{position:fixed;z-index:2147483646;left:max(8px,env(safe-area-inset-left,0px));bottom:max(8px,env(safe-area-inset-bottom,0px));border:1px solid #67e8f9;border-radius:9px;padding:6px 9px;background:#07151ee8;color:#a5f3fc;font:700 10px/1 system-ui;box-shadow:0 4px 15px #0008}
       #farm-debug-panel{position:fixed;z-index:2147483647;inset:8px;display:none;flex-direction:column;overflow:hidden;border:2px solid #fb7185;border-radius:14px;background:#100f18f5;color:#fff;box-shadow:0 12px 50px #000d;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
       #farm-debug-panel.visible{display:flex}#farm-debug-panel header{display:flex;align-items:center;gap:8px;padding:10px;background:#3f1725}#farm-debug-panel header b{flex:1;color:#fecdd3;font:800 13px system-ui}
       #farm-debug-panel button{border:1px solid #ffffff55;border-radius:8px;padding:6px 9px;background:#ffffff14;color:#fff;font:700 11px system-ui}#farm-debug-body{flex:1;overflow:auto;padding:10px;white-space:pre-wrap;word-break:break-word}
@@ -110,7 +149,21 @@
     panel.querySelector('#farm-debug-copy').onclick = async function () {
       const report = systemReport() + '\n\n' + entries.map(item => `[${item.time}] ${item.type}\n${item.message}`).join('\n\n');
       try { await navigator.clipboard.writeText(report); this.textContent = 'Đã sao chép'; }
-      catch { this.textContent = 'Không thể sao chép'; }
+      catch {
+        // Clipboard API is unavailable on the phone's HTTP LAN address.
+        let field = panel.querySelector('#farm-debug-export');
+        if (!field) {
+          field = document.createElement('textarea');
+          field.id = 'farm-debug-export';
+          field.readOnly = true;
+          field.setAttribute('aria-label', 'Báo cáo chẩn đoán — chọn và sao chép');
+          field.style.cssText = 'width:100%;min-height:120px;color:#fff;background:#172334;font:12px monospace';
+          panel.appendChild(field);
+        }
+        field.value = report;
+        field.focus(); field.select();
+        this.textContent = 'Giữ vào báo cáo để sao chép';
+      }
     };
     if (!forced && !isLan) badge.style.display = 'none';
     render();
@@ -153,7 +206,10 @@
       ensureUi(); render();
     },
     report(error, source) { report(source || 'APP ERROR', error); },
-    stage(stage) { finishStage(); runtimeStage = stage; stageStartedAt = performance.now(); },
+    stage(stage) {
+      finishStage(); runtimeStage = stage; stageStartedAt = performance.now();
+      if (stage.startsWith('stream job:')) constructionStage = stage;
+    },
     endStage() { finishStage(); runtimeStage = 'outside measured render work'; },
     snapshot(value) { runtimeSnapshot = value; },
     measure(name, callback) {
@@ -268,4 +324,37 @@
   });
   document.addEventListener('DOMContentLoaded', ensureUi);
 
+  function saveMobileCheckpoint() {
+    if (document.visibilityState !== 'visible') return;
+    const display = displayReport(), canvas = display.canvas, viewport = display.visualViewport, root = display.root;
+    const streamStats = runtimeSnapshot.streamingScheduler || {};
+    const foliageStats = runtimeSnapshot.foliageBatches || {};
+    const stage = String(constructionStage || runtimeStage || '');
+    const bootStages = [
+      ['initial world construction', 1], ['boot: open world', 2], ['boot: countryside', 3],
+      ['boot: farm proxy', 4], ['boot: bus route', 5], ['boot: foliage prototypes', 6],
+      ['boot: village gate', 7], ['boot: winding river', 8], ['boot: rendering pipeline', 11],
+      ['boot: atmosphere', 12], ['boot: meadow texture', 13], ['boot: player model', 14],
+      ['boot: farm animals', 15], ['boot: animal pen', 16],
+    ];
+    const bootStageCode = hasReachedReady ? 10 : bootStages.find(([label]) => stage.includes(label))?.[1] || 0;
+    const sample = { buildRevision: 2026100511, time: Date.now(), fps: runtimeSnapshot.fps, meshes: runtimeSnapshot.meshes,
+      textures: runtimeSnapshot.textures, materials: runtimeSnapshot.materials, geometries: runtimeSnapshot.geometries,
+      activeMeshes: runtimeSnapshot.activeMeshes, bootStageCode, ready: hasReachedReady,
+      foliagePlacements: foliageStats.placements, foliageDetailBatches: foliageStats.detailBatches,
+      foliageLodBatches: foliageStats.lodBatches, schedulerPending: streamStats.pending,
+      renderWidth: runtimeSnapshot.renderWidth, renderHeight: runtimeSnapshot.renderHeight,
+      renderDpr: runtimeSnapshot.renderDpr, nativeDpr: devicePixelRatio || 1,
+      layoutWidth: innerWidth, layoutHeight: innerHeight,
+      rootX: root?.x, rootY: root?.y, rootWidth: root?.width, rootHeight: root?.height,
+      canvasX: canvas?.x, canvasY: canvas?.y, canvasWidth: canvas?.width, canvasHeight: canvas?.height,
+      viewportWidth: viewport?.width || innerWidth, viewportHeight: viewport?.height || innerHeight,
+      viewportLeft: viewport?.left, viewportTop: viewport?.top, viewportScale: viewport?.scale,
+      pending: streamStats.pending, maxStepMs: streamStats.maxStepMs,
+      contextLost: webglContextLost };
+    try { localStorage.setItem('farm.mobileCheckpoint', JSON.stringify(sample)); } catch {}
+    uploadSample(sample);
+  }
+  setInterval(saveMobileCheckpoint, 5000);
+  document.addEventListener('DOMContentLoaded', saveMobileCheckpoint);
 })();

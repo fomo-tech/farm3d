@@ -125,6 +125,158 @@
   .cq-root-wrapper .pt-screen-action-dock { gap: 5px; }
   .cq-root-wrapper .pt-chip-selector-group { gap: 4px; }
 }
+/* Chuẩn Màn Hình Ngang (Casino Landscape Table) */
+@media screen and (orientation: landscape), (max-height: 560px) {
+  .cq-root-wrapper .pt-ingame-top-hud {
+    padding: max(4px, var(--sat, env(safe-area-inset-top, 0px))) max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) 4px max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))));
+    gap: 6px;
+    align-items: center;
+  }
+  .cq-root-wrapper .pill-table-name {
+    font-size: 11px;
+    max-width: 110px;
+  }
+  .cq-root-wrapper .pt-phase-countdown-capsule {
+    padding: 3px 10px;
+    font-size: 11px;
+  }
+  .cq-root-wrapper .pt-dedicated-game-stage {
+    width: min(840px, calc(100% - max(32px, calc(var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))) * 2))));
+    max-height: calc(100dvh - 104px);
+    overflow-y: auto;
+    padding: 2px 6px;
+  }
+  .cq-root-wrapper .pt-dedicated-game-stage.pt-stage-taixiu,
+  .cq-root-wrapper .pt-dedicated-game-stage.pt-stage-baucua {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    gap: 10px;
+    align-items: center;
+  }
+  .cq-root-wrapper .pt-dice-arena-pod,
+  .cq-root-wrapper .pt-baucua-shaker-pod {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .cq-root-wrapper .pt-bet-big-card {
+    min-height: 52px;
+    padding: 4px 8px;
+  }
+  .cq-root-wrapper .card-main-title {
+    font-size: 20px;
+  }
+  .cq-root-wrapper .pt-sub-bet-pill {
+    padding: 3px;
+    min-height: 22px;
+    font-size: 10px;
+  }
+  .cq-root-wrapper .pt-folk-animal-tile {
+    min-height: 56px;
+    padding: 4px;
+  }
+  .cq-root-wrapper .cq-symbol {
+    width: 38px;
+    height: 38px;
+  }
+  .cq-root-wrapper .pt-ingame-bottom-dock {
+    padding: 4px 12px max(4px, var(--safe-bottom, 0px));
+    gap: 6px;
+  }
+  .cq-root-wrapper .cq-chip {
+    width: 32px;
+    height: 32px;
+  }
+  .cq-root-wrapper .cq-chip-num {
+    font-size: 10px;
+  }
+  .cq-root-wrapper .pt-hud-seats-ring {
+    top: 50px;
+    left: max(8px, var(--safe-left, 0px));
+    width: 190px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cq-root-wrapper *, .cq-root-wrapper *::before, .cq-root-wrapper *::after { animation: none !important; transition: none !important; }
 }
+
+
+/* Candy arcade: scoped to the lounge so the world's other HUDs stay independent. */
+.cq-root-wrapper { --arcade-ink: #294d70; --arcade-mint: #42d5b0; --arcade-blue: #559df5; }
+.cq-root-wrapper button { transition: transform .18s ease, box-shadow .18s ease, filter .18s ease; touch-action: manipulation; }
+.cq-root-wrapper button:enabled:hover { transform: translateY(-3px); filter: brightness(1.06); }
+.cq-root-wrapper button:enabled:active { transform: translateY(2px) scale(.97); }
+.cq-root-wrapper :is(.pt-candy-pill-btn,.pt-candy-action-circle-btn,.pt-tool-btn) { background: #fffaf1; color: var(--arcade-ink); border: 2px solid white; box-shadow: 0 4px 0 #b7cddd; border-radius: 18px; min-height: 42px; }
+.cq-root-wrapper :is(.pt-ready-action-btn,.pt-candy-cta-btn,.pt-play-cards-cta-btn,.pt-flip-cards-cta-btn) { background: linear-gradient(#67e8ba,#23bc9e); color: #fff; border: 3px solid #e8fff5; border-radius: 22px; box-shadow: 0 5px 0 #198c80,0 8px 18px #173d4933; text-shadow: 0 2px #15816b; min-height: 46px; font-weight: 900; }
+.cq-root-wrapper .pt-candy-wallet-pill { background: #fff2b9; color: #805727; border: 2px solid white; box-shadow: 0 4px 0 #dfbb75; }
+.cq-root-wrapper .pt-roster-title { font-size: 11px; font-weight: 900; letter-spacing: 1px; display: flex; justify-content: space-between; color: #426383; margin: 0 4px 8px; }
+.cq-root-wrapper .pt-hud-seats-ring { top: 92px; left: 16px; width: 190px; padding: 12px; border-radius: 24px; background: #edf7ffed; border: 3px solid white; box-shadow: 0 5px 0 #b7cddd; pointer-events: none; }
+.cq-root-wrapper .pt-seat-picker-list { display: grid; grid-template-columns: 1fr; gap: 8px; background: transparent; padding: 0; max-height: 46vh; }
+.cq-root-wrapper .pt-player-bubble { border-radius: 18px; padding: 8px; animation: arcade-arrive .35s ease both; }
+.cq-root-wrapper .pt-player-avatar { width: 38px; height: 38px; background: linear-gradient(145deg,#9de9ff,#829bee); color: white; border: 2px solid white; font-size: 18px; box-shadow: 0 3px 0 #7997be; }
+.cq-root-wrapper .pt-player-nametag strong { font-size: 13px; }
+.cq-root-wrapper .pt-player-nametag small { display: block; font-size: 10px; }
+.cq-root-wrapper .is-me .pt-player-bubble { border-color: #ffd165; background: #fff6d7; }
+.cq-root-wrapper .is-turn .pt-player-bubble { border-color: #40cda7; animation: arcade-turn 1.4s ease-in-out infinite; }
+.cq-root-wrapper .pt-empty-player { display: flex; align-items: center; gap: 8px; padding: 4px 8px; color: #859fb0; }
+.cq-root-wrapper .pt-empty-player span { border: 2px dashed #b3cbd8; border-radius: 50%; width: 30px; height: 30px; display: grid; place-items: center; }
+.cq-root-wrapper .pt-empty-player small { font-size: 10px; }
+.cq-root-wrapper .pt-casino-lobby-hud .pt-game-cards-carousel { max-width: 900px; gap: 12px; padding: 10px 4px; }
+.cq-root-wrapper .pt-casino-lobby-hud .pt-arcade-game-card { display: flex; flex-direction: column; flex: 1 0 150px; gap: 7px; padding: 14px; border-radius: 24px; background: linear-gradient(#fffdf5,#ecf5ff) !important; animation: arcade-arrive .4s ease both; }
+.cq-root-wrapper .pt-casino-lobby-hud .pt-arcade-game-card.is-selected { background: linear-gradient(#e1fff4,#b9f2df) !important; border-color: white !important; box-shadow: 0 5px 0 #37ab94,0 0 0 3px #63d8bc; transform: translateY(-5px); }
+.cq-root-wrapper .pt-casino-lobby-hud .card-center-icon { display: grid; place-items: center; min-height: 40px; }
+.cq-root-wrapper .pt-casino-lobby-hud .card-game-title { font-size: 13px; text-align: center; }
+.cq-root-wrapper .pt-casino-lobby-hud .card-type-tag { display: block; font-size: 10px; }
+.cq-root-wrapper .pt-casino-lobby-hud .pt-lobby-center-hint { display: flex; }
+.cq-root-wrapper .pt-game-spotlight-pill { border-radius: 24px; padding: 12px 20px; animation: arcade-arrive .4s ease; }
+.cq-root-wrapper .pt-dedicated-game-stage { max-height: 52vh; width: min(740px,calc(100vw - 250px)); overflow-x: hidden; padding: 8px; gap: 10px; }
+.cq-root-wrapper .pt-bet-big-card { min-height: 95px; border: 3px solid #fff; border-radius: 25px; }
+.cq-root-wrapper .bet-tai { background: linear-gradient(#ff9b9c,#ec6c8d); box-shadow: 0 5px 0 #b6456d; }
+.cq-root-wrapper .bet-xiu { background: linear-gradient(#6ee5c5,#35bba9); box-shadow: 0 5px 0 #218c85; }
+.cq-root-wrapper .card-main-title { font-size: 32px; color: white; font-weight: 900; text-shadow: 0 3px #0002; }
+.cq-root-wrapper .pt-folk-animal-tile { border: 3px solid white; background: linear-gradient(#fffaf0,#ffe7ad); min-height: 100px; padding: 10px; border-radius: 24px; box-shadow: 0 4px 0 #d5ae69; }
+.cq-root-wrapper .pt-folk-animal-tile.winning { border-color: #ffe178; background: #fff0ae; animation: arcade-turn 1.2s ease-in-out 3; }
+.cq-root-wrapper .cq-symbol { width: 56px; height: 56px; margin: auto; }
+.cq-root-wrapper .pt-screen-action-dock { border-radius: 23px; padding: 9px 14px; gap: 10px; }
+.cq-root-wrapper .pt-chip-btn.selected { background: #fff0b1; border: 2px solid #f8c85e; transform: translateY(-4px); }
+.cq-root-wrapper .pt-shaker-capsule { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 25px; background: #edf7ff; color: #456783; border: 3px solid white; border-radius: 25px; font-size: 32px; animation: arcade-shake .25s ease-in-out infinite alternate; }
+.cq-root-wrapper .pt-shaker-capsule span { font-size: 14px; font-weight: 800; }
+.cq-root-wrapper :is(.dice-wrap-pop,.baucua-result-tile,.baicao-card-slot,.animate-trick-pop) { animation: arcade-reveal .45s cubic-bezier(.2,.8,.3,1.3) both; }
+.cq-root-wrapper :is(.dice-wrap-pop,.baucua-result-tile,.baicao-card-slot):nth-child(2) { animation-delay: .12s; }
+.cq-root-wrapper :is(.dice-wrap-pop,.baucua-result-tile,.baicao-card-slot):nth-child(3) { animation-delay: .24s; }
+.cq-root-wrapper .pt-result-banner-pop { animation: arcade-reveal .5s ease both; border-radius: 22px; }
+.cq-root-wrapper .pt-phase-countdown-capsule { border-radius: 22px; }
+.cq-root-wrapper .is-urgent .timer-badge { background: #ff6f8f; color: white; animation: arcade-turn .7s ease-in-out infinite; }
+.cq-root-wrapper .pt-social-bubble { position: absolute; top: 100px; right: 18px; max-width: 230px; display: flex; flex-direction: column; gap: 5px; padding: 12px 16px; background: #fff; color: #426383; border: 3px solid #d7f3ff; border-radius: 22px 22px 4px 22px; font-size: 12px; animation: arcade-chat 6s both; pointer-events: none; z-index: 70; }
+@keyframes arcade-arrive { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes arcade-reveal { from { opacity: 0; transform: translateY(-22px) scale(.75) rotate(-5deg); } to { opacity: 1; transform: translateY(0) scale(1) rotate(0); } }
+@keyframes arcade-shake { from { transform: translateX(-4px) rotate(-4deg); } to { transform: translateX(4px) rotate(4deg); } }
+@keyframes arcade-turn { 50% { box-shadow: 0 0 0 4px #52d6ba45,0 5px 12px #263f5020; } }
+@keyframes arcade-chat { 0% { opacity: 0; transform: scale(.85); } 10%,80% { opacity: 1; transform: scale(1); } 100% { opacity: 0; visibility: hidden; } }
+@media (max-width: 1000px) { .cq-root-wrapper .pt-hud-seats-ring { top: 118px; width: 155px; } .cq-root-wrapper .pt-dedicated-game-stage { width: min(650px,calc(100vw - 190px)); } }
+@media (max-width: 700px), (max-height: 560px) {
+  .cq-root-wrapper .pt-hud-seats-ring { top: 112px; left: 8px; right: 8px; width: auto; padding: 6px; border-radius: 16px; }
+  .cq-root-wrapper .pt-roster-title { display: none; }
+  .cq-root-wrapper .pt-seat-picker-list { display: flex; overflow-x: auto; max-height: 68px; gap: 5px; }
+  .cq-root-wrapper .pt-seat-pod { flex: 0 0 auto; }
+  .cq-root-wrapper .pt-player-bubble { padding: 4px 7px; }
+  .cq-root-wrapper .pt-player-avatar { width: 28px; height: 28px; font-size: 13px; }
+  .cq-root-wrapper .pt-empty-player { display: none; }
+  .cq-root-wrapper .pt-dedicated-game-stage { width: calc(100vw - 20px); max-height: calc(100dvh - 235px); }
+  .cq-root-wrapper .pt-social-bubble { top: 174px; right: 8px; }
+  .cq-root-wrapper .pt-casino-lobby-hud .pt-arcade-game-card { flex: 0 0 145px; padding: 10px; }
+  .cq-root-wrapper .pt-game-spotlight-pill { padding: 8px 12px; max-width: calc(100vw - 24px); }
+  .cq-root-wrapper .spotlight-text p { font-size: 11px; }
+  .cq-root-wrapper .pt-bet-big-card { min-height: 68px; }
+  .cq-root-wrapper .pt-folk-animal-tile { min-height: 72px; padding: 5px; }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  .cq-root-wrapper .pt-hud-seats-ring { top: 70px; width: 150px; right: auto; }
+  .cq-root-wrapper .pt-seat-picker-list { display: grid; max-height: 160px; }
+  .cq-root-wrapper .pt-dedicated-game-stage { width: calc(100vw - 190px); max-height: calc(100dvh - 110px); }
+  .cq-root-wrapper .pt-casino-lobby-hud .card-center-icon { display: none; }
+  .cq-root-wrapper .pt-casino-lobby-hud .pt-lobby-center-hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .cq-root-wrapper *, .cq-root-wrapper *::before, .cq-root-wrapper *::after { animation: none !important; transition: none !important; } }

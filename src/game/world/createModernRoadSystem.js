@@ -1,9 +1,58 @@
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
+import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { WORLD_PALETTE, createLampGlowAndPool } from './worldDesignSystem.js';
+
+function* batchMobileRoadBorders(root) {
+  if (!root.getScene().metadata?.mobile) return;
+  const groups = new Map();
+  for (const mesh of root.getChildMeshes()) {
+    if (!/^(curb-|sidewalk-|outer-trim-|walk-trim-)/.test(mesh.name) || !mesh.material) continue;
+    if (!groups.has(mesh.material)) groups.set(mesh.material, []);
+    groups.get(mesh.material).push(mesh);
+  }
+  for (const [material, meshes] of groups) {
+    if (meshes.length < 2) continue;
+    const receiveShadows = meshes.some(mesh => mesh.receiveShadows);
+    const merged = Mesh.MergeMeshes(meshes, true, true, undefined, false, false);
+    if (merged) {
+      merged.name = `road-border-batch-${root.name}-${material.name}`;
+      merged.material = material;
+      merged.setParent(root);
+      merged.receiveShadows = receiveShadows;
+      merged.isPickable = false;
+    }
+    yield;
+  }
+}
+
+// Preserve each marking's box geometry while giving phones one GPU resource
+// per road instead of hundreds of independently allocated meshes.
+function createMarkingBatch(scene, name, root, boxes, material) {
+  if (!boxes.length) return;
+  const positions = [], normals = [], indices = [], uvs = [];
+  for (const box of boxes) {
+    const data = VertexData.CreateBox(box);
+    const offset = positions.length / 3;
+    for (let i = 0; i < data.positions.length; i += 3) {
+      positions.push(data.positions[i] + (box.x || 0), data.positions[i + 1] + (box.y || 0), data.positions[i + 2] + (box.z || 0));
+    }
+    normals.push(...data.normals);
+    uvs.push(...data.uvs);
+    for (const index of data.indices) indices.push(index + offset);
+  }
+  const mesh = new Mesh(name, scene);
+  const data = new VertexData();
+  Object.assign(data, { positions, normals, indices, uvs });
+  data.applyToMesh(mesh);
+  mesh.material = material;
+  mesh.parent = root;
+  mesh.isPickable = false;
+}
 
 function freezeSubtree(node) {
   if (!node) return;
@@ -168,6 +217,7 @@ export function* createModernBoulevardSteps(scene, options = {}) {
 
   // 2. Tim đường phân làn: Dải đá sa thạch hoa văn cổ điển (Inlaid Sandstone Ribbons)
   if (hasCenterDashes && length >= 8) {
+    const mobileDashes = [];
     const dashLength = 2.4;
     const dashGap = 3.6;
     const stride = dashLength + dashGap;
@@ -179,6 +229,11 @@ export function* createModernBoulevardSteps(scene, options = {}) {
       const inIntersection = openings.some(op => dz >= op.start - 0.8 && dz <= op.end + 0.8);
       if (inIntersection) continue;
 
+      if (scene.metadata?.mobile) {
+        mobileDashes.push({ width: 0.28, height: 0.016, depth: dashLength, y: 0.089, z: dz });
+        yield;
+        continue;
+      }
       const dash = MeshBuilder.CreateBox(`dash-${id}-${i}`, {
         width: 0.28,
         height: 0.016,
@@ -189,6 +244,8 @@ export function* createModernBoulevardSteps(scene, options = {}) {
       dash.parent = root;
       yield;
     }
+    createMarkingBatch(scene, `dash-batch-${id}`, root, mobileDashes, mats.centerInlay);
+    yield;
   }
 
   // 3. Hai đường viền đá sa thạch chạy dọc mép lề đường
@@ -283,7 +340,7 @@ export function* createModernBoulevardSteps(scene, options = {}) {
 
   yield;
   // 6. Cột đèn sắt rèn phong cách châu Âu cổ điển (Victorian Gas Streetlamps)
-  if (hasStreetLamps && length >= 16) {
+  if (hasStreetLamps && !scene.metadata?.mobile && length >= 16) {
     const numLamps = Math.max(1, Math.floor(length / lampInterval));
     const actualInterval = length / (numLamps + 1);
 
@@ -362,6 +419,7 @@ export function* createModernBoulevardSteps(scene, options = {}) {
     }
   }
 
+  yield* batchMobileRoadBorders(root);
   freezeSubtree(root);
   return root;
 }
@@ -394,8 +452,13 @@ export function createZebraCrosswalk(scene, options = {}) {
   const numStripes = Math.floor((width - 0.4) / (stripeWidth + gap));
   const startX = -((numStripes - 1) * (stripeWidth + gap)) / 2;
 
+  const mobileStripes = [];
   for (let i = 0; i < numStripes; i++) {
     const sx = startX + i * (stripeWidth + gap);
+    if (scene.metadata?.mobile) {
+      mobileStripes.push({ width: stripeWidth, height: 0.012, depth, x: sx });
+      continue;
+    }
     const stripe = MeshBuilder.CreateBox(`cross-stone-${id}-${i}`, {
       width: stripeWidth,
       height: 0.012,
@@ -405,6 +468,7 @@ export function createZebraCrosswalk(scene, options = {}) {
     stripe.material = matStripe;
     stripe.parent = root;
   }
+  createMarkingBatch(scene, `cross-stone-batch-${id}`, root, mobileStripes, matStripe);
 
   freezeSubtree(root);
   return root;
@@ -606,6 +670,7 @@ export function* createCountryRoadSteps(scene, options = {}) {
 
   // 4. Tim đường phân làn đá sa thạch
   if (hasCenterDashes && length >= 12) {
+    const mobileDashes = [];
     const dashLength = 2.4;
     const dashGap = 4.2;
     const stride = dashLength + dashGap;
@@ -617,6 +682,11 @@ export function* createCountryRoadSteps(scene, options = {}) {
       const inIntersection = openings.some(op => dz >= op.start - 0.5 && dz <= op.end + 0.5);
       if (inIntersection) continue;
 
+      if (scene.metadata?.mobile) {
+        mobileDashes.push({ width: 0.26, height: 0.016, depth: dashLength, y: 0.089, z: dz });
+        yield;
+        continue;
+      }
       const dash = MeshBuilder.CreateBox(`dash-${id}-${i}`, {
         width: 0.26,
         height: 0.016,
@@ -628,6 +698,8 @@ export function* createCountryRoadSteps(scene, options = {}) {
 
       yield;
 }
+    createMarkingBatch(scene, `dash-batch-${id}`, root, mobileDashes, mats.centerInlay);
+    yield;
   }
     yield;
 
@@ -697,6 +769,7 @@ export function* createCountryRoadSteps(scene, options = {}) {
   }
     yield;
 
+  yield* batchMobileRoadBorders(root);
   freezeSubtree(root);
     yield;
   return root;

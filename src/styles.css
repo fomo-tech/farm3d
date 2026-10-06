@@ -1,5 +1,96 @@
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@700;800;900&subset=vietnamese&display=swap');
-:root{font-family:'Baloo 2','Nunito',ui-rounded,cursive,sans-serif;color:#203321;background:#dbeafe;font-synthesis:none}*{box-sizing:border-box}html,body,#root,.game-shell{width:100%;height:100%;margin:0;overflow:hidden}button{font:inherit}.game-shell{position:relative;background:#dbeafe}.game-canvas{display:block;width:100%;height:100%;outline:none;touch-action:none;background:#dbeafe}
+:root {
+  font-family: 'Baloo 2', 'Nunito', ui-rounded, cursive, sans-serif;
+  color: #203321;
+  background: #0277bd !important;
+  background-color: #0277bd !important;
+  font-synthesis: none;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --safe-side: max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+}
+* {
+  box-sizing: border-box;
+}
+html, body {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  -webkit-overflow-scrolling: none !important;
+  touch-action: none !important;
+  background: #0277bd !important;
+  background-color: #0277bd !important;
+}
+#root, .game-shell, .pt-game-shell {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background: #0277bd !important;
+  background-color: #0277bd !important;
+}
+button {
+  font: inherit;
+}
+.game-shell {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  overflow: hidden !important;
+  background: #0277bd !important;
+}
+.game-canvas {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  outline: none !important;
+  touch-action: none !important;
+  background: #0277bd !important;
+}
 
 /* =========================================================================
    AUTHENTIC PLAY TOGETHER ORIENTATION GUARD (MOBILE PORTRAIT ONLY)
@@ -21,7 +112,20 @@
    chubby 3D stars, golden candy play button with burst rays, Google login pill.
    ========================================================================== */
 
-body .pt-start-screen-backdrop.cutecore-theme {
+body .pt-start-screen-backdrop.cutecore-theme,
+.pt-start-screen-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
@@ -29,8 +133,10 @@ body .pt-start-screen-backdrop.cutecore-theme {
   background:
     radial-gradient(ellipse at 50% 70%, rgba(3, 76, 140, 0.45) 0%, transparent 62%),
     radial-gradient(ellipse at 50% 46%, #33bbf8 0%, #1093ef 52%, #0277bd 88%, #01528c 100%) !important;
-  padding: 24px 20px !important;
-  overflow: hidden;
+  padding: max(8px, var(--sat, env(safe-area-inset-top, 0px))) 16px max(8px, var(--sab, env(safe-area-inset-bottom, 0px))) 16px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
 }
 
 /* Hide all background clutter not present in reference */
@@ -136,14 +242,15 @@ body .pt-start-screen-backdrop.cutecore-theme {
 }
 
 .pt-jelly-track-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: center;
   width: 100%;
 }
 
 .pt-jelly-track {
-  flex: 1;
+  width: 100%;
   height: 28px;
   background: #025399;
   border: 3.5px solid #ffffff;
@@ -194,7 +301,8 @@ body .pt-start-screen-backdrop.cutecore-theme {
 }
 
 .pt-progress-pct-bubble {
-  flex-shrink: 0;
+  position: absolute;
+  right: -6px;
   min-width: 58px;
   height: 32px;
   padding: 0 10px;
@@ -210,6 +318,7 @@ body .pt-start-screen-backdrop.cutecore-theme {
   font-weight: 900;
   box-shadow: 0 4px 10px rgba(1, 46, 82, 0.3);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  z-index: 5;
 }
 
 .pt-loading-status-bar {
@@ -410,7 +519,216 @@ body .pt-start-screen-backdrop.cutecore-theme {
   }
 }
 
-@media (max-width: 520px) {
+/* ==========================================================================
+   LANDSCAPE / HORIZONTAL SCREEN START SCREEN RESPONSIVE (Màn Hình Ngang)
+   ========================================================================== */
+@media screen and (orientation: landscape), (max-height: 560px) {
+  body .pt-start-screen-backdrop.cutecore-theme,
+  .pt-start-screen-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    padding: max(8px, var(--sat, env(safe-area-inset-top, 0px))) 16px max(8px, var(--sab, env(safe-area-inset-bottom, 0px))) 16px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+  }
+
+  .pt-start-screen-backdrop .pt-start-center-content {
+    position: relative !important;
+    inset: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+    max-width: min(720px, 94vw) !important;
+    margin: auto !important;
+    pointer-events: auto !important;
+  }
+
+  .pt-start-screen-backdrop .pt-generated-logo-lockup {
+    width: auto !important;
+    max-width: min(380px, 50vw) !important;
+    margin: 0 auto !important;
+  }
+
+  .pt-start-screen-backdrop .pt-generated-brand-logo {
+    max-height: min(112px, 30vh) !important;
+    width: auto !important;
+  }
+
+  .pt-star-left {
+    width: 38px !important;
+    height: 38px !important;
+    top: 6% !important;
+    left: -12px !important;
+  }
+
+  .pt-star-right {
+    width: 36px !important;
+    height: 36px !important;
+    top: 24% !important;
+    right: -12px !important;
+  }
+
+  .pt-start-screen-backdrop .pt-ready-action-stage {
+    gap: 8px !important;
+    margin-top: 2px !important;
+  }
+
+  .pt-play-now-btn {
+    width: min(320px, 60vw) !important;
+    height: 52px !important;
+    padding: 0 24px !important;
+    border-width: 3px !important;
+    box-shadow: 0 5px 0 #c2410c, 0 10px 20px rgba(2, 60, 105, 0.35) !important;
+  }
+
+  .pt-play-now-icon svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .pt-play-now-text {
+    font-size: 22px !important;
+  }
+
+  .pt-burst-rays-left {
+    left: -18px !important;
+  }
+
+  .pt-burst-rays-right {
+    right: -18px !important;
+  }
+
+  .pt-burst-rays-left .ray,
+  .pt-burst-rays-right .ray {
+    width: 12px !important;
+    height: 4px !important;
+  }
+
+  .pt-google-login-btn {
+    width: min(280px, 52vw) !important;
+    height: 40px !important;
+    padding: 0 16px !important;
+    box-shadow: 0 3px 0 #cbd5e1, 0 8px 16px rgba(2, 60, 105, 0.2) !important;
+  }
+
+  .pt-google-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .pt-google-login-text {
+    font-size: 13.5px !important;
+  }
+
+  .pt-start-screen-backdrop .pt-loading-console {
+    width: min(450px, 75vw) !important;
+    gap: 8px !important;
+    margin-top: 2px !important;
+  }
+
+  .pt-jelly-track {
+    height: 22px !important;
+    border-width: 2.5px !important;
+  }
+
+  .pt-progress-pct-bubble {
+    position: absolute !important;
+    right: -6px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    height: 26px !important;
+    min-width: 48px !important;
+    font-size: 13px !important;
+    padding: 0 8px !important;
+  }
+
+  .pt-loading-status-bar {
+    font-size: 13.5px !important;
+  }
+}
+
+/* Extra Compact Landscape for Small Mobile Screens (max-height <= 400px) */
+@media screen and (orientation: landscape) and (max-height: 400px) {
+  body .pt-start-screen-backdrop.cutecore-theme,
+  .pt-start-screen-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    padding: max(4px, var(--sat, env(safe-area-inset-top, 0px))) 16px max(4px, var(--sab, env(safe-area-inset-bottom, 0px))) 16px !important;
+    box-sizing: border-box !important;
+  }
+
+  .pt-start-screen-backdrop .pt-start-center-content {
+    gap: 6px !important;
+  }
+
+  .pt-start-screen-backdrop .pt-generated-brand-logo {
+    max-height: 84px !important;
+  }
+
+  .pt-play-now-btn {
+    height: 44px !important;
+    width: min(280px, 55vw) !important;
+  }
+
+  .pt-play-now-text {
+    font-size: 19px !important;
+  }
+
+  .pt-google-login-btn {
+    height: 34px !important;
+    width: min(240px, 48vw) !important;
+  }
+
+  .pt-google-login-text {
+    font-size: 12px !important;
+  }
+
+  .pt-jelly-track {
+    height: 18px !important;
+  }
+
+  .pt-progress-pct-bubble {
+    position: absolute !important;
+    right: -6px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    height: 22px !important;
+    min-width: 42px !important;
+    font-size: 11px !important;
+  }
+
+  .pt-loading-status-bar {
+    font-size: 11.5px !important;
+  }
+}
+
+
+@media (max-width: 520px) and (orientation: portrait) {
   .pt-start-screen-backdrop {
     padding-left: 10px;
     padding-right: 10px;
@@ -450,7 +768,7 @@ body .pt-start-screen-backdrop.cutecore-theme {
 }
 
 /* Guard activates ONLY on genuine mobile devices in portrait mode and NOT dismissed */
-html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
+html.is-mobile-device.mobile-portrait:not(.guard-dismissed) #landscape-guard:not(.is-dismissed) {
   position: fixed;
   z-index: 2147483000;
   inset: 0;
@@ -588,121 +906,89 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
   100% { transform: rotate(360deg); }
 }
 
-/* Device Animation Stage */
-.pt-guard-stage {
-  position: relative;
-  width: 140px;
-  height: 116px;
+/* Dual Mode Stage */
+.pt-guard-dual-stage {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 4px 0 10px;
-}
-
-.pt-guard-device-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Stylized 3D Smartphone */
-.pt-guard-device {
-  position: relative;
-  width: 52px;
-  height: 92px;
-  background: linear-gradient(145deg, #1e293b, #0f172a);
-  border-radius: 14px;
-  border: 3px solid #f8fafc;
-  box-shadow:
-    0 10px 24px rgba(15, 23, 42, 0.25),
-    inset 0 1px 2px rgba(255, 255, 255, 0.4);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 4px 3px 6px;
-  animation: ptPhoneRotateCycle 3.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: center center;
-}
-
-.pt-device-notch {
-  width: 14px;
-  height: 3px;
-  border-radius: 999px;
-  background: #334155;
-  margin-bottom: 3px;
-}
-
-.pt-device-screen {
-  flex: 1;
+  gap: 8px;
   width: 100%;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #60a5fa 0%, #93c5fd 55%, #86efac 55%, #4ade80 100%);
-  overflow: hidden;
-  position: relative;
+  margin: 6px 0 12px;
 }
 
-.pt-mini-scene {
-  position: absolute;
-  inset: 0;
+.pt-guard-mode-card {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  padding: 3px;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  flex: 1;
+  border: 2px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.pt-mini-sun {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #fde047;
-  box-shadow: 0 0 6px #fde047;
-  align-self: flex-end;
+.pt-guard-mode-card.is-portrait-mode {
+  background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #86efac;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.2);
 }
 
-.pt-mini-emoji {
+.pt-guard-mode-card.is-landscape-mode {
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #7dd3fc;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.2);
+}
+
+.pt-mode-phone-wrap {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pt-mode-label {
+  font-family: 'Baloo 2', 'Nunito', sans-serif;
+  font-size: 12px;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: 0.3px;
+}
+
+.pt-mode-sub {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #475569;
+}
+
+.pt-guard-or-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.pt-or-badge {
+  font-size: 9px;
+  font-weight: 900;
+  color: #d97706;
+  background: #fef3c7;
+  border: 1.5px solid #fde047;
+  padding: 1px 5px;
+  border-radius: 999px;
+}
+
+.pt-or-arrows {
   font-size: 13px;
-  line-height: 1;
-  text-align: center;
-}
-
-.pt-device-glare {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0%, transparent 60%);
-  border-radius: 12px 12px 0 0;
-  pointer-events: none;
-}
-
-/* Orbit Arrow Animation */
-.pt-guard-orbit-arrow {
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  pointer-events: none;
-  animation: ptOrbitPulse 3.4s infinite ease-in-out;
-}
-
-@keyframes ptPhoneRotateCycle {
-  0%, 15% { transform: rotate(0deg) scale(1); }
-  35%, 65% { transform: rotate(90deg) scale(1.08); }
-  85%, 100% { transform: rotate(0deg) scale(1); }
-}
-
-@keyframes ptOrbitPulse {
-  0%, 15% { opacity: 0.35; transform: scale(0.95); }
-  35%, 65% { opacity: 1; transform: scale(1.05); }
-  85%, 100% { opacity: 0.35; transform: scale(0.95); }
+  font-weight: 900;
+  color: #0284c7;
 }
 
 /* Typography */
 .pt-guard-title {
-  margin: 6px 0 4px;
+  margin: 4px 0 4px;
   font-family: 'Baloo 2', 'Nunito', cursive, sans-serif;
-  font-size: clamp(20px, 5.5vw, 24px);
+  font-size: clamp(19px, 5.2vw, 22px);
   font-weight: 900;
   color: #0f172a;
   letter-spacing: 0.5px;
@@ -710,12 +996,16 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
 }
 
 .pt-guard-desc {
-  margin: 0 0 16px;
-  font-size: 13px;
+  margin: 0 0 14px;
+  font-size: 12.5px;
   font-weight: 700;
   line-height: 1.45;
   color: #475569;
-  max-width: 280px;
+  max-width: 300px;
+}
+
+.pt-guard-desc b {
+  color: #0284c7;
 }
 
 /* Actions */
@@ -724,64 +1014,133 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  gap: 8px;
+  gap: 10px;
 }
 
-.pt-guard-btn-primary {
+/* Primary Portrait Button (Lớn, Nổi bật, Xanh lá Candy 3D) */
+.pt-guard-btn-portrait {
   width: 100%;
-  max-width: 250px;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+  gap: 10px;
+  padding: 11px 16px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
   color: #ffffff;
-  border: 3px solid #ffffff;
-  font-family: 'Baloo 2', 'Nunito', sans-serif;
-  font-size: 15px;
-  font-weight: 900;
-  letter-spacing: 0.3px;
-  cursor: pointer;
+  border: 2.5px solid #ffffff;
   box-shadow:
-    0 6px 0 #0369a1,
-    0 12px 20px rgba(2, 132, 199, 0.4),
+    0 5px 0 #15803d,
+    0 10px 22px rgba(22, 163, 74, 0.4),
     inset 0 2px 2px rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  text-align: left;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.pt-guard-btn-primary:active {
-  transform: translateY(4px);
+.pt-guard-btn-portrait:active {
+  transform: translateY(3px);
   box-shadow:
-    0 2px 0 #0369a1,
-    0 6px 10px rgba(2, 132, 199, 0.3),
+    0 2px 0 #15803d,
+    0 5px 12px rgba(22, 163, 74, 0.3),
     inset 0 1px 1px rgba(255, 255, 255, 0.7);
 }
 
-.pt-guard-btn-primary .btn-icon {
-  font-size: 18px;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+.pt-guard-btn-portrait .btn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5);
 }
 
-.pt-guard-btn-secondary {
-  background: transparent;
-  border: none;
-  color: #64748b;
-  font-family: 'Nunito', sans-serif;
-  font-size: 12.5px;
+.pt-guard-btn-portrait .btn-text-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.22;
+}
+
+.pt-guard-btn-portrait .btn-text-wrap strong {
+  font-family: 'Baloo 2', 'Nunito', sans-serif;
+  font-size: 14.5px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.pt-guard-btn-portrait .btn-text-wrap small {
+  font-size: 10.5px;
   font-weight: 800;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-  padding: 6px 12px;
-  opacity: 0.85;
-  transition: opacity 0.15s ease, color 0.15s ease;
+  color: #dcfce7;
 }
 
-.pt-guard-btn-secondary:hover {
-  opacity: 1;
-  color: #0284c7;
+.pt-guard-btn-portrait .btn-arrow {
+  font-size: 16px;
+  font-weight: 900;
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+/* Secondary Landscape Button (Rõ ràng, Tinh tế, Xanh biển) */
+.pt-guard-btn-landscape {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+  color: #0369a1;
+  border: 2px solid #bae6fd;
+  box-shadow:
+    0 3px 0 #7dd3fc,
+    0 6px 14px rgba(3, 105, 161, 0.12);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pt-guard-btn-landscape:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #7dd3fc;
+}
+
+.pt-guard-btn-landscape .btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #bae6fd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pt-guard-btn-landscape .btn-text-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.22;
+}
+
+.pt-guard-btn-landscape .btn-text-wrap strong {
+  font-family: 'Baloo 2', 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  color: #0369a1;
+}
+
+.pt-guard-btn-landscape .btn-text-wrap small {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
 }
 
 /* Hint Pill */
@@ -794,14 +1153,22 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  color: #64748b;
-  font-size: 11.5px;
+  color: #475569;
+  font-size: 11px;
   font-weight: 800;
   max-width: 95%;
+  line-height: 1.35;
 }
 
 .pt-guard-hint .hint-icon {
   font-size: 14px;
+}
+
+html.guard-dismissed #landscape-guard,
+#landscape-guard.is-dismissed {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 .topbar,.social-panel,.community-card,.hotbar,.status,.minimap,.world-title,.quick-actions button{position:absolute;z-index:2;border:1px solid #ffffffa6;background:#fffcefde;box-shadow:0 12px 32px #213f2329;backdrop-filter:blur(14px)}
 .topbar{left:18px;top:16px;height:70px;min-width:390px;padding:8px 16px;border-radius:24px;display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,#ffffff 0%,#fffdf5 50%,#fef7e2 100%);border:2.5px solid #f59e0b;box-shadow:0 12px 28px rgba(0,0,0,0.18),0 3px 0 #d97706,inset 0 2px 0 #ffffff;backdrop-filter:blur(16px)}.topbar:before,.topbar:after{content:"";position:absolute;width:7px;height:7px;border-radius:50%;background:#f59e0b;box-shadow:inset 0 1px 1px #fff,0 1px 2px rgba(0,0,0,0.2)}.topbar:before{left:9px;top:9px}.topbar:after{right:9px;top:9px}.player-avatar{position:relative;width:50px;height:50px;border-radius:50%;display:grid;place-items:center;color:#451a03;font-weight:900;font-size:24px;background:radial-gradient(circle,#fed976 0%,#f59e0b 60%,#d97706 100%);border:3px solid #fef08a;box-shadow:0 0 14px rgba(245,158,11,0.5),0 4px 8px rgba(0,0,0,0.15);transition:transform .2s ease}.player-avatar:hover{transform:scale(1.1) rotate(-4deg)}.player-copy{min-width:110px}.player-copy strong{display:block;font-size:15px;font-weight:900;color:#3e1e07;text-shadow:none;letter-spacing:-0.01em}.player-copy span{display:block;color:#92400e;font-size:11px;font-weight:800;margin-top:2px;text-shadow:none}.level-wrap{display:flex;flex-direction:column;gap:3px}.level-label{font-size:9px;font-weight:900;color:#92400e;letter-spacing:.05em}.level{position:relative;width:74px;height:12px;border-radius:8px;background:#f3e8ca;border:1.5px solid #d4a373;box-shadow:inset 0 1px 3px rgba(0,0,0,0.15);overflow:hidden}.level i{display:block;height:100%;background:linear-gradient(90deg,#84cc16,#22c55e);border-radius:6px;box-shadow:0 0 8px #4ade80;transition:width .4s cubic-bezier(.34,1.56,.64,1)}.currency{display:flex;gap:8px;margin-left:auto}
@@ -2063,6 +2430,14 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
 
 .virtual-joystick{position:absolute;z-index:11;left:28px;bottom:72px;width:112px;height:112px;border:2px solid #ffffffc9;border-radius:50%;background:radial-gradient(circle,#ffffff24 0 34%,#173a325e 35% 100%);box-shadow:0 8px 24px #17271d47,inset 0 0 0 8px #ffffff18;touch-action:none;user-select:none}.virtual-joystick:before,.virtual-joystick:after{content:"";position:absolute;left:50%;top:50%;background:#ffffff3d;transform:translate(-50%,-50%)}.virtual-joystick:before{width:2px;height:74px}.virtual-joystick:after{width:74px;height:2px}.virtual-joystick>span{position:absolute;z-index:2;left:calc(50% - 25px);top:calc(50% - 25px);width:50px;height:50px;display:grid;place-items:center;border:3px solid #fff;border-radius:50%;background:linear-gradient(145deg,#72d68a,#2f9c61);color:#ffffff9c;font-size:12px;box-shadow:0 5px 13px #102b1d66;pointer-events:none;transition:transform .04s linear}.world-action-controls{position:absolute;z-index:11;right:24px;bottom:128px;display:flex;align-items:flex-end;gap:10px}.world-action-controls button{display:flex;flex-direction:column;align-items:center;justify-content:center;border:3px solid #fff;border-radius:50%;color:#fff;box-shadow:0 7px 18px #13271d59;cursor:pointer;touch-action:none}.world-action-controls i{font-style:normal;font-size:25px;line-height:1}.world-action-controls b{margin-top:3px;font-size:8px}.jump-action-btn{width:70px;height:70px;background:linear-gradient(145deg,#55bdeb,#277bc5)}.run-action-btn{width:58px;height:58px;background:linear-gradient(145deg,#ffca55,#e98024)}.world-action-controls button:active{transform:scale(.91);filter:brightness(.9)}
 @media(max-width:780px){.virtual-joystick{left:16px;bottom:68px;width:96px;height:96px}.virtual-joystick>span{left:calc(50% - 22px);top:calc(50% - 22px);width:44px;height:44px}.world-action-controls{right:12px;bottom:112px}.jump-action-btn{width:62px;height:62px}.run-action-btn{width:52px;height:52px}}
+@media screen and (orientation: landscape), (max-height: 560px) {
+  .virtual-joystick{left:max(18px,var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))))!important;bottom:max(12px,var(--safe-bottom, var(--sab, 0px)))!important;width:96px!important;height:96px!important}
+  .virtual-joystick>span{left:calc(50% - 21px)!important;top:calc(50% - 21px)!important;width:42px!important;height:42px!important}
+  .world-action-controls{right:max(18px,var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))))!important;bottom:max(12px,var(--safe-bottom, var(--sab, 0px)))!important;gap:8px!important}
+  .jump-action-btn{width:56px!important;height:56px!important}
+  .run-action-btn{width:46px!important;height:46px!important}
+  .dismount-vehicle-btn{right:max(18px,var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))))!important;bottom:calc(max(12px,var(--safe-bottom, var(--sab, 0px))) + 64px)!important;width:52px!important;height:52px!important}
+}
 
 /* --------------------------------------------------------------------------
    4. PLAY TOGETHER BEGINNER STAMP BOOK (PASSPORT & GAME GUIDE)
@@ -5718,6 +6093,15 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
 .pt-start-screen-backdrop {
   position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  height: 100dvh;
+  min-height: 100dvh;
+  margin: 0;
+  box-sizing: border-box;
   z-index: 1000;
   background: radial-gradient(ellipse at 50% 12%, #e0e7ff 0%, #c4b5fd 28%, #fbcfe8 58%, #bae6fd 82%, #7dd3fc 100%);
   display: flex;
@@ -6870,7 +7254,7 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
   margin-top: 2px;
 }
 
-@media (max-width: 780px) {
+@media (max-width: 780px) and (orientation: portrait) {
   .pt-start-screen-backdrop {
     padding: max(12px, env(safe-area-inset-top)) 12px max(14px, env(safe-area-inset-bottom));
   }
@@ -8356,6 +8740,7 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
   --sar: env(safe-area-inset-right, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
+  --safe-side: max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
 }
 
 /* 1. REAL-TIME 360 GPS RADAR MINIMAP */
@@ -8688,7 +9073,7 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
 
 .pt-joystick {
   position: absolute;
-  left: calc(20px + var(--sal));
+  left: calc(20px + var(--safe-side, 0px));
   bottom: calc(20px + var(--sab));
   width: 120px;
   height: 120px;
@@ -8821,8 +9206,8 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
 @media (max-width: 767px) {
   .game-shell .topbar.pt-topbar {
     top: calc(6px + var(--sat));
-    left: calc(8px + var(--sal));
-    right: calc(8px + var(--sar));
+    left: calc(8px + var(--safe-side, 0px));
+    right: calc(8px + var(--safe-side, 0px));
     gap: 6px;
     min-height: 48px;
   }
@@ -9411,7 +9796,7 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
   }
 
   .pt-action-bubbles {
-    right: calc(12px + var(--sar));
+    right: calc(12px + var(--safe-side, 0px)) !important;
     bottom: calc(16px + var(--sab));
   }
 
@@ -9434,7 +9819,7 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
   .pt-joystick {
     width: 96px !important;
     height: 96px !important;
-    left: calc(12px + var(--sal)) !important;
+    left: calc(12px + var(--safe-side, 0px)) !important;
     bottom: calc(14px + var(--sab)) !important;
   }
 
@@ -9445,7 +9830,7 @@ html.is-mobile-device.mobile-portrait #landscape-guard:not(.is-dismissed) {
 
   .pt-radar-minimap {
     top: calc(68px + var(--sat));
-    right: calc(8px + var(--sar));
+    right: calc(8px + var(--safe-side, 0px)) !important;
   }
 }
 
@@ -9596,15 +9981,15 @@ body .pt-start-screen-backdrop .pt-touch-start-btn:active {
 }
 
 /* ==========================================================================
-   START SCREEN REFERENCE MATCH — 16:9 SKY / VIBE CITY ENTRY
-   Keep the layout bitmap-light: logo and HUD icons stay WebP, while the
-   background, CTA and decorative clouds remain CSS-rendered.
+   START SCREEN COMPATIBILITY & CENTERING ENFORCEMENT
    ========================================================================== */
 body .pt-start-screen-backdrop.cutecore-theme {
-  padding: clamp(24px, 3.4vh, 34px) clamp(28px, 3vw, 52px) clamp(10px, 1.4vh, 16px);
-  background:
-    radial-gradient(ellipse at 50% 32%, rgba(255,255,255,.22), transparent 40%),
-    linear-gradient(180deg, #24b7f4 0%, #31b8ef 52%, #81ddf5 100%);
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 body .pt-start-screen-backdrop .pt-sunburst-layer {
@@ -9669,21 +10054,30 @@ body .pt-start-screen-backdrop .pt-start-top-actions .pt-candy-btn svg {
 }
 
 body .pt-start-screen-backdrop .pt-start-center-content {
-  position: absolute;
-  inset: 7% 0 auto;
-  display: flex;
-  width: 100%;
-  max-width: none;
-  height: 70%;
-  margin: 0;
-  pointer-events: none;
+  position: relative !important;
+  inset: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  max-width: min(720px, 94vw) !important;
+  height: auto !important;
+  margin: auto !important;
+  pointer-events: auto !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
 }
 
 body .pt-start-screen-backdrop .pt-generated-logo-lockup {
-  width: min(62vw, 630px);
-  margin: 0;
-  filter: drop-shadow(0 20px 22px rgba(5,75,128,.28));
-  animation: none;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  max-width: min(380px, 50vw) !important;
+  margin: 0 auto !important;
 }
 
 body .pt-start-screen-backdrop .pt-start-center-content .pt-error-card {
@@ -9869,7 +10263,7 @@ body .pt-start-screen-backdrop .pt-start-footer {
   text-shadow: 0 2px 5px rgba(10,96,158,.48);
 }
 
-@media (max-width: 780px) {
+@media (max-width: 780px) and (orientation: portrait) {
   body .pt-start-screen-backdrop.cutecore-theme {
     padding: max(14px, env(safe-area-inset-top)) 12px max(10px, env(safe-area-inset-bottom));
   }
@@ -11014,3 +11408,973 @@ body .pt-start-screen-backdrop .pt-start-footer {
 }
 
 
+
+/* Canvas owns the full browser content area; safe-area insets belong to HUD controls. */
+html.is-mobile-device, html.is-mobile-device body {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #0277bd;
+}
+html.is-mobile-device #root {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  min-width: 100% !important;
+  height: 100dvh !important;
+  min-height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+html.is-mobile-device .game-shell {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  min-width: 100% !important;
+  height: 100dvh !important;
+  min-height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+html.is-mobile-device .game-canvas {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  min-width: 100% !important;
+  height: 100dvh !important;
+  min-height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* =========================================================================
+   COMPREHENSIVE MOBILE LANDSCAPE SAFE-AREA & HUD BALANCING
+   Ensures 0px screen drift/offset and symmetrical margins in landscape mode
+   ========================================================================= */
+@media screen and (orientation: landscape), (max-height: 560px) {
+  html, body {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #0277bd !important;
+  }
+
+  #root, .game-shell, .pt-game-shell {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    min-width: 100% !important;
+    height: 100dvh !important;
+    min-height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .game-canvas {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    min-width: 100% !important;
+    height: 100dvh !important;
+    min-height: 100% !important;
+  }
+
+  /* Balanced Symmetrical Topbar in Landscape */
+  .pt-game-shell .topbar.pt-topbar,
+  .game-shell .topbar.pt-topbar {
+    top: max(8px, var(--sat, env(safe-area-inset-top, 0px))) !important;
+    left: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+    right: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+    min-height: 46px !important;
+    gap: 8px !important;
+  }
+
+  /* Virtual Joystick: Left Thumb Symmetrical Safe Zone */
+  .pt-game-shell .pt-joystick,
+  .virtual-joystick {
+    left: max(18px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+    bottom: max(12px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+    width: 92px !important;
+    height: 92px !important;
+  }
+
+  /* Action Buttons (Jump / Sprint): Right Thumb Symmetrical Safe Zone */
+  .pt-game-shell .pt-action-bubbles,
+  .world-action-controls {
+    right: max(18px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+    bottom: max(12px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+    gap: 8px !important;
+  }
+
+  /* Map Button & Radar: Upper Right Symmetrical Safe Zone */
+  .hud-map-button,
+  .pt-radar-minimap,
+  .pt-chibi-minimap-root {
+    right: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+  }
+
+  /* Quest Tracker: Left Upper Symmetrical Safe Zone */
+  .pt-game-shell .pt-candy-quest-tracker {
+    left: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+  }
+
+  /* Chat Bar: Anchored past the joystick with safe margin */
+  .avatar-chat-bar-container {
+    left: calc(max(18px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) + 104px) !important;
+    bottom: max(8px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+  }
+
+  /* Hotbar / Tool Dock: Bottom Center Safe Zone */
+  .game-shell .hotbar.pt-hotbar,
+  .pt-game-shell .hotbar.pt-hotbar,
+  .hotbar,
+  .farm-game-dock {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    bottom: max(8px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+  }
+
+  /* Context Action / Interact Button: Centered & Notch-Proof */
+  .pt-game-shell .pt-context-action-wrap {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    bottom: max(18px, calc(var(--sab, env(safe-area-inset-bottom, 0px)) + 10px)) !important;
+    max-width: calc(100% - max(40px, calc(var(--safe-side, 0px) * 2)) - 220px) !important;
+  }
+
+  /* Start Screen: Symmetrically Padded in Landscape */
+  .pt-start-screen-backdrop.cutecore-theme,
+  .pt-start-screen-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    padding-top: max(8px, var(--sat, env(safe-area-inset-top, 0px))) !important;
+    padding-bottom: max(8px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Modals: Symmetrically Padded in Landscape with Safe Areas */
+  .pt-map-backdrop,
+  .pt-inventory-backdrop,
+  .pt-inv-overlay,
+  .pt-casino-backdrop,
+  .pt-boutique-backdrop,
+  .pt-phone-backdrop,
+  .panel-backdrop,
+  .bulletin-backdrop,
+  .pt-notice-modal-backdrop,
+  .pt-onboarding-backdrop,
+  .celebration-backdrop,
+  .pt-sub-modal-backdrop,
+  .pt-leaderboard-modal-backdrop,
+  .fashion-modal-backdrop,
+  .onboarding-backdrop,
+  .pt-dialogue-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    padding-top: max(8px, var(--sat, env(safe-area-inset-top, 0px))) !important;
+    padding-bottom: max(8px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+    padding-left: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+    padding-right: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+    box-sizing: border-box !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* All Modal Cards: Guaranteed Viewport Fit and Safe Proportions in Landscape */
+  :is(
+    .pt-map-modal,
+    .pt-inv-modal,
+    .fashion-modal-card,
+    .pt-phone-device,
+    .game-panel,
+    .bulletin-board,
+    .pt-notice-modal-card,
+    .pt-billboard-modal-card,
+    .pt-leaderboard-modal-card,
+    .roadside-shop-card,
+    .pt-guide-book-panel,
+    .pt-graduation-card,
+    .pt-sub-modal-dialog,
+    .pt-history-dialog,
+    .pt-dialogue-bar-card,
+    .arrival-screen .pt-studio-card,
+    .arrival-screen .pt-ticket-card,
+    .character-creator-card
+  ) {
+    box-sizing: border-box !important;
+    max-width: min(100%, calc(100vw - max(28px, calc(var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))) * 2)))) !important;
+    max-height: calc(100dvh - max(12px, calc(var(--sat, env(safe-area-inset-top, 0px)) + var(--sab, env(safe-area-inset-bottom, 0px)) + 8px))) !important;
+    margin: auto !important;
+    overscroll-behavior: contain !important;
+  }
+
+  /* Smartphone Modal Landscape Layout */
+  .pt-phone-backdrop {
+    justify-content: center !important;
+    padding: 6px 16px !important;
+  }
+  .pt-phone-device {
+    width: min(500px, 94vw) !important;
+    max-height: calc(100dvh - 12px) !important;
+    padding: 8px 14px 10px 14px !important;
+    gap: 6px !important;
+    border-radius: 24px !important;
+    border-width: 3px !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), 0 0 0 3px #0f172a !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .pt-phone-device .pt-phone-notch {
+    width: 44px !important;
+    height: 3.5px !important;
+    top: 5px !important;
+  }
+  .pt-phone-device .pt-phone-status-bar {
+    padding: 0 4px !important;
+    font-size: 10px !important;
+  }
+  .pt-phone-device .pt-phone-status-right {
+    gap: 6px !important;
+  }
+  .pt-phone-device .pt-phone-close {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 16px !important;
+  }
+  .pt-phone-device .pt-phone-user-strip {
+    padding: 4px 10px !important;
+    gap: 8px !important;
+    border-radius: 14px !important;
+  }
+  .pt-phone-device .pt-phone-avatar-bubble {
+    width: 26px !important;
+    height: 26px !important;
+  }
+  .pt-phone-device .pt-phone-greeting b {
+    font-size: 12px !important;
+  }
+  .pt-phone-device .pt-phone-greeting small {
+    font-size: 10px !important;
+  }
+  .pt-phone-device .pt-phone-app-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px 8px !important;
+    padding: 2px !important;
+  }
+  .pt-phone-device .pt-app-icon {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 12px !important;
+  }
+  .pt-phone-device .pt-app-bubble span {
+    font-size: 9.5px !important;
+  }
+  .pt-phone-device .pt-travel-dock {
+    padding: 4px 6px !important;
+    gap: 4px !important;
+    border-radius: 14px !important;
+  }
+  .pt-phone-device .pt-travel-dock-label {
+    display: none !important;
+  }
+  .pt-phone-device .pt-travel-chip {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+    border-radius: 10px !important;
+  }
+
+  /* Game Panel Landscape Layout */
+  .game-panel {
+    width: min(620px, calc(100vw - 32px)) !important;
+    border-radius: 22px !important;
+  }
+  .game-panel > header {
+    padding: 6px 14px !important;
+  }
+  .game-panel > header small {
+    display: none !important;
+  }
+  .game-panel > header h2 {
+    font-size: 15px !important;
+    margin: 0 !important;
+  }
+  .game-panel > header button {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 16px !important;
+  }
+  .game-panel > *:not(header) {
+    padding: 8px 14px 12px !important;
+  }
+  .game-panel .item-list > button {
+    min-height: 42px !important;
+    padding: 6px 10px !important;
+    gap: 8px !important;
+  }
+  .game-panel .destination-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+  .game-panel .destination-grid button {
+    padding: 6px 8px !important;
+    min-height: 52px !important;
+  }
+
+  /* Order Bulletin Board Landscape Layout */
+  .bulletin-board {
+    width: min(780px, calc(100vw - 32px)) !important;
+    border-radius: 22px !important;
+  }
+  .bulletin-roof {
+    height: 6px !important;
+  }
+  .bulletin-header {
+    padding: 6px 14px !important;
+  }
+  .bulletin-title-wrap h2 {
+    font-size: 15px !important;
+  }
+  .bulletin-header button {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 16px !important;
+  }
+  .order-parchment-grid {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .order-parchment-card {
+    padding: 8px 10px !important;
+  }
+
+  /* Roadside Shop Landscape Layout */
+  .roadside-shop-card {
+    width: min(640px, calc(100vw - 32px)) !important;
+    border-radius: 22px !important;
+  }
+  .shop-canopy-stripe {
+    padding: 6px 14px !important;
+  }
+  .shop-title-wrap {
+    padding: 4px 10px !important;
+    gap: 8px !important;
+  }
+  .shop-title-wrap h2 {
+    font-size: 15px !important;
+  }
+  .shop-canopy-stripe .close-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 16px !important;
+  }
+  .shop-tab-bar {
+    padding: 4px 12px !important;
+    gap: 6px !important;
+  }
+  .shop-tab-btn {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+  .shop-content-area {
+    padding: 8px 12px !important;
+  }
+  .offers-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+  }
+  .market-crate-card {
+    padding: 6px !important;
+  }
+
+  /* Farm Guide Book Landscape Layout */
+  .pt-guide-book-panel {
+    width: min(780px, calc(100vw - 32px)) !important;
+    padding: 10px 16px !important;
+    border-radius: 22px !important;
+  }
+  .pt-book-header {
+    margin-bottom: 6px !important;
+    padding-bottom: 6px !important;
+  }
+  .pt-book-title-wrap h2 {
+    font-size: 15px !important;
+  }
+  .pt-book-close-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 16px !important;
+  }
+  .pt-book-tabs-bar {
+    gap: 4px !important;
+    margin-bottom: 6px !important;
+  }
+  .pt-book-tab-btn {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+
+  /* Graduation Ceremony Landscape Layout */
+  .pt-graduation-card {
+    width: min(580px, calc(100vw - 32px)) !important;
+    padding: 10px 16px !important;
+    border-radius: 22px !important;
+  }
+  .pt-graduation-card .pt-sunburst-wrap {
+    display: none !important;
+  }
+  .pt-graduation-card .pt-celebration-badge-wrap {
+    margin-bottom: 4px !important;
+  }
+  .pt-graduation-card .pt-trophy-ring {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .pt-graduation-card .pt-trophy-ring svg {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .pt-graduation-header h2 {
+    font-size: 17px !important;
+    margin: 2px 0 !important;
+  }
+  .pt-grad-tag-pill {
+    display: none !important;
+  }
+  .pt-grad-rewards-grid {
+    gap: 6px !important;
+    margin: 6px 0 !important;
+  }
+  .pt-grad-claim-btn {
+    min-height: 38px !important;
+    font-size: 13px !important;
+    padding: 5px 14px !important;
+  }
+
+  /* Plaza Event Notice & Billboard Modal Landscape Layout */
+  :is(.pt-notice-modal-card, .pt-billboard-modal-card) {
+    width: min(600px, calc(100vw - 32px)) !important;
+    border-radius: 22px !important;
+  }
+  .bb-header,
+  .pt-notice-modal-card .pt-modal-header {
+    padding: 6px 14px !important;
+  }
+  .bb-title,
+  .pt-notice-modal-card .pt-modal-title {
+    font-size: 15px !important;
+  }
+  .bb-subtitle {
+    display: none !important;
+  }
+  .pt-notice-modal-card .pt-modal-close,
+  .pt-billboard-modal-card .pt-modal-close {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 16px !important;
+  }
+  .bb-tabs {
+    padding: 4px 10px !important;
+    gap: 4px !important;
+  }
+  .bb-tab-btn {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+  .bb-events-scroll,
+  .bb-ads-scroll {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
+
+  /* Plaza Leaderboard Monument Landscape Layout */
+  .pt-leaderboard-modal-card {
+    width: min(580px, calc(100vw - 32px)) !important;
+    border-radius: 22px !important;
+  }
+  .ld-header {
+    padding: 6px 14px !important;
+  }
+  .ld-title {
+    font-size: 15px !important;
+  }
+  .ld-subtitle {
+    display: none !important;
+  }
+  .pt-leaderboard-modal-card .pt-modal-close {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 16px !important;
+  }
+  .ld-tabs {
+    padding: 4px 10px !important;
+    gap: 4px !important;
+  }
+  .ld-tab-btn {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+  .ld-top3-grid {
+    gap: 6px !important;
+    padding: 4px 10px !important;
+  }
+  .ld-podium-card {
+    padding: 4px 6px !important;
+    min-height: 0 !important;
+  }
+  .ld-podium-avatar svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* Casino Sub-Modals Landscape Layout */
+  :is(.pt-sub-modal-dialog, .pt-history-dialog) {
+    width: min(520px, calc(100vw - 32px)) !important;
+    border-radius: 22px !important;
+  }
+  .pt-sub-modal-header {
+    padding: 6px 14px !important;
+  }
+  .pt-sub-modal-header h3 {
+    font-size: 15px !important;
+  }
+  .pt-sub-modal-close {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 16px !important;
+  }
+  .pt-sub-modal-body {
+    padding: 8px 14px !important;
+  }
+
+  /* Elder Oliver Dialogue Landscape Layout */
+  .pt-dialogue-overlay {
+    padding-bottom: max(6px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+  }
+  .pt-dialogue-bar-card {
+    width: min(780px, calc(100vw - 32px)) !important;
+    max-height: min(200px, calc(100dvh - 12px)) !important;
+    padding: 8px 12px !important;
+    gap: 10px !important;
+    border-radius: 22px !important;
+  }
+  .pt-dialogue-npc-wrap {
+    width: 48px !important;
+  }
+  .pt-dialogue-npc-portrait svg {
+    width: 42px !important;
+    height: 42px !important;
+  }
+  .pt-dialogue-speaker h3 {
+    font-size: 13px !important;
+  }
+  .pt-dialogue-tag {
+    display: none !important;
+  }
+  .pt-dialogue-close-btn {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 15px !important;
+  }
+  .pt-dialogue-bubble {
+    font-size: 11.5px !important;
+    line-height: 1.3 !important;
+  }
+  .pt-dialogue-actions {
+    margin-top: 4px !important;
+    gap: 6px !important;
+  }
+  .pt-dialogue-actions button {
+    min-height: 32px !important;
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+  }
+}
+
+/* Also support html.mobile-landscape class selector explicitly */
+html.mobile-landscape .pt-game-shell .topbar.pt-topbar,
+html.mobile-landscape .game-shell .topbar.pt-topbar {
+  top: max(8px, var(--sat, env(safe-area-inset-top, 0px))) !important;
+  left: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+  right: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+}
+
+html.mobile-landscape .pt-game-shell .pt-joystick,
+html.mobile-landscape .virtual-joystick {
+  left: max(18px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+  bottom: max(12px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+}
+
+html.mobile-landscape .pt-game-shell .pt-action-bubbles,
+html.mobile-landscape .world-action-controls {
+  right: max(18px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+  bottom: max(12px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+}
+
+html.mobile-landscape .hud-map-button,
+html.mobile-landscape .pt-radar-minimap,
+html.mobile-landscape .pt-chibi-minimap-root {
+  right: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+}
+
+html.mobile-landscape .pt-game-shell .pt-candy-quest-tracker {
+  left: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+}
+
+html.mobile-landscape .game-shell .hotbar.pt-hotbar,
+html.mobile-landscape .pt-game-shell .hotbar.pt-hotbar,
+html.mobile-landscape .farm-game-dock {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  bottom: max(8px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+}
+
+html.mobile-landscape .avatar-chat-bar-container {
+  left: calc(max(18px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) + 104px) !important;
+  bottom: max(8px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+}
+
+html.mobile-landscape .pt-start-screen-backdrop.cutecore-theme,
+html.mobile-landscape .pt-start-screen-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 100dvh !important;
+  padding-top: max(8px, var(--sat, env(safe-area-inset-top, 0px))) !important;
+  padding-bottom: max(8px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)) !important;
+  padding-right: max(16px, env(safe-area-inset-right, 0px)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+html.mobile-landscape .pt-start-screen-backdrop .pt-start-center-content {
+  position: relative !important;
+  inset: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  max-width: min(720px, 94vw) !important;
+  height: auto !important;
+  margin: auto !important;
+  pointer-events: auto !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+html.mobile-landscape .pt-start-screen-backdrop .pt-generated-logo-lockup {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  max-width: min(380px, 50vw) !important;
+  margin: 0 auto !important;
+}
+
+html.mobile-landscape .pt-start-screen-backdrop .pt-ready-action-stage {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  pointer-events: auto !important;
+}
+
+html.mobile-landscape .pt-start-screen-backdrop .pt-play-now-wrap {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+}
+
+html.mobile-landscape :is(
+  .pt-map-backdrop,
+  .pt-inventory-backdrop,
+  .pt-inv-overlay,
+  .pt-casino-backdrop,
+  .pt-boutique-backdrop,
+  .pt-phone-backdrop,
+  .panel-backdrop,
+  .bulletin-backdrop,
+  .pt-notice-modal-backdrop,
+  .pt-onboarding-backdrop,
+  .celebration-backdrop,
+  .pt-sub-modal-backdrop,
+  .pt-leaderboard-modal-backdrop,
+  .fashion-modal-backdrop,
+  .onboarding-backdrop,
+  .pt-dialogue-overlay
+) {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  padding-top: max(8px, var(--sat, env(safe-area-inset-top, 0px))) !important;
+  padding-bottom: max(8px, var(--sab, env(safe-area-inset-bottom, 0px))) !important;
+  padding-left: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+  padding-right: max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) !important;
+  box-sizing: border-box !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+html.mobile-landscape :is(
+  .pt-map-modal,
+  .pt-inv-modal,
+  .fashion-modal-card,
+  .pt-phone-device,
+  .game-panel,
+  .bulletin-board,
+  .pt-notice-modal-card,
+  .pt-billboard-modal-card,
+  .pt-leaderboard-modal-card,
+  .roadside-shop-card,
+  .pt-guide-book-panel,
+  .pt-graduation-card,
+  .pt-sub-modal-dialog,
+  .pt-history-dialog,
+  .pt-dialogue-bar-card,
+  .arrival-screen .pt-studio-card,
+  .arrival-screen .pt-ticket-card,
+  .character-creator-card
+) {
+  box-sizing: border-box !important;
+  max-width: min(100%, calc(100vw - max(28px, calc(var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))) * 2)))) !important;
+  max-height: calc(100dvh - max(12px, calc(var(--sat, env(safe-area-inset-top, 0px)) + var(--sab, env(safe-area-inset-bottom, 0px)) + 8px))) !important;
+  margin: auto !important;
+  overscroll-behavior: contain !important;
+}
+
+/* =============================================================================
+   UNIVERSAL POPUP & MODAL VIEWPORT INTEGRITY (FLEX SCROLLING & CLOSE BUTTONS)
+   ============================================================================= */
+/* Ensure flex parents prevent child overflow across all views */
+.game-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+.game-panel > header {
+  flex-shrink: 0 !important;
+}
+.game-panel > *:not(header) {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.bulletin-board {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+.bulletin-roof,
+.bulletin-header {
+  flex-shrink: 0 !important;
+}
+.order-parchment-grid {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.roadside-shop-card {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+.shop-canopy-stripe,
+.shop-tab-bar {
+  flex-shrink: 0 !important;
+}
+.shop-content-area {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+:is(.pt-notice-modal-card, .pt-billboard-modal-card) {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+:is(.bb-header, .pt-notice-modal-card .pt-modal-header, .bb-tabs) {
+  flex-shrink: 0 !important;
+}
+:is(.bb-events-scroll, .bb-ads-scroll, .bb-daily-scroll, .bb-giftcode-body, .cutecore-modal-card > *:not(.pt-modal-header)) {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.pt-leaderboard-modal-card {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+.ld-header,
+.ld-tabs {
+  flex-shrink: 0 !important;
+}
+.ld-list-scroll {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+:is(.pt-sub-modal-dialog, .pt-history-dialog) {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+.pt-sub-modal-header {
+  flex-shrink: 0 !important;
+}
+:is(.pt-sub-modal-body, .pt-sub-modal-form) {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.pt-phone-device {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+.pt-phone-status-bar,
+.pt-phone-notch {
+  flex-shrink: 0 !important;
+}
+
+:is(.pt-guide-book-panel, .pt-graduation-card, .character-creator-card) {
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Close buttons guaranteed accessible and visible */
+:is(
+  .pt-phone-close,
+  .game-panel header button,
+  .bulletin-header button,
+  .shop-canopy-stripe .close-btn,
+  .pt-book-close-btn,
+  .pt-notice-modal-card .pt-modal-close,
+  .pt-billboard-modal-card .pt-modal-close,
+  .pt-leaderboard-modal-card .pt-modal-close,
+  .pt-sub-modal-close,
+  .pt-dialogue-close-btn,
+  .pt-map-close-btn,
+  .pt-inv-close-btn,
+  .fashion-close-btn
+) {
+  flex-shrink: 0 !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+  z-index: 20 !important;
+}
+
+
+/* Visible mobile viewport is updated after rotation and browser toolbar changes.
+   Insets protect controls only; they must never shrink or translate the scene. */
+html.is-mobile-device #root,
+html.is-mobile-device .game-shell,
+html.is-mobile-device .game-canvas,
+html.is-mobile-device .pt-start-screen-backdrop {
+  width: var(--game-viewport-width, 100vw) !important;
+  height: var(--game-viewport-height, 100dvh) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+html.is-mobile-device #root,
+html.is-mobile-device .game-shell,
+html.is-mobile-device .game-canvas,
+html.is-mobile-device .pt-start-screen-backdrop {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  bottom: auto !important;
+}
+
+/* One document coordinate system, rather than nested iOS fixed viewports. */
+html.is-mobile-device body { position: relative !important; }
+
+/* Chrome iOS already excludes the notch in its contained viewport. */
+html.chrome-ios-contained {
+  --safe-top: 0px;
+  --safe-bottom: 0px;
+  --safe-left: 0px;
+  --safe-right: 0px;
+  --sat: 0px;
+  --sab: 0px;
+  --sal: 0px;
+  --sar: 0px;
+  --safe-side: 0px;
+}
