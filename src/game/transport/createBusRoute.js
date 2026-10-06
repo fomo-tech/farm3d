@@ -175,7 +175,7 @@ function createBusStopShelter(scene, x, z, label, routeBadges, materials, rotati
 }
 
 /**
- * Creates an electronic LED destination board texture.
+ * Creates an electronic LED destination board texture (Phong cách xe buýt Việt Nam).
  */
 function createLedSignTexture(scene, id, text, routeNum, colorHex = '#38bdf8') {
   const dt = new DynamicTexture(`dt-led-${id}`, { width: 512, height: 128 }, scene, false);
@@ -183,28 +183,121 @@ function createLedSignTexture(scene, id, text, routeNum, colorHex = '#38bdf8') {
   ctx.fillStyle = '#020617';
   ctx.fillRect(0, 0, 512, 128);
 
-  // Viền LED
+  // Viền LED ma trận
   ctx.strokeStyle = colorHex;
-  ctx.lineWidth = 6;
-  ctx.strokeRect(6, 6, 500, 116);
+  ctx.lineWidth = 5;
+  ctx.strokeRect(4, 4, 504, 120);
 
-  // Badge tuyến
+  // Khung số tuyến xe buýt Việt Nam
   ctx.fillStyle = colorHex;
   ctx.beginPath();
-  ctx.roundRect(16, 16, 100, 96, 12);
+  ctx.roundRect(14, 14, 112, 100, 14);
   ctx.fill();
 
   ctx.fillStyle = '#020617';
-  ctx.font = '900 44px "Segoe UI", monospace';
+  ctx.font = '900 46px "Segoe UI", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(routeNum, 66, 66);
+  ctx.fillText(routeNum, 70, 64);
 
-  // Tên điểm đến
-  ctx.fillStyle = '#f8fafc';
-  ctx.font = 'bold 36px "Segoe UI", sans-serif';
+  // Tên điểm đến in hoa rõ nét
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 33px "Segoe UI", sans-serif';
   ctx.textAlign = 'left';
-  ctx.fillText(text, 130, 66);
+  ctx.fillText(text.toUpperCase(), 140, 50);
+
+  // Dòng phụ City Tour Việt Nam
+  ctx.fillStyle = colorHex;
+  ctx.font = 'bold 18px "Segoe UI", sans-serif';
+  ctx.fillText('VIETNAM CITY TOUR ★ XE MUI TRẦN', 140, 92);
+
+  dt.update();
+  return dt;
+}
+
+/**
+ * Biển số xe vận tải hành khách màu vàng nghệ đặc trưng Việt Nam (VD: 29B - 888.68)
+ */
+function createVietnamLicensePlateTexture(scene, id, plateText) {
+  const dt = new DynamicTexture(`dt-plate-${id}`, { width: 256, height: 96 }, scene, false);
+  const ctx = dt.getContext();
+  ctx.fillStyle = '#facc15';
+  ctx.fillRect(0, 0, 256, 96);
+
+  ctx.strokeStyle = '#0f172a';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(4, 4, 248, 88);
+
+  ctx.fillStyle = '#0f172a';
+  ctx.font = '900 36px "Segoe UI", Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(plateText, 128, 50);
+
+  dt.update();
+  return dt;
+}
+
+/**
+ * Cờ đỏ sao vàng 5 cánh Tổ quốc Việt Nam
+ */
+function createVietnamFlagTexture(scene, id) {
+  const dt = new DynamicTexture(`dt-flag-${id}`, { width: 300, height: 200 }, scene, false);
+  const ctx = dt.getContext();
+  // Nền đỏ thắm
+  ctx.fillStyle = '#da251d';
+  ctx.fillRect(0, 0, 300, 200);
+
+  // Ngôi sao vàng 5 cánh chuẩn tỉ lệ
+  ctx.fillStyle = '#ffff00';
+  ctx.beginPath();
+  const cx = 150, cy = 100, outerR = 54, innerR = 21;
+  for (let i = 0; i < 10; i++) {
+    const angle = (i * Math.PI) / 5 - Math.PI / 2;
+    const r = i % 2 === 0 ? outerR : innerR;
+    const x = cx + Math.cos(angle) * r;
+    const y = cy + Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  dt.update();
+  return dt;
+}
+
+/**
+ * Tem Decal sườn xe du lịch City Tour Việt Nam
+ */
+function createVietnamSideLiveryTexture(scene, id, routeNum, routeName) {
+  const dt = new DynamicTexture(`dt-livery-${id}`, { width: 512, height: 64 }, scene, false);
+  const ctx = dt.getContext();
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, 512, 64);
+
+  // Dải lượn sóng cờ đỏ sao vàng
+  ctx.fillStyle = '#da251d';
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(120, 0);
+  ctx.lineTo(80, 64);
+  ctx.lineTo(0, 64);
+  ctx.fill();
+
+  ctx.fillStyle = '#facc15';
+  ctx.beginPath();
+  ctx.moveTo(110, 0);
+  ctx.lineTo(135, 0);
+  ctx.lineTo(95, 64);
+  ctx.lineTo(70, 64);
+  ctx.fill();
+
+  ctx.fillStyle = '#0f172a';
+  ctx.font = '900 24px "Segoe UI", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`VIETNAM CITY TOUR · ${routeName.toUpperCase()}`, 148, 33);
 
   dt.update();
   return dt;
@@ -223,88 +316,419 @@ function createChibiBus(scene, shadows, config, materials) {
   ledMat.emissiveTexture = ledDT;
   ledMat.emissiveColor = new Color3(0.9, 0.9, 0.9);
 
-  // 1. Lower Body Chassis
-  const lowerBody = MeshBuilder.CreateBox(`${config.id}-lower-body`, { width: 3.4, height: 1.45, depth: 7.6 }, scene);
-  lowerBody.position.y = 1.35;
+  // 1. Lower Body Chassis (Tầng 1 - Khoang máy lạnh và buồng lái)
+  const lowerBody = MeshBuilder.CreateBox(`${config.id}-lower-body`, { width: 3.4, height: 1.55, depth: 7.8 }, scene);
+  lowerBody.position.set(0, 1.25, 0);
   lowerBody.material = bodyMat;
   lowerBody.parent = root;
 
-  // 2. Upper Body
-  const upperBody = MeshBuilder.CreateBox(`${config.id}-upper-body`, { width: 3.2, height: 1.35, depth: 7.2 }, scene);
-  upperBody.position.y = 2.7;
-  upperBody.material = accentMat;
-  upperBody.parent = root;
+  // Ốp sườn gầm xe màu xám đen thể thao (Chassis Lower Skirt)
+  const chassisSkirt = MeshBuilder.CreateBox(`${config.id}-chassis-skirt`, { width: 3.46, height: 0.30, depth: 7.84 }, scene);
+  chassisSkirt.position.set(0, 0.65, 0);
+  chassisSkirt.material = materials.vnGrille;
+  chassisSkirt.parent = root;
 
-  // Rounded Dome Roof Cap
-  const roof = MeshBuilder.CreateCylinder(`${config.id}-roof`, { diameter: 3.6, height: 7.4, tessellation: 16 }, scene);
-  roof.rotation.x = Math.PI / 2;
-  roof.scaling.set(0.28, 1.0, 0.95);
-  roof.position.y = 3.42;
-  roof.material = accentMat;
-  roof.parent = root;
+  // 2. Tầng 1 Buồng lái: Kính chắn gió lớn buồng lái tầng 1 (Lower Driver Windshield)
+  const lowerWindshield = MeshBuilder.CreateBox(`${config.id}-lower-windshield`, { width: 3.12, height: 0.82, depth: 0.12 }, scene);
+  lowerWindshield.position.set(0, 1.50, 3.92);
+  lowerWindshield.rotation.x = -0.10;
+  lowerWindshield.material = materials.glass;
+  lowerWindshield.parent = root;
 
-  // 3. Panoramic Windows
-  const frontWindshield = MeshBuilder.CreateBox(`${config.id}-windshield`, { width: 2.8, height: 1.15, depth: 0.15 }, scene);
-  frontWindshield.rotation.x = 0.14;
-  frontWindshield.position.set(0, 2.65, 3.62);
-  frontWindshield.material = materials.glass;
-  frontWindshield.parent = root;
+  // Táp-lô & Vô-lăng lái xe buýt bên trong tầng 1
+  const lowerDash = MeshBuilder.CreateBox(`${config.id}-lower-dash`, { width: 2.8, height: 0.35, depth: 0.75 }, scene);
+  lowerDash.position.set(0, 1.20, 3.45);
+  lowerDash.material = materials.vnGrille;
+  lowerDash.parent = root;
 
-  const rearWindow = MeshBuilder.CreateBox(`${config.id}-rear-window`, { width: 2.6, height: 1.0, depth: 0.15 }, scene);
-  rearWindow.position.set(0, 2.65, -3.62);
-  rearWindow.material = materials.glass;
-  rearWindow.parent = root;
+  const steeringWheel = MeshBuilder.CreateTorus(`${config.id}-steering-wheel`, { diameter: 0.38, thickness: 0.04, tessellation: 16 }, scene);
+  steeringWheel.rotation.x = 0.55;
+  steeringWheel.position.set(-0.75, 1.45, 3.4);
+  steeringWheel.material = materials.vnGrille;
+  steeringWheel.parent = root;
 
-  [-1.62, 1.62].forEach((sx, i) => {
-    const sideWin = MeshBuilder.CreateBox(`${config.id}-side-win-${i}`, { width: 0.12, height: 1.05, depth: 5.6 }, scene);
-    sideWin.position.set(sx, 2.65, 0);
-    sideWin.material = materials.glass;
-    sideWin.parent = root;
+  // Cần gạt nước đôi Inox trên kính lái tầng 1
+  [-0.6, 0.6].forEach((wx, wIdx) => {
+    const wiper = MeshBuilder.CreateBox(`${config.id}-wiper-${wIdx}`, { width: 0.035, height: 0.42, depth: 0.03 }, scene);
+    wiper.position.set(wx, 1.45, 3.98);
+    wiper.rotation.z = -0.38;
+    wiper.material = materials.chrome;
+    wiper.parent = root;
   });
 
-  // 4. LED Route Displays (Front & Sides)
-  const frontSign = MeshBuilder.CreatePlane(`${config.id}-front-sign`, { width: 2.4, height: 0.5 }, scene);
-  frontSign.position.set(0, 3.25, 3.68);
+  // Bảng LED điện tử Lộ Trình Xe Buýt trên trán kính tầng 1 (Quay mặt ra phía trước +Z đón khách)
+  const frontSign = MeshBuilder.CreatePlane(`${config.id}-front-sign`, { width: 2.3, height: 0.38 }, scene);
+  frontSign.position.set(0, 1.96, 3.94);
+  frontSign.rotation.y = Math.PI; // Xoay 180 độ để chữ LED hướng ra mặt trước xe
   frontSign.material = ledMat;
   frontSign.parent = root;
 
-  // 5. Chrome Bumpers
-  const frontBumper = MeshBuilder.CreateBox(`${config.id}-f-bumper`, { width: 3.6, height: 0.35, depth: 0.4 }, scene);
-  frontBumper.position.set(0, 0.8, 3.9);
+  // Dãy cửa sổ kính đen tầng 1 (4 ô cửa sổ mỗi bên)
+  [-1.71, 1.71].forEach((wx, wIdx) => {
+    [-2.2, -0.9, 0.4, 1.7].forEach((wz, zIdx) => {
+      // Bên hông phải tại Z=1.7 để làm cửa lên xuống xe buýt
+      if (wIdx === 1 && zIdx === 3) return;
+      const win = MeshBuilder.CreateBox(`${config.id}-t1-win-${wIdx}-${zIdx}`, { width: 0.08, height: 0.65, depth: 1.15 }, scene);
+      win.position.set(wx, 1.55, wz);
+      win.material = materials.tintedGlass;
+      win.parent = root;
+
+      const frame = MeshBuilder.CreateBox(`${config.id}-t1-frame-${wIdx}-${zIdx}`, { width: 0.09, height: 0.70, depth: 1.20 }, scene);
+      frame.position.set(wx, 1.55, wz);
+      frame.material = materials.chrome;
+      frame.parent = root;
+    });
+  });
+
+  // Cửa lên xuống tự động xe buýt Việt Nam (bên hông phải X = 1.71, Z = 1.75)
+  const doorFrame = MeshBuilder.CreateBox(`${config.id}-door-frame`, { width: 0.12, height: 1.35, depth: 1.20 }, scene);
+  doorFrame.position.set(1.70, 1.25, 1.75);
+  doorFrame.material = materials.chrome;
+  doorFrame.parent = root;
+
+  const doorGlass = MeshBuilder.CreateBox(`${config.id}-door-glass`, { width: 0.06, height: 1.22, depth: 1.08 }, scene);
+  doorGlass.position.set(1.72, 1.25, 1.75);
+  doorGlass.material = materials.glass;
+  doorGlass.parent = root;
+
+  // Bậc lên xuống màu vàng đen chống trượt & Tay vịn đón khách
+  const stepStripe = MeshBuilder.CreateBox(`${config.id}-door-step`, { width: 0.35, height: 0.12, depth: 1.12 }, scene);
+  stepStripe.position.set(1.72, 0.65, 1.75);
+  stepStripe.material = materials.stepYellow;
+  stepStripe.parent = root;
+
+  const doorHandrail = MeshBuilder.CreateCylinder(`${config.id}-door-handrail`, { height: 1.2, diameter: 0.05, tessellation: 8 }, scene);
+  doorHandrail.position.set(1.72, 1.25, 2.28);
+  doorHandrail.material = materials.goldRail;
+  doorHandrail.parent = root;
+
+  // 3. Tầng 2: Sàn mui trần ngắm cảnh lộ thiên chạy suốt chiều dài xe (Full-Length Observation Deck)
+  // Sàn gỗ Teak sang trọng từ Z = -3.8 đến Z = +3.8
+  const deckFloor = MeshBuilder.CreateBox(`${config.id}-deck-floor`, { width: 3.16, height: 0.10, depth: 7.6 }, scene);
+  deckFloor.position.set(0, 2.08, 0);
+  deckFloor.material = materials.deckTeak;
+  deckFloor.parent = root;
+
+  // Nẹp nhôm phân chia khoang sàn gỗ sang trọng
+  [-2.0, -0.8, 0.4, 1.6, 2.8].forEach((nz, nIdx) => {
+    const strip = MeshBuilder.CreateBox(`${config.id}-floor-strip-${nIdx}`, { width: 3.12, height: 0.015, depth: 0.04 }, scene);
+    strip.position.set(0, 2.14, nz);
+    strip.material = materials.chrome;
+    strip.parent = root;
+  });
+
+  // Thành be bo thấp bảo vệ quanh tầng 2 (Coaming Walls)
+  const leftWall = MeshBuilder.CreateBox(`${config.id}-left-wall`, { width: 0.16, height: 0.38, depth: 7.6 }, scene);
+  leftWall.position.set(-1.54, 2.28, 0);
+  leftWall.material = accentMat;
+  leftWall.parent = root;
+
+  const rightWall = MeshBuilder.CreateBox(`${config.id}-right-wall`, { width: 0.16, height: 0.38, depth: 7.6 }, scene);
+  rightWall.position.set(1.54, 2.28, 0);
+  rightWall.material = accentMat;
+  rightWall.parent = root;
+
+  const rearWall = MeshBuilder.CreateBox(`${config.id}-rear-wall`, { width: 3.24, height: 0.38, depth: 0.16 }, scene);
+  rearWall.position.set(0, 2.28, -3.8);
+  rearWall.material = accentMat;
+  rearWall.parent = root;
+
+  // Vòm bo đầu xe tầng 2 thấp nhẹ nhàng (Hoàn toàn không cản tầm nhìn)
+  const frontCowl = MeshBuilder.CreateBox(`${config.id}-front-cowl`, { width: 3.24, height: 0.38, depth: 0.16 }, scene);
+  frontCowl.position.set(0, 2.28, 3.8);
+  frontCowl.material = accentMat;
+  frontCowl.parent = root;
+
+  // 4. Lan can an toàn Inox 304 sáng bóng (Chrome Safety Railings)
+  const leftRail = MeshBuilder.CreateCylinder(`${config.id}-left-rail`, { height: 7.6, diameter: 0.08, tessellation: 10 }, scene);
+  leftRail.rotation.x = Math.PI / 2;
+  leftRail.position.set(-1.52, 2.70, 0);
+  leftRail.material = materials.chrome;
+  leftRail.parent = root;
+
+  const rightRail = MeshBuilder.CreateCylinder(`${config.id}-right-rail`, { height: 7.6, diameter: 0.08, tessellation: 10 }, scene);
+  rightRail.rotation.x = Math.PI / 2;
+  rightRail.position.set(1.52, 2.70, 0);
+  rightRail.material = materials.chrome;
+  rightRail.parent = root;
+
+  const rearRail = MeshBuilder.CreateCylinder(`${config.id}-rear-rail`, { height: 3.12, diameter: 0.08, tessellation: 10 }, scene);
+  rearRail.rotation.z = Math.PI / 2;
+  rearRail.position.set(0, 2.70, -3.8);
+  rearRail.material = materials.chrome;
+  rearRail.parent = root;
+
+  // Thanh vịn ngắm cảnh mạ vàng đầu xe tầng 2 (Front Observation Safety Crossbar)
+  const frontDeckRail = MeshBuilder.CreateCylinder(`${config.id}-front-deck-rail`, { height: 3.12, diameter: 0.08, tessellation: 10 }, scene);
+  frontDeckRail.rotation.z = Math.PI / 2;
+  frontDeckRail.position.set(0, 2.70, 3.78);
+  frontDeckRail.material = materials.goldRail;
+  frontDeckRail.parent = root;
+
+  // Kính chắn gió tầng 2 trong suốt bảo vệ hành khách (Upper Deck Windscreen)
+  const frontDeckGlass = MeshBuilder.CreateBox(`${config.id}-deck-front-glass`, { width: 3.12, height: 0.50, depth: 0.08 }, scene);
+  frontDeckGlass.position.set(0, 2.54, 3.80);
+  frontDeckGlass.material = materials.glass;
+  frontDeckGlass.parent = root;
+
+  // Trụ đứng lan can Inox (Vertical Chrome Stanchion Posts)
+  [-1.52, 1.52].forEach((sx, i) => {
+    [-3.8, -2.2, -0.6, 1.0, 2.6, 3.78].forEach((sz, j) => {
+      const stanchion = MeshBuilder.CreateCylinder(`${config.id}-stanchion-${i}-${j}`, { height: 0.44, diameter: 0.07, tessellation: 8 }, scene);
+      stanchion.position.set(sx, 2.48, sz);
+      stanchion.material = materials.chrome;
+      stanchion.parent = root;
+    });
+  });
+
+  // Tấm chắn gió mica trong suốt 2 bên tầng 2 (Acrylic Deflectors)
+  const leftDeflector = MeshBuilder.CreateBox(`${config.id}-left-deflector`, { width: 0.05, height: 0.32, depth: 7.4 }, scene);
+  leftDeflector.position.set(-1.52, 2.52, 0);
+  leftDeflector.material = materials.glass;
+  leftDeflector.parent = root;
+
+  const rightDeflector = MeshBuilder.CreateBox(`${config.id}-right-deflector`, { width: 0.05, height: 0.32, depth: 7.4 }, scene);
+  rightDeflector.position.set(1.52, 2.52, 0);
+  rightDeflector.material = materials.glass;
+  rightDeflector.parent = root;
+
+  // 5. Cột tay vịn đứng Inox mạ vàng & Quai móc nắm tay phong cách xe buýt
+  [-0.5, 0.5].forEach((gx, idx) => {
+    [0.2, 1.8].forEach((gz, zIdx) => {
+      const grabPole = MeshBuilder.CreateCylinder(`${config.id}-grab-pole-${idx}-${zIdx}`, { height: 1.40, diameter: 0.07, tessellation: 8 }, scene);
+      grabPole.position.set(gx, 2.75, gz);
+      grabPole.material = materials.goldRail;
+      grabPole.parent = root;
+
+      const ringGrip = MeshBuilder.CreateTorus(`${config.id}-ring-grip-${idx}-${zIdx}`, { diameter: 0.20, thickness: 0.03, tessellation: 12 }, scene);
+      ringGrip.position.set(gx, 3.22, gz);
+      ringGrip.material = materials.goldRail;
+      ringGrip.parent = root;
+    });
+  });
+
+  // 6. Hàng ghế đôi City Tour Việt Nam (4 hàng ghế nệm nhung đỏ đô mỗi bên sàn xe)
+  [-0.92, 0.92].forEach((bx, idx) => {
+    [-2.4, -1.2, 0.0, 1.2].forEach((bz, rIdx) => {
+      // Chân ghế Inox
+      const leg = MeshBuilder.CreateCylinder(`${config.id}-seat-leg-${idx}-${rIdx}`, { height: 0.28, diameter: 0.06, tessellation: 8 }, scene);
+      leg.position.set(bx, 2.22, bz);
+      leg.material = materials.chrome;
+      leg.parent = root;
+
+      // Nệm ghế nhung đỏ đô cao cấp
+      const seatCushion = MeshBuilder.CreateBox(`${config.id}-seat-cushion-${idx}-${rIdx}`, { width: 0.88, height: 0.16, depth: 0.65 }, scene);
+      seatCushion.position.set(bx, 2.36, bz);
+      seatCushion.material = materials.cushionRed;
+      seatCushion.parent = root;
+
+      // Tựa lưng ghế đệm đỏ
+      const seatBack = MeshBuilder.CreateBox(`${config.id}-seat-back-${idx}-${rIdx}`, { width: 0.88, height: 0.42, depth: 0.12 }, scene);
+      seatBack.position.set(bx, 2.60, bz - 0.28);
+      seatBack.material = materials.cushionRed;
+      seatBack.parent = root;
+
+      // Viền nẹp vàng sau tựa lưng
+      const backTrim = MeshBuilder.CreateBox(`${config.id}-seat-trim-${idx}-${rIdx}`, { width: 0.90, height: 0.04, depth: 0.13 }, scene);
+      backTrim.position.set(bx, 2.80, bz - 0.28);
+      backTrim.material = materials.goldRail;
+      backTrim.parent = root;
+
+      // Gối tựa đầu da đỏ thẫm êm ái
+      const headrest = MeshBuilder.CreateBox(`${config.id}-seat-headrest-${idx}-${rIdx}`, { width: 0.84, height: 0.16, depth: 0.14 }, scene);
+      headrest.position.set(bx, 2.88, bz - 0.28);
+      headrest.material = materials.cushionHeadrest;
+      headrest.parent = root;
+    });
+  });
+
+  // 7. Cột cờ Inox & Cờ Đỏ Sao Vàng Tổ Quốc Việt Nam (Vietnam National Flag)
+  const flagPole = MeshBuilder.CreateCylinder(`${config.id}-flag-pole`, { height: 1.4, diameter: 0.04, tessellation: 8 }, scene);
+  flagPole.position.set(-1.46, 3.35, -3.75);
+  flagPole.material = materials.chrome;
+  flagPole.parent = root;
+
+  const flagTopper = MeshBuilder.CreateSphere(`${config.id}-flag-topper`, { diameter: 0.12, segments: 8 }, scene);
+  flagTopper.position.set(-1.46, 4.07, -3.75);
+  flagTopper.material = materials.goldRail;
+  flagTopper.parent = root;
+
+  const flagDT = createVietnamFlagTexture(scene, config.id);
+  const flagMat = new StandardMaterial(`mat-flag-${config.id}`, scene);
+  flagMat.diffuseTexture = flagDT;
+  flagMat.emissiveColor = new Color3(0.5, 0.1, 0.1);
+  flagMat.backFaceCulling = false;
+
+  const vnFlagMesh = MeshBuilder.CreatePlane(`${config.id}-vn-flag`, { width: 0.72, height: 0.48 }, scene);
+  vnFlagMesh.position.set(-1.46, 3.75, -3.37);
+  vnFlagMesh.rotation.y = Math.PI / 2;
+  vnFlagMesh.material = flagMat;
+  vnFlagMesh.parent = root;
+
+  // 8. Mặt Ca-Lăng Tản Nhiệt Tổ Ong & Huy Hiệu Ngôi Sao Vàng Việt Nam (Thaco/Universe Style)
+  const grilleBox = MeshBuilder.CreateBox(`${config.id}-grille`, { width: 2.3, height: 0.55, depth: 0.12 }, scene);
+  grilleBox.position.set(0, 1.15, 3.96);
+  grilleBox.material = materials.vnGrille;
+  grilleBox.parent = root;
+
+  [-0.15, 0, 0.15].forEach((slatY, sIdx) => {
+    const slat = MeshBuilder.CreateBox(`${config.id}-grille-slat-${sIdx}`, { width: 2.25, height: 0.035, depth: 0.13 }, scene);
+    slat.position.set(0, 1.15 + slatY, 3.97);
+    slat.material = materials.chrome;
+    slat.parent = root;
+  });
+
+  // Huy hiệu Ngôi Sao Vàng dập nổi 3D
+  const starMedallion = MeshBuilder.CreateCylinder(`${config.id}-star-medallion`, { diameter: 0.44, height: 0.04, tessellation: 20 }, scene);
+  starMedallion.rotation.x = Math.PI / 2;
+  starMedallion.position.set(0, 1.15, 4.04);
+  starMedallion.material = materials.goldRail;
+  starMedallion.parent = root;
+
+  const goldenStar = MeshBuilder.CreateCylinder(`${config.id}-golden-star-3d`, { diameter: 0.32, height: 0.06, tessellation: 5 }, scene);
+  goldenStar.rotation.x = Math.PI / 2;
+  goldenStar.position.set(0, 1.15, 4.07);
+  goldenStar.material = materials.vnStarYellow;
+  goldenStar.parent = root;
+
+  // 9. Cặp Gương Chiếu Hậu "Tai Thỏ" Xe Khách / Xe Buýt Việt Nam (Bunny-ear Mirrors)
+  [-1, 1].forEach((dir) => {
+    const mx = dir * 1.88;
+    // Cần gương uốn cong từ cột A tầng 1
+    const mirrorArm = MeshBuilder.CreateCylinder(`${config.id}-mirror-arm-${dir}`, { height: 0.75, diameter: 0.045, tessellation: 8 }, scene);
+    mirrorArm.rotation.z = dir * 0.42;
+    mirrorArm.rotation.x = 0.28;
+    mirrorArm.position.set(dir * 1.76, 2.50, 3.65);
+    mirrorArm.material = materials.vnGrille;
+    mirrorArm.parent = root;
+
+    // Củ gương hình chữ nhật đứng bo góc
+    const mirrorHousing = MeshBuilder.CreateBox(`${config.id}-mirror-housing-${dir}`, { width: 0.22, height: 0.54, depth: 0.12 }, scene);
+    mirrorHousing.position.set(mx, 2.30, 3.75);
+    mirrorHousing.material = materials.vnGrille;
+    mirrorHousing.parent = root;
+
+    // Dải LED xi-nhan vàng trên ốp trước gương
+    const mirrorBlinker = MeshBuilder.CreateBox(`${config.id}-mirror-blinker-${dir}`, { width: 0.18, height: 0.06, depth: 0.04 }, scene);
+    mirrorBlinker.position.set(mx, 2.30, 3.82);
+    mirrorBlinker.material = materials.blinkerOn;
+    mirrorBlinker.parent = root;
+
+    // Mặt kính gương phản chiếu hướng về đuôi xe
+    const mirrorGlass = MeshBuilder.CreatePlane(`${config.id}-mirror-glass-${dir}`, { width: 0.18, height: 0.48 }, scene);
+    mirrorGlass.rotation.y = Math.PI;
+    mirrorGlass.position.set(mx, 2.30, 3.68);
+    mirrorGlass.material = materials.mirrorGlass;
+    mirrorGlass.parent = root;
+  });
+
+  // 10. Cặp Loa Phát Thanh Thuyết Minh Du Lịch Mini Trên Lan Can (PA Tour Speakers)
+  [-0.95, 0.95].forEach((spkX, sIdx) => {
+    const speaker = MeshBuilder.CreateCylinder(`${config.id}-speaker-${sIdx}`, { diameterTop: 0.16, diameterBottom: 0.06, height: 0.22, tessellation: 12 }, scene);
+    speaker.rotation.x = -Math.PI / 2.3;
+    speaker.position.set(spkX, 2.80, 1.46);
+    speaker.material = materials.speakerMat;
+    speaker.parent = root;
+  });
+
+  // 11. Biển Số Xe Vận Tải Màu Vàng Nghệ Việt Nam (Trước & Sau)
+  const plateNumber = config.plateNumber || '29B - 888.68';
+  const plateDT = createVietnamLicensePlateTexture(scene, config.id, plateNumber);
+  const plateMat = new StandardMaterial(`mat-plate-${config.id}`, scene);
+  plateMat.diffuseTexture = plateDT;
+  plateMat.emissiveColor = new Color3(0.3, 0.3, 0.1);
+
+  // Biển số trước (Z = 4.20)
+  const frontPlateHolder = MeshBuilder.CreateBox(`${config.id}-f-plate-holder`, { width: 1.40, height: 0.42, depth: 0.04 }, scene);
+  frontPlateHolder.position.set(0, 0.68, 4.18);
+  frontPlateHolder.material = materials.vnGrille;
+  frontPlateHolder.parent = root;
+
+  const frontPlate = MeshBuilder.CreatePlane(`${config.id}-f-plate`, { width: 1.34, height: 0.36 }, scene);
+  frontPlate.position.set(0, 0.68, 4.21);
+  frontPlate.material = plateMat;
+  frontPlate.parent = root;
+
+  // Biển số sau (Z = -3.98)
+  const rearPlateHolder = MeshBuilder.CreateBox(`${config.id}-r-plate-holder`, { width: 1.40, height: 0.42, depth: 0.04 }, scene);
+  rearPlateHolder.position.set(0, 0.68, -3.96);
+  rearPlateHolder.material = materials.vnGrille;
+  rearPlateHolder.parent = root;
+
+  const rearPlate = MeshBuilder.CreatePlane(`${config.id}-r-plate`, { width: 1.34, height: 0.36 }, scene);
+  rearPlate.rotation.y = Math.PI;
+  rearPlate.position.set(0, 0.68, -3.99);
+  rearPlate.material = plateMat;
+  rearPlate.parent = root;
+
+  // 12. Decal Tem Sườn Xe Du Lịch City Tour Việt Nam (Hai bên hông xe)
+  const liveryDT = createVietnamSideLiveryTexture(scene, config.id, config.routeCode, config.routeName);
+  const liveryMat = new StandardMaterial(`mat-livery-${config.id}`, scene);
+  liveryMat.diffuseTexture = liveryDT;
+  liveryMat.emissiveColor = new Color3(0.4, 0.4, 0.4);
+
+  [-1.71, 1.71].forEach((lx, lIdx) => {
+    const sideLivery = MeshBuilder.CreatePlane(`${config.id}-side-livery-${lIdx}`, { width: 5.2, height: 0.48 }, scene);
+    sideLivery.rotation.y = lIdx === 0 ? -Math.PI / 2 : Math.PI / 2;
+    sideLivery.position.set(lx, 1.48, -0.4);
+    sideLivery.material = liveryMat;
+    sideLivery.parent = root;
+  });
+
+  // 13. Ống xả kép thể thao mạ crom
+  [-0.9, 0.9].forEach((exX, eIdx) => {
+    const exhaust = MeshBuilder.CreateCylinder(`${config.id}-exhaust-${eIdx}`, { height: 0.35, diameter: 0.14, tessellation: 12 }, scene);
+    exhaust.rotation.x = Math.PI / 2;
+    exhaust.position.set(exX, 0.58, -3.95);
+    exhaust.material = materials.exhaustChrome;
+    exhaust.parent = root;
+  });
+
+  // 14. Cản trước & cản sau thể thao Chrome Bumpers
+  const frontBumper = MeshBuilder.CreateBox(`${config.id}-f-bumper`, { width: 3.55, height: 0.34, depth: 0.38 }, scene);
+  frontBumper.position.set(0, 0.72, 3.98);
   frontBumper.material = materials.chrome;
   frontBumper.parent = root;
 
-  const rearBumper = MeshBuilder.CreateBox(`${config.id}-r-bumper`, { width: 3.6, height: 0.35, depth: 0.4 }, scene);
-  rearBumper.position.set(0, 0.8, -3.9);
+  const rearBumper = MeshBuilder.CreateBox(`${config.id}-r-bumper`, { width: 3.55, height: 0.34, depth: 0.38 }, scene);
+  rearBumper.position.set(0, 0.72, -3.88);
   rearBumper.material = materials.chrome;
   rearBumper.parent = root;
 
-  // 6. Round Glowing Headlights & Red Taillights
-  [-1.2, 1.2].forEach((hx, i) => {
-    const headlight = MeshBuilder.CreateSphere(`${config.id}-headlight-${i}`, { diameter: 0.55, segments: 8 }, scene);
-    headlight.position.set(hx, 1.4, 3.82);
+  // 15. Đèn Pha Projector Mắt Đại Bàng & Đèn Sương Mù Vàng Chanh
+  [-1.25, 1.25].forEach((hx, i) => {
+    const headlight = MeshBuilder.CreateSphere(`${config.id}-headlight-${i}`, { diameter: 0.50, segments: 8 }, scene);
+    headlight.position.set(hx, 1.15, 3.96);
     headlight.material = materials.headlight;
     headlight.parent = root;
 
-    const taillight = MeshBuilder.CreateSphere(`${config.id}-taillight-${i}`, { diameter: 0.45, segments: 6 }, scene);
-    taillight.position.set(hx, 1.4, -3.82);
+    const taillight = MeshBuilder.CreateSphere(`${config.id}-taillight-${i}`, { diameter: 0.42, segments: 6 }, scene);
+    taillight.position.set(hx, 1.15, -3.88);
     taillight.material = materials.taillight;
     taillight.parent = root;
   });
 
-  // 7. Hazard Blinker Lights (Amber)
+  // Đèn sương mù vàng chanh hai bên cản trước
+  [-1.35, 1.35].forEach((fx, i) => {
+    const foglight = MeshBuilder.CreateSphere(`${config.id}-foglight-${i}`, { diameter: 0.28, segments: 6 }, scene);
+    foglight.position.set(fx, 0.78, 4.05);
+    foglight.material = materials.foglight;
+    foglight.parent = root;
+  });
+
+  // 16. Hazard Blinker Lights (Amber)
   const blinkers = [];
   [-1.5, 1.5].forEach((bx, i) => {
     [-3.7, 3.7].forEach((bz, j) => {
-      const bl = MeshBuilder.CreateSphere(`${config.id}-blinker-${i}-${j}`, { diameter: 0.3, segments: 6 }, scene);
-      bl.position.set(bx, 1.7, bz);
+      const bl = MeshBuilder.CreateSphere(`${config.id}-blinker-${i}-${j}`, { diameter: 0.28, segments: 6 }, scene);
+      bl.position.set(bx, 1.6, bz);
       bl.material = materials.blinkerOff;
       bl.parent = root;
       blinkers.push(bl);
     });
   });
 
-  // 8. 4 Rolling Rubber Tires
+  // 17. 4 Rolling Rubber Tires
   const wheels = [];
   [-1.65, 1.65].forEach(wx => {
     [-2.3, 2.3].forEach(wz => {
@@ -326,19 +750,14 @@ function createChibiBus(scene, shadows, config, materials) {
     });
   });
 
-  // 9. Passenger Seating Node (where player sits inside bus)
+  // 18. Passenger Sightseeing Deck Node (Player stands upright on the open observation deck)
+  // Đặt tại Z = 2.8: Đứng sát thanh vịn mạ vàng đầu xe tầng 2, tầm nhìn 360° bao la lộng gió!
   const passengerSeatNode = new TransformNode(`${config.id}-seat`, scene);
-  passengerSeatNode.position.set(0.7, 1.35, -0.6);
+  passengerSeatNode.position.set(0.0, 2.14, 2.8);
   passengerSeatNode.parent = root;
 
-  // Passenger Cabin Interior Bench
-  const seatMesh = MeshBuilder.CreateBox(`${config.id}-cabin-seat`, { width: 1.4, height: 0.45, depth: 1.8 }, scene);
-  seatMesh.position.set(0.7, 1.05, -0.6);
-  seatMesh.material = materials.bench;
-  seatMesh.parent = root;
-
   if (shadows) {
-    [lowerBody, upperBody, frontBumper].forEach(m => shadows.addShadowCaster(m));
+    [lowerBody, frontBumper].forEach(m => shadows.addShadowCaster(m));
   }
 
   // Pre-calculate segment lengths for route
@@ -361,7 +780,7 @@ function createChibiBus(scene, shadows, config, materials) {
   const CRUISE_SPEED = config.cruiseSpeed || 48.0; // 48 m/s (~173 km/h express speed)
   let currentSpeed = CRUISE_SPEED;
   let dwellTimer = 0;
-  const maxDwellTime = 4.0; // 4.0s dwell at stations (snappy, no long waiting)
+  const maxDwellTime = 2.4; // 2.4s dwell at stations for rapid transit & minimal waiting
   let currentStation = null;
   let nextStation = config.stops[0] || null;
   let blinkerPulse = 0;
@@ -490,42 +909,56 @@ export function* createBusRouteSteps(scene, shadows) {
     taillight: makeMat(scene, 'bus-taillight', '#ef4444', '#b91c1c'),
     blinkerOff: makeMat(scene, 'bus-blinker-off', '#78350f'),
     blinkerOn: makeMat(scene, 'bus-blinker-on', '#f59e0b', '#fbbf24'),
+    deckTeak: makeMat(scene, 'bus-deck-teak', '#a26b38', '#78350f'),
+    goldRail: makeMat(scene, 'bus-gold-rail', '#fcd34d', '#f59e0b'),
+    pennant: makeMat(scene, 'bus-pennant', '#f43f5e', '#fb7185'),
+    vnGrille: makeMat(scene, 'bus-vn-grille', '#0f172a', '#020617'),
+    vnStarYellow: makeMat(scene, 'bus-vn-star', '#ffea00', '#f59e0b'),
+    mirrorGlass: makeMat(scene, 'bus-mirror', '#e2e8f0', '#94a3b8'),
+    foglight: makeMat(scene, 'bus-foglight', '#fef08a', '#facc15'),
+    cushionRed: makeMat(scene, 'bus-cushion-red', '#b91c1c', '#7f1d1d'),
+    cushionHeadrest: makeMat(scene, 'bus-headrest', '#991b1b', '#7f1d1d'),
+    speakerMat: makeMat(scene, 'bus-speaker', '#1e293b', '#0f172a'),
+    tintedGlass: makeMat(scene, 'bus-tinted-glass', '#0f172a', '#1e293b'),
+    stepYellow: makeMat(scene, 'bus-step-yellow', '#facc15', '#b45309'),
+    exhaustChrome: makeMat(scene, 'bus-exhaust', '#f8fafc', '#94a3b8'),
   };
   materials.glass.alpha = 0.55;
+  materials.tintedGlass.alpha = 0.85;
 
   // 19 Chibi Ghibli Bus Stop Shelters - 100% CORRECTLY FACING ROADS:
   // 4 Trạm cuối (Gateway Terminals) tại 4 cửa ngõ giáp Quảng trường trung tâm (Bắc, Nam, Đông, Tây)
   // Xe buýt từ các làng chạy đến các trạm này dừng đón/trả khách rồi quay đầu, tuyệt đối không vào quảng trường.
   const shelters = [
-    // 1. Bốn trạm cuối Gateway Terminals tại 4 cửa ngõ Quảng trường:
-    { x: 5.4, z: 54, name: 'Trạm Cửa Nam - Quảng Trường', badge: 'Tuyến 01 · 02', rot: Math.PI / 2 },
-    { x: 5.4, z: -54, name: 'Trạm Cửa Bắc - Tòa Thị Chính', badge: 'Tuyến 03', rot: Math.PI / 2 },
-    { x: -54, z: 5.4, name: 'Trạm Cửa Tây - Phố Chợ', badge: 'Tuyến 04A', rot: 0 },
-    { x: 54, z: 5.4, name: 'Trạm Cửa Đông - Hồ Pha Lê', badge: 'Tuyến 04B', rot: 0 },
+    // 1. Bốn trạm cuối Gateway Terminals tại 4 cửa ngõ Quảng trường (trên vỉa hè rộng 2.6m, cách mép đường 4.25m):
+    { x: 6.2, z: 54, name: 'Trạm Cửa Nam - Quảng Trường', badge: 'Tuyến 01 · 02', rot: Math.PI / 2 },
+    { x: 6.2, z: -54, name: 'Trạm Cửa Bắc - Tòa Thị Chính', badge: 'Tuyến 03', rot: Math.PI / 2 },
+    { x: -54, z: 6.2, name: 'Trạm Cửa Tây - Phố Chợ', badge: 'Tuyến 04A', rot: 0 },
+    { x: 54, z: 6.2, name: 'Trạm Cửa Đông - Hồ Pha Lê', badge: 'Tuyến 04B', rot: 0 },
 
     // 2. Trục Đại lộ Nam (x = 0):
-    { x: 5.2, z: 86, name: 'Làng Bình Minh', badge: 'T1 · T2', rot: Math.PI / 2 },
+    { x: 6.2, z: 98, name: 'Làng Bình Minh', badge: 'T1 · T2', rot: Math.PI / 2 },
     { ...COASTAL_BUS_CONFIG.shelter, name: 'Bãi Biển Bình Minh', badge: 'Tuyến 02', rot: Math.PI },
-    { x: 5.2, z: -394, name: 'Làng Phú Điền', badge: 'Tuyến 03', rot: Math.PI / 2 },
+    { x: 6.0, z: -380, name: 'Làng Phú Điền', badge: 'Tuyến 03', rot: Math.PI / 2 },
 
-    // 3. Trục Quốc Lộ 86 (z = 86):
-    { x: -300, z: 80.8, name: 'Làng Hoa Mai', badge: 'Tuyến 01', rot: Math.PI },
-    { x: -594, z: 80.8, name: 'Làng Đồi Gió', badge: 'Tuyến 01', rot: Math.PI },
-    { x: 300, z: 80.8, name: 'Làng Ven Sông', badge: 'T1 · T4', rot: Math.PI },
-    { x: 594, z: 80.8, name: 'Làng An Nhiên', badge: 'Tuyến 01', rot: Math.PI },
+    // 3. Trục Quốc Lộ 86 (z = 86): trạm đặt bên lề cạnh cổng làng, không chắn ngã ba cổng làng
+    { x: -282, z: 80.8, name: 'Làng Hoa Mai', badge: 'Tuyến 01', rot: Math.PI },
+    { x: -582, z: 80.8, name: 'Làng Đồi Gió', badge: 'Tuyến 01', rot: Math.PI },
+    { x: 318, z: 80.8, name: 'Làng Ven Sông', badge: 'T1 · T4', rot: Math.PI },
+    { x: 582, z: 80.8, name: 'Làng An Nhiên', badge: 'Tuyến 01', rot: Math.PI },
 
     // 4. Trục Quốc Lộ Nam 406 (z = 406):
-    { x: -300, z: 400.8, name: 'Làng Thu Phong', badge: 'Tuyến 02', rot: Math.PI },
-    { x: 300, z: 400.8, name: 'Làng Hướng Dương', badge: 'Tuyến 02', rot: Math.PI },
+    { x: -282, z: 400.8, name: 'Làng Thu Phong', badge: 'Tuyến 02', rot: Math.PI },
+    { x: 318, z: 400.8, name: 'Làng Hướng Dương', badge: 'Tuyến 02', rot: Math.PI },
 
     // 5. Trục Quốc Lộ Bắc -234 (z = -234):
-    { x: -300, z: -239.2, name: 'Làng Thanh Hà', badge: 'Tuyến 03', rot: Math.PI },
-    { x: -594, z: -239.2, name: 'Làng Mộc Lan', badge: 'Tuyến 03', rot: Math.PI },
-    { x: 300, z: -239.2, name: 'Làng Tân Lộc', badge: 'Tuyến 03', rot: Math.PI },
-    { x: 594, z: -239.2, name: 'Làng Hải Vân', badge: 'Tuyến 03', rot: Math.PI },
+    { x: -282, z: -239.2, name: 'Làng Thanh Hà', badge: 'Tuyến 03', rot: Math.PI },
+    { x: -582, z: -239.2, name: 'Làng Mộc Lan', badge: 'Tuyến 03', rot: Math.PI },
+    { x: 318, z: -239.2, name: 'Làng Tân Lộc', badge: 'Tuyến 03', rot: Math.PI },
+    { x: 582, z: -239.2, name: 'Làng Hải Vân', badge: 'Tuyến 03', rot: Math.PI },
 
     // 6. Trục Phố Chợ & Vùng Hồ:
-    { x: -118, z: 5.4, name: 'Phố Chợ Phía Tây', badge: 'Tuyến 04A', rot: 0 },
+    { x: -118, z: 6.2, name: 'Phố Chợ Phía Tây', badge: 'Tuyến 04A', rot: 0 },
     { x: LAKE_CONFIG.busStop.x, z: LAKE_CONFIG.busStop.z, name: 'Hồ Pha Lê', badge: 'Tuyến 04B', rot: 0 },
   ];
 
@@ -635,14 +1068,15 @@ export function* createBusRouteSteps(scene, shadows) {
     { id: 'stop-lake', name: 'Hồ Pha Lê', waypointIndex: 3 },
   ];
 
-  // === ĐỘI HÌNH 8 XE BUÝT CHIBI CHẠY LIÊN TỤC SONG SONG (Hạn chế tối đa thời gian chờ) ===
-  // Tuyến 01: 2 xe chạy đối xứng trục QL 86
+  // === ĐỘI HÌNH 16 XE BUÝT CHIBI VIỆT NAM CHẠY LIÊN TỤC SONG SONG (SLA CHỜ 5S - 10S) ===
+  // Tuyến 01: 4 xe chia đều 25% lộ trình trục QL 86 (Hà Nội City Tour Đỏ Cờ)
   const bus1A = createChibiBus(scene, shadows, {
     id: 'bus-01A',
     routeCode: '01A',
     routeName: 'Hoa Mai Express',
-    bodyColor: PLAY_TOGETHER_PALETTE.pastels.bananaYellow,
-    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
+    plateNumber: '29B - 018.88',
+    bodyColor: '#dc2626',
+    accentColor: '#fef08a',
     ledColor: '#facc15',
     cruiseSpeed: CRUISE_SPEED,
     waypoints: route01Waypoints,
@@ -656,9 +1090,26 @@ export function* createBusRouteSteps(scene, shadows) {
     id: 'bus-01B',
     routeCode: '01B',
     routeName: 'Hoa Mai Express',
-    bodyColor: '#fb923c', // Cam mật ong Chibi
-    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
-    ledColor: '#fb923c',
+    plateNumber: '29B - 019.99',
+    bodyColor: '#b91c1c',
+    accentColor: '#fef08a',
+    ledColor: '#fbbf24',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route01Waypoints,
+    stops: route01Stops,
+    initialSegment: 4,
+    initialProgress: 0.2,
+  }, materials);
+
+  yield;
+  const bus1C = createChibiBus(scene, shadows, {
+    id: 'bus-01C',
+    routeCode: '01C',
+    routeName: 'Hoa Mai Express',
+    plateNumber: '29B - 018.11',
+    bodyColor: '#dc2626',
+    accentColor: '#fef08a',
+    ledColor: '#facc15',
     cruiseSpeed: CRUISE_SPEED,
     waypoints: route01Waypoints,
     stops: route01Stops,
@@ -666,15 +1117,32 @@ export function* createBusRouteSteps(scene, shadows) {
     initialProgress: 0.4,
   }, materials);
 
-  // Tuyến 02: 2 xe chạy đối xứng trục Biển & Làng Nam 406
+  yield;
+  const bus1D = createChibiBus(scene, shadows, {
+    id: 'bus-01D',
+    routeCode: '01D',
+    routeName: 'Hoa Mai Express',
+    plateNumber: '29B - 018.22',
+    bodyColor: '#b91c1c',
+    accentColor: '#fef08a',
+    ledColor: '#fbbf24',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route01Waypoints,
+    stops: route01Stops,
+    initialSegment: 12,
+    initialProgress: 0.3,
+  }, materials);
+
+  // Tuyến 02: 4 xe chia đều 25% lộ trình trục Biển & Làng Nam (Sài Gòn Coastal Xanh Ngọc Biển)
   yield;
   const bus2A = createChibiBus(scene, shadows, {
     id: 'bus-02A',
     routeCode: '02A',
     routeName: 'Biển Xanh Coastal',
-    bodyColor: '#34d399',
-    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
-    ledColor: '#34d399',
+    plateNumber: '51B - 028.68',
+    bodyColor: '#0284c7',
+    accentColor: '#ffffff',
+    ledColor: '#38bdf8',
     cruiseSpeed: CRUISE_SPEED,
     waypoints: route02Waypoints,
     stops: route02Stops,
@@ -687,25 +1155,59 @@ export function* createBusRouteSteps(scene, shadows) {
     id: 'bus-02B',
     routeCode: '02B',
     routeName: 'Biển Xanh Coastal',
-    bodyColor: '#2dd4bf', // Xanh mòng két ngọc bích
-    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
-    ledColor: '#2dd4bf',
+    plateNumber: '51B - 029.86',
+    bodyColor: '#0891b2',
+    accentColor: '#ffffff',
+    ledColor: '#22d3ee',
     cruiseSpeed: CRUISE_SPEED,
     waypoints: route02Waypoints,
     stops: route02Stops,
-    initialSegment: 7,
-    initialProgress: 0.5,
+    initialSegment: 5,
+    initialProgress: 0.2,
   }, materials);
 
-  // Tuyến 03: 2 xe chạy đối xứng trục Cao Nguyên & Làng Bắc -234
+  yield;
+  const bus2C = createChibiBus(scene, shadows, {
+    id: 'bus-02C',
+    routeCode: '02C',
+    routeName: 'Biển Xanh Coastal',
+    plateNumber: '51B - 029.33',
+    bodyColor: '#0284c7',
+    accentColor: '#ffffff',
+    ledColor: '#38bdf8',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route02Waypoints,
+    stops: route02Stops,
+    initialSegment: 10,
+    initialProgress: 0.3,
+  }, materials);
+
+  yield;
+  const bus2D = createChibiBus(scene, shadows, {
+    id: 'bus-02D',
+    routeCode: '02D',
+    routeName: 'Biển Xanh Coastal',
+    plateNumber: '51B - 029.77',
+    bodyColor: '#0891b2',
+    accentColor: '#ffffff',
+    ledColor: '#22d3ee',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route02Waypoints,
+    stops: route02Stops,
+    initialSegment: 15,
+    initialProgress: 0.4,
+  }, materials);
+
+  // Tuyến 03: 4 xe chia đều 25% lộ trình trục Cao Nguyên & Phú Điền (VinBus Xanh Lục Bảo)
   yield;
   const bus3A = createChibiBus(scene, shadows, {
     id: 'bus-03A',
     routeCode: '03A',
     routeName: 'Cao Nguyên Line',
-    bodyColor: '#fb7185',
-    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
-    ledColor: '#fb7185',
+    plateNumber: '43B - 036.78',
+    bodyColor: '#16a34a',
+    accentColor: '#ffffff',
+    ledColor: '#4ade80',
     cruiseSpeed: CRUISE_SPEED,
     waypoints: route03Waypoints,
     stops: route03Stops,
@@ -718,25 +1220,59 @@ export function* createBusRouteSteps(scene, shadows) {
     id: 'bus-03B',
     routeCode: '03B',
     routeName: 'Cao Nguyên Line',
-    bodyColor: '#a78bfa', // Tím hoa cà Lavender
-    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
-    ledColor: '#a78bfa',
+    plateNumber: '43B - 038.99',
+    bodyColor: '#15803d',
+    accentColor: '#ffffff',
+    ledColor: '#86efac',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route03Waypoints,
+    stops: route03Stops,
+    initialSegment: 4,
+    initialProgress: 0.2,
+  }, materials);
+
+  yield;
+  const bus3C = createChibiBus(scene, shadows, {
+    id: 'bus-03C',
+    routeCode: '03C',
+    routeName: 'Cao Nguyên Line',
+    plateNumber: '43B - 036.11',
+    bodyColor: '#16a34a',
+    accentColor: '#ffffff',
+    ledColor: '#4ade80',
     cruiseSpeed: CRUISE_SPEED,
     waypoints: route03Waypoints,
     stops: route03Stops,
     initialSegment: 9,
-    initialProgress: 0.5,
+    initialProgress: 0.3,
   }, materials);
 
-  // Tuyến 04A: Xe đưa đón Phố Chợ Phía Tây
   yield;
-  const bus4A = createChibiBus(scene, shadows, {
-    id: 'bus-04A',
+  const bus3D = createChibiBus(scene, shadows, {
+    id: 'bus-03D',
+    routeCode: '03D',
+    routeName: 'Cao Nguyên Line',
+    plateNumber: '43B - 038.22',
+    bodyColor: '#15803d',
+    accentColor: '#ffffff',
+    ledColor: '#86efac',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route03Waypoints,
+    stops: route03Stops,
+    initialSegment: 13,
+    initialProgress: 0.4,
+  }, materials);
+
+  // Tuyến 04A: 2 xe chạy con thoi đối xứng Phố Chợ Phía Tây
+  yield;
+  const bus4A_1 = createChibiBus(scene, shadows, {
+    id: 'bus-04A-1',
     routeCode: '04A',
     routeName: 'Phố Chợ Tây',
-    bodyColor: '#38bdf8',
-    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
-    ledColor: '#38bdf8',
+    plateNumber: '29B - 046.88',
+    bodyColor: '#ea580c',
+    accentColor: '#fef08a',
+    ledColor: '#fb923c',
     cruiseSpeed: CRUISE_SPEED,
     waypoints: route04AWaypoints,
     stops: route04AStops,
@@ -744,14 +1280,31 @@ export function* createBusRouteSteps(scene, shadows) {
     initialProgress: 0.1,
   }, materials);
 
-  // Tuyến 04B: Xe đưa đón Hồ Pha Lê & Bến Câu Cá
   yield;
-  const bus4B = createChibiBus(scene, shadows, {
-    id: 'bus-04B',
+  const bus4A_2 = createChibiBus(scene, shadows, {
+    id: 'bus-04A-2',
+    routeCode: '04A',
+    routeName: 'Phố Chợ Tây',
+    plateNumber: '29B - 046.99',
+    bodyColor: '#c2410c',
+    accentColor: '#fef08a',
+    ledColor: '#fb923c',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route04AWaypoints,
+    stops: route04AStops,
+    initialSegment: 3,
+    initialProgress: 0.5,
+  }, materials);
+
+  // Tuyến 04B: 2 xe chạy con thoi đối xứng Hồ Pha Lê & Bến Câu Cá
+  yield;
+  const bus4B_1 = createChibiBus(scene, shadows, {
+    id: 'bus-04B-1',
     routeCode: '04B',
-    routeName: 'Hồ Pha Lê Scenic',
-    bodyColor: '#818cf8', // Lam chàm hoàng gia
-    accentColor: PLAY_TOGETHER_PALETTE.pastels.creamyVanilla,
+    routeName: 'Hồ Pha Lê',
+    plateNumber: '51B - 048.66',
+    bodyColor: '#4f46e5',
+    accentColor: '#ffffff',
     ledColor: '#818cf8',
     cruiseSpeed: CRUISE_SPEED,
     waypoints: route04BWaypoints,
@@ -761,10 +1314,33 @@ export function* createBusRouteSteps(scene, shadows) {
   }, materials);
 
   yield;
-  const buses = [bus1A, bus1B, bus2A, bus2B, bus3A, bus3B, bus4A, bus4B];
+  const bus4B_2 = createChibiBus(scene, shadows, {
+    id: 'bus-04B-2',
+    routeCode: '04B',
+    routeName: 'Hồ Pha Lê',
+    plateNumber: '51B - 048.88',
+    bodyColor: '#4338ca',
+    accentColor: '#ffffff',
+    ledColor: '#818cf8',
+    cruiseSpeed: CRUISE_SPEED,
+    waypoints: route04BWaypoints,
+    stops: route04BStops,
+    initialSegment: 3,
+    initialProgress: 0.5,
+  }, materials);
+
+  yield;
+  const buses = [
+    bus1A, bus1B, bus1C, bus1D,
+    bus2A, bus2B, bus2C, bus2D,
+    bus3A, bus3B, bus3C, bus3D,
+    bus4A_1, bus4A_2,
+    bus4B_1, bus4B_2,
+  ];
 
   // Transit Management State
   let activeRidingBusId = null;
+  let boardingPosition = null;
 
   return {
     buses,
@@ -789,7 +1365,8 @@ export function* createBusRouteSteps(scene, shadows) {
 
     boardBus(busId, playerRoot) {
       const bus = buses.find(b => b.id === busId);
-      if (!bus) return false;
+      if (!bus || !playerRoot || activeRidingBusId || !bus.isDwelling() || Vector3.Distance(bus.root.position, playerRoot.position) > 6.5) return false;
+      boardingPosition = playerRoot.position.clone();
       activeRidingBusId = busId;
       // Snap player into bus cabin
       playerRoot.position.copyFrom(bus.passengerSeatNode.getAbsolutePosition());
@@ -797,18 +1374,25 @@ export function* createBusRouteSteps(scene, shadows) {
       return true;
     },
 
-    alightBus(playerRoot) {
+    alightBus(playerRoot, force = false) {
       if (!activeRidingBusId) return false;
       const bus = buses.find(b => b.id === activeRidingBusId);
+      if (!force && !bus?.isDwelling()) return false;
       activeRidingBusId = null;
       if (bus && playerRoot) {
+        if (force && boardingPosition) {
+          playerRoot.position.copyFrom(boardingPosition);
+          boardingPosition = null;
+          return true;
+        }
         // Drop player safely onto the sidewalk platform beside the bus door
         const forward = bus.root.forward;
         const right = new Vector3(forward.z, 0, -forward.x);
         const exitPos = bus.root.position.add(right.scale(3.4));
-        exitPos.y = 0;
+        exitPos.y = getTerrainHeight(exitPos.x, exitPos.z);
         playerRoot.position.copyFrom(exitPos);
       }
+      boardingPosition = null;
       return true;
     },
 

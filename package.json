@@ -4,10 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "test:missions": "node scripts/test-missions.mjs && node scripts/test-missions-server.mjs",
     "test:casino": "node scripts/test-casino-rules.mjs && node scripts/test-casino-mongo.mjs",
     "test:beach": "node scripts/test-beach.mjs",
     "test:fishing-config": "node scripts/test-fishing-config.mjs",
-    "test:fishing": "node scripts/test-fishing-config.mjs && node scripts/test-fishing-water.mjs && node scripts/test-fishing-session.mjs && node scripts/test-fishing-rig.mjs && node scripts/test-fishing-server.mjs",
+    "test:fishing": "node scripts/test-fishing-config.mjs && node scripts/test-fishing-water.mjs && node scripts/test-fishing-session.mjs && node scripts/test-fishing-rig.mjs && node scripts/test-fishing-visual-rig.mjs && node scripts/test-fishing-server.mjs",
     "test:livestock": "node scripts/test-livestock-actions.mjs && node scripts/test-owned-herd.mjs && node scripts/test-livestock-server.mjs",
     "test:farm-config": "node scripts/test-farm-config.mjs",
     "test:farm-security": "node scripts/test-farm-gate-swing.mjs && node scripts/test-farm-security-client.mjs && node scripts/test-farm-security.mjs && node scripts/test-farm-security-network.mjs",

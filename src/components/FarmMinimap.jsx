@@ -1,19 +1,20 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { WORLD_LAYOUT, zoneAtPosition } from '../game/world/worldLayout.js';
+import { zoneAtPosition } from '../game/world/worldLayout.js';
+import { WORLD_VILLAGES } from '../../shared/villageLayout.js';
 import { farmAudio } from '../game/audio/FarmAudioSystem.js';
-import { Icon3dMap, Icon3dHouseCabin } from './icons3d/GameIcons3D.jsx';
+import { Icon3dMap } from './icons3d/GameIcons3D.jsx';
 import './FarmMinimap.css';
 
 // Key Landmarks across Vibe City (Play Together Theme)
 const POIS = [
-  { id: 'plaza', label: 'Quảng Trường', x: 0, z: 0, color: '#f59e0b', symbol: '★', icon: '🌟' },
-  { id: 'lake', label: 'Hồ Pha Lê', x: 165, z: 2, color: '#0ea5e9', symbol: '🎣', icon: '🎣' },
+  { id: 'plaza', label: 'Quảng Trường', x: 0, z: 18, color: '#f59e0b', symbol: '★', icon: '🌟' },
+  { id: 'lake', label: 'Hồ Pha Lê', x: 126, z: 2, color: '#0ea5e9', symbol: '🎣', icon: '🎣' },
   { id: 'fashion', label: 'Thời Trang', x: 29, z: -25, color: '#ec4899', symbol: '👗', icon: '👗' },
   { id: 'casino', label: 'Hội Quán', x: -29, z: -25, color: '#8b5cf6', symbol: '🎲', icon: '🎲' },
   { id: 'supplies', label: 'Chợ Nông Sản', x: 29, z: 25, color: '#10b981', symbol: '🛒', icon: '🛒' },
   { id: 'elder', label: 'Trưởng Làng', x: -7.4, z: 76, color: '#14b8a6', symbol: '🏡', icon: '🏡' },
   { id: 'pen', label: 'Khu Nuôi Bò', x: 88, z: 112, color: '#d97706', symbol: '🐮', icon: '🐮' },
-  { id: 'beach', label: 'Biển Bình Minh', x: 0, z: 340, color: '#06b6d4', symbol: '🏖️', icon: '🏖️' },
+  { id: 'beach', label: 'Biển Bình Minh', x: 0, z: 320, color: '#06b6d4', symbol: '🏖️', icon: '🏖️' },
 ];
 
 export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
@@ -83,7 +84,25 @@ export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
     isHome: true,
   } : null;
 
-  const allPOIs = homeTarget ? [...POIS, homeTarget] : POIS;
+  // Include 12 Villages dynamically as nearby POIs
+  const villagePOIs = useMemo(() => {
+    return WORLD_VILLAGES.map(v => ({
+      id: v.id,
+      label: v.name,
+      x: v.gate.x,
+      z: v.gate.z,
+      color: '#10b981',
+      symbol: '🏡',
+      icon: '🏡',
+      isVillage: true,
+    }));
+  }, []);
+
+  const allPOIs = useMemo(() => {
+    const list = [...POIS, ...villagePOIs];
+    if (homeTarget) list.push(homeTarget);
+    return list;
+  }, [homeTarget, villagePOIs]);
 
   // Relative terrain feature positions
   const plazaTerrain = projectPoint(0, 0);
@@ -137,6 +156,12 @@ export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
               <linearGradient id="ptSweepGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
                 <stop offset="100%" stopColor="transparent" />
+              </linearGradient>
+              {/* Vision Cone Field Gradient (Play Together Radar) */}
+              <linearGradient id="ptVisionConeGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#fef08a" stopOpacity="0.5" />
+                <stop offset="60%" stopColor="#fde047" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
               </linearGradient>
             </defs>
 
@@ -223,6 +248,9 @@ export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
               {/* Landmark POI Icons */}
               {allPOIs.map(poi => {
                 const proj = projectPoint(poi.x, poi.z);
+                // Filter out non-clamped distant villages to avoid radar clutter
+                if (poi.isVillage && proj.distWorld > 240) return null;
+
                 return (
                   <g
                     key={poi.id}
@@ -258,12 +286,19 @@ export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
                 );
               })}
 
-              {/* Central Player Marker & Beacon Pulse */}
+              {/* Central Player Beacon Ping */}
               <circle cx="50" cy="50" r="7.5" fill="#38bdf8" opacity="0.28" className="pt-player-beacon-ping" />
-              {/* Rotating Player Direction Arrow (Heading) */}
+
+              {/* Rotating Player Vision Cone & Direction Arrow (Heading) */}
               <g transform={`rotate(${yawDeg} 50 50)`}>
+                {/* Vision Cone (Tầm nhìn phía trước chuẩn Game) */}
                 <polygon
-                  points="50,40 56,54 50,50.5 44,54"
+                  points="50,50 34,14 66,14"
+                  fill="url(#ptVisionConeGrad)"
+                />
+                {/* Heading Arrow (Mũi tên chỉ hướng Play Together) */}
+                <polygon
+                  points="50,38 56,53 50,49.5 44,53"
                   fill="#ff6b00"
                   stroke="#ffffff"
                   strokeWidth="1.6"
@@ -271,8 +306,8 @@ export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
                 />
               </g>
 
-              {/* True North Cardinal Compass Indicator */}
-              <g transform={`rotate(${-yawDeg} 50 50)`}>
+              {/* Cardinal Compass Directions on Bezel */}
+              <g transform={`rotate(${-yawDeg} 50 50)`} opacity="0.85">
                 <g transform="translate(50, 9)">
                   <circle cx="0" cy="0" r="4.2" fill="#ef4444" stroke="#ffffff" strokeWidth="1" />
                   <text
@@ -287,6 +322,9 @@ export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
                     N
                   </text>
                 </g>
+                <text x="50" y="93" textAnchor="middle" fontSize="4.8" fontWeight="900" fill="#64748b" fontFamily="Nunito, sans-serif">S</text>
+                <text x="91" y="52" textAnchor="middle" fontSize="4.8" fontWeight="900" fill="#64748b" fontFamily="Nunito, sans-serif">E</text>
+                <text x="9" y="52" textAnchor="middle" fontSize="4.8" fontWeight="900" fill="#64748b" fontFamily="Nunito, sans-serif">W</text>
               </g>
             </g>
           </svg>
@@ -327,5 +365,4 @@ export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
   );
 }
 
-// Named alias export to preserve backward compatibility with both import styles
 export default FarmMinimap;

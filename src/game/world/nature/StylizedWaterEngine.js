@@ -306,70 +306,9 @@ export function createOceanDepthTexture(scene, size = 512, options = {}) {
   dt.wrapV = Texture.CLAMP_ADDRESSMODE;
   const ctx = dt.getContext();
 
-  // 1. Chuyển sắc độ sâu đại dương mượt mà tuyệt đối (100% Continuous Depth Gradient)
-  const grad = ctx.createLinearGradient(0, 0, 0, size);
-  if (!isMid) {
-    // Vùng nước nông (Shallow): Từ bờ cát ngọc lam trong vắt sang xanh ngọc nhiệt đới rực rỡ
-    grad.addColorStop(0.0, '#38d9d6'); // Ven bờ: Ngọc lam sáng bừng (Turquoise / Aquamarine)
-    grad.addColorStop(0.35, '#22d3ee'); // Nắng rọi tầng nông (Luminous Cyan)
-    grad.addColorStop(0.70, '#0ea5e9'); // Chuyển tiếp êm dịu (Cerulean Azure)
-    grad.addColorStop(1.0, '#0284c7');  // Điểm nối giáp ranh: Xanh đại dương nhiệt đới
-  } else {
-    // Vùng nước sâu (Mid): Bắt đầu CHÍNH XÁC từ điểm nối #0284c7 để triệt tiêu hoàn toàn đường lằn chia cắt!
-    grad.addColorStop(0.0, '#0284c7');  // Điểm nối giáp ranh (Khớp 100% với đáy vùng nước nông)
-    grad.addColorStop(0.40, '#0369a1'); // Tầng sâu thăm thẳm (Deep Oceanic Blue)
-    grad.addColorStop(0.75, '#1e40af'); // Hoàng gia quý phái (Royal Sapphire)
-    grad.addColorStop(1.0, '#1e3a8a');  // Chân trời xa khơi (Deep Twilight Navy)
-  }
-  ctx.fillStyle = grad;
+  // Màu nước biển phẳng mịn, tươi sáng, thuần khiết chuẩn Play Together (100% như mẫu)
+  ctx.fillStyle = '#38bdf8';
   ctx.fillRect(0, 0, size, size);
-
-  // 2. Mạng lưới phản chiếu khúc xạ ánh nắng (Luminous Organic Water Caustics)
-  let seed = isMid ? 777 : 333;
-  function rnd() {
-    seed = (seed * 9301 + 49297) % 233280;
-    return seed / 233280;
-  }
-
-  const causticCount = isMid ? 24 : 48;
-  for (let c = 0; c < causticCount; c++) {
-    const cx = rnd() * size;
-    const cy = rnd() * size;
-    const r = (isMid ? 28 : 16) + rnd() * (isMid ? 20 : 12);
-
-    for (const ox of [-size, 0, size]) {
-      const x = cx + ox;
-      const y = cy;
-      if (x + r < 0 || x - r > size) continue;
-
-      const radGrad = ctx.createRadialGradient(x, y, 0, x, y, r);
-      const intensity = isMid ? 0.08 : 0.16;
-      radGrad.addColorStop(0, `rgba(255, 255, 255, ${intensity})`);
-      radGrad.addColorStop(0.5, `rgba(224, 242, 254, ${intensity * 0.4})`);
-      radGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0)');
-
-      ctx.fillStyle = radGrad;
-      ctx.beginPath();
-      ctx.ellipse(x, y, r * 1.3, r * 0.8, rnd() * Math.PI, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-
-  // 3. Các gợn vệt nắng lướt nhẹ vi mô
-  ctx.strokeStyle = isMid ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.12)';
-  ctx.lineWidth = 1.5;
-  for (let w = 0; w < (isMid ? 14 : 28); w++) {
-    const wx = rnd() * size;
-    const wy = rnd() * size;
-    const wlen = 20 + rnd() * 40;
-    for (const ox of [-size, 0, size]) {
-      const x = wx + ox;
-      ctx.beginPath();
-      ctx.moveTo(x, wy);
-      ctx.bezierCurveTo(x + wlen * 0.35, wy - 3, x + wlen * 0.65, wy + 3, x + wlen, wy);
-      ctx.stroke();
-    }
-  }
 
   dt.update();
   return dt;
@@ -1305,10 +1244,8 @@ export function createOceanHorizonTexture(scene, size = 256) {
   dt.wrapU = Texture.WRAP_ADDRESSMODE;
   dt.wrapV = Texture.CLAMP_ADDRESSMODE;
   const ctx = dt.getContext();
-  const grad = ctx.createLinearGradient(0, 0, 0, size);
-  grad.addColorStop(0, '#1e3a8a');
-  grad.addColorStop(1, '#5799b1');
-  ctx.fillStyle = grad;
+  // Màu nước biển phẳng mịn, tươi sáng, thuần khiết chuẩn Play Together (100% đồng nhất)
+  ctx.fillStyle = '#38bdf8';
   ctx.fillRect(0, 0, size, size);
   dt.update();
   return dt;

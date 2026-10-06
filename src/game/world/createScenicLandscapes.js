@@ -546,12 +546,6 @@ function createCentralBotanicalPark(scene, parent, foliage, shadows) {
   root.parent = parent;
 
   const matPathGravel = makeMat(scene, 'park-gravel-path', '#ebdccb', null, 0.1);
-  const matBrookWater = new StandardMaterial('park-brook-water', scene);
-  matBrookWater.diffuseColor = Color3.FromHexString('#38bdf8');
-  matBrookWater.emissiveColor = Color3.FromHexString('#0284c7').scale(0.32);
-  matBrookWater.specularColor = new Color3(0.8, 0.9, 1.0);
-  matBrookWater.specularPower = 64;
-  matBrookWater.alpha = 0.88;
 
   // 1. Hai lối dạo bộ lát đá vàng mật ong dọc hai bên Đại lộ Nam (x = -14m và x = +14m, z: 22 -> 80)
   // Tạo trục đi dạo ngập tràn sắc hoa ngay trước mắt người chơi khi vừa xuất phát
@@ -593,56 +587,7 @@ function createCentralBotanicalPark(scene, parent, foliage, shadows) {
     }
   });
 
-  // 2. Đài Phun Nước Hoa Hoàng Gia Trung Tâm (Grand Floral Fountain, x = -24, z = 50)
-  if (!isPointOnRoadCorridor(-24, 50, 4.0)) {
-    const fountainRoot = new TransformNode('botanical-fountain', scene);
-    fountainRoot.position.set(-24, 0, 50);
-    fountainRoot.parent = root;
-
-    const baseRing = MeshBuilder.CreateCylinder('fountain-basin', {
-      diameter: 6.8,
-      height: 0.45,
-      tessellation: 24,
-    }, scene);
-    baseRing.position.y = 0.225;
-    baseRing.material = makeMat(scene, 'fountain-stone', '#e2e8f0', null, 0.2);
-    baseRing.parent = fountainRoot;
-    shadows?.addShadowCaster(baseRing);
-
-    const waterSurface = MeshBuilder.CreateDisc('fountain-water', { radius: 3.1, tessellation: 24 }, scene);
-    waterSurface.rotation.x = Math.PI / 2;
-    waterSurface.position.y = 0.42;
-    waterSurface.material = matBrookWater;
-    waterSurface.parent = fountainRoot;
-
-    const centerPillar = MeshBuilder.CreateCylinder('fountain-pillar', {
-      diameterTop: 0.9,
-      diameterBottom: 1.4,
-      height: 1.6,
-      tessellation: 16,
-    }, scene);
-    centerPillar.position.y = 1.0;
-    centerPillar.material = baseRing.material;
-    centerPillar.parent = fountainRoot;
-
-    const topBowl = MeshBuilder.CreateSphere('fountain-top-bowl', {
-      diameter: 1.8,
-      slice: 0.5,
-      segments: 16,
-    }, scene);
-    topBowl.rotation.x = Math.PI;
-    topBowl.position.y = 2.0;
-    topBowl.material = baseRing.material;
-    topBowl.parent = fountainRoot;
-
-    // Vành hoa hồng rực rỡ bao quanh đài phun nước
-    foliage.createFlowerPatch(-24 + 4.2, 50, 12, 2.2);
-    foliage.createFlowerPatch(-24 - 4.2, 50, 12, 2.2);
-    foliage.createHydrangeaBush(-24, 50 + 4.2, '#f43f5e', 1.25);
-    foliage.createHydrangeaBush(-24, 50 - 4.2, '#a855f7', 1.25);
-  }
-
-  // 3. 6 Cụm Tiểu Cảnh Vườn Hoa Cổ Thụ & Nghỉ Chân Tự Nhiên (Scenic Garden Rest Spots - hoàn toàn trên mặt đất phẳng tự nhiên)
+  // 2. 6 Cụm Tiểu Cảnh Vườn Hoa Cổ Thụ & Nghỉ Chân Tự Nhiên (Scenic Garden Rest Spots - hoàn toàn trên mặt đất phẳng tự nhiên)
   const scenicSpots = [
     { x: -125, z: 54 },
     { x: -75, z: 62 },

@@ -260,7 +260,13 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   const longSleeves = [];
   const shortSleeves = [];
   const shoulderSurfaces = [];
+  const wristCuffs = [];
   let clothingScaled = false;
+  let aodaiNamFrontFlapNode = null;
+  let aodaiNamBackFlapNode = null;
+  let aodaiNamPendantNode = null;
+  let aodaiNuFrontFlapNode = null;
+  let aodaiNuBackFlapNode = null;
 
   // ========================================================
   // 1. TORSO NODE (Thân giọt nước Chibi mũm mĩm & Áo Hoodie)
@@ -721,114 +727,440 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   obiBow.material = materials.royalRed;
   obiBow.parent = topVariants.kimono;
 
-  // 11. ÁO DÀI VIỆT NAM NỮ HOA SEN (Vietnamese Traditional Ao Dai - Female)
-  const aodaiNuBody = shirtBody.clone(`${idPrefix}-aodai-nu-body`);
-  aodaiNuBody.scaling.set(1.025, 1.015, 1.025);
-  aodaiNuBody.position.set(0, 0.22, 0.01);
-  aodaiNuBody.material = materials.shirt;
-  aodaiNuBody.parent = topVariants.aodai_nu;
-
-  const aodaiNuCollar = MeshBuilder.CreateCylinder(`${idPrefix}-aodai-nu-collar`, { height: 0.07, diameter: 0.28, tessellation: 18 }, scene);
+  // 11. ÁO DÀI VIỆT NAM NỮ HOA SEN (Vietnamese Traditional Ao Dai - Female Lotus Silk)
+  const aodaiNuCollar = MeshBuilder.CreateCylinder(`${idPrefix}-aodai-nu-collar`, { height: 0.08, diameter: 0.285, tessellation: 24 }, scene);
   aodaiNuCollar.position.set(0, 0.44, 0.02);
   aodaiNuCollar.material = materials.shirt;
   aodaiNuCollar.parent = topVariants.aodai_nu;
 
-  // Tà trước thướt tha buông qua gối
-  const aodaiNuFrontFlap = MeshBuilder.CreateBox(`${idPrefix}-aodai-nu-front-flap`, { width: 0.38, height: 0.58, depth: 0.016 }, scene);
-  aodaiNuFrontFlap.position.set(0, -0.22, 0.18);
-  aodaiNuFrontFlap.rotation.x = -0.06;
-  aodaiNuFrontFlap.material = materials.shirt;
-  aodaiNuFrontFlap.parent = topVariants.aodai_nu;
+  const aodaiNuCollarTrim = MeshBuilder.CreateTorus(`${idPrefix}-aodai-nu-collar-trim`, { diameter: 0.285, thickness: 0.018, tessellation: 24 }, scene);
+  aodaiNuCollarTrim.position.set(0, 0.475, 0.02);
+  aodaiNuCollarTrim.material = materials.aodaiGoldTrim;
+  aodaiNuCollarTrim.parent = topVariants.aodai_nu;
 
-  const aodaiNuFrontTrim = MeshBuilder.CreateBox(`${idPrefix}-aodai-nu-front-trim`, { width: 0.38, height: 0.022, depth: 0.022 }, scene);
-  aodaiNuFrontTrim.position.set(0, -0.50, 0.198);
-  aodaiNuFrontTrim.rotation.x = -0.06;
-  aodaiNuFrontTrim.material = materials.aodaiGoldTrim;
-  aodaiNuFrontTrim.parent = topVariants.aodai_nu;
+  // Khuy ngọc cổ áo thanh lịch
+  const aodaiNuCollarBrooch = MeshBuilder.CreateSphere(`${idPrefix}-aodai-nu-collar-brooch`, { diameter: 0.032, segments: 8 }, scene);
+  aodaiNuCollarBrooch.position.set(0, 0.45, 0.165);
+  aodaiNuCollarBrooch.material = materials.aodaiGoldTrim;
+  aodaiNuCollarBrooch.parent = topVariants.aodai_nu;
 
-  // Tà sau bay nhẹ khi di chuyển
-  const aodaiNuBackFlap = MeshBuilder.CreateBox(`${idPrefix}-aodai-nu-back-flap`, { width: 0.40, height: 0.60, depth: 0.016 }, scene);
-  aodaiNuBackFlap.position.set(0, -0.23, -0.17);
-  aodaiNuBackFlap.rotation.x = 0.06;
-  aodaiNuBackFlap.material = materials.shirt;
-  aodaiNuBackFlap.parent = topVariants.aodai_nu;
+  // Họa tiết hoa sen lụa hồng thêu ngực bên phải (Lotus Flower Chest Motif)
+  const aodaiNuLotusBloom = MeshBuilder.CreateSphere(`${idPrefix}-aodai-nu-lotus-bloom`, { diameter: 0.075, segments: 8 }, scene);
+  aodaiNuLotusBloom.scaling.set(1.1, 0.8, 0.4);
+  aodaiNuLotusBloom.position.set(0.08, 0.30, 0.262);
+  aodaiNuLotusBloom.material = materials.aodaiSilk;
+  aodaiNuLotusBloom.parent = topVariants.aodai_nu;
 
-  const aodaiNuBackTrim = MeshBuilder.CreateBox(`${idPrefix}-aodai-nu-back-trim`, { width: 0.40, height: 0.022, depth: 0.022 }, scene);
-  aodaiNuBackTrim.position.set(0, -0.52, -0.188);
-  aodaiNuBackTrim.rotation.x = 0.06;
-  aodaiNuBackTrim.material = materials.aodaiGoldTrim;
-  aodaiNuBackTrim.parent = topVariants.aodai_nu;
+  [-0.035, 0.035].forEach((lx, lIdx) => {
+    const petal = MeshBuilder.CreateSphere(`${idPrefix}-aodai-nu-lotus-petal-${lIdx}`, { diameter: 0.045, segments: 6 }, scene);
+    petal.scaling.set(0.9, 0.6, 0.35);
+    petal.position.set(0.08 + lx, 0.30 - Math.abs(lx) * 0.2, 0.260);
+    petal.rotation.z = lIdx === 0 ? 0.35 : -0.35;
+    petal.material = materials.aodaiGoldTrim;
+    petal.parent = topVariants.aodai_nu;
+  });
 
-  // Hàng khuy ngọc trai / hoa cài ngực bên phải
-  [0.39, 0.34, 0.29].forEach((by, idx) => {
-    const pearlBtn = MeshBuilder.CreateSphere(`${idPrefix}-aodai-pearl-${idx}`, { diameter: 0.028, segments: 8 }, scene);
-    pearlBtn.position.set(0.06 + idx * 0.035, by, 0.25);
+  // Hàng khuy ngọc trai / hoa cài uốn lượn duyên dáng từ cổ xuống eo
+  [
+    [0.05, 0.41, 0.260],
+    [0.08, 0.35, 0.265],
+    [0.12, 0.28, 0.260],
+    [0.15, 0.21, 0.245],
+    [0.18, 0.14, 0.230],
+  ].forEach(([px, py, pz], idx) => {
+    const pearlBtn = MeshBuilder.CreateSphere(`${idPrefix}-aodai-pearl-${idx}`, { diameter: 0.032, segments: 8 }, scene);
+    pearlBtn.position.set(px, py, pz);
     pearlBtn.material = materials.aodaiGoldTrim;
     pearlBtn.parent = topVariants.aodai_nu;
   });
 
   // Xẻ tà hông eo áo dài nữ viền chỉ vàng thướt tha
   [-0.205, 0.205].forEach((sx, idx) => {
-    const slitTrim = MeshBuilder.CreateBox(`${idPrefix}-aodai-slit-trim-${idx}`, { width: 0.015, height: 0.22, depth: 0.04 }, scene);
+    const slitTrim = MeshBuilder.CreateBox(`${idPrefix}-aodai-slit-trim-${idx}`, { width: 0.016, height: 0.24, depth: 0.035 }, scene);
     slitTrim.position.set(sx, 0.02, 0);
     slitTrim.material = materials.aodaiGoldTrim;
     slitTrim.parent = topVariants.aodai_nu;
   });
 
-  // 12. ÁO DÀI NAM CÁCH TÂN GẤM RỒNG (Vietnamese Traditional Ao Dai - Male Brocade)
-  const aodaiNamBody = shirtBody.clone(`${idPrefix}-aodai-nam-body`);
-  aodaiNamBody.scaling.set(1.055, 1.02, 1.055);
-  aodaiNamBody.position.set(0, 0.22, 0.01);
-  aodaiNamBody.material = materials.shirt;
-  aodaiNamBody.parent = topVariants.aodai_nam;
+  // TÀ ÁO DÀI NỮ THƯỚT THA DÁNG CHỮ A (Female Flowing Flaps Node)
+  aodaiNuFrontFlapNode = new TransformNode(`${idPrefix}-aodai-nu-front-flap-node`, scene);
+  aodaiNuFrontFlapNode.position.set(0, -0.02, 0.185);
+  aodaiNuFrontFlapNode.parent = topVariants.aodai_nu;
 
-  const aodaiNamCollar = MeshBuilder.CreateCylinder(`${idPrefix}-aodai-nam-collar`, { height: 0.08, diameter: 0.29, tessellation: 18 }, scene);
+  const aodaiNuFrontUpper = MeshBuilder.CreateBox(`${idPrefix}-aodai-nu-front-upper`, { width: 0.38, height: 0.28, depth: 0.018 }, scene);
+  aodaiNuFrontUpper.position.set(0, -0.13, 0);
+  aodaiNuFrontUpper.rotation.x = -0.05;
+  aodaiNuFrontUpper.material = materials.shirt;
+  aodaiNuFrontUpper.parent = aodaiNuFrontFlapNode;
+
+  const aodaiNuFrontLower = MeshBuilder.CreateBox(`${idPrefix}-aodai-nu-front-lower`, { width: 0.44, height: 0.28, depth: 0.018 }, scene);
+  aodaiNuFrontLower.position.set(0, -0.37, 0.012);
+  aodaiNuFrontLower.rotation.x = -0.02;
+  aodaiNuFrontLower.material = materials.shirt;
+  aodaiNuFrontLower.parent = aodaiNuFrontFlapNode;
+
+  const aodaiNuFrontTrim = MeshBuilder.CreateBox(`${idPrefix}-aodai-nu-front-trim`, { width: 0.445, height: 0.026, depth: 0.026 }, scene);
+  aodaiNuFrontTrim.position.set(0, -0.50, 0.015);
+  aodaiNuFrontTrim.material = materials.aodaiGoldTrim;
+  aodaiNuFrontTrim.parent = aodaiNuFrontFlapNode;
+
+  // Họa tiết hoa sen thêu nổi chân tà áo dài nữ
+  const aodaiNuHemLotus = MeshBuilder.CreateSphere(`${idPrefix}-aodai-nu-hem-lotus`, { diameter: 0.065, segments: 8 }, scene);
+  aodaiNuHemLotus.scaling.set(1.2, 0.8, 0.4);
+  aodaiNuHemLotus.position.set(0, -0.44, 0.02);
+  aodaiNuHemLotus.material = materials.aodaiSilk;
+  aodaiNuHemLotus.parent = aodaiNuFrontFlapNode;
+
+  // Viền chỉ vàng hai mép tà trước
+  [-0.20, 0.20].forEach((ex, eIdx) => {
+    const edgeTrim = MeshBuilder.CreateBox(`${idPrefix}-aodai-nu-f-edge-${eIdx}`, { width: 0.015, height: 0.48, depth: 0.022 }, scene);
+    edgeTrim.position.set(ex * 1.05, -0.26, 0.008);
+    edgeTrim.material = materials.aodaiGoldTrim;
+    edgeTrim.parent = aodaiNuFrontFlapNode;
+  });
+
+  // Tà sau áo dài nữ
+  aodaiNuBackFlapNode = new TransformNode(`${idPrefix}-aodai-nu-back-flap-node`, scene);
+  aodaiNuBackFlapNode.position.set(0, -0.02, -0.175);
+  aodaiNuBackFlapNode.parent = topVariants.aodai_nu;
+
+  const aodaiNuBackUpper = MeshBuilder.CreateBox(`${idPrefix}-aodai-nu-back-upper`, { width: 0.40, height: 0.28, depth: 0.018 }, scene);
+  aodaiNuBackUpper.position.set(0, -0.13, 0);
+  aodaiNuBackUpper.rotation.x = 0.05;
+  aodaiNuBackUpper.material = materials.shirt;
+  aodaiNuBackUpper.parent = aodaiNuBackFlapNode;
+
+  const aodaiNuBackLower = MeshBuilder.CreateBox(`${idPrefix}-aodai-nu-back-lower`, { width: 0.46, height: 0.28, depth: 0.018 }, scene);
+  aodaiNuBackLower.position.set(0, -0.37, -0.012);
+  aodaiNuBackLower.rotation.x = 0.02;
+  aodaiNuBackLower.material = materials.shirt;
+  aodaiNuBackLower.parent = aodaiNuBackFlapNode;
+
+  const aodaiNuBackTrim = MeshBuilder.CreateBox(`${idPrefix}-aodai-nu-back-trim`, { width: 0.465, height: 0.026, depth: 0.026 }, scene);
+  aodaiNuBackTrim.position.set(0, -0.50, -0.015);
+  aodaiNuBackTrim.material = materials.aodaiGoldTrim;
+  aodaiNuBackTrim.parent = aodaiNuBackFlapNode;
+
+  // 12. ÁO DÀI NAM HOÀNG TRIỀU GẤM RỒNG (Vietnamese Imperial Ao Dai - Male Royal Brocade)
+  const aodaiNamCollar = MeshBuilder.CreateCylinder(`${idPrefix}-aodai-nam-collar`, { height: 0.085, diameter: 0.295, tessellation: 24 }, scene);
   aodaiNamCollar.position.set(0, 0.45, 0.02);
   aodaiNamCollar.material = materials.shirt;
   aodaiNamCollar.parent = topVariants.aodai_nam;
 
-  const aodaiNamCollarTrim = MeshBuilder.CreateTorus(`${idPrefix}-aodai-nam-collar-trim`, { diameter: 0.29, thickness: 0.02, tessellation: 18 }, scene);
-  aodaiNamCollarTrim.position.set(0, 0.48, 0.02);
+  const aodaiNamCollarTrim = MeshBuilder.CreateTorus(`${idPrefix}-aodai-nam-collar-trim`, { diameter: 0.295, thickness: 0.022, tessellation: 24 }, scene);
+  aodaiNamCollarTrim.position.set(0, 0.49, 0.02);
   aodaiNamCollarTrim.material = materials.aodaiGoldTrim;
   aodaiNamCollarTrim.parent = topVariants.aodai_nam;
 
-  // Vạt chéo ngũ thân gấm vàng
-  const aodaiNamPlacket = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-placket`, { width: 0.035, height: 0.32, depth: 0.025 }, scene);
-  aodaiNamPlacket.rotation.z = -0.45;
-  aodaiNamPlacket.position.set(0.08, 0.32, 0.26);
-  aodaiNamPlacket.material = materials.aodaiGoldTrim;
-  aodaiNamPlacket.parent = topVariants.aodai_nam;
+  // Khuy cài cổ áo hoàng gia nạm hồng ngọc
+  const aodaiNamCollarBrooch = MeshBuilder.CreateSphere(`${idPrefix}-aodai-nam-collar-brooch`, { diameter: 0.038, segments: 8 }, scene);
+  aodaiNamCollarBrooch.position.set(0, 0.46, 0.17);
+  aodaiNamCollarBrooch.material = materials.royalGold;
+  aodaiNamCollarBrooch.parent = topVariants.aodai_nam;
 
-  [0.40, 0.32, 0.24].forEach((by, idx) => {
-    const goldBtn = MeshBuilder.CreateCylinder(`${idPrefix}-aodai-nam-btn-${idx}`, { height: 0.018, diameter: 0.034, tessellation: 10 }, scene);
-    goldBtn.rotation.x = Math.PI / 2;
-    goldBtn.position.set(0.04 + idx * 0.04, by, 0.27);
-    goldBtn.material = materials.brass;
-    goldBtn.parent = topVariants.aodai_nam;
+  const aodaiNamCollarRuby = MeshBuilder.CreateSphere(`${idPrefix}-aodai-nam-collar-ruby`, { diameter: 0.022, segments: 6 }, scene);
+  aodaiNamCollarRuby.position.set(0, 0.46, 0.185);
+  aodaiNamCollarRuby.material = materials.royalRed;
+  aodaiNamCollarRuby.parent = topVariants.aodai_nam;
+
+  // VẠT CHÉO NGŨ THÂN CÀI KHUY BƯỚM UỐN LƯỢN ÔM SÁT THÂN NGƯỜI
+  [
+    { w: 0.026, h: 0.12, d: 0.020, px: 0.05, py: 0.40, pz: 0.258, rz: -0.55 },
+    { w: 0.026, h: 0.14, d: 0.020, px: 0.11, py: 0.31, pz: 0.262, rz: -0.50 },
+    { w: 0.026, h: 0.14, d: 0.020, px: 0.17, py: 0.20, pz: 0.245, rz: -0.35 },
+  ].forEach((cfg, sIdx) => {
+    const placketSeg = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-placket-seg-${sIdx}`, { width: cfg.w, height: cfg.h, depth: cfg.d }, scene);
+    placketSeg.position.set(cfg.px, cfg.py, cfg.pz);
+    placketSeg.rotation.z = cfg.rz;
+    placketSeg.material = materials.aodaiGoldTrim;
+    placketSeg.parent = topVariants.aodai_nam;
   });
 
-  // Tà áo nam dáng đứng sang trọng
-  const aodaiNamFrontFlap = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-front-flap`, { width: 0.42, height: 0.48, depth: 0.02 }, scene);
-  aodaiNamFrontFlap.position.set(0, -0.17, 0.19);
-  aodaiNamFrontFlap.material = materials.shirt;
-  aodaiNamFrontFlap.parent = topVariants.aodai_nam;
+  // Hàng khuy bướm gấm mạ vàng hoàng gia (Imperial Butterfly Knot Frogs)
+  [
+    [0.04, 0.42, 0.262],
+    [0.08, 0.35, 0.268],
+    [0.13, 0.27, 0.262],
+    [0.18, 0.18, 0.248],
+  ].forEach(([bx, by, bz], idx) => {
+    const goldKnot = MeshBuilder.CreateSphere(`${idPrefix}-aodai-nam-knot-${idx}`, { diameter: 0.038, segments: 8 }, scene);
+    goldKnot.position.set(bx, by, bz);
+    goldKnot.material = materials.royalGold;
+    goldKnot.parent = topVariants.aodai_nam;
 
-  const aodaiNamBackFlap = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-back-flap`, { width: 0.44, height: 0.50, depth: 0.02 }, scene);
-  aodaiNamBackFlap.position.set(0, -0.18, -0.18);
-  aodaiNamBackFlap.material = materials.shirt;
-  aodaiNamBackFlap.parent = topVariants.aodai_nam;
+    const knotBar = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-knot-bar-${idx}`, { width: 0.055, height: 0.016, depth: 0.016 }, scene);
+    knotBar.position.set(bx, by, bz - 0.004);
+    knotBar.rotation.z = -0.45;
+    knotBar.material = materials.aodaiGoldTrim;
+    knotBar.parent = topVariants.aodai_nam;
+  });
 
-  const aodaiNamBelt = MeshBuilder.CreateTorus(`${idPrefix}-aodai-nam-belt`, { diameter: 0.52, thickness: 0.035, tessellation: 20 }, scene);
-  aodaiNamBelt.position.y = 0.04;
-  aodaiNamBelt.material = materials.aodaiGoldTrim;
-  aodaiNamBelt.parent = topVariants.aodai_nam;
+  // BỔ TỬ RỒNG MÂY HOÀNG TRIỀU THÊU NỔI TRƯỚC NGỰC ÁO (Imperial Dragon Medallion & Jade Emblem)
+  const aodaiNamMedallionRing = MeshBuilder.CreateTorus(`${idPrefix}-aodai-nam-medallion-ring`, {
+    diameter: 0.155,
+    thickness: 0.018,
+    tessellation: 24,
+  }, scene);
+  aodaiNamMedallionRing.position.set(0, 0.29, 0.268);
+  aodaiNamMedallionRing.rotation.x = 0.08;
+  aodaiNamMedallionRing.material = materials.aodaiGoldTrim;
+  aodaiNamMedallionRing.parent = topVariants.aodai_nam;
 
-  // Phù hiệu rồng mây hoàng gia thêu nổi trước ngực áo dài nam
-  const aodaiNamBadge = MeshBuilder.CreateCylinder(`${idPrefix}-aodai-nam-badge`, { height: 0.016, diameter: 0.11, tessellation: 16 }, scene);
-  aodaiNamBadge.rotation.x = Math.PI / 2;
-  aodaiNamBadge.position.set(0, 0.28, 0.26);
-  aodaiNamBadge.material = materials.aodaiGoldTrim;
-  aodaiNamBadge.parent = topVariants.aodai_nam;
+  const aodaiNamMedallionDisk = MeshBuilder.CreateCylinder(`${idPrefix}-aodai-nam-medallion-disk`, {
+    height: 0.016,
+    diameter: 0.135,
+    tessellation: 20,
+  }, scene);
+  aodaiNamMedallionDisk.position.set(0, 0.29, 0.266);
+  aodaiNamMedallionDisk.rotation.x = Math.PI / 2 + 0.08;
+  aodaiNamMedallionDisk.material = materials.royalGold;
+  aodaiNamMedallionDisk.parent = topVariants.aodai_nam;
+
+  const aodaiNamMedallionJade = MeshBuilder.CreateSphere(`${idPrefix}-aodai-nam-medallion-jade`, {
+    diameter: 0.055,
+    segments: 10,
+  }, scene);
+  aodaiNamMedallionJade.scaling.set(1.0, 1.0, 0.5);
+  aodaiNamMedallionJade.position.set(0, 0.29, 0.280);
+  aodaiNamMedallionJade.material = materials.jadeGreen;
+  aodaiNamMedallionJade.parent = topVariants.aodai_nam;
+
+  // ĐAI LƯNG GẤM HOÀNG GIA & KHÓA THẮT LƯNG NGỌC BÍCH (Imperial Waist Sash & Jade Plaque)
+  const aodaiNamSash = MeshBuilder.CreateTorus(`${idPrefix}-aodai-nam-sash`, {
+    diameter: 0.53,
+    thickness: 0.042,
+    tessellation: 24,
+  }, scene);
+  aodaiNamSash.position.set(0, 0.035, 0);
+  aodaiNamSash.material = materials.aodaiGoldTrim;
+  aodaiNamSash.parent = topVariants.aodai_nam;
+
+  const aodaiNamSashInner = MeshBuilder.CreateTorus(`${idPrefix}-aodai-nam-sash-inner`, {
+    diameter: 0.532,
+    thickness: 0.018,
+    tessellation: 24,
+  }, scene);
+  aodaiNamSashInner.position.set(0, 0.035, 0);
+  aodaiNamSashInner.material = materials.khanDongNavy;
+  aodaiNamSashInner.parent = topVariants.aodai_nam;
+
+  const aodaiNamBuckleGold = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-buckle-gold`, {
+    width: 0.11,
+    height: 0.065,
+    depth: 0.032,
+  }, scene);
+  aodaiNamBuckleGold.position.set(0, 0.035, 0.275);
+  aodaiNamBuckleGold.material = materials.royalGold;
+  aodaiNamBuckleGold.parent = topVariants.aodai_nam;
+
+  const aodaiNamBuckleJade = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-buckle-jade`, {
+    width: 0.075,
+    height: 0.045,
+    depth: 0.036,
+  }, scene);
+  aodaiNamBuckleJade.position.set(0, 0.035, 0.277);
+  aodaiNamBuckleJade.material = materials.jadeGreen;
+  aodaiNamBuckleJade.parent = topVariants.aodai_nam;
+
+  // NGỌC BỘI HOÀNG GIA THẢ RỦ BÊN EO (Imperial Royal Jade Bi Pendant & Silk Tassel)
+  aodaiNamPendantNode = new TransformNode(`${idPrefix}-aodai-nam-pendant-node`, scene);
+  aodaiNamPendantNode.position.set(-0.17, 0.01, 0.20);
+  aodaiNamPendantNode.parent = topVariants.aodai_nam;
+
+  const aodaiPendantCord = MeshBuilder.CreateCylinder(`${idPrefix}-aodai-pendant-cord`, {
+    height: 0.05,
+    diameter: 0.014,
+    tessellation: 6,
+  }, scene);
+  aodaiPendantCord.position.set(0, -0.01, 0);
+  aodaiPendantCord.material = materials.aodaiGoldTrim;
+  aodaiPendantCord.parent = aodaiNamPendantNode;
+
+  const aodaiPendantJadeBi = MeshBuilder.CreateTorus(`${idPrefix}-aodai-pendant-jade-bi`, {
+    diameter: 0.075,
+    thickness: 0.022,
+    tessellation: 18,
+  }, scene);
+  aodaiPendantJadeBi.position.set(0, -0.05, 0);
+  aodaiPendantJadeBi.material = materials.jadeGreen;
+  aodaiPendantJadeBi.parent = aodaiNamPendantNode;
+
+  const aodaiPendantCap = MeshBuilder.CreateCylinder(`${idPrefix}-aodai-pendant-cap`, {
+    height: 0.025,
+    diameterTop: 0.018,
+    diameterBottom: 0.035,
+    tessellation: 10,
+  }, scene);
+  aodaiPendantCap.position.set(0, -0.09, 0);
+  aodaiPendantCap.material = materials.royalGold;
+  aodaiPendantCap.parent = aodaiNamPendantNode;
+
+  const aodaiPendantTassel = MeshBuilder.CreateCylinder(`${idPrefix}-aodai-pendant-tassel`, {
+    height: 0.09,
+    diameterTop: 0.030,
+    diameterBottom: 0.042,
+    tessellation: 10,
+  }, scene);
+  aodaiPendantTassel.position.set(0, -0.14, 0);
+  aodaiPendantTassel.material = materials.aodaiGoldTrim;
+  aodaiPendantTassel.parent = aodaiNamPendantNode;
+
+  // TÀ ÁO DÀI NAM HOÀNG TRIỀU THƯỚT THA DÁNG ĐỨNG CHỮ A (Male Flowing Flaps Node)
+  aodaiNamFrontFlapNode = new TransformNode(`${idPrefix}-aodai-nam-front-flap-node`, scene);
+  aodaiNamFrontFlapNode.position.set(0, -0.02, 0.19);
+  aodaiNamFrontFlapNode.parent = topVariants.aodai_nam;
+
+  const aodaiNamFrontUpper = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-front-upper`, {
+    width: 0.42,
+    height: 0.26,
+    depth: 0.022,
+  }, scene);
+  aodaiNamFrontUpper.position.set(0, -0.12, 0);
+  aodaiNamFrontUpper.rotation.x = -0.05;
+  aodaiNamFrontUpper.material = materials.shirt;
+  aodaiNamFrontUpper.parent = aodaiNamFrontFlapNode;
+
+  const aodaiNamFrontLower = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-front-lower`, {
+    width: 0.47,
+    height: 0.26,
+    depth: 0.022,
+  }, scene);
+  aodaiNamFrontLower.position.set(0, -0.35, 0.012);
+  aodaiNamFrontLower.rotation.x = -0.02;
+  aodaiNamFrontLower.material = materials.shirt;
+  aodaiNamFrontLower.parent = aodaiNamFrontFlapNode;
+
+  const aodaiNamFrontTrim = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-front-trim`, {
+    width: 0.475,
+    height: 0.028,
+    depth: 0.028,
+  }, scene);
+  aodaiNamFrontTrim.position.set(0, -0.47, 0.016);
+  aodaiNamFrontTrim.material = materials.aodaiGoldTrim;
+  aodaiNamFrontTrim.parent = aodaiNamFrontFlapNode;
+
+  // Dải hoa văn gấm hoàng triều thêu chỉ vàng chân vạt (Imperial Hem Wave Ribbon)
+  const aodaiNamFrontBand = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-front-band`, {
+    width: 0.465,
+    height: 0.042,
+    depth: 0.026,
+  }, scene);
+  aodaiNamFrontBand.position.set(0, -0.41, 0.015);
+  aodaiNamFrontBand.material = materials.aodaiGoldTrim;
+  aodaiNamFrontBand.parent = aodaiNamFrontFlapNode;
+
+  [-0.14, 0, 0.14].forEach((rx, rIdx) => {
+    const rosette = MeshBuilder.CreateSphere(`${idPrefix}-aodai-nam-rosette-${rIdx}`, {
+      diameter: 0.032,
+      segments: 6,
+    }, scene);
+    rosette.position.set(rx, -0.41, 0.030);
+    rosette.material = materials.royalGold;
+    rosette.parent = aodaiNamFrontFlapNode;
+  });
+
+  // Bổ tử thêu gấm hoàng triều ở trung tâm vạt trước (Imperial Medallion on Front Flap)
+  const aodaiFlapMedallionRing = MeshBuilder.CreateTorus(`${idPrefix}-aodai-flap-medallion-ring`, {
+    diameter: 0.13,
+    thickness: 0.016,
+    tessellation: 20,
+  }, scene);
+  aodaiFlapMedallionRing.rotation.x = Math.PI / 2;
+  aodaiFlapMedallionRing.position.set(0, -0.25, 0.015);
+  aodaiFlapMedallionRing.material = materials.aodaiGoldTrim;
+  aodaiFlapMedallionRing.parent = aodaiNamFrontFlapNode;
+
+  const aodaiFlapMedallionDisk = MeshBuilder.CreateCylinder(`${idPrefix}-aodai-flap-medallion-disk`, {
+    height: 0.014,
+    diameter: 0.11,
+    tessellation: 16,
+  }, scene);
+  aodaiFlapMedallionDisk.rotation.x = Math.PI / 2;
+  aodaiFlapMedallionDisk.position.set(0, -0.25, 0.015);
+  aodaiFlapMedallionDisk.material = materials.royalGold;
+  aodaiFlapMedallionDisk.parent = aodaiNamFrontFlapNode;
+
+  const aodaiFlapMedallionJade = MeshBuilder.CreateSphere(`${idPrefix}-aodai-flap-medallion-jade`, {
+    diameter: 0.040,
+    segments: 8,
+  }, scene);
+  aodaiFlapMedallionJade.position.set(0, -0.25, 0.024);
+  aodaiFlapMedallionJade.material = materials.jadeGreen;
+  aodaiFlapMedallionJade.parent = aodaiNamFrontFlapNode;
+
+  // Viền chỉ vàng hai mép tà trước và khuy thắt eo
+  [-0.225, 0.225].forEach((ex, eIdx) => {
+    const edgeTrim = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-f-edge-${eIdx}`, {
+      width: 0.015,
+      height: 0.47,
+      depth: 0.026,
+    }, scene);
+    edgeTrim.position.set(ex * 1.04, -0.24, 0.008);
+    edgeTrim.material = materials.aodaiGoldTrim;
+    edgeTrim.parent = aodaiNamFrontFlapNode;
+
+    const waistFrog = MeshBuilder.CreateSphere(`${idPrefix}-aodai-nam-waist-frog-${eIdx}`, {
+      diameter: 0.035,
+      segments: 6,
+    }, scene);
+    waistFrog.position.set(ex * 0.95, 0.01, 0.01);
+    waistFrog.material = materials.royalGold;
+    waistFrog.parent = aodaiNamFrontFlapNode;
+  });
+
+  // TÀ SAU ÁO DÀI NAM HOÀNG TRIỀU
+  aodaiNamBackFlapNode = new TransformNode(`${idPrefix}-aodai-nam-back-flap-node`, scene);
+  aodaiNamBackFlapNode.position.set(0, -0.02, -0.18);
+  aodaiNamBackFlapNode.parent = topVariants.aodai_nam;
+
+  const aodaiNamBackUpper = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-back-upper`, {
+    width: 0.43,
+    height: 0.26,
+    depth: 0.022,
+  }, scene);
+  aodaiNamBackUpper.position.set(0, -0.12, 0);
+  aodaiNamBackUpper.rotation.x = 0.05;
+  aodaiNamBackUpper.material = materials.shirt;
+  aodaiNamBackUpper.parent = aodaiNamBackFlapNode;
+
+  const aodaiNamBackLower = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-back-lower`, {
+    width: 0.48,
+    height: 0.26,
+    depth: 0.022,
+  }, scene);
+  aodaiNamBackLower.position.set(0, -0.35, -0.012);
+  aodaiNamBackLower.rotation.x = 0.02;
+  aodaiNamBackLower.material = materials.shirt;
+  aodaiNamBackLower.parent = aodaiNamBackFlapNode;
+
+  const aodaiNamBackTrim = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-back-trim`, {
+    width: 0.485,
+    height: 0.028,
+    depth: 0.028,
+  }, scene);
+  aodaiNamBackTrim.position.set(0, -0.47, -0.016);
+  aodaiNamBackTrim.material = materials.aodaiGoldTrim;
+  aodaiNamBackTrim.parent = aodaiNamBackFlapNode;
+
+  const aodaiNamBackBand = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-back-band`, {
+    width: 0.475,
+    height: 0.042,
+    depth: 0.026,
+  }, scene);
+  aodaiNamBackBand.position.set(0, -0.41, -0.015);
+  aodaiNamBackBand.material = materials.aodaiGoldTrim;
+  aodaiNamBackBand.parent = aodaiNamBackFlapNode;
+
+  [-0.235, 0.235].forEach((ex, eIdx) => {
+    const edgeTrim = MeshBuilder.CreateBox(`${idPrefix}-aodai-nam-b-edge-${eIdx}`, {
+      width: 0.015,
+      height: 0.47,
+      depth: 0.026,
+    }, scene);
+    edgeTrim.position.set(ex * 1.04, -0.24, -0.008);
+    edgeTrim.material = materials.aodaiGoldTrim;
+    edgeTrim.parent = aodaiNamBackFlapNode;
+  });
 
   // 13. ÁO VEST BLAZER DOANH NHÂN SANG TRỌNG (Luxury Executive Blazer & Suit)
   const blazerBody = shirtBody.clone(`${idPrefix}-blazer-body`);
@@ -1973,40 +2305,99 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     ring.parent = nonLaNode;
   });
 
-  // KHĂN ĐÓNG MẤN GẤM HOÀNG GIA (ROYAL TURBAN)
+  // KHĂN ĐÓNG MẤN GẤM HOÀNG GIA (VIETNAMESE ROYAL TURBAN - NẾP GẤM 5 TẦNG)
   const khanDongNode = new TransformNode(`${idPrefix}-khan-dong-node`, scene);
   khanDongNode.parent = headNode;
   khanDongNode.setEnabled(false);
 
-  const khanDongRing = MeshBuilder.CreateTorus(`${idPrefix}-khan-dong-ring`, {
-    diameter: 0.86,
-    thickness: 0.075,
-    tessellation: 24,
+  // Khối mấn gấm ôm khít trán và hộp sọ
+  const khanDongBase = MeshBuilder.CreateCylinder(`${idPrefix}-khan-dong-base`, {
+    height: 0.16,
+    diameterTop: 0.88,
+    diameterBottom: 0.93,
+    tessellation: 32,
   }, scene);
-  khanDongRing.scaling.set(1.0, 0.80, 1.0);
-  khanDongRing.position.set(0, 0.76, 0.01);
-  khanDongRing.rotation.x = -0.10;
-  khanDongRing.material = materials.khanDongNavy;
-  khanDongRing.parent = khanDongNode;
+  khanDongBase.position.set(0, 0.77, 0.01);
+  khanDongBase.rotation.x = -0.12;
+  khanDongBase.material = materials.khanDongNavy;
+  khanDongBase.parent = khanDongNode;
 
-  // Các nếp gấp mấn gấm xếp tầng truyền thống (7 nếp)
-  [0.82, 0.85].forEach((diam, kIdx) => {
+  // 5 Tầng nếp mấn gấm xếp lớp truyền thống (Iconic multi-tier wrapped silk)
+  const khanDongTiers = [
+    { diam: 0.925, y: 0.725, thick: 0.046 },
+    { diam: 0.910, y: 0.755, thick: 0.043 },
+    { diam: 0.895, y: 0.785, thick: 0.040 },
+    { diam: 0.880, y: 0.815, thick: 0.038 },
+    { diam: 0.865, y: 0.845, thick: 0.035 },
+  ];
+  khanDongTiers.forEach(({ diam, y, thick }, kIdx) => {
     const tier = MeshBuilder.CreateTorus(`${idPrefix}-khan-dong-tier-${kIdx}`, {
       diameter: diam,
-      thickness: 0.048,
-      tessellation: 22,
+      thickness: thick,
+      tessellation: 28,
     }, scene);
-    tier.scaling.set(1.0, 0.75, 1.0);
-    tier.position.set(0, 0.80 + kIdx * 0.035, 0.01);
-    tier.rotation.x = -0.10;
+    tier.position.set(0, y, 0.01);
+    tier.rotation.x = -0.12;
     tier.material = materials.khanDongNavy;
     tier.parent = khanDongNode;
+
+    // Viền chỉ vàng nổi bật giữa các nếp mấn hoàng gia
+    if (kIdx < 4) {
+      const goldPiping = MeshBuilder.CreateTorus(`${idPrefix}-khan-dong-piping-${kIdx}`, {
+        diameter: diam + 0.005,
+        thickness: 0.012,
+        tessellation: 24,
+      }, scene);
+      goldPiping.position.set(0, y + 0.015, 0.01);
+      goldPiping.rotation.x = -0.12;
+      goldPiping.material = materials.aodaiGoldTrim;
+      goldPiping.parent = khanDongNode;
+    }
   });
 
-  const khanDongBrooch = MeshBuilder.CreateSphere(`${idPrefix}-khan-dong-brooch`, { diameter: 0.055, segments: 8 }, scene);
-  khanDongBrooch.position.set(0, 0.76, 0.46);
-  khanDongBrooch.material = materials.royalGold;
-  khanDongBrooch.parent = khanDongNode;
+  // KIM BÍNH HOÀNG GIA - NGỌC CÀI MẤN VƯƠNG GIẢ (Imperial Brooch & Ruby Jewel)
+  const broochAnchor = new TransformNode(`${idPrefix}-khan-dong-brooch-anchor`, scene);
+  broochAnchor.position.set(0, 0.765, 0.475);
+  broochAnchor.rotation.x = -0.12;
+  broochAnchor.parent = khanDongNode;
+
+  // Đế hoa văn bát giác mạ vàng (8-pointed golden imperial star plate)
+  const broochStar = MeshBuilder.CreateCylinder(`${idPrefix}-khan-dong-brooch-star`, {
+    height: 0.018,
+    diameter: 0.096,
+    tessellation: 8,
+  }, scene);
+  broochStar.rotation.x = Math.PI / 2;
+  broochStar.material = materials.royalGold;
+  broochStar.parent = broochAnchor;
+
+  // Vòng chuỗi hạt vàng bao quanh ngọc
+  const broochRim = MeshBuilder.CreateTorus(`${idPrefix}-khan-dong-brooch-rim`, {
+    diameter: 0.096,
+    thickness: 0.016,
+    tessellation: 18,
+  }, scene);
+  broochRim.material = materials.aodaiGoldTrim;
+  broochRim.parent = broochAnchor;
+
+  // Viên hồng ngọc hoàng gia Ruby lấp lánh ở tâm (Imperial Ruby cabochon)
+  const broochRuby = MeshBuilder.CreateSphere(`${idPrefix}-khan-dong-brooch-ruby`, {
+    diameter: 0.052,
+    segments: 10,
+  }, scene);
+  broochRuby.scaling.set(1.0, 1.0, 0.6);
+  broochRuby.position.set(0, 0, 0.015);
+  broochRuby.material = materials.royalRed;
+  broochRuby.parent = broochAnchor;
+
+  // Giọt ngọc trai thả rủ quý phái
+  const broochPearlDrop = MeshBuilder.CreateSphere(`${idPrefix}-khan-dong-pearl-drop`, {
+    diameter: 0.030,
+    segments: 8,
+  }, scene);
+  broochPearlDrop.position.set(0, -0.055, 0);
+  broochPearlDrop.material = materials.vestWhite;
+  broochPearlDrop.parent = broochAnchor;
 
   // MŨ NỒI BERET IDOL K-POP (K-POP BERET)
   const kpopBeretNode = new TransformNode(`${idPrefix}-kpop-beret-node`, scene);
@@ -2255,6 +2646,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     wristCuff.parent = elbow;
     wristCuff.setEnabled(false);
     longSleeves.push(wristCuff);
+    wristCuffs.push(wristCuff);
 
     // Bàn tay bánh Mochi tròn nhẵn cực kỳ đáng yêu (Mitten Style)
     const hand = MeshBuilder.CreateSphere(`${idPrefix}-hand-${isLeft ? 'l' : 'r'}`, { diameter: 0.155, segments: 10 }, scene);
@@ -2905,10 +3297,11 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     const isHoodie = resolvedTop === 'hoodie_pastel' || resolvedTop === 'hoodie_oversized' || resolvedTop === 'farmer';
     hoodieDetails.forEach(m => m.setEnabled(isHoodie && resolvedTop !== 'hoodie_oversized'));
     const isLongSleeve = isHoodie || resolvedTop === 'bomber' || resolvedTop === 'knit' || resolvedTop === 'vest' || resolvedTop === 'techwear' || resolvedTop === 'prince' || resolvedTop === 'vampire' || resolvedTop === 'kimono' || resolvedTop === 'aodai_nu' || resolvedTop === 'aodai_nam' || resolvedTop === 'blazer_luxury' || resolvedTop === 'kpop_streetwear';
-    longSleeves.forEach(mesh => mesh.setEnabled(isLongSleeve));
-    const sleeveMaterial = resolvedTop === 'bomber' ? materials.topDark : (resolvedTop === 'vest' || resolvedTop === 'blazer_luxury') ? materials.vestNavy : (resolvedTop === 'techwear' || resolvedTop === 'kpop_streetwear') ? materials.cyberDark : (resolvedTop === 'prince' || resolvedTop === 'aodai_nam') ? materials.vestWhite : resolvedTop === 'vampire' ? materials.royalRed : (resolvedTop === 'kimono' || resolvedTop === 'aodai_nu') ? materials.shirt : resolvedTop === 'knit' ? materials.knit : materials.shirt;
+    const isAodai = resolvedTop === 'aodai_nam' || resolvedTop === 'aodai_nu';
+    const sleeveMaterial = resolvedTop === 'bomber' ? materials.topDark : (resolvedTop === 'vest' || resolvedTop === 'blazer_luxury') ? materials.vestNavy : (resolvedTop === 'techwear' || resolvedTop === 'kpop_streetwear') ? materials.cyberDark : resolvedTop === 'prince' ? materials.vestWhite : isAodai ? materials.shirt : resolvedTop === 'vampire' ? materials.royalRed : (resolvedTop === 'kimono') ? materials.shirt : resolvedTop === 'knit' ? materials.knit : materials.shirt;
     const isBareShoulders = resolvedTop === 'tank' || resolvedTop === 'corset_ballgown';
     [...longSleeves, ...shortSleeves].forEach(mesh => { mesh.material = sleeveMaterial; });
+    wristCuffs.forEach(mesh => { mesh.material = isAodai ? materials.aodaiGoldTrim : sleeveMaterial; });
     shoulderSurfaces.forEach(mesh => { mesh.material = isBareShoulders ? materials.skin : sleeveMaterial; });
     shoulderSurfaces.forEach(mesh => {
       mesh.metadata.sleeveLength = isLongSleeve || isBareShoulders ? 0.63 : 0.24;
@@ -2924,7 +3317,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
       collar.setEnabled(false);
     } else {
       shirtBody.setEnabled(true);
-      collar.setEnabled(resolvedTop !== 'tank');
+      collar.setEnabled(resolvedTop !== 'tank' && !isAodai && resolvedTop !== 'blazer_luxury');
       if (resolvedTop === 'croptop_summer') {
         shirtBody.scaling.set(1.0, 0.72 * (clothingScaled ? proportions.torsoHeightScale : 1), 1.0);
         shirtBody.position.y = 0.28 * (clothingScaled ? proportions.torsoHeightScale : 1);
@@ -2961,6 +3354,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     legOutfitParts.forEach(({ pantLeg, calf, shinPants, kneeSurface, longPants, kneeSock, sockCuff, ankleSockCuff }) => {
       shinPants.setEnabled(false);
       longPants.setEnabled(!isBallgown && (isLongPants || isOveralls));
+      longPants.material = (resolvedBottom === 'aodai_silk') ? materials.aodaiPantsMat : materials.overalls;
       kneeSurface.setEnabled(false);
       if (isBallgown) {
         pantLeg.setEnabled(false);
@@ -3177,7 +3571,8 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   const fishingRodNode = new TransformNode(`${idPrefix}-tool-fishing-rod`, scene);
   fishingRodNode.parent = toolsNode;
   fishingRodNode.position.set(0, -0.05, 0.05);
-  fishingRodNode.rotation.z = -0.18;
+  fishingRodNode.rotation.x = 2.7;
+  fishingRodNode.rotation.z = -0.08;
   const fishingRodGrip = MeshBuilder.CreateCylinder(`${idPrefix}-fishing-rod-grip`, {
     height: 0.28, diameterTop: 0.075, diameterBottom: 0.095, tessellation: 10,
   }, scene);
@@ -3197,6 +3592,9 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   fishingRodTip.position.set(0, 1.37, 0.04);
   fishingRodTip.material = toolMatRodTip;
   fishingRodTip.parent = fishingRodNode;
+  const fishingLineOrigin = new TransformNode(`${idPrefix}-fishing-line-origin`, scene);
+  fishingLineOrigin.parent = fishingRodNode;
+  fishingLineOrigin.position.set(0, 1.45, 0.04);
   fishingRodNode.setEnabled(false);
 
   if (shadowGenerator) {
@@ -3219,6 +3617,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   let fishingActionDuration = 0.9;
   let onFishingActionEnd = null;
   let fishingPose = false;
+  let fishingCatchPose = false;
 
   function updateToolVisibility() {
     const effective = currentAction;
@@ -3226,7 +3625,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     waterCanNode.setEnabled(effective === 'water');
     seedBagNode.setEnabled(effective === 'seed');
     basketNode.setEnabled(effective === 'harvest' || effective === 'celebrate');
-    fishingRodNode.setEnabled(Boolean(fishingAction || fishingPose));
+    fishingRodNode.setEnabled(Boolean((fishingAction && fishingAction !== 'catch') || fishingPose));
   }
 
   function resetFishingPose() {
@@ -3247,6 +3646,17 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     rightLeg.rotation.x *= 0.82;
 
     if (!fishingAction) {
+      if (fishingCatchPose) {
+        // Both palms converge below the fish in front of the chest.
+        rightArm.rotation.x = -1.18;
+        rightArm.rotation.y = 0.08;
+        rightArm.rotation.z = 0.42;
+        leftArm.rotation.x = -1.18;
+        leftArm.rotation.y = -0.08;
+        leftArm.rotation.z = -0.42;
+        headNode.rotation.x = -0.12;
+        return;
+      }
       rightArm.rotation.x = -0.95;
       rightArm.rotation.y = 0.18;
       rightArm.rotation.z = -0.12;
@@ -3283,13 +3693,13 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
       leftArm.rotation.y = -0.18;
       torsoNode.rotation.x = 0.05 + Math.abs(pump) * 0.05;
     } else if (fishingAction === 'catch') {
-      const lift = Math.sin(progress * Math.PI);
-      rightArm.rotation.x = -1.2 - lift * 1.0;
-      rightArm.rotation.z = -0.25 - lift * 0.15;
-      leftArm.rotation.x = -1.0 - lift * 0.72;
-      leftArm.rotation.z = 0.15 + lift * 0.12;
-      torsoNode.position.y = 0.60 + lift * 0.15;
-      headNode.rotation.x = -lift * 0.18;
+      const lift = 1 - Math.pow(1 - progress, 3);
+      rightArm.rotation.x = -1.1 - lift * 0.08;
+      rightArm.rotation.z = 0.2 + lift * 0.22;
+      leftArm.rotation.x = -1.0 - lift * 0.18;
+      leftArm.rotation.z = -0.2 - lift * 0.22;
+      torsoNode.position.y = 0.60 + Math.sin(progress * Math.PI) * 0.08;
+      headNode.rotation.x = -lift * 0.12;
     }
   }
 
@@ -3309,6 +3719,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     faceSystem,
     joints: { elbows: armJoints, knees: legJoints },
     toolGrip: toolsNode,
+    fishingLineOrigin,
 
     setOutfitColor(color) {
       setMaterialColor(materials.shirt, color);
@@ -3401,6 +3812,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     },
     playFishingAction(actionType, onEndCallback = null, durationOverride = null) {
       currentAction = null;
+      fishingCatchPose = false;
       fishingAction = actionType;
       fishingPose = false;
       fishingActionTime = 0;
@@ -3414,11 +3826,20 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
       currentAction = null;
       fishingAction = null;
       fishingPose = Boolean(active);
+      fishingCatchPose = false;
+      updateToolVisibility();
+    },
+    setFishingCatchPose() {
+      currentAction = null;
+      fishingAction = null;
+      fishingPose = false;
+      fishingCatchPose = true;
       updateToolVisibility();
     },
     clearFishingPose() {
       fishingAction = null;
       fishingPose = false;
+      fishingCatchPose = false;
       onFishingActionEnd = null;
       resetFishingPose();
       updateToolVisibility();
@@ -3464,7 +3885,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
       duckFloatieNode.rotation.y = Math.sin(animTimer * 4.0) * 0.08;
       duckFloatieNode.rotation.z = Math.sin(animTimer * 2.5) * 0.04;
 
-      if (fishingAction || fishingPose) {
+      if (fishingAction || fishingPose || fishingCatchPose) {
         if (fishingAction) fishingActionTime += delta;
         animateFishing(delta);
         if (fishingAction && fishingActionTime >= fishingActionDuration) {
@@ -3686,6 +4107,28 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
           royalCapeNode.rotation.x = 0.22 + Math.abs(Math.sin(walkCycle)) * 0.16;
           royalCapeNode.rotation.z = Math.sin(walkCycle) * 0.08;
         }
+
+        // Tà áo dài hoàng triều thướt tha phấp phới tự nhiên khi di chuyển
+        if (topVariants.aodai_nam?.isEnabled() && aodaiNamFrontFlapNode && aodaiNamBackFlapNode) {
+          const flapFlutter = Math.sin(walkCycle) * 0.055;
+          const runLift = (gait ? gait.run : 0) * 0.085;
+          aodaiNamFrontFlapNode.rotation.x = -0.05 - runLift + flapFlutter;
+          aodaiNamFrontFlapNode.rotation.z = Math.sin(walkCycle * 0.5) * 0.025;
+          aodaiNamBackFlapNode.rotation.x = 0.05 + runLift - flapFlutter;
+          aodaiNamBackFlapNode.rotation.z = -Math.sin(walkCycle * 0.5) * 0.025;
+          if (aodaiNamPendantNode) {
+            aodaiNamPendantNode.rotation.z = Math.sin(walkCycle * 1.5) * 0.16;
+            aodaiNamPendantNode.rotation.x = Math.cos(walkCycle * 1.5) * 0.12;
+          }
+        }
+        if (topVariants.aodai_nu?.isEnabled() && aodaiNuFrontFlapNode && aodaiNuBackFlapNode) {
+          const flapFlutter = Math.sin(walkCycle) * 0.065;
+          const runLift = (gait ? gait.run : 0) * 0.095;
+          aodaiNuFrontFlapNode.rotation.x = -0.06 - runLift + flapFlutter;
+          aodaiNuFrontFlapNode.rotation.z = Math.sin(walkCycle * 0.5) * 0.030;
+          aodaiNuBackFlapNode.rotation.x = 0.06 + runLift - flapFlutter;
+          aodaiNuBackFlapNode.rotation.z = -Math.sin(walkCycle * 0.5) * 0.030;
+        }
         if (faerieWingsNode.isEnabled()) {
           faerieWingsNode.rotation.y = Math.sin(animTimer * 12) * 0.28;
         }
@@ -3719,6 +4162,26 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
           royalCapeNode.rotation.x = 0.05 + Math.sin(idleCycle) * 0.03;
           royalCapeNode.rotation.z = 0;
         }
+
+        // Tà áo dài và ngọc bội đung đưa êm dịu khi đứng thở
+        if (topVariants.aodai_nam?.isEnabled() && aodaiNamFrontFlapNode && aodaiNamBackFlapNode) {
+          const flapBreathe = Math.sin(idleCycle) * 0.018;
+          aodaiNamFrontFlapNode.rotation.x = -0.05 + flapBreathe;
+          aodaiNamFrontFlapNode.rotation.z = 0;
+          aodaiNamBackFlapNode.rotation.x = 0.05 - flapBreathe;
+          aodaiNamBackFlapNode.rotation.z = 0;
+          if (aodaiNamPendantNode) {
+            aodaiNamPendantNode.rotation.z = Math.sin(idleCycle * 0.8) * 0.04;
+            aodaiNamPendantNode.rotation.x = 0;
+          }
+        }
+        if (topVariants.aodai_nu?.isEnabled() && aodaiNuFrontFlapNode && aodaiNuBackFlapNode) {
+          const flapBreathe = Math.sin(idleCycle) * 0.022;
+          aodaiNuFrontFlapNode.rotation.x = -0.06 + flapBreathe;
+          aodaiNuFrontFlapNode.rotation.z = 0;
+          aodaiNuBackFlapNode.rotation.x = 0.06 - flapBreathe;
+          aodaiNuBackFlapNode.rotation.z = 0;
+        }
         if (faerieWingsNode.isEnabled()) {
           faerieWingsNode.rotation.y = Math.sin(animTimer * 6) * 0.18;
         }
@@ -3748,7 +4211,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
         torsoNode.position.y += proportions.hipHeight - 0.60;
         const blend = 1 - Math.exp(-delta / CHARACTER_ANIMATION_CONFIG.locomotionBlendSeconds);
         animatedJoints.forEach((joint, i) => Vector3.LerpToRef(previousRotations[i], joint.rotation, blend, joint.rotation));
-        if (!currentAction && !fishingAction && !fishingPose) {
+        if (!currentAction && !fishingAction && !fishingPose && !fishingCatchPose) {
           Vector3.LerpToRef(previousTorsoRotation,torsoNode.rotation,blend,torsoNode.rotation);
           Vector3.LerpToRef(previousHeadRotation,headNode.rotation,blend,headNode.rotation);
           if (isMoving || gait.weight > .001) {

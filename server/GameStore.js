@@ -22,6 +22,7 @@ import {
 import { calculateVerifiedCustomizationCost, normalizeCustomization } from '../shared/fashionConfig.js';
 import { validateEquippedCustomization } from '../shared/fashionValidation.js';
 import { applyCommunityReward } from './CommunityRewards.js';
+import { claimMission, freshDailyMissions, normalizeMissions } from '../shared/missions.js';
 
 const mongo = new MongoClient(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017', {
   serverSelectionTimeoutMS: 5000,
@@ -97,6 +98,7 @@ const initialProgress = () => ({
   },
   stats: { planted: 0, watered: 0, harvested: 0, orders: 0, animalsFed: 0, crafted: 0 },
   claimedQuests: [], completedOrders: [], unlockedPlots: 0, barnLevel: 0, toolLevel: 1,
+  missions: { main: { claimed: [] }, daily: null },
   outfit: 'starter', ownedOutfits: ['starter'], vehicle: 'walk', ownedVehicles: ['walk'],
   homeTier: 0, ownedHomes: [], casinoPlays: 0,
   onboarding: { characterCreated: false, step: 0, freeSeedsReceived: false, completed: false, bicycleAwarded: false },
@@ -128,6 +130,7 @@ function docToPlayer(doc, sessionToken = null) {
   // without overwriting the player's current inventory.
   progress.inventory = { ...initialProgress().inventory, ...(doc.progress?.inventory || {}) };
   progress.stats = { ...initialProgress().stats, ...(doc.progress?.stats || {}) };
+  progress.missions = normalizeMissions(doc.progress?.missions, progress.stats);
   progress.fishing = normalizeFishingState(progress.fishing);
   progress.level = levelFromXp(progress.xp);
   const livestock = (doc.livestock || initialLivestock()).map((a, index) => ({ ...a, id: a.id || `legacy-${a.species}-${index}` }));
@@ -288,6 +291,7 @@ export async function performAction(playerId, action, payload = {}, context = {}
   else if (action === 'sell_item') { const crop = CROPS[payload.id]; const amount = Number(payload.amount ?? 1); if (!Number.isSafeInteger(amount) || amount < 1 || amount > 99) return fail('Số lượng bán phải là số nguyên từ 1 đến 99.'); if (!crop || (p.inventory[payload.id] || 0) < amount) return fail('Không đủ nông sản.'); p.inventory[payload.id] -= amount; p.coins += crop.sellPrice * amount; }
   else if (action === 'deliver_order') { const order = ORDERS[payload.id]; if (!order || p.completedOrders.includes(payload.id) || !requireItems(p, order.items)) return fail('Không thể giao đơn hàng.'); consume(p, order.items); p.coins += order.coins; p.xp += order.xp; p.stats.orders += 1; p.completedOrders.push(payload.id); if (p.onboarding.step === 4) p.onboarding.step = 5; }
   else if (action === 'claim_quest') { const quest = QUESTS[payload.id]; if (!quest || p.claimedQuests.includes(payload.id) || p.stats[quest.stat] < quest.goal) return fail('Nhiệm vụ chưa hoàn thành.'); p.coins += quest.coins; p.xp += quest.xp; p.claimedQuests.push(payload.id); }
+  else if (action === 'claim_mission') { const error = claimMission(p, payload.kind, payload.id); if (error) return fail(error); actionResult = { missionClaimed: { kind: payload.kind, id: payload.id } }; }
   else if (action === 'craft') { const recipe = RECIPES[payload.id]; if (!recipe || !requireItems(p, recipe.inputs)) return fail('Không đủ nguyên liệu.'); consume(p, recipe.inputs); p.inventory[payload.id] += 1; p.xp += recipe.xp; p.stats.crafted += 1; }
   else if (action === 'sell_product') { const recipe = RECIPES[payload.id]; if (!recipe || !p.inventory[payload.id]) return fail('Không có sản phẩm.'); p.inventory[payload.id] -= 1; p.coins += recipe.sell; }
   else if (action === 'upgrade_land') { const item = EXPANSIONS.find(v => v.plots > p.unlockedPlots); if (!item || p.level < item.level || p.coins < item.cost) return fail('Chưa đủ điều kiện mở rộng đất.'); p.coins -= item.cost; p.unlockedPlots = item.plots; }
@@ -433,7 +437,7 @@ export async function performAction(playerId, action, payload = {}, context = {}
   }
   else if (action === 'claim_seeds') { if (p.onboarding.step !== 1) return fail('Chưa đến bước nhận hạt giống.'); if (!p.onboarding.freeSeedsReceived) { p.freeSeeds += 3; p.coins += 50; p.onboarding.freeSeedsReceived = true; } p.onboarding.step = 2; }
   else if (action === 'advance_onboarding') { const step = Number(payload.step); if (step !== 4 || p.onboarding.step !== 3) return fail('Không thể bỏ qua bước hướng dẫn.'); p.onboarding.step = 4; }
-  else if (action === 'complete_onboarding') { if (p.onboarding.step !== 5) return fail('Bạn chưa hoàn thành chuỗi hướng dẫn.'); p.onboarding.completed = true; p.onboarding.step = 6; if (!p.onboarding.bicycleAwarded) { p.coins += 200; p.xp += 80; if (!p.ownedVehicles.includes('bike')) p.ownedVehicles.push('bike'); p.onboarding.bicycleAwarded = true; } p.vehicle = 'bike'; }
+  else if (action === 'complete_onboarding') { if (p.onboarding.step !== 5) return fail('Bạn chưa hoàn thành chuỗi hướng dẫn.'); p.onboarding.completed = true; p.onboarding.step = 6; p.missions.daily = freshDailyMissions(p.stats); if (!p.onboarding.bicycleAwarded) { p.coins += 200; p.xp += 80; if (!p.ownedVehicles.includes('bike')) p.ownedVehicles.push('bike'); p.onboarding.bicycleAwarded = true; } p.vehicle = 'bike'; }
   else if (action === 'reset_onboarding') { p.onboarding = { ...p.onboarding, characterCreated: true, step: 1, completed: false }; }
   else if (action === 'help_friend') return fail('Hãy tưới cây trong nông trại bạn bè để nhận thưởng qua hành động đã xác thực.');
   else if (['claim_daily_reward','redeem_giftcode'].includes(action)) {

@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb';
-import { calculateLandPrice, landPricingRadius } from '../shared/landConfig.js';
+import { calculateLandPrice, firstLandPurchasePrice, landPricingRadius } from '../shared/landConfig.js';
 import { FARM_CONFIG } from '../shared/farmConfig.js';
 import { farmGateOpen } from '../shared/farmSecurity.js';
 import { decodeFarmId, worldFarmId, worldFarmNumber } from '../shared/villageLayout.js';
@@ -155,13 +155,14 @@ export async function purchaseFarm(playerId, farmId) {
   if (existing) return { error: 'Bạn đã sở hữu một lô đất.' };
   const listing = (await listLandMarket()).find(l => l.farmId === farmId);
   if (!listing?.available) return { error: 'Lô đất không hợp lệ hoặc đã có người mua.' };
+  const purchasePrice = firstLandPurchasePrice(listing.price);
   const village = await villages.findOne({ villageId: listing.villageId });
   const purchaseId = `${playerId}:${farmId}`;
   const doc = {
     playerId,
     villageId: listing.villageId,
     lot: listing.lot,
-    status: 'pending', purchaseId, purchasePrice: listing.price,
+    status: 'pending', purchaseId, purchasePrice,
     layoutVersion: FARM_LAYOUT_VERSION,
     activePlots: FARM_ACTIVE_PLOTS,
     houseType: 'starter-house', houseTier: 1,
@@ -171,9 +172,9 @@ export async function purchaseFarm(playerId, farmId) {
   try { await assignments.insertOne(doc); }
   catch (error) { if (error.code === 11000) return { error: 'Lô đất đang được mua hoặc bạn đã sở hữu đất.' }; throw error; }
   // Unique reservations protect both parcel and buyer. Revision blocks stale economy writes.
-  const paid = await players.updateOne({ playerId, 'progress.onboarding.characterCreated': true, 'progress.coins': { $gte: listing.price }, landPurchase: { $exists: false } }, {
-    $inc: { 'progress.coins': -listing.price, revision: 1 },
-    $set: { landPurchase: { purchaseId, farmId, price: listing.price, purchasedAt: Date.now() }, 'progress.unlockedPlots': 12, 'progress.homeTier': 1, 'progress.barnLevel': 1, 'progress.ownedHomes': ['starter-cabin'], updatedAt: Date.now() },
+  const paid = await players.updateOne({ playerId, 'progress.onboarding.characterCreated': true, 'progress.coins': { $gte: purchasePrice }, landPurchase: { $exists: false } }, {
+    $inc: { 'progress.coins': -purchasePrice, revision: 1 },
+    $set: { landPurchase: { purchaseId, farmId, price: purchasePrice, listPrice: listing.price, purchasedAt: Date.now() }, 'progress.unlockedPlots': 12, 'progress.homeTier': 1, 'progress.barnLevel': 1, 'progress.ownedHomes': ['starter-cabin'], updatedAt: Date.now() },
   });
   if (!paid.modifiedCount) {
     await assignments.deleteOne({ playerId, purchaseId, status: 'pending' });

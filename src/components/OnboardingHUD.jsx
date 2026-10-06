@@ -12,7 +12,9 @@ import {
 
 export function OnboardingHUD({
   progress,
+  hasFarm = false,
   targetDistance,
+  onOpenLand,
   onNavigateTarget,
   onTalkToElder,
   onOpenGuide,
@@ -24,7 +26,7 @@ export function OnboardingHUD({
 
   const step = onboarding.step;
 
-  let stepNumber = 1;
+  let stepNumber = 2;
   let title = 'Gặp Oliver';
   let desc = 'Đến đài phun nước trung tâm gặp Quản Gia nhận quà.';
   let targetName = 'Oliver';
@@ -32,8 +34,16 @@ export function OnboardingHUD({
   let onAction = onTalkToElder;
   let avatarIcon = <Icon3dManager size={36} />;
 
-  if (step === ONBOARDING_STEPS.FIRST_PLANT) {
-    stepNumber = 2;
+  if (!hasFarm) {
+    stepNumber = 1;
+    title = 'Chọn đất đầu tiên';
+    desc = 'Xem giá sau ưu đãi và chọn một lô đất vừa túi tiền.';
+    targetName = 'Bản đồ đất';
+    actionText = 'XEM ĐẤT';
+    avatarIcon = <Icon3dCompass size={36} />;
+    onAction = onOpenLand;
+  } else if (step === ONBOARDING_STEPS.FIRST_PLANT) {
+    stepNumber = 3;
     avatarIcon = <Icon3dCarrot size={36} />;
     targetName = 'Ruộng nhà';
     actionText = 'ĐI!';
@@ -41,13 +51,13 @@ export function OnboardingHUD({
 
     if (progress.stats?.planted === 0) {
       title = 'Gieo Cà Rốt';
-      desc = 'Dùng Cuốc xới đất (2) rồi gieo hạt giống (3).';
+      desc = 'Đến ruộng, xới một ô đất rồi gieo hạt cà rốt.';
     } else if (progress.stats?.watered === 0) {
       title = 'Tưới Nước';
-      desc = 'Dùng Bình tưới (4) tưới đẫm nước cho luống rau.';
+      desc = 'Chọn bình tưới và tưới ô vừa gieo.';
     } else if (progress.stats?.harvested === 0) {
       title = 'Thu Hoạch';
-      desc = 'Đợi 8 giây cho cà rốt lớn rồi bấm thu hoạch (5).';
+      desc = 'Cây chín sau khoảng 8 giây. Thu hoạch khi hiện biểu tượng sẵn sàng.';
     } else {
       title = 'Báo Cáo Oliver';
       desc = 'Mang cà rốt tươi ngon về báo cáo Quản Gia!';
@@ -57,7 +67,7 @@ export function OnboardingHUD({
       onAction = onTalkToElder;
     }
   } else if (step === ONBOARDING_STEPS.EXPLAIN_SYSTEMS) {
-    stepNumber = 3;
+    stepNumber = 4;
     title = 'Mẹo Nông Trại';
     desc = 'Nghe Oliver chia sẻ bí quyết làm giàu và vận tải.';
     targetName = 'Oliver';
@@ -65,7 +75,7 @@ export function OnboardingHUD({
     actionText = 'NGHE!';
     onAction = onTalkToElder;
   } else if (step === ONBOARDING_STEPS.DELIVER_ORDER) {
-    stepNumber = 4;
+    stepNumber = 5;
     title = 'Giao Đơn Xe Tải';
     desc = 'Mở Bảng Đơn Hàng giao cà rốt lấy Xu x3.';
     targetName = 'Bảng Đơn';
@@ -73,7 +83,7 @@ export function OnboardingHUD({
     actionText = 'GIAO!';
     onAction = onOpenOrders;
   } else if (step === ONBOARDING_STEPS.CLAIM_REWARD) {
-    stepNumber = 5;
+    stepNumber = 6;
     title = 'Nhận Xe Đạp!';
     desc = 'Gặp Oliver nhận chứng chỉ tốt nghiệp & Xe Đạp.';
     targetName = 'Oliver';
@@ -87,7 +97,7 @@ export function OnboardingHUD({
   return (
     <aside
       className={`pt-candy-quest-tracker ${collapsed ? 'is-collapsed' : ''}`}
-      aria-label="Nhiệm vụ tân thủ Play Together"
+      aria-label="Nhiệm vụ tân thủ"
     >
       {/* Collapsed Pill State */}
       {collapsed ? (
@@ -100,11 +110,11 @@ export function OnboardingHUD({
         >
           <div className="pt-collapsed-avatar">
             {avatarIcon}
-            <span className="pt-quest-step-badge">{stepNumber}/5</span>
+            <span className="pt-quest-step-badge">{stepNumber}/6</span>
           </div>
           <div className="pt-collapsed-text">
             <b>{title}</b>
-            <small>{isNear ? 'Đã đến!' : targetDistance ? `${targetDistance}m` : targetName}</small>
+            <small>{hasFarm && isNear ? 'Đã đến!' : hasFarm && targetDistance != null ? `${targetDistance}m` : targetName}</small>
           </div>
           <span className="pt-collapsed-expand-btn">▶</span>
         </button>
@@ -115,7 +125,7 @@ export function OnboardingHUD({
           <div className="pt-quest-header-strip">
             <div className="pt-quest-step-pill">
               <Icon3dSparkleStar size={12} />
-              <span>Nhiệm Vụ Tân Thủ ({stepNumber}/5)</span>
+              <span>Nhiệm Vụ Tân Thủ ({stepNumber}/6)</span>
             </div>
 
             <div className="pt-quest-top-actions">

@@ -61,6 +61,26 @@ for (const selector of ['input', '[role="dialog"]']) {
   player.update(1 / 60);
   assert.equal(player.root.position.z, before.z, `${selector} must retain keyboard control`);
 }
+for (const selector of ['input', '[role="dialog"]']) {
+  const focused = new MockElement();
+  focused.closest = query => query.includes(selector) ? focused : null;
+  player.root.position.set(0, 0, 0);
+  press('KeyW');
+  player.update(1 / 60);
+  const beforeFocus = player.root.position.z;
+  document.activeElement = focused;
+  player.update(1 / 60);
+  assert.equal(player.root.position.z, beforeFocus, `${selector} pauses a held movement key`);
+  document.activeElement = null;
+  player.update(1 / 60);
+  assert.ok(player.root.position.z < beforeFocus, `${selector} releasing focus resumes the same held key without another press`);
+  document.activeElement = focused;
+  release('KeyW');
+  document.activeElement = null;
+  const afterRelease = player.root.position.z;
+  player.update(1 / 60);
+  assert.equal(player.root.position.z, afterRelease, 'keyup while HUD has focus cannot leave a stuck key');
+}
 for (const [key, axis, sign] of [['KeyW', 'z', -1], ['KeyS', 'z', 1], ['KeyA', 'x', 1], ['KeyD', 'x', -1]]) {
   player.root.position.set(0, 0, 0);
   press(key);

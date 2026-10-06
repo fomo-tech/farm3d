@@ -71,19 +71,29 @@ export function VehiclePreview({ id }) {
     document.addEventListener('visibilitychange', visibility);
     return () => { resize.disconnect(); intersection.disconnect(); document.removeEventListener('visibilitychange', visibility); rig.current = null; vehicles.dispose(); scene.dispose(); engine.dispose(); };
   }, []);
-  return <div className="vehicle-preview"><canvas ref={canvas} aria-label="Xem xe và animation 3D · kéo để xoay" /><button type="button" aria-pressed={playing} onClick={() => { driving.current = !driving.current; dirty.current = true; setPlaying(driving.current); }}>{playing ? 'Dừng animation' : 'Xem animation'}</button><small>Kéo để xoay · cuộn để zoom</small></div>;
+  return <div className="vehicle-preview"><canvas ref={canvas} aria-label="Xem xe 3D · kéo để xoay" /><span className="vehicle-preview-badge">XEM THỬ 3D</span><div className="vehicle-preview-controls"><button type="button" aria-pressed={playing} onClick={() => { driving.current = !driving.current; dirty.current = true; setPlaying(driving.current); }}>{playing ? 'Tạm dừng' : 'Chạy thử'}</button><small>Kéo để xoay · cuộn để phóng to</small></div></div>;
 }
 
 export function VehicleShowroom({ vehicles, owned, current, coins, connected, onBuy }) {
   const [selected, setSelected] = useState(current === 'walk' ? 'bike' : current);
   const vehicle = vehicles.find(item => item.id === selected) || vehicles[0];
+  if (!vehicle) return <p>Chưa có phương tiện để trưng bày.</p>;
   const isOwned = owned.includes(vehicle.id);
+  const isEquipped = current === vehicle.id;
+  const missingCoins = Math.max(0, vehicle.cost - coins);
   return <div className="vehicle-showroom">
+    <header className="vehicle-showroom-heading"><div><span>ĐẠI LÝ PHƯƠNG TIỆN</span><h2>Chọn xe, xem thử rồi lên đường</h2></div><div className="vehicle-wallet">Xu của bạn <strong>{Number(coins || 0).toLocaleString('vi-VN')}</strong></div></header>
     <VehiclePreview id={vehicle.id} />
-    <section className="vehicle-showroom-info"><small>{vehicle.category}</small><h3>{vehicle.name}</h3><p>Tốc độ {vehicle.speed} · {isOwned ? 'Đã sở hữu' : `${vehicle.cost.toLocaleString('vi-VN')} xu`}</p>
-      <button type="button" disabled={!connected || current === vehicle.id || (!isOwned && coins < vehicle.cost)} onClick={() => onBuy(vehicle)}>{current === vehicle.id ? 'Đang sử dụng' : isOwned ? 'Lên xe' : 'Mua phương tiện'}</button>
-      {!connected && <small>Đang chờ kết nối server…</small>}
+    <section className="vehicle-showroom-info" aria-live="polite">
+      <span className="vehicle-category">{vehicle.category}</span>
+      <h3>{vehicle.name}</h3>
+      <div className="vehicle-spec"><span>Tốc độ</span><strong>{vehicle.speed} m/giây</strong></div>
+      <div className="vehicle-spec"><span>Trạng thái</span><strong>{isEquipped ? 'Đang sử dụng' : isOwned ? 'Đã sở hữu' : 'Chưa sở hữu'}</strong></div>
+      <div className="vehicle-price"><span>{isOwned ? 'Xe của bạn' : 'Giá bán'}</span><strong>{isOwned ? 'Đã mở khóa' : `${vehicle.cost.toLocaleString('vi-VN')} xu`}</strong></div>
+      <button type="button" disabled={!connected || isEquipped || (!isOwned && missingCoins > 0)} onClick={() => onBuy(vehicle)}>{isEquipped ? 'Đang sử dụng' : isOwned ? 'Lên xe' : 'Mua xe'}</button>
+      {!connected && <p className="vehicle-notice">Đang chờ kết nối máy chủ…</p>}
+      {connected && !isOwned && missingCoins > 0 && <p className="vehicle-notice">Cần thêm {missingCoins.toLocaleString('vi-VN')} xu để mua xe này.</p>}
     </section>
-    <nav aria-label="Chọn phương tiện">{vehicles.map(item => <button type="button" key={item.id} aria-pressed={item.id === vehicle.id} onClick={() => setSelected(item.id)}><i>{item.icon}</i><b>{item.name}</b><small>{owned.includes(item.id) ? 'Đã sở hữu' : `${item.cost.toLocaleString('vi-VN')} xu`}</small></button>)}</nav>
+    <nav aria-label="Chọn phương tiện"><div className="vehicle-list-heading"><strong>Các mẫu xe</strong><small>{vehicles.length} phương tiện</small></div><div className="vehicle-list-track">{vehicles.map(item => <button type="button" key={item.id} aria-pressed={item.id === vehicle.id} onClick={() => setSelected(item.id)}><i aria-hidden="true">{item.icon}</i><b>{item.name}</b><small>{current === item.id ? 'Đang dùng' : owned.includes(item.id) ? 'Đã có' : `${item.cost.toLocaleString('vi-VN')} xu`}</small></button>)}</div></nav>
   </div>;
 }

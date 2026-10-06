@@ -5,6 +5,7 @@ import { MongoClient } from 'mongodb';
 import { WebSocket } from 'ws';
 import { farmTilePosition } from '../shared/farmLayout.js';
 import { CROPS } from '../shared/farmConfig.js';
+import { firstLandPurchasePrice } from '../shared/landConfig.js';
 
 // Only an isolated, generated test database is used; never touches live player data.
 const databaseName = `farm_land_test_${randomUUID().replaceAll('-', '')}`;
@@ -70,6 +71,8 @@ try {
   const ordered = [...lots].sort((x, y) => Math.hypot(x.x, x.z) - Math.hypot(y.x, y.z));
   for (let i = 1; i < ordered.length; i++) assert.ok(ordered[i - 1].price >= ordered[i].price);
   const cheapest = ordered.at(-1); assert.equal(cheapest.price, 150);
+  const starterOption = lots.find(lot => lot.price === 500 && lot.available);
+  assert.ok(starterOption, 'an additional affordable starter option exists');
   assert.equal((await a.action('buy_land', { farmId: ordered[0].farmId, price: 0 })).type, 'action_error');
   assert.equal((await a.action('buy_land', { farmId: 'farm_999999', price: 0 })).type, 'action_error');
   const race = await Promise.all([a.action('buy_land', { farmId: cheapest.farmId, price: 0 }), b.action('buy_land', { farmId: cheapest.farmId, price: 0 })]);
@@ -77,6 +80,12 @@ try {
   assert.equal(race.filter(r => r.type === 'action_error').length, 1);
   const winner = race[0].type === 'account_state' ? a : b;
   const loser = winner === a ? b : a;
+  const starterBuyer = await connect();
+  assert.equal((await starterBuyer.action('character_create', { name: 'Starter Buyer' })).type, 'account_state');
+  assert.equal((await starterBuyer.action('buy_land', { farmId: starterOption.farmId, price: 0 })).type, 'account_state');
+  const starterReceipt = await db.collection('farm_assignments').findOne({ playerId: starterBuyer.playerId });
+  assert.equal(starterReceipt.purchasePrice, firstLandPurchasePrice(starterOption.price));
+  assert.equal((await db.collection('players').findOne({ playerId: starterBuyer.playerId })).progress.coins, 180 - starterReceipt.purchasePrice);
   const owner = await db.collection('farm_assignments').findOne({ playerId: winner.playerId });
   assert.equal(owner.status, 'owned'); assert.equal(owner.purchasePrice, 150);
   const winnerDoc = await db.collection('players').findOne({ playerId: winner.playerId });

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { LAND_CONFIG, validateLandConfig, calculateLandPrice, landPricingRadius } from '../shared/landConfig.js';
+import { LAND_CONFIG, validateLandConfig, calculateLandPrice, firstLandPurchasePrice, landPricingRadius } from '../shared/landConfig.js';
 import { WORLD_VILLAGES, worldFarmId } from '../shared/villageLayout.js';
 import { farmLotPosition } from '../shared/farmLayout.js';
 const lots = WORLD_VILLAGES.flatMap(v => Array.from({ length: 24 }, (_, index) => ({
@@ -17,6 +17,10 @@ assert.equal(calculateLandPrice(lot, radius, config), 1234, 'exact override take
 assert.equal(calculateLandPrice({ ...lot, x: radius * 10 }, radius), LAND_CONFIG.minPrice);
 assert.equal(calculateLandPrice({ ...lot, x: 0, z: 0 }, radius), LAND_CONFIG.maxPrice);
 assert.equal(landPricingRadius([]), 1);
+assert.equal(firstLandPurchasePrice(150), 150, 'starter land still has an entry cost');
+assert.equal(firstLandPurchasePrice(500), 150, 'starter assistance makes a 500-xu lot affordable on day one');
+assert.equal(firstLandPurchasePrice(1700), 1350, 'premium land retains a substantial premium');
+assert.ok(lots.filter(l => firstLandPurchasePrice(calculateLandPrice(l, radius)) <= 180).length > 100, 'new players have many affordable choices');
 for (const change of [{ minPrice: -1 }, { maxPrice: 100 }, { roundingStep: 0 }, { center: { x: NaN, z: 0 } }, { villageMultipliers: { test: 0 } }, { overrides: { farm_000001: -10 } }]) {
   assert.throws(() => validateLandConfig({ ...structuredClone(LAND_CONFIG), ...change }), /Land config/);
 }

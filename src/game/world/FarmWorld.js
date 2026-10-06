@@ -248,10 +248,12 @@ function* createInteriorSteps(scene, kind, config, shadows) {
     const firstMeshIndex = scene.meshes.length;
     yield* createCasinoLoungeInterior(scene, config, shadows);
     const venueMeshes = scene.meshes.slice(firstMeshIndex);
-    venueMeshes.forEach(mesh => {
+    for (let index = 0; index < venueMeshes.length; index++) {
+      const mesh = venueMeshes[index];
       mesh.metadata = { ...(mesh.metadata || {}), interiorVenue: kind };
       mesh.setEnabled(false);
-    });
+      if ((index + 1) % 24 === 0) yield;
+    }
     return venueMeshes;
   }
   const firstMeshIndex = scene.meshes.length;
@@ -540,7 +542,6 @@ export class FarmWorld {
         const nearby = this.busRoute?.getNearbyBoardableBus(this.player?.root?.position);
         if (nearby) {
           this.boardBus(nearby.bus.id);
-          this.onStatus?.(`Đã lên ${nearby.bus.routeName}!`);
           return;
         }
       }
@@ -550,9 +551,8 @@ export class FarmWorld {
         return;
       }
       if (event.code === 'KeyE') {
-        if (event.code === 'KeyE' && this.busRoute?.isPlayerRiding()) {
-          this.busRoute.alightBus(this.player.root);
-          this.onStatus?.('Đã xuống xe buýt');
+        if (this.busRoute?.isPlayerRiding()) {
+          if (!this.alightBus()) this.onStatus?.('Chỉ có thể xuống xe khi xe dừng tại trạm.');
           return;
         }
         if (event.code === 'KeyE' && this.currentVenue && this.interactContext()) return;
@@ -610,15 +610,15 @@ export class FarmWorld {
         const nearby=this.busRoute.getNearbyBoardableBus(this.player.root.position);
         if(!nearby || nearby.bus.id!==busId || this.callbacks.onBusBoard?.(busId)===false)return false;
         const res = this.busRoute.boardBus(busId, this.player.root);
-        if (res) this.onStatus?.('Đã lên xe buýt');
+        if (res) this.onStatus?.('Đã lên xe buýt mui trần ngắm cảnh');
         return res;
       }
       return false;
     };
 
-    this.alightBus = () => {
+    this.alightBus = (force = false) => {
       if (this.busRoute && this.player) {
-        const res = this.busRoute.alightBus(this.player.root);
+        const res = this.busRoute.alightBus(this.player.root, force);
         if (res) this.onStatus?.('Đã xuống xe buýt');
         return res;
       }
@@ -1017,8 +1017,8 @@ export class FarmWorld {
     this.shadows = shadows;
     // Limit shadow draw calls during construction too, not only after boot.
     this.getNearbyShadowCount = installNearbyShadows(shadows, () => this.player?.root.position, {
-      radius: this.isMobile ? 22 : 36,
-      maxCasters: this.isMobile ? 16 : (this.graphicsQuality === 'ultra' ? 32 : 24),
+      radius: this.isMobile ? 22 : 32,
+      maxCasters: this.isMobile ? 16 : 24,
     });
     yield;
     this.rimLight = rimLight;
@@ -1729,9 +1729,9 @@ export class FarmWorld {
       }
 
       if (isRiding) {
-        // Nới rộng góc nhìn điện ảnh khi ngồi trên xe buýt
-        camera.radius += (16.5 - camera.radius) * Math.min(1, dt * 2.0);
-        camera.beta += (1.18 - camera.beta) * Math.min(1, dt * 2.0);
+        // Góc nhìn du ngoạn điện ảnh chuẩn game Play Together: cận cảnh người chơi đứng ngắm cảnh
+        camera.radius += (11.5 - camera.radius) * Math.min(1, dt * 2.0);
+        camera.beta += (1.20 - camera.beta) * Math.min(1, dt * 2.0);
 
         // Chế độ Điện Ảnh 360 độ tự động xoay nhẹ nhàng lướt ngắm cảnh
         if (this.cinematicTourActive) {
@@ -1740,9 +1740,9 @@ export class FarmWorld {
       }
 
       _TMP_VIEW_FORWARD.set(-Math.cos(camera.alpha), 0, -Math.sin(camera.alpha));
-      const lookAhead = isRiding ? 8.0 : (this.currentVenue ? 0 : (this.cameraViewMode === 'farm' ? RENDER_CONFIG.farmCameraLookAhead : RENDER_CONFIG.cameraLookAhead));
-      const targetPos = isRiding && busTransitStatus?.activeRide ? busTransitStatus.activeRide.busRoot.position : player.root.position;
-      const targetYOffset = isRiding ? (RENDER_CONFIG.cameraTargetHeight + 1.2) : (this.currentVenue ? 1.05 : RENDER_CONFIG.cameraTargetHeight);
+      const lookAhead = isRiding ? 4.0 : (this.currentVenue ? 0 : (this.cameraViewMode === 'farm' ? RENDER_CONFIG.farmCameraLookAhead : RENDER_CONFIG.cameraLookAhead));
+      const targetPos = player.root.position;
+      const targetYOffset = isRiding ? (RENDER_CONFIG.cameraTargetHeight + 0.8) : (this.currentVenue ? 1.05 : RENDER_CONFIG.cameraTargetHeight);
 
       if (this.currentVenue === 'casino' && this.focusedCasinoTable) {
         const vInt = VENUES.casino.interior;
@@ -2021,8 +2021,8 @@ export class FarmWorld {
     this.player?.startFishingCast?.(options);
   }
 
-  setFishingPhase(phase) {
-    this.player?.setFishingPhase?.(phase);
+  setFishingPhase(phase, timeUntilBiteMs = null) {
+    this.player?.setFishingPhase?.(phase, timeUntilBiteMs);
   }
 
   playFishingReel() {
@@ -2355,11 +2355,11 @@ export class FarmWorld {
         this.player.root.position.set(vInt.x + table.seatX, vInt.y, vInt.z + table.seatZ);
       }
       this.player.root.rotation.y = table.seatYaw;
-      this.camera.radius = 7.4;
-      this.camera.beta = 0.76;
+      this.camera.radius = 9.6;
+      this.camera.beta = 0.88;
       this.camera.alpha = -Math.PI / 2;
-      this.camera.lowerBetaLimit = 0.70;
-      this.camera.upperBetaLimit = 0.85;
+      this.camera.lowerBetaLimit = 0.78;
+      this.camera.upperBetaLimit = 1.0;
     } else {
       this.camera.radius = 7.2;
       this.camera.beta = 1.12;

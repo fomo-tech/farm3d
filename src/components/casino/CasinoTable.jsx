@@ -254,7 +254,7 @@ export function CasinoTable({
       <section className="pt-hud-seats-ring" aria-label="Người chơi trong bàn">
         <div className="pt-roster-title">BẠN CÙNG BÀN <span>{(room?.seatList || []).filter(Boolean).length}/{room?.seatList?.length || 0}</span></div>
         <div className="pt-seat-picker-list">
-        {(room?.seatList || []).map((seat, idx) => {
+        {(room?.seatList || []).filter(Boolean).map((seat, idx) => {
           const isMe = seat?.playerId === player;
           const isTurn = round?.turn === seat?.playerId;
 
@@ -263,8 +263,7 @@ export function CasinoTable({
               key={idx}
               className={`pt-seat-pod ${seat ? 'occupied' : 'empty'} ${isMe ? 'is-me' : ''} ${isTurn ? 'is-turn' : ''}`}
             >
-              {seat ? (
-                <div className="pt-player-bubble">
+              <div className="pt-player-bubble">
                   <div className="pt-player-avatar">
                     <span className="avatar-letter">{seat.name ? seat.name.charAt(0).toUpperCase() : 'P'}</span>
                     {seat.ready && <span className="pt-ready-stamp" title="Đã sẵn sàng">✓</span>}
@@ -274,10 +273,7 @@ export function CasinoTable({
                     <strong>{isMe ? 'Bạn' : seat.name}</strong>
                     <small>{seat.offlineAt ? 'Đang kết nối lại' : isTurn ? 'Đang đến lượt' : seat.ready ? 'Sẵn sàng' : 'Đang chơi'}</small>
                   </div>
-                </div>
-              ) : (
-                <div className="pt-empty-player"><span>＋</span><small>Chờ bạn chơi</small></div>
-              )}
+              </div>
             </div>
           );
         })}

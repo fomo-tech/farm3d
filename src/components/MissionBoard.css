@@ -1,0 +1,64 @@
+/* Mission UI: compact world objective and a readable in-phone quest journal. */
+.mission-tracker{position:fixed;top:calc(max(14px,env(safe-area-inset-top,0px)) + 64px);left:max(14px,env(safe-area-inset-left,0px));z-index:30;display:flex;align-items:center;gap:9px;width:220px;max-width:calc(100vw - 28px);min-height:48px;padding:6px 10px;border:2px solid #fff;border-radius:16px;background:#fffaed;color:#173b4d;box-shadow:0 4px 0 #abc0c4,0 9px 20px #102b3d38;cursor:pointer;text-align:left}
+.mission-tracker-icon{display:grid;place-items:center;width:32px;height:32px;flex:none;border-radius:10px;background:#f1ad32;color:#4e3413;font-size:20px}
+.mission-tracker span:nth-child(2){display:flex;min-width:0;flex-direction:column;text-align:left}
+.mission-tracker small{font-size:9px;font-weight:950;letter-spacing:.08em}
+.mission-tracker strong{overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.mission-tracker em{margin-left:auto;color:#0e8296;font-size:11px;font-style:normal;font-weight:950}
+.mission-tracker:focus-visible,.mission-board button:focus-visible{outline:3px solid #0b83a3;outline-offset:2px}
+.hud-modal-open .mission-tracker,.in-venue .mission-tracker{display:none}
+
+.game-panel:has(.mission-board){width:min(680px,96vw);max-height:min(760px,90dvh);background:#e9f1ed;border-color:#f9fff9}
+.game-panel:has(.mission-board)>header{background:#214b56;box-shadow:none}
+.game-panel:has(.mission-board)>header small{background:#f2bd50;color:#4b381f;text-shadow:none;box-shadow:none}
+.game-panel:has(.mission-board)>header button{background:#f4f2e8;color:#254552;border-color:#fff;box-shadow:0 3px 0 #94aeb3}
+.game-panel:has(.mission-board)>.mission-board{padding:0!important;overflow:hidden!important;background:#e9f1ed}
+.mission-board{--mission-ink:#213b47;--mission-muted:#58707a;--mission-blue:#0d7693;--mission-gold:#e6a831;display:flex;min-height:0;flex-direction:column;color:var(--mission-ink)}
+.mission-board--daily{--mission-blue:#258777;--mission-gold:#f1af39}
+.mission-board--legacy{--mission-blue:#72638e;--mission-gold:#c3a2ee}
+.mission-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:9px 12px 0;background:#244e59}
+.mission-tabs button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:46px;padding:6px 5px;border:0;border-radius:13px 13px 0 0;background:#386470;color:#daeceb;font-family:inherit;font-size:13px;font-weight:800;line-height:1.1;cursor:pointer}
+.mission-tabs button span{font-size:16px}
+.mission-tabs button[aria-current=page]{background:#e9f1ed;color:#174354}
+.mission-board-body{min-height:0;padding:14px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#a6bec0 transparent}
+.mission-summary{display:flex;align-items:center;gap:13px;min-height:92px;padding:14px 16px;border:2px solid #fff;border-radius:18px;background:linear-gradient(125deg,#216078,#113b53);color:#fff;box-shadow:0 4px 0 #a9bfc3}
+.mission-board--daily .mission-summary{background:linear-gradient(125deg,#277a68,#194f5d)}
+.mission-board--legacy .mission-summary{background:linear-gradient(125deg,#715d85,#38536a)}
+.mission-summary-mark{display:grid;place-items:center;width:52px;height:52px;flex:none;border:2px solid #fff9;border-radius:15px;background:#fff2;color:#ffda76;font-size:29px;font-weight:900}
+.mission-summary-copy{display:flex;min-width:0;flex:1;flex-direction:column;gap:2px}
+.mission-summary-copy small{color:#f5d88e;font-size:10px;font-weight:950;letter-spacing:.07em}
+.mission-summary-copy strong{font-size:21px;font-weight:950;letter-spacing:-.02em}
+.mission-summary-copy span{color:#e0f0ee;font-size:11px;line-height:1.3}
+.mission-summary-count{display:flex;flex:none;flex-direction:column;align-items:center;justify-content:center;min-width:74px;padding:7px;border:1px solid #ffffff66;border-radius:12px;background:#ffffff20}
+.mission-summary-count b{font-size:22px;line-height:1}
+.mission-summary-count small{margin-top:5px;font-size:9px;font-weight:900;letter-spacing:.04em}
+.mission-locked-note,.mission-ready-note{margin:11px 2px 0;padding:8px 11px;border-radius:10px;background:#f8e5ba;color:#64471b;font-size:12px;font-weight:800}
+.mission-ready-note{background:#d3efe5;color:#176550}
+.mission-list{display:grid;gap:10px;margin-top:13px;padding-bottom:4px}
+.mission-card{position:relative;padding:13px 15px;border:2px solid #d5e0df;border-radius:16px;background:#fffdf4;box-shadow:0 3px 0 #c9d8d6}
+.mission-card.is-ready{border-color:#e4b349;background:#fff8e7}
+.mission-card.is-gated{background:#edf0ed;color:#63757a}
+.mission-card.is-claimed{background:#eff5ef;color:#5c746d}
+.mission-card-title{display:flex;align-items:flex-start;gap:11px}
+.mission-card-number{display:grid;place-items:center;width:38px;height:38px;flex:none;border-radius:12px;background:#dcebec;color:var(--mission-blue);font-size:17px;font-weight:950}
+.mission-card.is-ready .mission-card-number{background:#f5d481;color:#634517}
+.mission-card-title>div{display:flex;min-width:0;flex-direction:column;gap:2px}
+.mission-card-state{color:var(--mission-blue);font-size:9px;font-weight:950;letter-spacing:.08em}
+.mission-card.is-ready .mission-card-state{color:#9a631a}
+.mission-card-title strong{font-size:16px;font-weight:950;line-height:1.2}
+.mission-card-title small{color:var(--mission-muted);font-size:11px;line-height:1.3}
+.mission-progress-line{display:flex;align-items:center;gap:10px;margin:11px 0 12px}
+.mission-progress-line>b{flex:none;color:var(--mission-blue);font-size:11px}
+.mission-progress{height:10px;flex:1;overflow:hidden;border-radius:9px;background:#d7e2e0}
+.mission-progress span{display:block;height:100%;border-radius:9px;background:var(--mission-blue);transition:width .2s ease}
+.mission-card.is-ready .mission-progress span{background:#e9a72d}
+.mission-card-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #dce5df;padding-top:10px}
+.mission-rewards{display:flex;flex-wrap:wrap;gap:6px}
+.mission-rewards span{padding:5px 8px;border-radius:9px;font-size:11px;font-weight:800}
+.mission-coin{background:#fff0c6;color:#825719}
+.mission-xp{background:#dcefed;color:#176d7c}
+.mission-card-footer button{min-width:114px;min-height:39px;padding:6px 12px;border:1px solid #ad7117;border-radius:11px;background:#f1ad32;color:#483213;box-shadow:0 3px 0 #a96a1b;font-family:inherit;font-size:12px;font-weight:900;line-height:1.2;cursor:pointer}
+.mission-card-footer button:disabled{border-color:#c5d2d2;background:#e3eae8;color:#63777a;box-shadow:none;cursor:default}
+.mission-card.is-ready .mission-card-footer button:not(:disabled){background:#ffc44e}
+@media(max-width:600px){.mission-tracker{top:calc(max(14px,env(safe-area-inset-top,0px)) + 55px);left:max(9px,env(safe-area-inset-left,0px))}.mission-tabs{padding-inline:7px}.mission-tabs button{gap:3px;font-size:11px}.mission-tabs button span{font-size:13px}.mission-board-body{padding:9px}.mission-summary{gap:9px;min-height:80px;padding:10px}.mission-summary-mark{width:37px;height:37px;font-size:22px}.mission-summary-copy strong{font-size:16px}.mission-summary-copy span{font-size:10px}.mission-summary-count{min-width:55px}.mission-summary-count b{font-size:17px}.mission-card{padding:11px}.mission-card-footer button{min-width:96px}}
+@media(max-width:390px){.mission-card-footer{align-items:stretch;flex-direction:column}.mission-card-footer button{align-self:flex-end}.mission-summary-mark{display:none}}

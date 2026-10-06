@@ -11,8 +11,9 @@ export const BEACH_CONFIG = freeze(validateBeachConfig({
   road: { z:310, width:6, shoulder:1.2, detourX:240, inlandStart:278 },
   oceanBands: [[361,118],[474,176],[650,176],[970,550]],
   sideBeach: { endZ:650, sandWidth:24, pathOffset:28, pathWidth:5 },
-  colors: { sand:'#ead6b2', wetSand:'#cfbb9b', shallow:'#61bfca', middle:'#438eae', horizon:'#5799b1', foam:'#e5f3ed',
-    wood:'#b79170', darkWood:'#806752', cream:'#f2e9d7', coral:'#d88a79', blue:'#83baca', palm:'#579970', trunk:'#a08465', stone:'#c3beb0', skin:'#d7b99d', ink:'#403e39' },
+  colors: { sand:'#ead6b2', wetSand:'#cfbb9b', shallow:'#38bdf8', middle:'#38bdf8', horizon:'#38bdf8', foam:'#e5f3ed',
+    wood:'#b79170', darkWood:'#806752', cream:'#f2e9d7', coral:'#d88a79', blue:'#83baca', palm:'#579970', trunk:'#a08465', stone:'#c3beb0', skin:'#d7b99d', ink:'#403e39',
+    yellow:'#ffd13b', pink:'#ff7599', orange:'#ff8c37', red:'#eb4d4b', white:'#ffffff', lime:'#6ab04c', purple:'#9b59b6', gold:'#f1c40f', cyan:'#22d3ee' },
   streaming: { detailDistance: 165, keepDistance: 225 },
   waves: { count:3, speed:.19, travel:1.5, spacing:3.6, width:.5 },
   fishingPier: { x:-63, z:365, width:4, length:24, landStart:341, deckY:.22 },
@@ -75,7 +76,7 @@ export const COASTAL_BUS_CONFIG=freeze({
     [BEACH_CONFIG.road.detourX,BEACH_CONFIG.road.z],[BEACH_CONFIG.road.detourX,406],[300,406],[315,406],
     [BEACH_CONFIG.road.detourX,406],[BEACH_CONFIG.road.detourX,BEACH_CONFIG.road.z],[0,BEACH_CONFIG.road.z],[0,86]],
   stops: {beach:3,thuPhong:6,huongDuong:13},
-  shelter: {x:5.2,z:BEACH_CONFIG.road.z-5.2},
+  shelter: {x:7.5,z:BEACH_CONFIG.road.z-5.2},
 });
 export function beachRoadAt(x,z,clearance=0) {
   return beachRoadSegments().some(s=>s.isNorthSouth

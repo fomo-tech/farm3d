@@ -2,6 +2,7 @@ import { WorldCollisionSystem } from '../src/game/physics/WorldCollisionSystem.j
 import { vehicleCollisionRadius } from '../shared/vehicleCollision.js';
 import { busRouteForId, nearBusRoute } from '../shared/busAuthorityConfig.js';
 import { VEHICLES } from '../shared/vehicleConfig.js';
+import { getTerrainHeight } from '../src/game/world/TerrainHeightSystem.js';
 
 // The collision implementation has no WebGL/DOM dependencies. Reuse the same
 // static geometry and swept sliding rules as the client instead of endpoints only.
@@ -10,10 +11,11 @@ export class MovementAuthority {
   reset(client, now=Date.now()) { this.budgets.set(client,{at:now,credit:1.5});this.rides.delete(client); }
   board(client,id,now=Date.now()) {
     const route=busRouteForId(id);
-    if(client.venue||!route||!route.stops.some(([x,z])=>Math.hypot(x-client.x,z-client.z)<=15))return false;
-    this.reset(client,now);this.rides.set(client,{route,expiresAt:now+600000});
-    this.budgets.get(client).credit=6;return true;
+    if(client.venue||this.rides.has(client)||!route||!route.stops.some(([x,z])=>Math.hypot(x-client.x,z-client.z)<=6.5))return false;
+    this.reset(client,now);this.rides.set(client,{route,expiresAt:now+600000,boarding:true});
+    this.budgets.get(client).credit=9;return true;
   }
+  isBoarding(client) { return Boolean(this.rides.get(client)?.boarding); }
   maxSpeed(client) { return this.rides.has(client)?48:(Object.hasOwn(VEHICLES,client.vehicle)?VEHICLES[client.vehicle].speed:7)*1.35; }
   accepts(client, target, now=Date.now()) {
     let budget=this.budgets.get(client);
@@ -25,11 +27,15 @@ export class MovementAuthority {
     const distance=Math.hypot(target.x-client.x,target.z-client.z);
     if(distance>budget.credit+.001)return false;
     if(ride && now<=ride.expiresAt) {
+      if(ride.boarding&&distance>9)return false;
+      const onGround=target.y<=getTerrainHeight(target.x,target.z)+.4;
+      if(onGround&&!ride.route.stops.some(([x,z])=>Math.hypot(x-target.x,z-target.z)<=8))return false;
       const count=Math.max(1,Math.ceil(distance/.5));
       for(let step=1;step<=count;step++)if(!nearBusRoute(ride.route,client.x+(target.x-client.x)*step/count,client.z+(target.z-client.z)*step/count))return false;
       budget.credit=Math.max(0,budget.credit-distance);
+      ride.boarding=false;
       ride.expiresAt=now+600000;
-      if(target.y<.2)this.rides.delete(client);
+      if(onGround)this.rides.delete(client);
       return true;
     }
     this.collision.playerRadius=vehicleCollisionRadius(client.vehicle);

@@ -16,7 +16,9 @@ export function claimFishingMission(fishing,id) {
 export function publicFishingProgress(progress) {
   if (!progress?.fishing?.pending) return progress;
   const { fishId, weight, ...pending } = progress.fishing.pending;
-  return { ...progress, fishing: { ...progress.fishing, pending } };
+  // A visual size class is public; the species and exact weight remain server-only.
+  const shadowSize = weight < 1 ? 'small' : weight < 3 ? 'medium' : 'large';
+  return { ...progress, fishing: { ...progress.fishing, pending: { ...pending, shadowSize } } };
 }
 export function fishResistance(pending, now) {
   return Math.floor((now - pending.hookedAt) / 1800) % 3 === 1;

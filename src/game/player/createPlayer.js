@@ -1,6 +1,7 @@
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { FARM_CONFIG } from '../config.js';
@@ -20,21 +21,262 @@ export function createFishingRig(scene, root, human) {
   bobber.material = bobberMaterial;
   bobber.setEnabled(false);
 
-  const caughtMaterial = new StandardMaterial('caught-fish-material',scene);
-  caughtMaterial.diffuseColor=Color3.FromHexString('#e9a63a');
-  const caughtRoot = new TransformNode('caught-fish',scene);
-  const body=MeshBuilder.CreateSphere('caught-fish-body',{diameter:1,segments:8},scene);
-  body.scaling.set(.65,.28,.22);body.material=caughtMaterial;body.parent=caughtRoot;
-  const tail=MeshBuilder.CreateCylinder('caught-fish-tail',{height:.25,diameterTop:0,diameterBottom:.35,tessellation:3},scene);
-  tail.rotation.z=-Math.PI/2;tail.position.x=-.4;tail.scaling.z=.3;tail.material=caughtMaterial;tail.parent=caughtRoot;
-  const eyeMaterial=new StandardMaterial('caught-fish-eye-material',scene);
-  eyeMaterial.diffuseColor=Color3.FromHexString('#172b38');
-  for(const side of [-1,1]){
-    const eye=MeshBuilder.CreateSphere(`caught-fish-eye-${side}`,{diameter:.055,segments:8},scene);
-    eye.position.set(.2,.055,side*.095);eye.material=eyeMaterial;eye.parent=caughtRoot;
+  const silhouetteMaterial = new StandardMaterial('fishing-shadow-material', scene);
+  silhouetteMaterial.diffuseColor = Color3.FromHexString('#082e51');
+  silhouetteMaterial.emissiveColor = Color3.FromHexString('#082e51').scale(0.28);
+  silhouetteMaterial.alpha = 0.8;
+  silhouetteMaterial.backFaceCulling = false;
+  const silhouette = MeshBuilder.CreateSphere('fishing-fish-shadow', {diameter:1,segments:12}, scene);
+  silhouette.scaling.set(.18,.016,.52);
+  silhouette.material = silhouetteMaterial;
+  silhouette.setEnabled(false);
+  const shadowTail = MeshBuilder.CreateSphere('fishing-shadow-tail',{diameter:1,segments:8},scene);
+  shadowTail.scaling.set(.16,.012,.13);shadowTail.material=silhouetteMaterial;shadowTail.setEnabled(false);
+  const splashMaterial = new StandardMaterial('fishing-bite-splash-material',scene);
+  splashMaterial.diffuseColor=Color3.FromHexString('#e4fbff');
+  splashMaterial.emissiveColor=Color3.FromHexString('#91edff').scale(.45);
+  splashMaterial.alpha=.85;
+  const splash=MeshBuilder.CreateTorus('fishing-bite-splash',{diameter:.4,thickness:.035,tessellation:20},scene);
+  splash.material=splashMaterial;splash.setEnabled(false);
+  const alertMaterial=new StandardMaterial('fishing-bite-alert-material',scene);
+  alertMaterial.diffuseColor=Color3.White();alertMaterial.emissiveColor=Color3.White();alertMaterial.disableLighting=true;
+  const biteAlert=MeshBuilder.CreatePlane('fishing-bite-alert',{width:.13,height:.39},scene);
+  biteAlert.billboardMode=Mesh.BILLBOARDMODE_ALL;biteAlert.material=alertMaterial;biteAlert.setEnabled(false);
+  const biteAlertDot=MeshBuilder.CreateSphere('fishing-bite-alert-dot',{diameter:.12,segments:8},scene);
+  biteAlertDot.material=alertMaterial;biteAlertDot.setEnabled(false);
+
+  // =========================================================================
+  // NÂNG CẤP MESH CÁ CHIBI PLAY TOGETHER (CUTE EXPRESSIVE CARTOON FISH)
+  // - Đôi mắt to tròn Anime long lanh ánh sao, má hồng đào Chibi dễ thương
+  // - Miệng cười nhỏ xinh ngộ nghĩnh, viền vây đuôi uốn lượn xòe mềm mại
+  // - Vương miện vàng Hoàng gia (Play Together Crown) đính ngọc quý cho cá Huyền thoại
+  // - Vân sọc, hoa văn đốm và râu cá trê chuyển động sống động
+  // =========================================================================
+  const caughtMaterial = new StandardMaterial('caught-fish-material', scene);
+  caughtMaterial.diffuseColor = Color3.FromHexString('#f59e0b');
+  caughtMaterial.ambientColor = Color3.FromHexString('#f59e0b').scale(0.4);
+  caughtMaterial.emissiveColor = Color3.FromHexString('#f59e0b').scale(0.18);
+  caughtMaterial.specularColor = new Color3(0.35, 0.35, 0.35);
+  caughtMaterial.specularPower = 32;
+
+  const caughtRoot = new TransformNode('caught-fish', scene);
+
+  // Thân cá tròn bầu bĩnh Chibi (Cute Chubby Body)
+  const body = MeshBuilder.CreateSphere('caught-fish-body', { diameter: 1, segments: 16 }, scene);
+  body.scaling.set(.48, .22, .18);
+  body.material = caughtMaterial;
+  body.parent = caughtRoot;
+
+  // Đuôi cá thon thả uốn lượn (Wavy Caudal Tail)
+  const tail = MeshBuilder.CreateSphere('caught-fish-tail', { diameter: 1, segments: 12 }, scene);
+  tail.position.x = -.27;
+  tail.scaling.set(.19, .11, .07);
+  tail.material = caughtMaterial;
+  tail.parent = caughtRoot;
+
+  // Cánh quạt vây đuôi cá xòe rộng duyên dáng (Fan-shaped Tail Lobes)
+  const tailLobes = [];
+  for (const side of [-1, 1]) {
+    const lobe = MeshBuilder.CreateSphere(`caught-fish-tail-lobe-${side}`, { diameter: 1, segments: 10 }, scene);
+    lobe.position.set(-.36, side * .05, 0);
+    lobe.rotation.z = side * .45;
+    lobe.scaling.set(.14, .085, .04);
+    lobe.material = caughtMaterial;
+    lobe.parent = caughtRoot;
+    tailLobes.push(lobe);
   }
-  const fin=MeshBuilder.CreateCylinder('caught-fish-fin',{height:.16,diameterTop:0,diameterBottom:.2,tessellation:3},scene);
-  fin.position.y=.16;fin.scaling.z=.25;fin.material=caughtMaterial;fin.parent=caughtRoot;
+
+  // Mắt Anime tròn xoe long lanh chuẩn Play Together (Cute Glossy Anime Eyes)
+  const eyeWhiteMat = new StandardMaterial('caught-fish-eye-white-mat', scene);
+  eyeWhiteMat.diffuseColor = Color3.White();
+  eyeWhiteMat.emissiveColor = Color3.White().scale(0.2);
+
+  const eyeMaterial = new StandardMaterial('caught-fish-eye-material', scene);
+  eyeMaterial.diffuseColor = Color3.FromHexString('#0f172a'); // Đồng tử đen tuyền sâu thẳm
+
+  const blushMaterial = new StandardMaterial('caught-fish-blush-mat', scene);
+  blushMaterial.diffuseColor = Color3.FromHexString('#f472b6');
+  blushMaterial.emissiveColor = Color3.FromHexString('#f472b6').scale(0.3);
+  blushMaterial.alpha = 0.85;
+
+  const eyes = [];
+  const eyeScleras = [];
+  const gleams = [];
+  const gleams2 = [];
+  const blushes = [];
+
+  for (const side of [-1, 1]) {
+    // Tròng trắng mắt
+    const eyeWhite = MeshBuilder.CreateSphere(`caught-fish-eye-sclera-${side}`, { diameter: .075, segments: 10 }, scene);
+    eyeWhite.position.set(.26, .065, side * .138);
+    eyeWhite.scaling.set(1.0, 1.15, 0.45);
+    eyeWhite.material = eyeWhiteMat;
+    eyeWhite.parent = caughtRoot;
+    eyeScleras.push(eyeWhite);
+
+    // Con ngươi to tròn đáng yêu
+    const eye = MeshBuilder.CreateSphere(`caught-fish-eye-${side}`, { diameter: .058, segments: 10 }, scene);
+    eye.position.set(.263, .065, side * .143);
+    eye.scaling.set(0.9, 1.05, 0.4);
+    eye.material = eyeMaterial;
+    eye.parent = caughtRoot;
+    eyes.push(eye);
+
+    // Điểm sáng lấp lánh chính (Primary sparkle)
+    const gleam = MeshBuilder.CreateSphere(`caught-fish-eye-gleam-${side}`, { diameter: .022, segments: 8 }, scene);
+    gleam.position.set(.272, .078, side * .166);
+    gleam.material = splashMaterial;
+    gleam.parent = caughtRoot;
+    gleams.push(gleam);
+
+    // Điểm sáng phụ dưới (Secondary mini sparkle)
+    const gleam2 = MeshBuilder.CreateSphere(`caught-fish-eye-gleam2-${side}`, { diameter: .012, segments: 6 }, scene);
+    gleam2.position.set(.268, .052, side * .162);
+    gleam2.material = splashMaterial;
+    gleam2.parent = caughtRoot;
+    gleams2.push(gleam2);
+
+    // Má hồng Chibi siêu đáng yêu
+    const blush = MeshBuilder.CreateSphere(`caught-fish-blush-${side}`, { diameter: .045, segments: 8 }, scene);
+    blush.position.set(.22, -.01, side * .148);
+    blush.scaling.set(1.1, 0.6, 0.15);
+    blush.material = blushMaterial;
+    blush.parent = caughtRoot;
+    blushes.push(blush);
+  }
+
+  // Miệng cười nhỏ xinh thân thiện (Cute Smiling Mouth)
+  const mouthMat = new StandardMaterial('caught-fish-mouth-mat', scene);
+  mouthMat.diffuseColor = Color3.FromHexString('#334155');
+  const mouth = MeshBuilder.CreateTorus('caught-fish-mouth', { diameter: .045, thickness: .012, tessellation: 12 }, scene);
+  mouth.rotation.x = Math.PI * 0.5;
+  mouth.rotation.y = Math.PI * 0.5;
+  mouth.position.set(.43, -.04, 0);
+  mouth.scaling.set(0.6, 1.0, 1.0);
+  mouth.material = mouthMat;
+  mouth.parent = caughtRoot;
+
+  // Vây lưng cá uốn cong (Dorsal Fin)
+  const fin = MeshBuilder.CreateCylinder('caught-fish-fin', { height: .11, diameterTop: 0.02, diameterBottom: .16, tessellation: 4 }, scene);
+  fin.position.y = .16;
+  fin.scaling.z = .26;
+  fin.material = caughtMaterial;
+  fin.parent = caughtRoot;
+
+  // Vây bụng dưới (Ventral Fin)
+  const lowerFin = MeshBuilder.CreateCylinder('caught-fish-lower-fin', { height: .13, diameterTop: 0.02, diameterBottom: .17, tessellation: 4 }, scene);
+  lowerFin.position.set(-.09, -.16, 0);
+  lowerFin.rotation.z = Math.PI;
+  lowerFin.scaling.z = .32;
+  lowerFin.material = caughtMaterial;
+  lowerFin.parent = caughtRoot;
+
+  // Đầu mõm cá tròn trịa (Snout)
+  const snout = MeshBuilder.CreateSphere('caught-fish-snout', { diameter: 1, segments: 10 }, scene);
+  snout.position.x = .44;
+  snout.scaling.set(.11, .075, .105);
+  snout.material = caughtMaterial;
+  snout.parent = caughtRoot;
+
+  // Bụng cá sáng mịn êm đềm (Smooth Pastel Belly)
+  const bellyMaterial = new StandardMaterial('caught-fish-belly-material', scene);
+  bellyMaterial.diffuseColor = Color3.FromHexString('#fff1cf');
+  bellyMaterial.emissiveColor = Color3.FromHexString('#fff1cf').scale(0.12);
+  const belly = MeshBuilder.CreateSphere('caught-fish-belly', { diameter: 1, segments: 12 }, scene);
+  belly.scaling.set(.37, .085, .15);
+  belly.position.y = -.115;
+  belly.material = bellyMaterial;
+  belly.parent = caughtRoot;
+
+  // Vây bơi hai bên hông (Pectoral Side Flippers)
+  const sideFins = [];
+  for (const side of [-1, 1]) {
+    const sideFin = MeshBuilder.CreateSphere(`caught-fish-side-fin-${side}`, { diameter: 1, segments: 10 }, scene);
+    sideFin.position.set(-.06, -.095, side * .17);
+    sideFin.rotation.y = side * .35;
+    sideFin.scaling.set(.18, .045, .11);
+    sideFin.material = caughtMaterial;
+    sideFin.parent = caughtRoot;
+    sideFins.push(sideFin);
+  }
+
+  // Sọc thân cá (Body Stripes)
+  const stripeMaterial = new StandardMaterial('caught-fish-stripe-material', scene);
+  stripeMaterial.diffuseColor = Color3.FromHexString('#294f5a');
+  const stripes = [];
+  for (const x of [-.15, -.02, .11]) {
+    const stripe = MeshBuilder.CreateTorus(`caught-fish-stripe-${x}`, { diameter: .42, thickness: .022, tessellation: 20 }, scene);
+    stripe.position.x = x;
+    stripe.rotation.y = Math.PI / 2;
+    stripe.material = stripeMaterial;
+    stripe.parent = caughtRoot;
+    stripes.push(stripe);
+  }
+
+  // Râu cá trê uốn cong ngộ nghĩnh (Cute Curled Catfish Whiskers)
+  const whiskerMaterial = new StandardMaterial('caught-fish-whisker-material', scene);
+  whiskerMaterial.diffuseColor = Color3.FromHexString('#45616a');
+  const whiskers = [];
+  for (const side of [-1, 1]) {
+    const whisker = MeshBuilder.CreateCylinder(`caught-fish-whisker-${side}`, { height: .26, diameter: .014, tessellation: 6 }, scene);
+    whisker.position.set(.5, -.055, side * .095);
+    whisker.rotation.x = side * .62;
+    whisker.rotation.z = -.8;
+    whisker.material = whiskerMaterial;
+    whisker.parent = caughtRoot;
+    whiskers.push(whisker);
+  }
+
+  // Đốm hoa văn lấp lánh (Sparkling Scale Spots)
+  const spotMaterial = new StandardMaterial('caught-fish-spot-material', scene);
+  spotMaterial.diffuseColor = Color3.FromHexString('#d6a344');
+  spotMaterial.emissiveColor = Color3.FromHexString('#d6a344').scale(0.25);
+  const spots = [];
+  for (const side of [-1, 1]) for (const x of [-.23, -.02, .16]) {
+    const spot = MeshBuilder.CreateSphere(`caught-fish-spot-${side}-${x}`, { diameter: 1, segments: 8 }, scene);
+    spot.position.set(x, .07, side * .182);
+    spot.scaling.set(.042, .034, .01);
+    spot.material = spotMaterial;
+    spot.parent = caughtRoot;
+    spots.push(spot);
+  }
+
+  // =========================================================================
+  // VƯƠNG MIỆN CÁ VUA HOÀNG GIA (PLAY TOGETHER CROWN FISH - NHƯ HÌNH MẪU)
+  // Vương miện vàng 4 cánh nhọn đính ngọc quý rực rỡ trên đầu cá huyền thoại
+  // =========================================================================
+  const crownMat = new StandardMaterial('caught-fish-crown-mat', scene);
+  crownMat.diffuseColor = Color3.FromHexString('#facc15');
+  crownMat.emissiveColor = Color3.FromHexString('#f59e0b').scale(0.45);
+  crownMat.specularColor = new Color3(0.9, 0.85, 0.4);
+  crownMat.specularPower = 64;
+
+  const crownGemMat = new StandardMaterial('caught-fish-crown-gem-mat', scene);
+  crownGemMat.diffuseColor = Color3.FromHexString('#ef4444');
+  crownGemMat.emissiveColor = Color3.FromHexString('#ef4444').scale(0.5);
+
+  const crownRoot = new TransformNode('caught-fish-crown', scene);
+  crownRoot.parent = caughtRoot;
+
+  const crownBand = MeshBuilder.CreateTorus('caught-fish-crown-band', { diameter: .075, thickness: .014, tessellation: 16 }, scene);
+  crownBand.rotation.x = Math.PI / 2;
+  crownBand.material = crownMat;
+  crownBand.parent = crownRoot;
+
+  for (let cIdx = 0; cIdx < 4; cIdx++) {
+    const cAng = (cIdx / 4) * Math.PI * 2;
+    const cProng = MeshBuilder.CreateCylinder(`caught-fish-crown-prong-${cIdx}`, { height: .042, diameterTop: 0, diameterBottom: .022, tessellation: 4 }, scene);
+    cProng.position.set(Math.cos(cAng) * .036, .026, Math.sin(cAng) * .036);
+    cProng.material = crownMat;
+    cProng.parent = crownRoot;
+
+    const cGem = MeshBuilder.CreateSphere(`caught-fish-crown-gem-${cIdx}`, { diameter: .014, segments: 6 }, scene);
+    cGem.position.set(Math.cos(cAng) * .036, .046, Math.sin(cAng) * .036);
+    cGem.material = crownGemMat;
+    cGem.parent = crownRoot;
+  }
+  crownRoot.setEnabled(false);
+
   caughtRoot.setEnabled(false);
 
   const linePoints = [new Vector3(), new Vector3(), new Vector3()];
@@ -49,6 +291,10 @@ export function createFishingRig(scene, root, human) {
   let elapsed = 0;
   let castDistance = 8;
   let animationId = 'basic_cast';
+  let timeUntilBiteMs = null;
+  let shadowSize = 'medium';
+  const catchStart = new Vector3();
+  let catchAttached = false;
 
   const animationDuration = (action, id = animationId) => {
     const animation = FISHING_CONFIG.animations[id] || FISHING_CONFIG.animations.basic_cast;
@@ -63,15 +309,30 @@ export function createFishingRig(scene, root, human) {
     line.setEnabled(false);
     human.clearFishingPose?.();
     caughtRoot.setEnabled(false);
+    silhouette.setEnabled(false);
+    shadowTail.setEnabled(false);
+    splash.setEnabled(false);
+    biteAlert.setEnabled(false);biteAlertDot.setEnabled(false);
+    caughtRoot.parent=null;
+    catchAttached=false;
   };
 
   const updateLine = () => {
-    const hand = (human.toolGrip || human.rightArm).getAbsolutePosition();
+    const hand = (human.fishingLineOrigin || human.toolGrip || human.rightArm).getAbsolutePosition();
     if(phase==='catch'){
-      caughtRoot.position.copyFrom(hand);caughtRoot.position.y+=.3;
-      caughtRoot.rotation.y=root.rotation.y;
-      caughtRoot.rotation.z=Math.sin(elapsed*12)*.12;
-      tail.rotation.y=Math.sin(elapsed*18)*.4;
+      if(!catchAttached){
+        const lift=Math.min(1,elapsed/animationDuration('catch'));
+        const eased=1-(1-lift)**3;
+        const cradle=(human.torsoNode || root).getAbsolutePosition().add(new Vector3(Math.sin(root.rotation.y)*.42,.43,Math.cos(root.rotation.y)*.42));
+        Vector3.LerpToRef(catchStart,cradle,eased,caughtRoot.position);
+        caughtRoot.position.y+=Math.sin(lift*Math.PI)*.48;
+        caughtRoot.rotation.y=root.rotation.y;
+        if(lift>=1){caughtRoot.parent=human.torsoNode || root;caughtRoot.position.set(0,.43,.42);caughtRoot.rotation.set(0,0,0);catchAttached=true;}
+      }
+      tail.rotation.y=Math.sin(elapsed*11)*.28;
+      sideFins.forEach((sideFin, index)=>{
+        sideFin.rotation.y=(index?1:-1)*(0.35+Math.sin(elapsed*9)*0.14);
+      });
     }
     linePoints[0].copyFrom(hand);
     linePoints[1].set(
@@ -86,7 +347,7 @@ export function createFishingRig(scene, root, human) {
   const update = delta => {
     if (phase === 'idle') return;
     elapsed += delta;
-    const hand = (human.toolGrip || human.rightArm).getAbsolutePosition();
+    const hand = (human.fishingLineOrigin || human.toolGrip || human.rightArm).getAbsolutePosition();
     if (phase === 'cast') {
       const progress = Math.min(1, elapsed / animationDuration('cast'));
       Vector3.LerpToRef(hand, baseTarget, progress, bobber.position);
@@ -102,13 +363,38 @@ export function createFishingRig(scene, root, human) {
         bobber.position.y=target.y+Math.sin(elapsed*12)*.035;
       }
     }
+    if(phase==='waiting'||phase==='bite'){
+      if(timeUntilBiteMs!==null)timeUntilBiteMs=Math.max(0,timeUntilBiteMs-delta*1000);
+      const approach=phase==='bite'?1:timeUntilBiteMs===null?0:Math.max(0,Math.min(1,(3400-timeUntilBiteMs)/3000));
+      const distance=2.1*(1-approach);
+      const direction=root.rotation.y+.55;
+      const shadowScale={small:.72,medium:1,large:1.38}[shadowSize] || 1;
+      silhouette.scaling.set(.18*shadowScale,.016,.52*shadowScale);
+      shadowTail.scaling.set(.16*shadowScale,.012,.13*shadowScale);
+      silhouette.position.set(target.x+Math.sin(direction)*distance+Math.sin(elapsed*2)*.035,target.y+.09,target.z+Math.cos(direction)*distance+Math.cos(elapsed*2)*.04);
+      silhouette.rotation.y=direction+Math.PI;
+      shadowTail.position.set(silhouette.position.x+Math.sin(direction)*.23*shadowScale,silhouette.position.y,silhouette.position.z+Math.cos(direction)*.23*shadowScale);
+      shadowTail.rotation.y=silhouette.rotation.y;
+      silhouetteMaterial.alpha=phase==='bite'?.92:.76;
+      silhouette.setEnabled(true);
+      shadowTail.setEnabled(true);
+      if(phase==='bite'){
+        splash.position.set(target.x,target.y+.1,target.z);
+        splash.scaling.setAll(.8+Math.abs(Math.sin(elapsed*10))*.6);
+        splash.setEnabled(true);
+        const alertY=target.y+.7+Math.sin(elapsed*8)*.05;
+        biteAlert.position.set(target.x,alertY,target.z);
+        biteAlertDot.position.set(target.x,alertY-.29,target.z);
+        biteAlert.setEnabled(true);biteAlertDot.setEnabled(true);
+      }else{ splash.setEnabled(false);biteAlert.setEnabled(false);biteAlertDot.setEnabled(false); }
+    }else{silhouette.setEnabled(false);shadowTail.setEnabled(false);splash.setEnabled(false);biteAlert.setEnabled(false);biteAlertDot.setEnabled(false);}
     updateLine();
   };
 
   return {
     update,
     isActive() { return phase !== 'idle'; },
-    startCast(distance = 8, nextAnimationId = 'basic_cast', waterTarget = null) {
+    startCast(distance = 8, nextAnimationId = 'basic_cast', waterTarget = null, nextShadowSize = 'medium') {
       castDistance = Math.max(3, Number(distance) || 8);
       animationId = nextAnimationId || 'basic_cast';
       const position = root.getAbsolutePosition();
@@ -122,18 +408,23 @@ export function createFishingRig(scene, root, human) {
       target.copyFrom(baseTarget);
       phase = 'cast';
       elapsed = 0;
+      timeUntilBiteMs = null;
+      shadowSize = nextShadowSize;
+      caughtRoot.parent=null;
       bobber.position.copyFrom(position);
       bobber.position.y += 0.9;
       bobber.setEnabled(true);
       line.setEnabled(true);
+      caughtRoot.setEnabled(false);
       human.playFishingAction?.('cast', () => {
         phase = 'waiting';
         elapsed = 0;
         human.setFishingPose?.(true);
       }, animationDuration('cast'));
     },
-    setPhase(nextPhase) {
+    setPhase(nextPhase, nextTimeUntilBiteMs = null) {
       if (phase === 'idle') return;
+      if(Number.isFinite(nextTimeUntilBiteMs))timeUntilBiteMs=Math.max(0,nextTimeUntilBiteMs);
       if (phase === 'cast') return;
       if(nextPhase==='reel' && phase!=='reel') human.playFishingAction?.('reel',()=>human.setFishingPose?.(true),animationDuration('reel'));
       if (nextPhase === 'waiting' || nextPhase === 'bite' || nextPhase === 'reel') phase = nextPhase;
@@ -148,18 +439,91 @@ export function createFishingRig(scene, root, human) {
       if (!success) { hide(); return; }
       phase = 'catch';
       elapsed = 0;
-      if(fish?.color)caughtMaterial.diffuseColor=Color3.FromHexString(fish.color);
+      catchAttached=false;
+      caughtRoot.parent=null;
+      catchStart.copyFrom(bobber.position);
+      if(fish?.color) {
+        const c = Color3.FromHexString(fish.color);
+        caughtMaterial.diffuseColor = c;
+        caughtMaterial.ambientColor = c.scale(0.42);
+        caughtMaterial.emissiveColor = c.scale(0.18);
+      }
+      const shape = {
+        carp: [.54, .24, .18],
+        perch: [.48, .20, .16],
+        golden_carp: [.58, .25, .21],
+        river_catfish: [.62, .16, .17],
+        river_barb: [.55, .18, .15],
+        sea_mackerel: [.68, .15, .15],
+        sea_snapper: [.54, .22, .19],
+      }[fish?.id] || [.53, .2, .17];
+
+      body.scaling.set(...shape);
+      belly.scaling.set(shape[0] * .82, shape[1] * .46, shape[2] * .85);
+      belly.position.set(shape[0] * .02, -shape[1] * .52, 0);
+      tail.position.x = -shape[0] * .59;
+      tailLobes.forEach((lobe, index) => {
+        lobe.position.x = -shape[0] * .72;
+        lobe.position.y = (index ? 1 : -1) * shape[1] * .32;
+      });
+      fin.position.y = shape[1] * .76;
+      lowerFin.position.y = -shape[1] * .76;
+      snout.position.x = shape[0] * .45;
+
+      mouth.position.set(shape[0] * .44, -shape[1] * .22, 0);
+
+      eyes.forEach((eye, index) => {
+        const side = index ? 1 : -1;
+        const ex = shape[0] * .38;
+        const ey = shape[1] * .25;
+        const ez = side * shape[2] * .82;
+        eye.position.set(ex + .004, ey, ez + side * .006);
+        eyeScleras[index].position.set(ex, ey, ez);
+        gleams[index].position.set(ex + .012, ey + .014, ez + side * .015);
+        gleams2[index].position.set(ex + .008, ey - .012, ez + side * .012);
+        blushes[index].position.set(shape[0] * .32, -shape[1] * .05, side * (shape[2] * .83 + .004));
+      });
+
+      sideFins.forEach((sideFin, index) => {
+        sideFin.position.set(-shape[0] * .07, -shape[1] * .42, (index ? 1 : -1) * shape[2] * .84);
+      });
+
+      spots.forEach((spot, index) => {
+        spot.position.z = (index < 3 ? -1 : 1) * (shape[2] + .004);
+        spot.setEnabled(['carp', 'golden_carp', 'sea_snapper'].includes(fish?.id));
+      });
+      for (const stripe of stripes) stripe.setEnabled(['perch', 'river_barb', 'sea_mackerel'].includes(fish?.id));
+      for (const whisker of whiskers) whisker.setEnabled(fish?.id === 'river_catfish');
+
+      // Vương miện hoàng gia Play Together cho cá Huyền thoại (Golden Crown)
+      const isCrowned = fish?.rarity === 'legendary' || fish?.id === 'golden_carp';
+      crownRoot.setEnabled(isCrowned);
+      if (isCrowned) {
+        crownRoot.position.set(shape[0] * .12, shape[1] * .88, 0);
+        crownRoot.scaling.setAll(1.2);
+      }
+
+      stripeMaterial.diffuseColor = fish?.id === 'perch' ? Color3.FromHexString('#164e32') : Color3.FromHexString('#1e3a5f');
+      spotMaterial.diffuseColor = fish?.id === 'sea_snapper' ? Color3.FromHexString('#fef08a') : Color3.FromHexString('#fde047');
+      bellyMaterial.diffuseColor = fish?.id === 'golden_carp' ? Color3.FromHexString('#fef9c3') : fish?.id === 'sea_snapper' ? Color3.FromHexString('#ffe4e6') : Color3.FromHexString('#f1f5f9');
+      caughtRoot.scaling.setAll(fish?.rarity === 'legendary' ? 1.25 : 1);
       caughtRoot.setEnabled(true);
       bobber.setEnabled(false);line.setEnabled(false);
-      human.playFishingAction?.('catch', hide, animationDuration('catch'));
+      silhouette.setEnabled(false);
+      biteAlert.setEnabled(false);biteAlertDot.setEnabled(false);
+      human.playFishingAction?.('catch', () => human.setFishingCatchPose?.(), animationDuration('catch'));
     },
     clear: hide,
     dispose() {
       hide();
       bobberMaterial.dispose();
       bobber.dispose();
+      silhouette.dispose();silhouetteMaterial.dispose();
+      shadowTail.dispose();splash.dispose();splashMaterial.dispose();biteAlert.dispose();biteAlertDot.dispose();alertMaterial.dispose();
       line.dispose();
-      caughtRoot.dispose();caughtMaterial.dispose();eyeMaterial.dispose();
+      caughtRoot.dispose(false,true);
+      caughtMaterial.dispose();eyeMaterial.dispose();eyeWhiteMat.dispose();blushMaterial.dispose();mouthMat.dispose();crownMat.dispose();crownGemMat.dispose();
+      bellyMaterial.dispose();stripeMaterial.dispose();whiskerMaterial.dispose();spotMaterial.dispose();
     },
   };
 }
@@ -203,9 +567,10 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
   const diagnostics = { input: false, collided: false, speed: 0, ridingBus: false };
   const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight']);
   const isEditing = target => target instanceof Element && Boolean(target.closest('input, textarea, select, [contenteditable="true"]'));
+  const isModal = target => target instanceof Element && Boolean(target.closest('[role="dialog"], [aria-modal="true"]'));
+  const keyboardBlocked = () => isEditing(document.activeElement) || isModal(document.activeElement);
   const down = event => {
-    if (isEditing(event.target) || event.altKey || event.ctrlKey || event.metaKey) return;
-    if (event.target instanceof Element && event.target.closest('[role="dialog"], [aria-modal="true"]')) return;
+    if (isEditing(event.target) || isModal(event.target) || keyboardBlocked() || event.altKey || event.ctrlKey || event.metaKey) return;
     // Space on a HUD button belongs to that button, not the jump action.
     if (event.code === 'Space' && event.target instanceof Element && event.target.closest('button')) return;
     if (event.code === 'Space' && !event.repeat && !airborne && !fishingRig.isActive() && !controls.isRidingBus?.()) {
@@ -223,12 +588,10 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
   const up = event => keys.delete(event.code);
   const clearKeys = () => keys.clear();
   const onVisibilityChange = () => { if (document.hidden) clearKeys(); };
-  const onFocusIn = event => { if (isEditing(event.target) || (event.target instanceof Element && event.target.closest('[role="dialog"], [aria-modal="true"]'))) clearKeys(); };
   window.addEventListener('keydown', down, true);
   window.addEventListener('keyup', up, true);
   window.addEventListener('blur', clearKeys);
   document.addEventListener('visibilitychange', onVisibilityChange);
-  document.addEventListener('focusin', onFocusIn);
 
 
   return {
@@ -243,11 +606,14 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
         autoTarget = null;
         onArrive = null;
         airborne = false;
-        human.torsoNode.position.y = 1.1;
-        human.leftLeg.rotation.x = -1.2;
-        human.rightLeg.rotation.x = -1.2;
-        human.leftArm.rotation.x = -0.4;
-        human.rightArm.rotation.x = -0.4;
+        // Open-Top Convertible Sightseeing Bus: Player stands tall on the observation deck!
+        human.animate(frameDelta, false, 0);
+        human.torsoNode.position.y = 0.60;
+        human.leftLeg.rotation.set(0, 0, 0);
+        human.rightLeg.rotation.set(0, 0, 0);
+        // Stylized standing sightseeing pose: hands resting on/holding the front safety rail
+        human.leftArm.rotation.set(-0.35, 0.10, -0.12);
+        human.rightArm.rotation.set(-0.35, -0.10, 0.12);
         return;
       }
       if (fishingRig.isActive() || human.isFishingBusy?.()) {
@@ -259,8 +625,11 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
         fishingRig.update(frameDelta);
         return;
       }
-      const horizontal = (Number(keys.has('KeyD') || keys.has('ArrowRight')) - Number(keys.has('KeyA') || keys.has('ArrowLeft'))) + virtualInput.x;
-      const vertical = (Number(keys.has('KeyW') || keys.has('ArrowUp')) - Number(keys.has('KeyS') || keys.has('ArrowDown'))) + virtualInput.y;
+      // HUD focus must pause gameplay keys without forgetting a physically held key.
+      // Clearing on focusin used to discard W/A/S/D until the next keydown.
+      const useKeyboard = !keyboardBlocked();
+      const horizontal = (useKeyboard ? Number(keys.has('KeyD') || keys.has('ArrowRight')) - Number(keys.has('KeyA') || keys.has('ArrowLeft')) : 0) + virtualInput.x;
+      const vertical = (useKeyboard ? Number(keys.has('KeyW') || keys.has('ArrowUp')) - Number(keys.has('KeyS') || keys.has('ArrowDown')) : 0) + virtualInput.y;
       const hasManualInput = horizontal !== 0 || vertical !== 0;
       diagnostics.input = hasManualInput;
       diagnostics.ridingBus = false;
@@ -442,10 +811,10 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
     startFishingCast(options = {}) {
       autoTarget = null;
       onArrive = null;
-      fishingRig.startCast(options.distance || 8, options.animation || 'basic_cast', options.target);
+      fishingRig.startCast(options.distance || 8, options.animation || 'basic_cast', options.target, options.shadowSize);
     },
-    setFishingPhase(phase) {
-      fishingRig.setPhase(phase);
+    setFishingPhase(phase, timeUntilBiteMs = null) {
+      fishingRig.setPhase(phase, timeUntilBiteMs);
     },
     playFishingReel() {
       fishingRig.playReel();
@@ -473,7 +842,6 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       window.removeEventListener('keyup', up, true);
       window.removeEventListener('blur', clearKeys);
       document.removeEventListener('visibilitychange', onVisibilityChange);
-      document.removeEventListener('focusin', onFocusIn);
       fishingRig.dispose();
       vehicleRigs.dispose();
     },

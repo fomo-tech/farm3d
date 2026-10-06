@@ -82,8 +82,8 @@ export class CasinoTableView {
       this.chips.forEach((chip, index) => {
         if (!chip.isEnabled()) return;
         const progress = Math.min(1, Math.max(0, (performance.now() - (chip.metadata.enteredAt || 0)) / 450));
-        chip.position.z = 0.4 - (1 - progress) * 1.5;
-        chip.position.y = 1.38 + Math.floor(index / 4) * 0.05 + Math.sin(progress * Math.PI) * 0.35;
+        chip.position.z = (chip.metadata.targetZ ?? 0.4) - (1 - progress) * 1.5;
+        chip.position.y = (chip.metadata.targetY ?? 1.38) + Math.sin(progress * Math.PI) * 0.35;
       });
 
       // Tìm bát 3D trên bàn Tài Xỉu
@@ -184,7 +184,7 @@ export class CasinoTableView {
             ctx.beginPath(); ctx.arc(64 + (pip % 3) * 64, 64 + Math.floor(pip / 3) * 64, 15, 0, Math.PI * 2); ctx.fill();
           }
         } else {
-          const txt = values ? (CASINO_SYMBOLS[values[i]]?.name || String(values[i])) : '?';
+          const txt = values ? (CASINO_SYMBOLS[values[i]] || String(values[i])) : '?';
           ctx.fillText(txt, 128, 128);
         }
         t.update();
@@ -223,10 +223,30 @@ export class CasinoTableView {
     const showingDice = ['shaking', 'reveal', 'settling', 'result'].includes(this.phase);
     const covered = this.game === 'tai-xiu' && this.phase === 'shaking';
     this.dice.forEach(d => d.setEnabled(showingDice && !covered && ['tai-xiu', 'bau-cua'].includes(room?.game)));
-    const count = Math.min(CASINO_CONFIG.maxVisibleChips, Math.ceil(Object.values(room?.round?.totals || {}).reduce((a, b) => a + b, 0) / 10));
+    const totals = room?.round?.totals || {};
+    const choices = room?.game === 'bau-cua'
+      ? ['bau', 'cua', 'tom', 'ca', 'ga', 'nai']
+      : room?.game === 'tai-xiu' ? ['tai', 'xiu'] : [];
+    const positions = [];
+    for (const choice of choices) {
+      const amount = Number(totals[choice]) || 0;
+      if (amount <= 0) continue;
+      const index = choices.indexOf(choice);
+      const x = room.game === 'bau-cua' ? (index % 3 - 1) * 1.28 : (index === 0 ? -1 : 1) * 1.12;
+      const z = room.game === 'bau-cua' ? (index < 3 ? 0.72 : -0.72) : 0;
+      for (let layer = 0; layer < Math.min(2, Math.ceil(amount / 50)); layer++) {
+        positions.push({ x, z, layer });
+      }
+    }
     this.chips.forEach((c, i) => {
-      if (i < count && !c.isEnabled(false)) c.metadata.enteredAt = performance.now();
-      c.setEnabled(i < count);
+      const spot = positions[i];
+      if (spot && !c.isEnabled(false)) c.metadata.enteredAt = performance.now();
+      if (spot) {
+        c.metadata.targetZ = spot.z;
+        c.metadata.targetY = 1.52 + spot.layer * 0.06;
+        c.position.set(spot.x, c.metadata.targetY, spot.z);
+      }
+      c.setEnabled(!!spot);
     });
   }
 

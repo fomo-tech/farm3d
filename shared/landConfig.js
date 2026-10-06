@@ -26,6 +26,14 @@ export const LAND_CONFIG = Object.freeze(validateLandConfig({
   overrides: Object.freeze({}),
 }));
 
+// One-time help is applied only to the first parcel purchase, never credited
+// to the wallet. Keep a real entry price so the starter choice still matters.
+export const STARTER_LAND_DISCOUNT = 350;
+export function firstLandPurchasePrice(listPrice) {
+  if (!Number.isSafeInteger(listPrice) || listPrice < LAND_CONFIG.minPrice) throw new Error('Land pricing: invalid list price');
+  return Math.max(LAND_CONFIG.minPrice, listPrice - STARTER_LAND_DISCOUNT);
+}
+
 export function landPricingRadius(lots, config = LAND_CONFIG) {
   return Math.max(1, ...lots.map(lot => Math.hypot(lot.x - config.center.x, lot.z - config.center.z)));
 }

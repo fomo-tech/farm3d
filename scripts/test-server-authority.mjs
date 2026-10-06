@@ -32,11 +32,19 @@ const authority=new MovementAuthority(), client={...TOWN_SPAWN,vehicle:'walk',ve
 assert.equal(authority.maxSpeed(client),7*1.35,'speed is derived from server-equipped vehicle');
 const rider={x:0,z:54,y:0,venue:null,vehicle:'walk'};
 assert.equal(authority.board({...rider,x:900},'bus-01A',0),false);
+assert.equal(authority.board({...rider,x:10},'bus-01A',0),false,'boarding requires the same close-range stop as the client');
 assert.equal(authority.board(rider,'fake-bus',0),false);
 assert.equal(authority.board(rider,'bus-01A',0),true);
+assert.equal(authority.board(rider,'bus-02A',0),false,'cannot switch buses mid-ride');
+assert.equal(authority.isBoarding(rider),true);
 assert.equal(authority.maxSpeed(rider),48);
 assert.equal(authority.accepts(rider,{x:0,z:58,y:1.35},100),true);
+assert.equal(authority.isBoarding(rider),false);
+Object.assign(rider,{x:0,z:58,y:1.35});
+assert.equal(authority.accepts(rider,{x:0,z:67,y:0.08},1000),false,'cannot jump off between stops');
 assert.equal(authority.accepts(rider,{x:20,z:54,y:1.35},1000),false,'bus cannot leave its approved route');
+assert.equal(authority.accepts(rider,{x:0,z:54,y:0.08},2000),true,'can alight on the platform');
+assert.equal(authority.maxSpeed(rider),7*1.35,'normal speed resumes after alighting');
 authority.reset(client,0);
 for(let tick=1;tick<=120;tick++) {
   const next={x:client.x+.1,z:client.z};

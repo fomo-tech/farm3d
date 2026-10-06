@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import './PlayTogetherWorldMapModal.css';
 import './WorldMapGameStyle.css';
-import { WorldMapSurface } from './WorldMapSurface.jsx';
+import { WorldMapSurface, ALL_MAP_DESTINATIONS } from './WorldMapSurface.jsx';
 import { farmAudio } from '../game/audio/FarmAudioSystem.js';
 import { WORLD_LAYOUT } from '../game/world/worldLayout.js';
 import { WORLD_VILLAGES } from '../../shared/villageLayout.js';
@@ -21,6 +21,7 @@ import {
   Icon3dCoast,
   Icon3dCityBus,
   Icon3dStar,
+  Icon3dMap,
 } from './icons3d/GameIcons3D.jsx';
 
 const RAW_VILLAGE_THEMES = {
@@ -138,41 +139,55 @@ const VILLAGE_THEMES = {
 const SPECIAL_DESTINATIONS = [
   {
     id: 'town',
-    label: 'Quảng Trường Trung Tâm',
+    label: 'Đô Thị (Trung Tâm)',
     category: 'city',
-    badge: 'Phố Thị',
+    badge: 'Quảng Trường',
     color: '#ec4899',
     gradient: 'linear-gradient(135deg, #fdf2f8, #fce7f3)',
-    highway: 'Tâm Điểm Bản Đồ (x: 0, z: 0)',
-    sub: 'Đài phun nước, tiệm bánh, rạp phim & hội quán',
+    highway: 'Quảng Trường Vibe City (x: 0, z: 18)',
+    sub: 'Cửa hàng vật tư, tiệm may, gara xe & hội quán',
     Icon: Icon3dModernCity,
-    ...TOWN_SPAWN,
+    x: 0,
+    z: 18,
+  },
+  {
+    id: 'farms',
+    label: 'Làng Nông Trại',
+    category: 'village',
+    badge: '12 Làng',
+    color: '#16a34a',
+    gradient: 'linear-gradient(135deg, #dcfce7, #bbf7d0)',
+    highway: 'Quốc Lộ 86 · Trục Nam (x: 0, z: 86)',
+    sub: '288 lô đất nông trại, vựa lúa & hoa màu',
+    Icon: Icon3dRiceSpike,
+    x: 0,
+    z: 86,
   },
   {
     id: 'lake',
-    label: 'Hồ Pha Lê & Bến Câu Cá',
+    label: 'Hồ Pha Lê',
     category: 'nature',
-    badge: 'Bến Thuyền',
+    badge: 'Bến Câu Cá',
     color: '#0284c7',
     gradient: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
-    highway: 'Đại Lộ Phía Đông (x: 128, z: 2)',
-    sub: 'Tiệm đồ câu Lão Ngư, chòi dã ngoại & bến thuyền',
+    highway: 'Tiệm Đồ Câu Lão Ngư (x: 126, z: 2)',
+    sub: 'Cần trúc, nơm lờ, mồi câu & bến thuyền dã ngoại',
     Icon: Icon3dFishingRodBamboo,
-    x: 128,
-    z: -2,
+    x: 126,
+    z: 2,
   },
   {
     id: 'beach',
-    label: 'Bãi biển & Bến tàu',
+    label: 'Bãi Biển Bình Minh',
     category: 'nature',
-    badge: 'Bờ Cát',
+    badge: 'Bờ Cát & Bến Tàu',
     color: '#0d9488',
     gradient: 'linear-gradient(135deg, #f0fdfa, #ccfbf1)',
-    highway: 'Quốc Lộ Nam (x: 0, z: 300)',
+    highway: 'Quốc Lộ Nam (x: 0, z: 320)',
     sub: 'Ngọn hải đăng, ghế tắm nắng & bến tàu viễn dương',
     Icon: Icon3dCoast,
     x: 0,
-    z: 300,
+    z: 320,
   },
 ];
 
@@ -186,8 +201,8 @@ export default function PlayTogetherWorldMapModal({
 }) {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDestination,setSelectedDestination]=useState(null);
-  const [mapZoom,setMapZoom]=useState(1);
+  const [selectedDestination, setSelectedDestination] = useState(null);
+  const [mapZoom, setMapZoom] = useState(1);
 
   // 1. Determine player's owned farm
   const myFarm = useMemo(() => {
@@ -233,7 +248,7 @@ export default function PlayTogetherWorldMapModal({
         sub: theme.sub,
         Icon: theme.Icon || Icon3dHouseCabin,
         x: v.gate.x,
-        z: v.gate.z - 4,
+        z: v.gate.z,
         isMyVillage,
         isHere,
         distance: dist,
@@ -292,8 +307,8 @@ export default function PlayTogetherWorldMapModal({
     onTravel?.({
       id: 'farm',
       label: `Nông Trại Của Bạn (${myFarm.villageName} - Lô ${myFarm.lotNumber})`,
-      x: myFarm.x,
-      z: myFarm.z - 6,
+      x: myFarm.x + 6,
+      z: myFarm.z - 4,
     });
     onClose?.();
   };
@@ -335,6 +350,7 @@ export default function PlayTogetherWorldMapModal({
             myFarm={myFarm}
             destinations={allDestinations}
             selectedId={selectedDestination?.id}
+            selectedDestination={selectedDestination}
             onSelect={dest => {
               farmAudio?.playPop?.();
               setSelectedDestination(dest);
@@ -437,17 +453,34 @@ export default function PlayTogetherWorldMapModal({
             <aside className="map-destination-preview">
               <div
                 className="map-preview-icon-frame"
-                style={{ background: selectedDestination.gradient || 'linear-gradient(135deg, #e0f2fe, #bae6fd)' }}
+                style={{
+                  background:
+                    selectedDestination.gradient ||
+                    (selectedDestination.isCustom
+                      ? 'linear-gradient(135deg, #ffe4e6, #fecdd3)'
+                      : 'linear-gradient(135deg, #e0f2fe, #bae6fd)'),
+                }}
               >
                 {selectedDestination.Icon ? (
                   <selectedDestination.Icon size={30} />
+                ) : selectedDestination.isCustom ? (
+                  <Icon3dMap size={30} />
                 ) : (
                   <Icon3dHouseCabin size={30} />
                 )}
               </div>
               <div className="map-preview-info">
                 <div className="map-preview-tag-row">
-                  <span className="map-preview-badge">{selectedDestination.badge}</span>
+                  <span
+                    className="map-preview-badge"
+                    style={
+                      selectedDestination.isCustom
+                        ? { background: '#f43f5e', color: '#ffffff', borderColor: '#e11d48' }
+                        : {}
+                    }
+                  >
+                    {selectedDestination.badge}
+                  </span>
                   <span className="map-preview-distance" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <Icon3dCityBus size={13} />
                     <span>{Math.round(Math.hypot(selectedDestination.x - playerCoord.x, selectedDestination.z - playerCoord.z))}m</span>
@@ -521,6 +554,17 @@ export default function PlayTogetherWorldMapModal({
                     setSelectedDestination(dest);
                   }}
                 >
+                  <span
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      background: dest.color || '#0284c7',
+                      display: 'inline-block',
+                      flexShrink: 0,
+                      boxShadow: '0 0 4px rgba(0,0,0,0.2)',
+                    }}
+                  />
                   <span className="map-capsule-name">{dest.label.replace('Làng ', '')}</span>
                   <span className="map-capsule-dist">{dist}m</span>
                 </button>

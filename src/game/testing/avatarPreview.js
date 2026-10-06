@@ -4,7 +4,12 @@ import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera.js';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { Color4 } from '@babylonjs/core/Maths/math.color.js';
+import { Color3 } from '@babylonjs/core/Maths/math.color.js';
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { buildHumanMesh } from '../player/buildHumanMesh.js';
+import { createFishingRig } from '../player/createPlayer.js';
+import { FISHING_CONFIG } from '../../../shared/fishingConfig.js';
 import { createPlayerNameplate } from '../player/createPlayerNameplate.js';
 import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline.js';
 const engine = new Engine(document.querySelector('#view'), true, {antialias:true, stencil:true});
@@ -36,6 +41,23 @@ if (params.get('top')) avatar.setTop(params.get('top'));
 if (params.get('mouth')) avatar.setFaceFeatures({mouthType:params.get('mouth')});
 if (params.get('lod')) avatar.setLOD(Number(params.get('lod')));
 if (params.get('action')) avatar.playAction(params.get('action'));
+const previewFish = FISHING_CONFIG.fish[params.get('fish')];
+const fishingRig = previewFish ? createFishingRig(scene, avatar.root, avatar) : null;
+const shadowPreview = Boolean(fishingRig && ['bite','waiting'].includes(params.get('phase')));
+let shadowPreviewElapsed = 0;
+if (fishingRig) {
+  fishingRig.startCast(3, 'basic_cast', {x:0,y:.13,z:3}, params.get('size') || 'medium');
+  if (shadowPreview) {
+    camera.setTarget(params.get('phase')==='bite'?new Vector3(0,.13,2.7):new Vector3(0,1.1,1.2));
+    camera.beta=params.get('phase')==='bite'?.28:1.12;camera.radius=5.2;
+    const water=MeshBuilder.CreateGround('fishing-preview-water',{width:8,height:7},scene);
+    water.position.set(0,.04,3);
+    const waterMaterial=new StandardMaterial('fishing-preview-water-material',scene);
+    waterMaterial.diffuseColor=Color3.FromHexString('#54b9dc');
+    waterMaterial.emissiveColor=Color3.FromHexString('#2483b9').scale(.2);
+    water.material=waterMaterial;
+  } else fishingRig.finishCatch(true, previewFish);
+}
 createPlayerNameplate(scene, avatar.root, 'preview', 'Nông dân mới');
 const crowd = [];
 if (params.get('crowd') === '1') {
@@ -52,6 +74,11 @@ document.querySelector('#status').textContent = `Avatar v3 · ${params.get('gend
 engine.runRenderLoop(() => {
   const delta = Math.min(engine.getDeltaTime() / 1000, 0.05);
   avatar.animate(delta, params.get('motion') === 'run', 4);
+  if (shadowPreview) {
+    shadowPreviewElapsed+=delta;
+    if(shadowPreviewElapsed>1)fishingRig.setPhase(params.get('phase') === 'bite' ? 'bite' : 'waiting',params.get('phase') === 'bite' ? 0 : 2500);
+  }
+  fishingRig?.update(delta);
   crowd.forEach(remote => remote.animate(delta, params.get('motion') === 'run', 4));
   scene.render();
 });

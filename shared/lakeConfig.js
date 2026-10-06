@@ -8,7 +8,7 @@ export const LAKE_CONFIG = Object.freeze({
   approach: Object.freeze({ x: 133, z: 2, width: 24, depth: 4.8, y: .10 }),
   shop: Object.freeze({ x: 123, z: -16, entranceX: 116.9, exitX: 112.5 }),
   rest: Object.freeze({ x: 130, z: 24 }),
-  busStop: Object.freeze({ x: 110, z: 5.4, turnX: 114 }),
+  busStop: Object.freeze({ x: 110, z: 6.2, turnX: 114 }),
   detailDistance: 120, keepDetailDistance: 145,
 });
 

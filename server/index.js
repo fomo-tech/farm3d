@@ -305,6 +305,11 @@ wss.on('connection', socket => {
       return;
     }
     if (!client.playerId || !clients.has(socket)) return;
+    if (message.type === 'missions_sync') {
+      const player = await loadPlayer(client.playerId);
+      if (player) safeSend(socket, { type: 'account_state', progress: player.progress });
+      return;
+    }
     if (message.type === 'resync' && client.villageId) {
       await publicFarmScope(client, true);
       broadcastPresence(client.channelId);
@@ -328,7 +333,7 @@ wss.on('connection', socket => {
       const anchor=casinoRoom && CASINO_TABLE_ANCHORS[casinoRoom.game];
       const seatTravel=client.venue==='casino' && requestedVenue==='casino' && anchor && Math.hypot(x-ROOM_LAYOUT.casino.interior.x-anchor.seatX,z-ROOM_LAYOUT.casino.interior.z-anchor.seatZ)<.4 && Math.abs(y-ROOM_LAYOUT.casino.interior.y)<.4;
       if (requestedVenue !== client.venue && !roomTransition) return;
-      if (!roomTransition && !seatTravel && distance > 1.5 + elapsed * movementAuthority.maxSpeed(client)) {
+      if (!roomTransition && !seatTravel && !movementAuthority.isBoarding(client) && distance > 1.5 + elapsed * movementAuthority.maxSpeed(client)) {
         safeSend(socket, { type: 'move_ack', accepted: false, x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, serverTime: Date.now() });
         return;
       }

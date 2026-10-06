@@ -35,6 +35,7 @@ const initial = {
   },
   stats: { planted: 0, watered: 0, harvested: 0, orders: 0, animalsFed: 0, crafted: 0 },
   claimedQuests: [], completedOrders: [], unlockedPlots: 0, barnLevel: 0, toolLevel: 1,
+  missions: { main: { claimed: [] }, daily: null },
   outfit: 'starter', ownedOutfits: ['starter'], vehicle: 'walk', ownedVehicles: ['walk'],
   homeTier: 0, ownedHomes: [], casinoPlays: 0,
   fishing: normalizeFishingState(),

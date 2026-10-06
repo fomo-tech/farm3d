@@ -109,6 +109,40 @@ function citizen(scene, x, z, hex, shadows) {
   return human;
 }
 
+// These two citizens are far outside the playable starting area. Their full
+// customizable avatar rigs used to allocate hundreds of meshes and a dynamic
+// face texture during boot, even while invisible to the player.
+export function distantCitizen(scene, x, z, hex) {
+  const root = new TransformNode(`citizen-${x}-${z}`, scene);
+  root.position.set(x, 0, z);
+  const shirt = mat(scene, `citizen-shirt-${x}-${z}`, hex);
+  const skin = mat(scene, `citizen-skin-${x}-${z}`, '#fcd5b5');
+  const pants = mat(scene, `citizen-pants-${x}-${z}`, '#2b4162');
+  const hair = mat(scene, `citizen-hair-${x}-${z}`, '#76503b');
+  const make = (name, diameter, material, px, py, pz, sx = 1, sy = 1, sz = 1) => {
+    const mesh = MeshBuilder.CreateSphere(`citizen-${x}-${z}-${name}`, { diameter, segments: 8 }, scene);
+    mesh.parent = root;
+    mesh.position.set(px, py, pz);
+    mesh.scaling.set(sx, sy, sz);
+    mesh.material = material;
+    return mesh;
+  };
+  make('torso', .78, shirt, 0, 1.17, 0, .85, 1.1, .55);
+  make('head', .76, skin, 0, 2.04, 0);
+  make('hair', .74, hair, 0, 2.25, -.06, 1, .55, 1);
+  const leftArm = make('left-arm', .24, shirt, -.46, 1.13, 0, .7, 2.4, .7);
+  const rightArm = make('right-arm', .24, shirt, .46, 1.13, 0, .7, 2.4, .7);
+  make('left-leg', .26, pants, -.2, .48, 0, .8, 2.9, .8);
+  make('right-leg', .26, pants, .2, .48, 0, .8, 2.9, .8);
+  let elapsed = 0;
+  return {
+    root,
+    animate(delta) { elapsed += delta; leftArm.rotation.x = Math.sin(elapsed * .8) * .08; rightArm.rotation.x = -leftArm.rotation.x; },
+    isPerformingAction() { return true; },
+    playAction() {},
+  };
+}
+
 function market(scene, x, z, hex, materials, shadows) {
   const stallModel = Math.random() > 0.5 ? MODEL_PATHS.town.stallRed : MODEL_PATHS.town.stallGreen;
   return spawnModelSync(scene, stallModel, {
@@ -842,7 +876,9 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
     [-64, 26, '#71a866'], [-12, 326, '#ed7185'], [112, -11, '#db835e'],
   ]) {
     yield `boot: town citizen ${x}:${z}`;
-    townCitizens.push(citizen(scene, x, z, color, shadows));
+    townCitizens.push(Math.hypot(x, z) > 100
+      ? distantCitizen(scene, x, z, color)
+      : citizen(scene, x, z, color, shadows));
     yield;
   }
 

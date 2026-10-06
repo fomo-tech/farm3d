@@ -10,6 +10,7 @@ const f=fresh();
 f.pending.fishId='golden_carp';
 assert.equal(publicFishingProgress({fishing:f}).fishing.pending.fishId,undefined);
 assert.equal(publicFishingProgress({fishing:f}).fishing.pending.weight,undefined);
+assert.equal(publicFishingProgress({fishing:f}).fishing.pending.shadowSize,'medium');
 assert.equal(f.pending.fishId,'golden_carp');
 assert.throws(()=>call(f,'fishing_reel',999));
 assert.throws(()=>call(f,'fishing_reel',1000,{sessionId:'wrong'}));

@@ -1133,7 +1133,7 @@ export function* createPlayTogetherPlazaSteps(scene, shadows, foliage) {
   fishDorsal.material = matFishAzure;
   fishDorsal.parent = mascotNode;
 
-  // 2 Mắt cá tròn to Chibi Play Together
+  // 2 Mắt cá tròn to Chibi Play Together & Má hồng
   [-0.45, 0.45].forEach((ex, eIdx) => {
     const eyeWhite = MeshBuilder.CreateSphere(`mascot-eye-w-${eIdx}`, { diameter: 0.42, segments: 6 }, scene);
     eyeWhite.position.set(ex, 0.22, 1.45);
@@ -1144,19 +1144,90 @@ export function* createPlayTogetherPlazaSteps(scene, shadows, foliage) {
     eyePupil.position.set(ex * 1.1, 0.22, 1.6);
     eyePupil.material = matsCozy.roofRidge;
     eyePupil.parent = mascotNode;
+
+    const blush = MeshBuilder.CreateSphere(`mascot-blush-${eIdx}`, { diameter: 0.26, segments: 6 }, scene);
+    blush.position.set(ex * 1.25, -0.05, 1.2);
+    blush.scaling.set(1.0, 0.6, 0.2);
+    blush.material = makeMat(scene, `mascot-blush-mat-${eIdx}`, '#f472b6', '#db2777', 0.6, 60);
+    blush.parent = mascotNode;
   });
 
-  // Bể cá thủy sinh trước sảnh bến thuyền (Aquarium Showcase)
+  // Vương miện vàng Hoàng gia trên đỉnh đầu Cá linh vật (Play Together Mascot Golden Crown)
+  const mascotCrown = MeshBuilder.CreateCylinder('mascot-carp-crown', { diameterTop: 0.95, diameterBottom: 0.65, height: 0.5, tessellation: 5 }, scene);
+  mascotCrown.position.set(0, 1.35, 1.1);
+  mascotCrown.rotation.x = -0.3;
+  mascotCrown.material = matFishGold;
+  mascotCrown.parent = mascotNode;
+
+  // Bể cá thủy sinh trước sảnh bến thuyền (Play Together Aquarium Showcase - Chuẩn như mẫu)
   const aquariumTank = MeshBuilder.CreateBox('fishing-live-aquarium', { width: 4.5, height: 1.8, depth: 1.4 }, scene);
   aquariumTank.position.set(4.2, 1.2, 7.2);
   aquariumTank.material = matsCozy.glassClear;
   aquariumTank.parent = fishingRoot;
 
-  // Nước trong bể cá phản quang ngọc lam
+  // Nước trong bể cá phản quang ngọc lam trong suốt
   const aquariumWater = MeshBuilder.CreateBox('fishing-aquarium-water', { width: 4.3, height: 1.6, depth: 1.2 }, scene);
   aquariumWater.position.set(4.2, 1.1, 7.2);
-  aquariumWater.material = makeMat(scene, 'aquarium-water-mat', '#38bdf8', '#0284c7', 0.9, 100);
+  const aqWaterMat = makeMat(scene, 'aquarium-water-mat', '#38bdf8', '#0284c7', 0.9, 100);
+  aqWaterMat.alpha = 0.55;
+  aquariumWater.material = aqWaterMat;
   aquariumWater.parent = fishingRoot;
+
+  // Cát trắng mịn đáy bể cá
+  const aqSand = MeshBuilder.CreateBox('fishing-aquarium-sand', { width: 4.25, height: 0.12, depth: 1.15 }, scene);
+  aqSand.position.set(4.2, 0.36, 7.2);
+  aqSand.material = matsCozy.sand;
+  aqSand.parent = fishingRoot;
+
+  // 1. Kỳ giông hồng Axolotl bơi trong bể cá (như hình mẫu Play Together)
+  const matAxolotl = makeMat(scene, 'aquarium-axolotl-mat', '#f472b6', '#ec4899', 0.7, 60);
+  const axoNode = new TransformNode('aquarium-axolotl', scene);
+  axoNode.position.set(3.2, 0.82, 7.2);
+  axoNode.parent = fishingRoot;
+
+  const axoBody = MeshBuilder.CreateSphere('axo-body', { diameterX: 0.35, diameterY: 0.22, diameterZ: 0.85, segments: 8 }, scene);
+  axoBody.material = matAxolotl;
+  axoBody.parent = axoNode;
+
+  const axoTail = MeshBuilder.CreateCylinder('axo-tail', { diameterTop: 0.02, diameterBottom: 0.22, height: 0.45, tessellation: 3 }, scene);
+  axoTail.rotation.x = Math.PI / 2;
+  axoTail.position.set(0, 0, -0.55);
+  axoTail.material = matAxolotl;
+  axoTail.parent = axoNode;
+
+  for (const aSide of [-1, 1]) {
+    for (let f = 0; f < 3; f++) {
+      const frill = MeshBuilder.CreateSphere(`axo-frill-${aSide}-${f}`, { diameter: 0.075, segments: 6 }, scene);
+      frill.position.set(aSide * (0.19 + f * 0.035), 0.08 + f * 0.045, 0.22 - f * 0.055);
+      frill.material = matAxolotl;
+      frill.parent = axoNode;
+    }
+  }
+
+  // 2. Cá vương miện bơi lội dưới đáy bể (Crowned Fish như hình mẫu Play Together)
+  const matCrownFish = makeMat(scene, 'aquarium-crownfish-mat', '#334155', '#1e293b', 0.8, 70);
+  const crownFishNode = new TransformNode('aquarium-crowned-fish', scene);
+  crownFishNode.position.set(5.1, 0.68, 7.2);
+  crownFishNode.parent = fishingRoot;
+
+  const cfBody = MeshBuilder.CreateSphere('cf-body', { diameterX: 0.36, diameterY: 0.28, diameterZ: 1.15, segments: 8 }, scene);
+  cfBody.material = matCrownFish;
+  cfBody.parent = crownFishNode;
+
+  const cfCrown = MeshBuilder.CreateCylinder('cf-crown', { diameterTop: 0.18, diameterBottom: 0.12, height: 0.14, tessellation: 5 }, scene);
+  cfCrown.position.set(0, 0.22, 0.26);
+  cfCrown.material = matFishGold;
+  cfCrown.parent = crownFishNode;
+
+  // Hiệu ứng bơi lội êm đềm trong bể kính
+  scene.onBeforeRenderObservable.add(() => {
+    const tSec = performance.now() * 0.001;
+    axoNode.position.x = 3.2 + Math.sin(tSec * 0.8) * 0.35;
+    axoTail.rotation.y = Math.sin(tSec * 4.0) * 0.35;
+
+    crownFishNode.position.x = 5.1 + Math.sin(tSec * 0.6 + 1.5) * 0.4;
+    crownFishNode.rotation.y = Math.sin(tSec * 0.6 + 1.5) > 0 ? 0 : Math.PI;
+  });
 
   // Bảng kỷ lục câu cá mùa giải (Fishing Tournament Trophy Stand)
   const recordBoard = MeshBuilder.CreateBox('fishing-record-board', { width: 2.2, height: 1.6, depth: 0.15 }, scene);

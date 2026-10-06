@@ -91,25 +91,6 @@ export const ALL_BRIDGES = Object.freeze([
     lanternCount: 4,
     pierCount: 2,
   },
-  {
-    id: 'bridge-valley-wood',
-    name: 'Cầu Thung Lũng Lá Vàng',
-    subtitle: 'Suối Đá Cuội Tự Nhiên',
-    type: BRIDGE_TYPES.PEDESTRIAN_TIMBER,
-    cx: 150,
-    cz: 180,
-    spanX: 11,
-    widthZ: 3.8,
-    deckY: 0.10,
-    archPeakY: 0.42,
-    rampLen: 2.0,
-    woodColor: '#78350f',
-    railColor: '#92400e',
-    accentColor: '#fbbf24',
-    hasLanterns: true,
-    lanternCount: 2,
-    pierCount: 0,
-  },
 ]);
 
 /**

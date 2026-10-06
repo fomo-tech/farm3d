@@ -52,7 +52,6 @@ if (villageViolations === 0 && farmViolations === 0) {
 // 2. Check Inter-Village Scenic Landmarks
 const majorLandmarks = [
   { name: 'West Windmills', x: -450, z: 180 },
-  { name: 'Golden Maple Valley Bridge', x: 150, z: 180 },
   { name: 'East Watermill', x: 428, z: 180 },
   { name: 'North Highlands Pine Forest', x: 70, z: -185 },
   { name: 'North Tea Hills Retreat', x: 80, z: -440 },
@@ -74,7 +73,7 @@ majorLandmarks.forEach(lm => {
 });
 
 if (landmarkViolations === 0) {
-  console.log(`2. All 6 Major Inter-Village Scenic Buffer Landscapes are 100% CLEAR of road corridors & farm lots.`);
+  console.log(`2. All ${majorLandmarks.length} Major Inter-Village Scenic Buffer Landscapes are 100% CLEAR of road corridors & farm lots.`);
 } else {
   console.error(`2. Found ${landmarkViolations} violations in inter-village landmarks.`);
   process.exit(1);

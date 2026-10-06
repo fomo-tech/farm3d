@@ -20,8 +20,6 @@ import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 import { WORLD_PALETTE, createCozyMaterial } from './worldDesignSystem.js';
 import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
-import { ALL_BRIDGES } from '../../../shared/bridgeConfig.js';
-import { buildBridge } from './nature/BridgeSystem.js';
 
 function mat(scene, name, hex, emissiveHex = null, specular = 0.08) {
   const m = new StandardMaterial(name, scene);
@@ -103,16 +101,6 @@ export function* createInterVillagePlainsSteps(scene, foliage, shadows) {
   // Giữa Bình Minh (x = 0) và Ven Sông (x = 300): x = 90 -> 210, z = 125 -> 235
   // =========================================================================
   const valleyCenter = { x: 150, z: 180 };
-    yield;
-
-  // Suối đá cuội tự nhiên có cầu gỗ vòm uốn cong đồng bộ
-  if (!isPointOnRoadCorridor(valleyCenter.x, valleyCenter.z, 4.0) && !isPointInsideAnyFarmLot(valleyCenter.x, valleyCenter.z, 2.0)) {
-    const bridgeValley = ALL_BRIDGES.find(b => b.id === 'bridge-valley-wood');
-    if (bridgeValley) {
-      buildBridge(scene, bridgeValley, root, shadows);
-    }
-    foliage.createRusticBench(valleyCenter.x - 5.5, valleyCenter.z - 3.8, 0.8);
-  }
     yield;
 
   // Lưới rừng cây phong lá vàng & sồi đại thụ (Lưới đều đặn 24m)

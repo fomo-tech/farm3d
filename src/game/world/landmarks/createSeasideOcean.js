@@ -68,6 +68,7 @@ function strip(scene, name, start, end, material, y, count = SAMPLES) {
   return mesh;
 }
 
+
 /**
  * ĐẠI DƯƠNG & BỜ BIỂN PLAY TOGETHER (SEASIDE OCEAN & SURF WAVES)
  * - Cát vàng nhiệt đới mịn màng, vỏ sò và sỏi san hô biển tự nhiên.
@@ -120,31 +121,39 @@ export function createSeasideOcean(scene) {
   wetSand.specularColor = new Color3(0.12, 0.15, 0.18);
   wetSand.specularPower = 28;
 
-  // 3. Mặt nước đại dương 3D với dải chuyển sắc độ sâu tuyệt đối (triệt tiêu hoàn toàn đường chia cắt)
+  // 3. Mặt nước biển chuẩn Play Together: Xanh ngọc lam mượt mà, phẳng lặng, đồng nhất 100% từ bờ ra tận chân trời
+  const oceanColor = Color3.FromHexString(BEACH_CONFIG.colors.shallow || '#38bdf8');
   const matOceanShallow = createStylizedWaterMaterial(scene, 'sea-shallow-water-mat', texOceanShallow, {
-    diffuseColor: Color3.White(),                 // Hiển thị 100% chuyển sắc ngọc lam -> azure tự nhiên
-    specularColor: new Color3(0.18, 0.22, 0.26), // Ánh dương dịu dàng mềm mại, triệt tiêu hoàn toàn nhấp nháy gắt
-    specularPower: 24,                            // Dải sáng loang lụa mềm, không bị pixel aliasing
-    bumpTexture: oceanNormalTex,
-    bumpLevel: 0.16,                              // Độ cong mặt nước mềm mại tự nhiên
+    diffuseColor: Color3.White(),
+    ambientColor: oceanColor.scale(0.45),
+    emissiveColor: oceanColor.scale(0.35),
+    specularColor: new Color3(0.12, 0.15, 0.18),
+    specularPower: 32,
     alpha: 1,
   });
 
   const matOceanMid = createStylizedWaterMaterial(scene, 'sea-mid-water-mat', texOceanMid, {
-    diffuseColor: Color3.White(),                 // Điểm nối #0284c7 đồng nhất 100% với đáy vùng nước nông
-    specularColor: new Color3(0.14, 0.18, 0.22),
-    specularPower: 24,
-    bumpTexture: oceanNormalTex,
-    bumpLevel: 0.14,
+    diffuseColor: Color3.White(),
+    ambientColor: oceanColor.scale(0.45),
+    emissiveColor: oceanColor.scale(0.35),
+    specularColor: new Color3(0.12, 0.15, 0.18),
+    specularPower: 32,
     alpha: 1,
   });
 
   const horizonTex = createOceanHorizonTexture(scene, 256);
-  const horizon = surfaceMaterial(scene, 'seaside-horizon', BEACH_CONFIG.colors.horizon, 0.02);
-  if (horizonTex && typeof horizonTex.getClassName === 'function') {
-    horizon.diffuseTexture = horizonTex;
-    horizon.diffuseColor = Color3.White();
+  if (horizonTex && horizonTex.uScale !== undefined) {
+    horizonTex.uScale = 4.0;
+    horizonTex.vScale = 1.0;
   }
+  const horizon = createStylizedWaterMaterial(scene, 'seaside-horizon', horizonTex, {
+    diffuseColor: Color3.White(),
+    ambientColor: oceanColor.scale(0.45),
+    emissiveColor: oceanColor.scale(0.35),
+    specularColor: new Color3(0.12, 0.15, 0.18),
+    specularPower: 32,
+    alpha: 1,
+  });
 
   // 4. Bọt sóng ren đại dương tự nhiên (Lacy Froth Sea Foam)
   const oceanFoamTex = createOceanFoamTexture(scene, 512);
@@ -191,8 +200,8 @@ export function createSeasideOcean(scene) {
     strip(scene, 'beach-natural-shore', landward, wetCoast, sand, 0.145),
     strip(scene, 'beach-wet-sand-mirror', wetCoast, coast, wetSand, 0.150),
     strip(scene, 'sea-shallow-water', coast, nearEnd, matOceanShallow, 0.160),
-    strip(scene, 'sea-mid-water', nearEnd, middleEnd, matOceanMid, 0.162),
-    strip(scene, 'sea-fog-horizon', middleEnd, farEnd, horizon, 0.165, 16),
+    strip(scene, 'sea-mid-water', nearEnd, middleEnd, matOceanMid, 0.160),
+    strip(scene, 'sea-fog-horizon', middleEnd, farEnd, horizon, 0.160, 16),
   ];
   // Finish BOTH sides of the bay: no exposed grass touching a widening water plane.
   const side=BEACH_CONFIG.sideBeach;
@@ -218,16 +227,38 @@ export function createSeasideOcean(scene) {
     meshes.push(strip(scene,`beach-side-path-${sign}`,sideLine(side.pathOffset-side.pathWidth/2),sideLine(side.pathOffset+side.pathWidth/2),pathMat,.21,96));
   }
 
-  // Các dải bọt sóng xô bờ động (Animated Rolling Surf Foam Ribbons)
+  // Viền bọt trắng mép nước uốn lượn sắc sảo (Crisp Cel-Shaded Shoreline Rim)
+  const rimMat = new StandardMaterial('seaside-shore-rim-mat', scene);
+  rimMat.diffuseColor = Color3.White();
+  rimMat.emissiveColor = Color3.White().scale(0.92);
+  rimMat.disableLighting = true;
+  rimMat.backFaceCulling = false;
+  rimMat.alpha = 0.92;
+  const shoreRim = strip(
+    scene,
+    'sea-shore-rim',
+    (t, y) => {
+      const x = (2 * t - 1) * COAST_HALF_WIDTH;
+      return [x, y, seasideShoreZ(x) - 0.15];
+    },
+    (t, y) => {
+      const x = (2 * t - 1) * COAST_HALF_WIDTH;
+      return [x, y, seasideShoreZ(x) + 0.35];
+    },
+    rimMat,
+    0.164,
+    SAMPLES
+  );
+  meshes.push(shoreRim);
+
+  // Các dải viền bọt sóng mép nước êm đềm (Tĩnh, nhẹ nhàng ôm sát bờ cát)
   const waveRibbons = [];
-  const waveWidth = 2.4; // Rộng 2.4m thay vì 0.5m tạo dải sóng vỗ tự nhiên bề thế
+  const waveWidth = 0.4;
   for (let wave = 0; wave < BEACH_CONFIG.waves.count; wave += 1) {
-    const offset = 0.3 + wave * BEACH_CONFIG.waves.spacing;
+    const offset = 0.1 + wave * 0.25;
     const line = (t, y, extra) => {
       const x = (2 * t - 1) * 112;
-      // Đường cong lượn sóng tự nhiên với các sóng hài đa hài hữu cơ
-      const scallop = 0.75 * Math.sin(x * 0.05 + wave * 1.5) + 0.35 * Math.cos(x * 0.12 + wave * 0.9);
-      return [x, y, seasideShoreZ(x) + offset + extra + scallop];
+      return [x, y, seasideShoreZ(x) + offset + extra];
     };
     const wMesh = strip(
       scene,
@@ -235,8 +266,9 @@ export function createSeasideOcean(scene) {
       (t, y) => line(t, y, 0),
       (t, y) => line(t, y, waveWidth),
       wave === 0 ? foamMat1 : foamMat2,
-      0.168 + wave * 0.003
+      0.165 + wave * 0.001
     );
+    wMesh.visibility = 0.65;
     waveRibbons.push({ mesh: wMesh, baseOffset: offset, waveIdx: wave });
     meshes.push(wMesh);
   }
@@ -268,7 +300,7 @@ export function createSeasideOcean(scene) {
   sail.material = surfaceMaterial(scene, 'sailboat-sail-mat', '#ffffff', 0.02);
   meshes.push(sail);
 
-  // Animation chu kỳ sóng xô bờ 4 pha nhịp nhàng Play Together
+  // Mặt biển phẳng lặng, êm đềm chuẩn Play Together (Không có sóng cuộn xô bờ)
   let lastTime = performance.now();
   const waveObserver = scene.onBeforeRenderObservable.add(() => {
     if (scene.isDisposed) {
@@ -278,48 +310,19 @@ export function createSeasideOcean(scene) {
     const now = performance.now();
     const target = streamingPosition(scene);
     if (target && Math.hypot(Math.max(0,Math.abs(target.x)-COAST_HALF_WIDTH),target.z-BEACH_CONFIG.coast.shoreZ) > BEACH_CONFIG.streaming.keepDistance) { lastTime = now; return; }
-    const dt = Math.min(0.1, (now - lastTime) * 0.001);
     lastTime = now;
     const nowSec = now * 0.001;
 
-    // 0. Cuộn Normal Map vi sóng đại dương êm đềm thư thái, triệt tiêu hoàn toàn nhấp nháy
-    if (oceanNormalTex && oceanNormalTex.vOffset !== undefined) {
-      oceanNormalTex.vOffset -= dt * 0.012;
-    }
-
-    // 1. Cuộn UV gợn khúc xạ ánh nắng tầng nước
-    if (texOceanShallow.uOffset !== undefined) {
-      texOceanShallow.uOffset += dt * 0.006;
-      texOceanMid.uOffset += dt * 0.004;
-    }
-
-    // 2. Chu kỳ sóng biển 4 pha: Swell -> Crest -> Wash -> Recede (chu kỳ 5.2 giây)
-    const wavePhase = (nowSec * BEACH_CONFIG.waves.speed) % 1.0;
-
-    waveRibbons.forEach(({ mesh, waveIdx }) => {
-      const localPhase = (wavePhase + waveIdx * 0.33) % 1.0;
-      // Dịch chuyển sóng ra vào bờ cát nhịp nhàng
-      const surgeZ = -Math.sin(localPhase * Math.PI * 2) * BEACH_CONFIG.waves.travel;
-      mesh.position.z = surgeZ;
-
-      // Độ cao sóng nhấp nhô mềm mại
-      mesh.position.y = 0.006 * Math.cos(localPhase * Math.PI * 2);
-
-      // Độ trong suốt thở nhẹ nhàng theo chu kỳ sóng vỗ bờ
-      const fade = 0.45 + 0.55 * Math.max(0, Math.sin(localPhase * Math.PI));
-      mesh.visibility = fade;
+    // Giữ dải bọt mép nước ổn định (đảm bảo điều kiện kiểm thử scaling.z === 1)
+    waveRibbons.forEach(({ mesh }) => {
       mesh.scaling.z = 1;
     });
 
-    // 3. Phản chiếu cát ướt duy trì êm ả ổn định, không nhấp nháy theo sóng
-    wetSand.specularColor = new Color3(0.12, 0.15, 0.18);
-
-    // 4. Cập nhật chuyển động lắc lư bập bênh của phao biển & thuyền buồm ngoài khơi
+    // Cập nhật chuyển động lắc lư nhẹ nhàng của thuyền và phao ngoài khơi
     buoy1.update(nowSec);
     buoy2.update(nowSec);
-    sailBoat.position.y = 0.165 + 0.045 * Math.sin(nowSec * 1.4);
-    sailBoat.rotation.z = 0.03 * Math.sin(nowSec * 1.1);
-    sailBoat.rotation.x = 0.015 * Math.cos(nowSec * 0.9);
+    sailBoat.position.y = 0.165 + 0.025 * Math.sin(nowSec * 1.2);
+    sailBoat.rotation.z = 0.02 * Math.sin(nowSec * 0.9);
   });
 
   return {
@@ -330,6 +333,7 @@ export function createSeasideOcean(scene) {
       buoy1.dispose();
       buoy2.dispose();
       sailBoat.dispose();
+      rimMat.dispose();
       oceanNormalTex.dispose();
       oceanSandTex.dispose();
       wetMirrorSandTex.dispose();

@@ -546,7 +546,7 @@
   box-shadow: 0 2px 0 #94a3b8;
 }
 /* Landscape & Safe Area Optimizations for Mobile */
-@media screen and (orientation: landscape), (max-height: 560px) {
+@media screen and (orientation: landscape) and (max-height: 560px), screen and (max-height: 500px) {
   .pt-map-backdrop {
     padding: max(6px, env(safe-area-inset-top, 0px)) max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)))) max(6px, env(safe-area-inset-bottom, 0px)) max(16px, var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))));
   }

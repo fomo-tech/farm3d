@@ -4,14 +4,20 @@ import { fishResistance } from '../../shared/fishingSession.js';
 import { Icon3dFishingRodBamboo } from './icons3d/GameIcons3D.jsx';
 import './FishingHUD.css';
 
-function VectorFish({ size = 42, color = '#38bdf8' }) {
+function VectorFish({ size = 42, color = '#38bdf8', fishId = 'carp' }) {
+  const longBody=['river_catfish','sea_mackerel'].includes(fishId);
+  const roundBody=['golden_carp','sea_snapper'].includes(fishId);
+  const striped=['perch','sea_mackerel','river_barb'].includes(fishId);
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" style={{ verticalAlign: 'middle' }}>
-      <path d="M6 24 C14 12, 32 14, 40 24 C32 34, 14 36, 6 24 Z" fill={color} stroke="#0f172a" strokeWidth="2.5" />
-      <path d="M38 24 L46 16 L44 24 L46 32 Z" fill={color} stroke="#0f172a" strokeWidth="2.5" strokeLinejoin="round" />
-      <circle cx="14" cy="22" r="2.5" fill="#ffffff" stroke="#0f172a" strokeWidth="1.5" />
-      <circle cx="15" cy="22" r="1.2" fill="#0f172a" />
-      <path d="M22 17 C25 21, 25 27, 22 31" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+    <svg width={size} height={size} viewBox="0 0 100 72" fill="none" role="img" aria-label={FISHING_CONFIG.fish[fishId]?.name || 'Cá'}>
+      <path d="M73 37 L96 16 Q87 36 96 57 Z" fill={color} stroke="#264252" strokeWidth="3" strokeLinejoin="round" />
+      <path d={roundBody?'M12 36 C17 8 62 2 78 35 C64 69 21 65 12 36 Z':longBody?'M7 36 C24 22 63 23 79 35 C61 49 22 50 7 36 Z':'M9 36 C19 17 60 14 79 35 C62 56 21 56 9 36 Z'} fill={color} stroke="#264252" strokeWidth="3" />
+      <path d="M21 43 Q45 55 70 40" stroke="#fff5d9" strokeWidth="5" opacity=".75" strokeLinecap="round" />
+      <path d="M38 23 L51 10 L58 23" fill={color} stroke="#264252" strokeWidth="2.5" strokeLinejoin="round" />
+      {striped&&[43,52,61].map(x=><path key={x} d={`M${x} 25 Q${x-6} 34 ${x} 44`} stroke="#284a55" strokeWidth="3" opacity=".55" />)}
+      <path d="M30 33 Q34 37 30 41" stroke="#264252" strokeWidth="2" opacity=".65" />
+      <circle cx="21" cy="32" r="5" fill="white" /><circle cx="20" cy="32" r="2.4" fill="#203b4c" />
+      {fishId==='river_catfish'&&<><path d="M14 40 Q1 45 2 52 M18 41 Q13 55 22 61" stroke="#264252" strokeWidth="2" strokeLinecap="round" /></>}
     </svg>
   );
 }
@@ -94,21 +100,23 @@ export function FishingHUD({ fishing, connected, water, send, cast, serverOffset
   if(caught){
     const fish=FISHING_CONFIG.fish[caught.fishCaught];
     const rarity={common:'Thông thường',uncommon:'Ít gặp',rare:'Hiếm',epic:'Quý hiếm',legendary:'Huyền thoại'}[caught.rarity]||'Cá vừa bắt';
-    return <section className="fish-result" role="dialog" aria-label="Cá vừa bắt"><span className="fish-result-art"><VectorFish size={80} color={fish?.color || '#38bdf8'} /></span><small>{rarity}</small><h2>{fish?.name}</h2><b>{Number(caught.weight).toFixed(2)} kg</b><p>Đã vào thùng cá · giá trị {caught.value} xu</p><button disabled={!canCast} onClick={repeatCast}>Thả câu tiếp · F</button>{!canCast&&<p role="status">{!connected?'Đang chờ kết nối':!water?'Quay lại bờ nước để câu tiếp':!fishing?.equippedRod?'Trang bị cần câu trước':'Thùng cá đầy — hãy bán cá'}</p>}<button className="fish-cancel" onClick={clearCaught}>Cất cá</button></section>;
+    return <section className="fish-result" role="dialog" aria-label="Cá vừa bắt"><span className="fish-result-art"><VectorFish size={100} color={fish?.color || '#38bdf8'} fishId={caught.fishCaught} /></span><small>{rarity}</small><h2>{fish?.name}</h2><b>{Number(caught.weight).toFixed(2)} kg</b><p>Nhân vật đang cầm cá · đã vào thùng · giá trị {caught.value} xu</p><button disabled={!canCast} onClick={repeatCast}>Thả câu tiếp · F</button>{!canCast&&<p role="status">{!connected?'Đang chờ kết nối':!water?'Quay lại bờ nước để câu tiếp':!fishing?.equippedRod?'Trang bị cần câu trước':'Thùng cá đầy — hãy bán cá'}</p>}<button className="fish-cancel" onClick={clearCaught}>Cất cá</button></section>;
   }
   if(!pending && !water)return null;
   const fighting=pending?.phase==='fighting', biting=pending && !fighting && now>=pending.biteAt && now<=pending.expiresAt;
   const struggling=fighting&&fishResistance(pending,now);
+  const tension=Math.max(0,Math.min(100,Number(pending?.tension)||0));
+  const pull=Math.max(0,Math.min(100,Number(pending?.pull)||0));
+  const remaining=biting ? Math.max(0,(pending.expiresAt-now)/(pending.expiresAt-pending.biteAt)*100) : 0;
+  const title=fighting?'KÉO CÁ':biting?'CÁ ĐÃ CẮN CÂU':pending?'CHỜ CÁ CẮN':'SẴN SÀNG CÂU';
   return <section className={`fish-hud fish-state-${fighting?'fighting':biting?'bite':pending?'waiting':'ready'}`} aria-label="Câu cá">
-    <header><b style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dFishingRodBamboo size={18} /> {fighting?'Kéo cá':biting?'Cá cắn!':'Câu cá'}</b><small>{fishingInventoryCount(fishing)}/{fishingCapacity(fishing)} cá</small></header>
+    <header><span className="fish-hud-icon"><Icon3dFishingRodBamboo size={26} /></span><span className="fish-hud-heading"><b>{title}</b><small>{fighting?'Giữ khi dây êm · thả khi cá vùng':biting?'Giật cần trước khi cá bơi đi':pending?'Nhìn phao · nghe tín hiệu':'Một nút để thả câu'}</small></span><span className="fish-hud-bag">{fishingInventoryCount(fishing)}/{fishingCapacity(fishing)}</span></header>
     {fighting ? <>
-      <label>Lực căng dây <strong>{Math.round(pending.tension)}%</strong></label>
-      <div className="fish-tension-track" role="meter" aria-label="Lực căng dây" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pending.tension)}><span className="fish-tension-safe"/><i style={{left:`${Math.max(0,Math.min(100,pending.tension))}%`}}/></div>
-      <div className="fish-tension-labels"><span>Chùng</span><span>An toàn</span><span>Đứt dây</span></div>
-      <label>Kéo cá về <strong>{Math.round(pending.pull)}%</strong></label><progress aria-label="Tiến độ kéo cá" max="100" value={pending.pull}/>
-      <p>{struggling?'Cá vùng vẫy — thả nút để giảm căng!':'Giữ nút kéo, giữ lực căng trong vùng an toàn.'}</p>
-      <button className="fish-pull" aria-pressed={pressed} disabled={!connected} onBlur={()=>hold(false)} onPointerDown={e=>{if(e.button!==0)return;e.currentTarget.setPointerCapture(e.pointerId);hold(true);}} onPointerUp={()=>hold(false)} onPointerCancel={()=>hold(false)} onLostPointerCapture={()=>hold(false)} onKeyDown={e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();e.stopPropagation();hold(true);}}} onKeyUp={e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();e.stopPropagation();hold(false);}}}>{pressed?'Đang kéo… · thả để hạ lực':'Giữ kéo cá · F'}</button>
-    </> : pending ? <><p role="status">{biting?'Cá cắn! Bấm ngay để giật cần.':'Chờ phao chìm — chưa bấm kéo.'}</p>{biting&&<progress aria-label="Thời gian giật cần" max={pending.expiresAt-pending.biteAt} value={Math.max(0,pending.expiresAt-now)}/>}<button className={biting?'fish-bite-action':''} disabled={!connected||!biting} onClick={primary}>{biting?'! GIẬT CẦN · F':'Chờ cá cắn…'}</button></> : <><p>{FISHING_CONFIG.rods[fishing?.equippedRod]?.name || 'Mua và trang bị cần tại tiệm đồ câu'}</p><button disabled={!connected||!fishing?.equippedRod||fishingInventoryCount(fishing)>=fishingCapacity(fishing)} onClick={primary}>Thả câu · F</button>{fishingInventoryCount(fishing)>=fishingCapacity(fishing)&&<p role="status">Thùng đầy — bán cá trước khi câu tiếp.</p>}</>}
+      <div className="fish-hud-readout"><span>Đã kéo <b>{Math.round(pull)}%</b></span><div className="fish-progress"><i style={{width:`${pull}%`}}/></div></div>
+      <div className="fish-hud-readout"><span>Lực dây <b>{Math.round(tension)}%</b></span><div className="fish-tension-track" role="meter" aria-label="Lực căng dây" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(tension)}><span className="fish-tension-safe"/><i style={{left:`${tension}%`}}/></div></div>
+      <p className={`fish-hud-cue ${struggling?'fish-hud-warning':''}`} role="status">{struggling?'Cá vùng mạnh! Thả nút':'Dây êm — giữ nút để kéo'}</p>
+      <button className="fish-main-action fish-pull" aria-pressed={pressed} disabled={!connected} onBlur={()=>hold(false)} onPointerDown={e=>{if(e.button!==0)return;e.currentTarget.setPointerCapture(e.pointerId);hold(true);}} onPointerUp={()=>hold(false)} onPointerCancel={()=>hold(false)} onLostPointerCapture={()=>hold(false)} onKeyDown={e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();e.stopPropagation();hold(true);}}} onKeyUp={e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();e.stopPropagation();hold(false);}}}>{pressed?'THẢ ĐỂ GIẢM LỰC':'GIỮ ĐỂ KÉO · F'}</button>
+    </> : pending ? <><div className={`fish-bobber ${biting?'fish-bobber-bite':''}`} aria-hidden="true"><span/><i/></div>{biting&&<div className="fish-bite-time" role="progressbar" aria-label="Thời gian giật cần" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(remaining)}><i style={{width:`${remaining}%`}}/></div>}<button className={`fish-main-action ${biting?'fish-bite-action':''}`} disabled={!connected||!biting} onClick={primary}>{biting?'GIẬT CẦN · F':'ĐANG CHỜ PHAO CHÌM'}</button></> : <><p className="fish-rod-name">{FISHING_CONFIG.rods[fishing?.equippedRod]?.name || 'Cần mua và trang bị cần câu'}</p><button className="fish-main-action" disabled={!connected||!fishing?.equippedRod||fishingInventoryCount(fishing)>=fishingCapacity(fishing)} onClick={primary}>THẢ CÂU · F</button>{fishingInventoryCount(fishing)>=fishingCapacity(fishing)&&<p role="status">Thùng cá đầy — hãy bán cá trước.</p>}</>}
     {pending&&<button className="fish-cancel" disabled={!connected} onClick={()=>send('fishing_cancel',{sessionId:pending.id})}>Thu cần</button>}
     {!connected&&<p role="alert">Mất kết nối — không thể xác nhận thao tác.</p>}
   </section>;
