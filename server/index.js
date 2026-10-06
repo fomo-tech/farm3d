@@ -3,7 +3,8 @@ import { travelCost } from '../shared/travelConfig.js';
 import { chargeTravel } from './GameStore.js';
 import { WebSocketServer, WebSocket } from 'ws';
 import { purchaseFarm, listLandMarket, getAssignment, initVillageRegistry, isAssignedFarm, listVillageAssignments, listVillages, positionForLot, villageChannel, villageForFarm } from './VillageRegistry.js';
-import { authenticate, casinoRefundStale, farmAction, initGameStore, initFarmSecurity, farmSecurity, loadFarmAssignment, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadPublicPlayerProfile, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
+import { authenticate, googleAccountLogin, linkGoogleAccount, revokeGameSession, casinoRefundStale, farmAction, initGameStore, initFarmSecurity, farmSecurity, loadFarmAssignment, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadPublicPlayerProfile, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
+import { verifyGoogleCredential } from './GoogleIdentity.js';
 import { decodeFarmId } from '../shared/villageLayout.js';
 import { farmGateOpen } from '../shared/farmSecurity.js';
 import { CasinoActionError } from './casino/CasinoActionError.js';
@@ -223,6 +224,23 @@ wss.on('connection', socket => {
     if (client.messages.length >= 40) return;
     client.messages.push(now);
     try { message = JSON.parse(String(raw)); } catch { return; }
+    if (message.type === 'google_login' || message.type === 'google_link') {
+      if (!allowAuthAttempt(clientAddress(socket))) {
+        safeSend(socket, { type: 'google_auth_result', status: 'error', message: 'Thử lại sau một phút.' });
+        return;
+      }
+      try {
+        const { sub } = await verifyGoogleCredential(message.credential);
+        if (message.type === 'google_login') {
+          const account = await googleAccountLogin(sub);
+          safeSend(socket, { type: 'google_auth_result', status: 'login', playerId: account.playerId,
+            sessionToken: account.token, name: account.name, googleLinked: true });
+        } else if (client.playerId && clients.has(socket)) {
+          safeSend(socket, { type: 'google_auth_result', ...(await linkGoogleAccount(client.playerId, sub)) });
+        } else safeSend(socket, { type: 'google_auth_result', status: 'error', message: 'Cần vào game trước khi liên kết.' });
+      } catch (error) { safeSend(socket, { type: 'google_auth_result', status: 'error', message: error.message || 'Không thể xác thực Google.' }); }
+      return;
+    }
     if (message.type === 'join') {
       client.playerId = String(message.playerId || '').slice(0, 64);
       if (!/^player_[a-z0-9_-]{8,64}$/i.test(client.playerId)) return socket.close(1008, 'Invalid player id');
@@ -232,6 +250,7 @@ wss.on('connection', socket => {
       }
       const account = await authenticate(client.playerId, String(message.sessionToken || ''), message.name);
       if (account.error) { safeSend(socket, { type: 'auth_error', message: account.error }); return socket.close(1008, 'Invalid session'); }
+      client.sessionToken = account.token;
       const recovered = await casinoRefundStale(client.playerId, []);
       if (recovered) account.progress = recovered.progress;
       client.name = account.name;
@@ -243,7 +262,7 @@ wss.on('connection', socket => {
       }
       client.vehicle = account.progress?.vehicle || 'walk';
       client.outfit = account.progress?.outfit || 'starter';
-      safeSend(socket, { type: 'account_state', name: account.name, sessionToken: account.token, progress: account.progress, livestock: account.livestock, position: account.position?.layoutVersion === MAP_LAYOUT_VERSION ? account.position : null });
+      safeSend(socket, { type: 'account_state', name: account.name, googleLinked: account.googleLinked, sessionToken: account.token, progress: account.progress, livestock: account.livestock, position: account.position?.layoutVersion === MAP_LAYOUT_VERSION ? account.position : null });
       safeSend(socket, { type: 'village_list', villages: await listVillages() });
       const existing = await getAssignment(client.playerId);
       const assignedLot = existing || { farmId: null, villageId: 'town', villageName: 'Thị trấn', lot: null, spawn: TOWN_SPAWN, farmConfig: null };
@@ -305,6 +324,12 @@ wss.on('connection', socket => {
       return;
     }
     if (!client.playerId || !clients.has(socket)) return;
+    if (message.type === 'google_logout') {
+      await revokeGameSession(client.playerId, client.sessionToken);
+      safeSend(socket, { type: 'google_auth_result', status: 'logged-out' });
+      socket.close(1000, 'Signed out');
+      return;
+    }
     if (message.type === 'missions_sync') {
       const player = await loadPlayer(client.playerId);
       if (player) safeSend(socket, { type: 'account_state', progress: player.progress });

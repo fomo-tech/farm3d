@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "test:auth": "node scripts/test-google-auth.mjs",
     "test:missions": "node scripts/test-missions.mjs && node scripts/test-missions-server.mjs",
     "test:casino": "node scripts/test-casino-rules.mjs && node scripts/test-casino-mongo.mjs",
     "test:beach": "node scripts/test-beach.mjs",

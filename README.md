@@ -11,6 +11,11 @@ npm run dev
 
 Game client chạy tại `http://localhost:4177`, multiplayer server chạy tại `http://localhost:8787`.
 Lệnh dev chạy cả hai; dùng `npm run dev:client` hoặc `npm run dev:server` khi cần chạy riêng.
+Để bật Google Sign-In, tạo OAuth 2.0 **Web Client ID** trong Google Cloud,
+thêm `http://localhost:4177` vào Authorized JavaScript origins, rồi chép `.env.example`
+thành `.env` và đặt cùng Client ID ở `VITE_GOOGLE_CLIENT_ID` và `GOOGLE_CLIENT_ID`.
+Không cần Client Secret. Khi chạy riêng server, xuất `GOOGLE_CLIENT_ID` vào môi trường.
+Không có Client ID, chế độ Chơi ngay vẫn hoạt động còn nút Google hiển thị trạng thái chưa cấu hình.
 Mở nhiều tab để thử nhiều người chơi trong cùng kênh. Nếu server tắt, client tự chuyển sang
 offline và thử kết nối lại sau mỗi 2,5 giây.
 

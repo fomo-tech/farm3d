@@ -331,7 +331,7 @@ export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
         </div>
       </button>
 
-      {/* 2. Tactile Location Pill Badge (Docked Under Radar) */}
+      {/* 2. Location Pill Badge (Docked Under Radar) */}
       {!minimized && (
         <button
           type="button"
@@ -340,29 +340,9 @@ export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
           aria-label={`Mở bản đồ: ${zoneName}`}
           title="Bấm để mở Bản Đồ Toàn Cảnh (Phím M)"
         >
-          <span className="pt-location-badge-icon" aria-hidden="true">{zoneIcon}</span>
           <span className="pt-location-badge-name">{zoneName}</span>
-          <span className="pt-location-badge-tag">
-            <Icon3dMap size={12} />
-            <small>M</small>
-          </span>
         </button>
       )}
-
-      {/* 3. Sleek Toggle Minimize / Expand Button */}
-      <button
-        type="button"
-        className="pt-radar-minimize-toggle"
-        onClick={(e) => {
-          e.stopPropagation();
-          try { farmAudio.playPop?.(); } catch {}
-          setMinimized(v => !v);
-        }}
-        title={minimized ? 'Mở rộng Radar' : 'Thu nhỏ Radar'}
-        aria-label={minimized ? 'Mở rộng Radar' : 'Thu nhỏ Radar'}
-      >
-        <span>{minimized ? '+' : '−'}</span>
-      </button>
     </aside>
   );
 }

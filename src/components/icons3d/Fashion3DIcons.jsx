@@ -1,199 +1,458 @@
 import React from 'react';
 
 /**
- * PURE VECTOR 3D ICONS - PLAY TOGETHER FASHION & BOUTIQUE EDITION
- * 100% Thuần Vector & Gradient 3D, Tuyệt đối không dùng Emoji.
+ * PURE VECTOR 3D ICONS - PLAY TOGETHER CASUAL GAME EDITION
+ * Rich 3D Gradients, Specular Highlights, Chunky Volumetric Forms & Shadows.
  */
 
-// 1. LOGO NƠ THỜI TRANG 3D (Sophie's Boutique Ribbon Bow)
+// 1. LOGO NƠ THỜI TRANG 3D HOÀNG GIA (Sophie's Boutique Ribbon & Golden Hanger)
 export function Icon3dFashionLogo({ size = 42, className = '' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none" className={`icon-3d ${className}`}>
       <defs>
-        <radialGradient id="bow_pink" cx="35%" cy="30%" r="70%">
-          <stop offset="0%" stopColor="#fbcfe8" />
-          <stop offset="40%" stopColor="#f472b6" />
-          <stop offset="85%" stopColor="#ec4899" />
-          <stop offset="100%" stopColor="#be185d" />
+        <radialGradient id="fash_ribbon" cx="30%" cy="25%" r="75%">
+          <stop offset="0%" stopColor="#fdf2f8" />
+          <stop offset="30%" stopColor="#f472b6" />
+          <stop offset="75%" stopColor="#db2777" />
+          <stop offset="100%" stopColor="#9d174d" />
         </radialGradient>
-        <radialGradient id="gem_gold" cx="40%" cy="35%" r="65%">
-          <stop offset="0%" stopColor="#fef08a" />
-          <stop offset="60%" stopColor="#facc15" />
-          <stop offset="100%" stopColor="#ca8a04" />
+        <radialGradient id="fash_gold" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fef9c3" />
+          <stop offset="45%" stopColor="#facc15" />
+          <stop offset="85%" stopColor="#ca8a04" />
+          <stop offset="100%" stopColor="#713f12" />
         </radialGradient>
+        <radialGradient id="fash_ruby" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stopColor="#fecdd3" />
+          <stop offset="40%" stopColor="#f43f5e" />
+          <stop offset="90%" stopColor="#9f1239" />
+        </radialGradient>
+        <filter id="fash_glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="3" stdDeviation="2" floodColor="#be185d" floodOpacity="0.35" />
+        </filter>
       </defs>
-      {/* 2 Cánh nơ bồng bềnh */}
-      <ellipse cx="19" cy="30" rx="14" ry="11" transform="rotate(-15 19 30)" fill="url(#bow_pink)" stroke="#9d174d" strokeWidth="2" />
-      <ellipse cx="45" cy="30" rx="14" ry="11" transform="rotate(15 45 30)" fill="url(#bow_pink)" stroke="#9d174d" strokeWidth="2" />
-      {/* Nếp gấp ruy băng trong cánh nơ */}
-      <ellipse cx="20" cy="30" rx="6" ry="4" fill="#9d174d" opacity="0.6" transform="rotate(-15 20 30)" />
-      <ellipse cx="44" cy="30" rx="6" ry="4" fill="#9d174d" opacity="0.6" transform="rotate(15 44 30)" />
-      {/* 2 Dải đuôi ruy băng rủ xuống */}
-      <path d="M 26 36 L 16 54 L 26 48 L 32 38 Z" fill="url(#bow_pink)" stroke="#9d174d" strokeWidth="1.5" />
-      <path d="M 38 36 L 48 54 L 38 48 L 32 38 Z" fill="url(#bow_pink)" stroke="#9d174d" strokeWidth="1.5" />
-      {/* Viên ngọc hoàng kim ở tâm nơ */}
-      <circle cx="32" cy="32" r="7.5" fill="url(#gem_gold)" stroke="#854d0e" strokeWidth="1.8" />
-      <polygon points="32,27 34,31 38,32 34,33 32,37 30,33 26,32 30,31" fill="#ffffff" />
+      {/* Móc treo quần áo hoàng kim 3D */}
+      <path
+        d="M 32 8 C 28 8 26 12 28 15 C 30 18 32 18 32 21"
+        fill="none"
+        stroke="url(#fash_gold)"
+        strokeWidth="3.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 12 36 L 32 23 L 52 36 C 46 38 18 38 12 36 Z"
+        fill="url(#fash_gold)"
+        stroke="#854d0e"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <ellipse cx="32" cy="35" rx="18" ry="2" fill="#713f12" opacity="0.3" />
+
+      {/* Cánh nơ hồng bồng bềnh 3D */}
+      <g filter="url(#fash_glow)">
+        {/* Dải nơ rủ xuống */}
+        <path d="M 27 34 Q 20 48 16 54 Q 24 50 30 44 Z" fill="url(#fash_ribbon)" stroke="#831843" strokeWidth="1.2" />
+        <path d="M 37 34 Q 44 48 48 54 Q 40 50 34 44 Z" fill="url(#fash_ribbon)" stroke="#831843" strokeWidth="1.2" />
+
+        {/* Cánh nơ trái & phải */}
+        <ellipse cx="20" cy="30" rx="14" ry="10" transform="rotate(-18 20 30)" fill="url(#fash_ribbon)" stroke="#831843" strokeWidth="1.5" />
+        <ellipse cx="44" cy="30" rx="14" ry="10" transform="rotate(18 44 30)" fill="url(#fash_ribbon)" stroke="#831843" strokeWidth="1.5" />
+
+        {/* Highlight bóng sáng trên cánh nơ */}
+        <ellipse cx="18" cy="27" rx="9" ry="4" transform="rotate(-18 18 27)" fill="#ffffff" opacity="0.55" />
+        <ellipse cx="42" cy="27" rx="9" ry="4" transform="rotate(18 42 27)" fill="#ffffff" opacity="0.55" />
+
+        {/* Nếp gấp ruy băng sâu */}
+        <path d="M 23 27 Q 28 30 24 33" stroke="#831843" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+        <path d="M 41 27 Q 36 30 40 33" stroke="#831843" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+
+        {/* Nút thắt nơ kim cương Ruby đỏ viền vàng */}
+        <circle cx="32" cy="31" r="8" fill="url(#fash_gold)" stroke="#713f12" strokeWidth="1.5" />
+        <circle cx="32" cy="31" r="5.5" fill="url(#fash_ruby)" />
+        <polygon points="32,27 33.5,30 36,31 33.5,32 32,35 30.5,32 28,31 30.5,30" fill="#ffffff" opacity="0.95" />
+      </g>
+      {/* Sao lấp lánh Play Together */}
+      <polygon points="12,18 13.5,21 16,21.5 13.5,23 12,26 10.5,23 8,21.5 10.5,21" fill="#facc15" stroke="#ca8a04" strokeWidth="0.8" />
+      <polygon points="52,14 53,16 55,16.5 53,17.5 52,20 51,17.5 49,16.5 51,16" fill="#fef08a" />
     </svg>
   );
 }
 
-// 2. TAB: DÁNG CƠ THỂ 3D (Body Profile)
-export function Icon3dTabBody({ size = 22, active = false }) {
+// 2. TAB: DÁNG & DA 3D (Body Profile & Skin Swatches)
+export function Icon3dTabBody({ size = 30, active = false }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
       <defs>
-        <radialGradient id="body_skin" cx="35%" cy="30%" r="70%">
-          <stop offset="0%" stopColor="#fed7aa" />
-          <stop offset="70%" stopColor="#f97316" />
+        <radialGradient id="body_head" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fef3c7" />
+          <stop offset="40%" stopColor="#fed7aa" />
+          <stop offset="90%" stopColor="#f97316" />
           <stop offset="100%" stopColor="#c2410c" />
         </radialGradient>
+        <radialGradient id="body_torso" cx="35%" cy="25%" r="75%">
+          <stop offset="0%" stopColor="#bae6fd" />
+          <stop offset="50%" stopColor="#38bdf8" />
+          <stop offset="90%" stopColor="#0284c7" />
+          <stop offset="100%" stopColor="#0369a1" />
+        </radialGradient>
       </defs>
-      {/* Đầu tròn chibi */}
-      <circle cx="16" cy="9" r="6" fill={active ? '#ffffff' : 'url(#body_skin)'} stroke={active ? '#0284c7' : '#9a3412'} strokeWidth="1.5" />
-      {/* Thân & vai */}
+      {/* Chân đế bục mannequin */}
+      <ellipse cx="24" cy="42" rx="14" ry="4" fill={active ? '#0369a1' : '#cbd5e1'} />
+      <ellipse cx="24" cy="41" rx="13" ry="3.2" fill={active ? '#ffffff' : '#f1f5f9'} />
+
+      {/* Thân mannequin 3D bồng bềnh */}
       <path
-        d="M 9 27 C 9 18, 23 18, 23 27 Z"
-        fill={active ? '#ffffff' : '#38bdf8'}
+        d="M 15 39 C 14 26 18 24 24 24 C 30 24 34 26 33 39 Z"
+        fill={active ? '#ffffff' : 'url(#body_torso)'}
+        stroke={active ? '#0284c7' : '#0369a1'}
+        strokeWidth="2"
+      />
+      {/* Cột cổ */}
+      <rect x="22" y="20" width="4" height="6" rx="2" fill={active ? '#ffffff' : '#fb923c'} stroke={active ? '#0284c7' : '#9a3412'} strokeWidth="1.5" />
+
+      {/* Đầu tròn chibi 3D */}
+      <circle cx="24" cy="14" r="9" fill={active ? '#ffffff' : 'url(#body_head)'} stroke={active ? '#0284c7' : '#9a3412'} strokeWidth="2" />
+      <ellipse cx="21" cy="11" rx="4" ry="2" fill="#ffffff" opacity={active ? 0 : 0.65} />
+
+      {/* Bảng màu da mini bên cạnh */}
+      <circle cx="37" cy="12" r="4.5" fill="#fde047" stroke="#ca8a04" strokeWidth="1.5" />
+      <circle cx="37" cy="22" r="4" fill="#fb923c" stroke="#c2410c" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+// 3. TAB: TÓC & SALON 3D (Play Together Bouncy Anime Hair)
+export function Icon3dTabHair({ size = 30, active = false }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="hair_main" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stopColor="#fdf2f8" />
+          <stop offset="35%" stopColor="#f472b6" />
+          <stop offset="85%" stopColor="#db2777" />
+          <stop offset="100%" stopColor="#831843" />
+        </radialGradient>
+        <linearGradient id="hair_twins" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#f472b6" />
+          <stop offset="100%" stopColor="#be185d" />
+        </linearGradient>
+      </defs>
+      {/* 2 Búi tóc / đuôi tóc bồng bềnh sau lưng */}
+      <circle cx="10" cy="26" r="7" fill={active ? '#ffffff' : 'url(#hair_twins)'} stroke={active ? '#0284c7' : '#831843'} strokeWidth="2" />
+      <circle cx="38" cy="26" r="7" fill={active ? '#ffffff' : 'url(#hair_twins)'} stroke={active ? '#0284c7' : '#831843'} strokeWidth="2" />
+
+      {/* Khối tóc chính tròn bồng bềnh */}
+      <path
+        d="M 12 24 C 10 10 38 10 36 24 C 36 30 33 34 29 27 C 27 22 21 22 19 27 C 15 34 12 30 12 24 Z"
+        fill={active ? '#ffffff' : 'url(#hair_main)'}
+        stroke={active ? '#0284c7' : '#831843'}
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+
+      {/* Vệt bóng sáng trắng phong cách Anime Play Together */}
+      <path
+        d="M 17 14 Q 24 9 31 14"
+        stroke="#ffffff"
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        fill="none"
+        opacity={active ? 0 : 0.75}
+      />
+
+      {/* Kẹp tóc ngôi sao vàng 3D bên tai */}
+      <polygon
+        points="34,16 36,20 40,20.5 37,23 38,27 34,24.5 30,27 31,23 28,20.5 32,20"
+        fill="#facc15"
+        stroke="#ca8a04"
+        strokeWidth="1.2"
+      />
+    </svg>
+  );
+}
+
+// 4. TAB: ÁO THỜI TRANG 3D (Puffy Casual Hoodie Jacket)
+export function Icon3dTabTop({ size = 30, active = false }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="top_jacket" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stopColor="#bae6fd" />
+          <stop offset="35%" stopColor="#38bdf8" />
+          <stop offset="85%" stopColor="#0284c7" />
+          <stop offset="100%" stopColor="#075985" />
+        </radialGradient>
+      </defs>
+      {/* 2 Tay áo phồng 3D */}
+      <path d="M 14 18 L 6 28 C 5 32 9 35 12 33 L 17 25 Z" fill={active ? '#ffffff' : 'url(#top_jacket)'} stroke={active ? '#0284c7' : '#0369a1'} strokeWidth="2" strokeLinejoin="round" />
+      <path d="M 34 18 L 42 28 C 43 32 39 35 36 33 L 31 25 Z" fill={active ? '#ffffff' : 'url(#top_jacket)'} stroke={active ? '#0284c7' : '#0369a1'} strokeWidth="2" strokeLinejoin="round" />
+
+      {/* Thân áo Hoodie tròn phồng */}
+      <path
+        d="M 14 16 L 34 16 L 36 38 C 36 41 12 41 12 38 Z"
+        fill={active ? '#ffffff' : 'url(#top_jacket)'}
+        stroke={active ? '#0284c7' : '#0369a1'}
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+
+      {/* Mũ trùm / Cổ áo tròn bồng bềnh */}
+      <ellipse cx="24" cy="16" rx="9" ry="5" fill={active ? '#e0f2fe' : '#e0f2fe'} stroke={active ? '#0284c7' : '#0369a1'} strokeWidth="2" />
+      <path d="M 20 18 Q 24 23 28 18" fill="none" stroke={active ? '#0284c7' : '#0369a1'} strokeWidth="2" strokeLinecap="round" />
+
+      {/* Túi Kangaroo trước bụng 3D */}
+      <path
+        d="M 17 31 L 31 31 L 29 38 L 19 38 Z"
+        fill={active ? '#f0f9ff' : '#0284c7'}
         stroke={active ? '#0284c7' : '#0369a1'}
         strokeWidth="1.5"
       />
+
+      {/* Dây rút mũ trắng có nốt tròn */}
+      <line x1="21" y1="20" x2="21" y2="28" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="21" cy="28" r="1.5" fill="#facc15" />
+      <line x1="27" y1="20" x2="27" y2="26" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="27" cy="26" r="1.5" fill="#facc15" />
     </svg>
   );
 }
 
-// 3. TAB: TÓC & SALON 3D (Hair & Salon)
-export function Icon3dTabHair({ size = 22, active = false }) {
+// 5. TAB: QUẦN & VÁY 3D (Chunky Denim Shorts & Tennis Pleats)
+export function Icon3dTabBottom({ size = 30, active = false }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
       <defs>
-        <linearGradient id="hair_tab_grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#f472b6" />
-          <stop offset="100%" stopColor="#db2777" />
-        </linearGradient>
+        <radialGradient id="bot_denim" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stopColor="#c084fc" />
+          <stop offset="35%" stopColor="#a855f7" />
+          <stop offset="85%" stopColor="#7e22ce" />
+          <stop offset="100%" stopColor="#581c87" />
+        </radialGradient>
       </defs>
-      {/* Kiểu tóc đuôi ngựa / bồng bềnh */}
+      {/* Váy xếp ly / Quần shorts thời trang */}
       <path
-        d="M 16 5 C 9 5, 6 12, 6 18 C 6 22, 10 21, 10 18 C 10 14, 12 12, 16 12 C 20 12, 22 14, 22 18 C 22 21, 26 22, 26 18 C 26 12, 23 5, 16 5 Z"
-        fill={active ? '#ffffff' : 'url(#hair_tab_grad)'}
-        stroke={active ? '#be185d' : '#831843'}
-        strokeWidth="1.5"
-      />
-      {/* Kẹp tóc ngôi sao vàng */}
-      <circle cx="21" cy="9" r="2" fill="#facc15" />
-    </svg>
-  );
-}
-
-// 4. TAB: ÁO THỜI TRANG 3D (Tops)
-export function Icon3dTabTop({ size = 22, active = false }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <path
-        d="M 12 5 L 20 5 L 27 10 L 23 14 L 21 12 L 21 27 L 11 27 L 11 12 L 9 14 L 5 10 Z"
-        fill={active ? '#ffffff' : '#3b82f6'}
-        stroke={active ? '#1d4ed8' : '#1e3a8a'}
-        strokeWidth="1.5"
+        d="M 14 12 L 34 12 L 39 36 C 39 39 9 39 9 36 Z"
+        fill={active ? '#ffffff' : 'url(#bot_denim)'}
+        stroke={active ? '#0284c7' : '#581c87'}
+        strokeWidth="2"
         strokeLinejoin="round"
       />
-      {/* Cổ áo chữ V */}
-      <path d="M 13 5 Q 16 10 19 5" stroke={active ? '#1d4ed8' : '#ffffff'} strokeWidth="1.5" fill="none" />
+
+      {/* Đai lưng cạp váy */}
+      <rect x="13" y="11" width="22" height="6" rx="2" fill={active ? '#f1f5f9' : '#6b21a8'} stroke={active ? '#0284c7' : '#581c87'} strokeWidth="1.8" />
+      <circle cx="24" cy="14" r="1.8" fill="#facc15" stroke="#854d0e" strokeWidth="1" />
+
+      {/* Đường nếp gấp xếp ly 3D viền nổi */}
+      <line x1="18" y1="17" x2="16" y2="37" stroke={active ? '#a855f7' : '#c084fc'} strokeWidth="2" strokeLinecap="round" />
+      <line x1="24" y1="17" x2="24" y2="37" stroke={active ? '#a855f7' : '#e9d5ff'} strokeWidth="2" strokeLinecap="round" />
+      <line x1="30" y1="17" x2="32" y2="37" stroke={active ? '#a855f7' : '#c084fc'} strokeWidth="2" strokeLinecap="round" />
+
+      {/* Highlight phản chiếu mềm */}
+      <path d="M 15 13 L 33 13" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" opacity="0.6" />
     </svg>
   );
 }
 
-// 5. TAB: QUẦN & VÁY 3D (Bottoms)
-export function Icon3dTabBottom({ size = 22, active = false }) {
+// 6. TAB: GIÀY DÉP 3D (Chunky Platform Marshmallow Sneaker)
+export function Icon3dTabShoes({ size = 30, active = false }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      {/* Váy tennis xếp ly / quần shorts */}
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="shoe_body" cx="30%" cy="30%" r="75%">
+          <stop offset="0%" stopColor="#a7f3d0" />
+          <stop offset="40%" stopColor="#34d399" />
+          <stop offset="85%" stopColor="#059669" />
+          <stop offset="100%" stopColor="#064e3b" />
+        </radialGradient>
+      </defs>
+      {/* Thân giày Sneaker thể thao phồng */}
       <path
-        d="M 9 8 L 23 8 L 26 24 L 6 24 Z"
-        fill={active ? '#ffffff' : '#a855f7'}
-        stroke={active ? '#7e22ce' : '#581c87'}
-        strokeWidth="1.5"
+        d="M 9 24 C 11 16 20 16 24 20 L 37 20 C 41 20 44 24 43 30 L 7 30 C 7 26 8 24 9 24 Z"
+        fill={active ? '#ffffff' : 'url(#shoe_body)'}
+        stroke={active ? '#0284c7' : '#064e3b'}
+        strokeWidth="2"
         strokeLinejoin="round"
       />
-      {/* Đường ly xếp nếp */}
-      <line x1="12" y1="9" x2="11" y2="24" stroke={active ? '#7e22ce' : '#c084fc'} strokeWidth="1.2" />
-      <line x1="16" y1="9" x2="16" y2="24" stroke={active ? '#7e22ce' : '#c084fc'} strokeWidth="1.2" />
-      <line x1="20" y1="9" x2="21" y2="24" stroke={active ? '#7e22ce' : '#c084fc'} strokeWidth="1.2" />
+
+      {/* Mũi giày cao su trắng có vân phản chiếu */}
+      <path d="M 33 21 C 37 21 42 24 42 30 L 32 30 Z" fill="#ffffff" stroke={active ? '#0284c7' : '#064e3b'} strokeWidth="1.5" />
+
+      {/* Cổ giày & lưỡi gà */}
+      <ellipse cx="18" cy="18" rx="6" ry="3" fill="#ffffff" stroke={active ? '#0284c7' : '#064e3b'} strokeWidth="1.5" />
+
+      {/* Dây giày chéo màu cam nổi bật */}
+      <line x1="20" y1="21" x2="27" y2="21" stroke="#f97316" strokeWidth="2" strokeLinecap="round" />
+      <line x1="21" y1="25" x2="28" y2="25" stroke="#f97316" strokeWidth="2" strokeLinecap="round" />
+
+      {/* Đế bánh mì Marshmallow Sole siêu dày 3D */}
+      <rect x="5" y="30" width="39" height="8" rx="4" fill="#ffffff" stroke={active ? '#0284c7' : '#064e3b'} strokeWidth="2" />
+      <ellipse cx="24.5" cy="37" rx="17" ry="1.5" fill="#047857" opacity="0.3" />
+
+      {/* Rãnh đế thể thao thời trang */}
+      <line x1="14" y1="34" x2="18" y2="34" stroke="#e2e8f0" strokeWidth="2" strokeLinecap="round" />
+      <line x1="22" y1="34" x2="26" y2="34" stroke="#e2e8f0" strokeWidth="2" strokeLinecap="round" />
+      <line x1="30" y1="34" x2="34" y2="34" stroke="#e2e8f0" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
 
-// 6. TAB: GIÀY DÉP 3D (Shoes / Sneakers)
-export function Icon3dTabShoes({ size = 22, active = false }) {
+// 7. TAB: TAI THÚ & PHỤ KIỆN (Play Together Fluffy Cat Ears & Halo)
+export function Icon3dTabEars({ size = 30, active = false }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      {/* Sneaker đế bánh mì Chunky */}
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="ears_fur" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fed7aa" />
+          <stop offset="40%" stopColor="#fb923c" />
+          <stop offset="85%" stopColor="#ea580c" />
+          <stop offset="100%" stopColor="#9a3412" />
+        </radialGradient>
+        <radialGradient id="ears_pink" cx="40%" cy="40%" r="65%">
+          <stop offset="0%" stopColor="#ffe4e6" />
+          <stop offset="70%" stopColor="#fda4af" />
+          <stop offset="100%" stopColor="#f43f5e" />
+        </radialGradient>
+      </defs>
+      {/* Gọng cài tóc đen cong 3D */}
+      <path d="M 8 36 C 8 16 40 16 40 36" stroke={active ? '#ffffff' : '#334155'} strokeWidth="3" strokeLinecap="round" fill="none" />
+
+      {/* Tai mèo trái phồng 3D */}
       <path
-        d="M 6 17 C 8 11, 14 11, 16 15 L 25 15 C 27 15, 29 18, 28 22 L 4 22 C 4 19, 5 17, 6 17 Z"
-        fill={active ? '#ffffff' : '#10b981'}
-        stroke={active ? '#047857' : '#064e3b'}
-        strokeWidth="1.5"
+        d="M 10 32 C 8 16 12 8 20 18 C 21 27 15 32 10 32 Z"
+        fill={active ? '#ffffff' : 'url(#ears_fur)'}
+        stroke={active ? '#0284c7' : '#9a3412'}
+        strokeWidth="2"
+        strokeLinejoin="round"
       />
-      {/* Đế giày cao su dày */}
-      <rect x="3" y="22" width="26" height="5" rx="2.5" fill={active ? '#e2e8f0' : '#ffffff'} stroke={active ? '#047857' : '#064e3b'} strokeWidth="1.2" />
+      {/* Lòng tai hồng xinh xắn */}
+      <path d="M 12 28 C 11 19 14 14 17 21 C 18 26 14 28 12 28 Z" fill="url(#ears_pink)" />
+
+      {/* Tai mèo phải phồng 3D */}
+      <path
+        d="M 38 32 C 40 16 36 8 28 18 C 27 27 33 32 38 32 Z"
+        fill={active ? '#ffffff' : 'url(#ears_fur)'}
+        stroke={active ? '#0284c7' : '#9a3412'}
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      {/* Lòng tai hồng xinh xắn */}
+      <path d="M 36 28 C 37 19 34 14 31 21 C 30 26 34 28 36 28 Z" fill="url(#ears_pink)" />
+
+      {/* Charm chuông vàng leng keng ở giữa */}
+      <circle cx="24" cy="20" r="4.5" fill="#facc15" stroke="#a16207" strokeWidth="1.5" />
+      <polygon points="24,18 25,19.5 27,20 25,20.5 24,22 23,20.5 21,20 23,19.5" fill="#ffffff" />
     </svg>
   );
 }
 
-// 7. TAB: TAI THÚ & PHỤ KIỆN (Animal Ears / Hats)
-export function Icon3dTabEars({ size = 22, active = false }) {
+// 8. TAB: KHUÔN MẶT & BIỂU CẢM (Sparkling Anime Chibi Face)
+export function Icon3dTabFace({ size = 30, active = false }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      {/* 2 Tai mèo nhọn xinh xắn */}
-      <polygon points="6,24 10,7 18,17" fill={active ? '#ffffff' : '#f43f5e'} stroke={active ? '#be123c' : '#881337'} strokeWidth="1.5" />
-      <polygon points="9,21 11,11 16,17" fill={active ? '#fecdd3' : '#fecdd3'} />
-      <polygon points="26,24 22,7 14,17" fill={active ? '#ffffff' : '#f43f5e'} stroke={active ? '#be123c' : '#881337'} strokeWidth="1.5" />
-      <polygon points="23,21 21,11 16,17" fill={active ? '#fecdd3' : '#fecdd3'} />
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="face_skin" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fffbeb" />
+          <stop offset="45%" stopColor="#fef3c7" />
+          <stop offset="85%" stopColor="#fed7aa" />
+          <stop offset="100%" stopColor="#f97316" />
+        </radialGradient>
+      </defs>
+      {/* Khuôn mặt chibi tròn trĩnh 3D */}
+      <circle cx="24" cy="24" r="18" fill={active ? '#ffffff' : 'url(#face_skin)'} stroke={active ? '#0284c7' : '#ea580c'} strokeWidth="2.2" />
+
+      {/* Má hồng trái tim siêu dễ thương */}
+      <ellipse cx="14" cy="28" rx="3.5" ry="2" fill="#fb7185" opacity="0.85" />
+      <ellipse cx="34" cy="28" rx="3.5" ry="2" fill="#fb7185" opacity="0.85" />
+
+      {/* Mắt trái Anime to tròn lấp lánh */}
+      <ellipse cx="16" cy="21" rx="4.5" ry="6" fill="#1e1b4b" />
+      <circle cx="15" cy="19" r="2" fill="#ffffff" />
+      <circle cx="17.5" cy="23.5" r="1" fill="#ffffff" />
+
+      {/* Mắt phải Anime to tròn lấp lánh */}
+      <ellipse cx="32" cy="21" rx="4.5" ry="6" fill="#1e1b4b" />
+      <circle cx="31" cy="19" r="2" fill="#ffffff" />
+      <circle cx="33.5" cy="23.5" r="1" fill="#ffffff" />
+
+      {/* Miệng mèo cười chúm chím :3 */}
+      <path
+        d="M 21 28 Q 24 31 24 28 Q 24 31 27 28"
+        stroke="#be123c"
+        strokeWidth="2"
+        strokeLinecap="round"
+        fill="none"
+      />
     </svg>
   );
 }
 
-// 8. TAB: KHUÔN MẶT & BIỂU CẢM (Face / Expressions)
-export function Icon3dTabFace({ size = 22, active = false }) {
+// 9. TAB: FULL SET TRỌN BỘ 3D (Golden Star Magic Fashion Chest)
+export function Icon3dTabSets({ size = 30, active = false }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <circle cx="16" cy="16" r="12" fill={active ? '#ffffff' : '#fef08a'} stroke={active ? '#ca8a04' : '#854d0e'} strokeWidth="1.5" />
-      {/* 2 Mắt anime cười cong tít */}
-      <path d="M 10 14 Q 13 11 15 14" stroke={active ? '#ca8a04' : '#713f12'} strokeWidth="2" strokeLinecap="round" fill="none" />
-      <path d="M 17 14 Q 19 11 22 14" stroke={active ? '#ca8a04' : '#713f12'} strokeWidth="2" strokeLinecap="round" fill="none" />
-      {/* Miệng cười xinh */}
-      <path d="M 13 20 Q 16 24 19 20" stroke={active ? '#ca8a04' : '#713f12'} strokeWidth="1.8" strokeLinecap="round" fill="none" />
-      {/* 2 Má hồng */}
-      <circle cx="9" cy="18" r="2" fill="#f43f5e" opacity="0.75" />
-      <circle cx="23" cy="18" r="2" fill="#f43f5e" opacity="0.75" />
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="set_gold" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fef9c3" />
+          <stop offset="40%" stopColor="#facc15" />
+          <stop offset="85%" stopColor="#eab308" />
+          <stop offset="100%" stopColor="#854d0e" />
+        </radialGradient>
+        <radialGradient id="set_ruby" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fbcfe8" />
+          <stop offset="50%" stopColor="#ec4899" />
+          <stop offset="100%" stopColor="#9d174d" />
+        </radialGradient>
+      </defs>
+      {/* Hộp quà thời trang vàng kim 3D */}
+      <rect x="9" y="17" width="30" height="23" rx="4" fill={active ? '#ffffff' : 'url(#set_gold)'} stroke={active ? '#0284c7' : '#713f12'} strokeWidth="2" />
+      {/* Nắp hộp quà viền rộng */}
+      <rect x="7" y="13" width="34" height="8" rx="3" fill={active ? '#ffffff' : 'url(#set_gold)'} stroke={active ? '#0284c7' : '#713f12'} strokeWidth="2" />
+
+      {/* Ruy băng hồng tím quấn hộp */}
+      <rect x="22" y="13" width="4" height="27" fill={active ? '#0284c7' : 'url(#set_ruby)'} />
+
+      {/* Chiếc nơ 3D trên nắp hộp */}
+      <ellipse cx="18" cy="11" rx="5" ry="3.5" transform="rotate(-15 18 11)" fill="url(#set_ruby)" stroke="#831843" strokeWidth="1.2" />
+      <ellipse cx="30" cy="11" rx="5" ry="3.5" transform="rotate(15 30 11)" fill="url(#set_ruby)" stroke="#831843" strokeWidth="1.2" />
+      <circle cx="24" cy="11" r="2.5" fill="#facc15" stroke="#854d0e" strokeWidth="1" />
+
+      {/* Ngôi sao ma thuật lấp lánh Play Together */}
+      <polygon points="38,8 39.5,12 43,12.5 40,15 41,19 38,16.5 35,19 36,15 33,12.5 36.5,12" fill="#fde047" stroke="#ca8a04" strokeWidth="1" />
     </svg>
   );
 }
 
-// 9. TAB: FULL SET TRỌN BỘ 3D (Full Sets)
-export function Icon3dTabSets({ size = 22, active = false }) {
+// 10. TAB: TỦ ĐỒ CỦA TÔI (Boutique Wardrobe Armoire)
+export function Icon3dTabWardrobe({ size = 30, active = false }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      {/* Hộp quà màu vàng óng */}
-      <rect x="6" y="11" width="20" height="15" rx="3" fill={active ? '#ffffff' : '#f59e0b'} stroke={active ? '#b45309' : '#78350f'} strokeWidth="1.5" />
-      <rect x="4" y="8" width="24" height="5" rx="2" fill={active ? '#ffffff' : '#fbbf24'} stroke={active ? '#b45309' : '#78350f'} strokeWidth="1.5" />
-      {/* Ruy băng đỏ */}
-      <line x1="16" y1="8" x2="16" y2="26" stroke="#ef4444" strokeWidth="2.5" />
-      {/* Nơ trên đỉnh */}
-      <circle cx="16" cy="6" r="3" fill="#ef4444" stroke="#991b1b" strokeWidth="1" />
-    </svg>
-  );
-}
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      <defs>
+        <radialGradient id="wardrobe_body" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#fed7aa" />
+          <stop offset="40%" stopColor="#f59e0b" />
+          <stop offset="85%" stopColor="#d97706" />
+          <stop offset="100%" stopColor="#78350f" />
+        </radialGradient>
+      </defs>
+      {/* 2 Chân tủ */}
+      <rect x="11" y="41" width="5" height="4" rx="2" fill="#78350f" />
+      <rect x="32" y="41" width="5" height="4" rx="2" fill="#78350f" />
 
-// 10. TAB: TỦ ĐỒ CỦA TÔI (My Wardrobe)
-export function Icon3dTabWardrobe({ size = 22, active = false }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      {/* Tủ đồ gỗ 2 cánh */}
-      <rect x="5" y="4" width="22" height="24" rx="3" fill={active ? '#ffffff' : '#d97706'} stroke={active ? '#92400e' : '#451a03'} strokeWidth="1.5" />
-      <line x1="16" y1="4" x2="16" y2="28" stroke={active ? '#92400e' : '#78350f'} strokeWidth="1.5" />
-      {/* 2 Tay nắm tủ */}
-      <circle cx="14" cy="16" r="1.5" fill="#fef08a" stroke="#854d0e" strokeWidth="0.8" />
-      <circle cx="18" cy="16" r="1.5" fill="#fef08a" stroke="#854d0e" strokeWidth="0.8" />
+      {/* Thân tủ quần áo 3D */}
+      <rect x="9" y="8" width="30" height="34" rx="4" fill={active ? '#ffffff' : 'url(#wardrobe_body)'} stroke={active ? '#0284c7' : '#451a03'} strokeWidth="2" />
+
+      {/* Mái vòm tủ phong cách hoàng gia */}
+      <path d="M 8 9 Q 24 4 40 9" stroke={active ? '#0284c7' : '#451a03'} strokeWidth="2.5" strokeLinecap="round" fill="none" />
+
+      {/* Khe giữa 2 cánh cửa */}
+      <line x1="24" y1="8" x2="24" y2="36" stroke={active ? '#0284c7' : '#78350f'} strokeWidth="2" />
+      {/* Ngăn kéo dưới */}
+      <line x1="9" y1="36" x2="39" y2="36" stroke={active ? '#0284c7' : '#78350f'} strokeWidth="2" />
+
+      {/* 2 Tay nắm tủ mạ vàng tròn bóng */}
+      <circle cx="21" cy="22" r="2.2" fill="#facc15" stroke="#854d0e" strokeWidth="1.2" />
+      <circle cx="27" cy="22" r="2.2" fill="#facc15" stroke="#854d0e" strokeWidth="1.2" />
+      <circle cx="24" cy="38.5" r="1.5" fill="#facc15" stroke="#854d0e" strokeWidth="1" />
     </svg>
   );
 }

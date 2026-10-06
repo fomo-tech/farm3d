@@ -67,12 +67,23 @@ export function LiveBusHud({ statusRef, ...props }) {
 
 export function LiveWorldDebug({ worldRef }) {
   const [debug, setDebug] = useState(null);
+  const [dismissed, setDismissed] = useState(false);
   useEffect(() => {
     const timer = setInterval(() => setDebug(worldRef.current?.getDebugState() || null), 1000);
     return () => clearInterval(timer);
   }, [worldRef]);
-  if (!debug) return null;
-  return <aside className="debug-panel"><b>WORLD DEBUG · F3</b><span>FPS {debug.fps}</span>
-    <span>POS {debug.x}, {debug.z}</span><span>CHUNK {debug.chunk}</span>
-    <span>MESHES {debug.meshes}</span><span>{debug.worldId}</span></aside>;
+  if (!debug || dismissed) return null;
+  return (
+    <aside className="debug-panel">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+        <b>WORLD DEBUG · F3</b>
+        <button type="button" onClick={() => setDismissed(true)} style={{ background: 'none', border: 'none', color: '#8df4a1', cursor: 'pointer', fontSize: 11, padding: '0 2px' }}>✕</button>
+      </div>
+      <span>FPS {debug.fps}</span>
+      <span>POS {debug.x}, {debug.z}</span>
+      <span>CHUNK {debug.chunk}</span>
+      <span>MESHES {debug.meshes}</span>
+      <span>{debug.worldId}</span>
+    </aside>
+  );
 }

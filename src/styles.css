@@ -457,24 +457,26 @@ body .pt-start-screen-backdrop.cutecore-theme,
   gap: 10px;
   width: min(340px, 80vw);
   height: 50px;
-  padding: 0 22px;
-  background: linear-gradient(180deg, #ffffff 0%, #f4f6f8 100%);
-  border: 2px solid rgba(255, 255, 255, 0.95);
+  padding: 0;
+  background: transparent;
+  border: 0;
   border-radius: 9999px;
-  box-shadow: 0 4px 0 #cbd5e1, 0 10px 22px rgba(2, 60, 105, 0.22);
-  cursor: pointer;
+  box-shadow: none;
+  cursor: default;
   user-select: none;
   transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease-out;
 }
+.pt-google-signin-host{display:inline-flex;align-items:center;justify-content:center;width:100%;min-width:220px;min-height:42px}
+.pt-google-config-note{display:block;color:#fff4dd;font-weight:800;text-shadow:0 2px 3px #123d5b;text-align:center}
 
 .pt-google-login-btn:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 6px 0 #cbd5e1, 0 14px 26px rgba(2, 60, 105, 0.28);
+  transform: none;
+  box-shadow: none;
 }
 
 .pt-google-login-btn:active {
-  transform: translateY(3px) scale(0.985);
-  box-shadow: 0 1px 0 #cbd5e1, 0 6px 12px rgba(2, 60, 105, 0.2);
+  transform: none;
+  box-shadow: none;
 }
 
 .pt-google-icon {
@@ -522,7 +524,7 @@ body .pt-start-screen-backdrop.cutecore-theme,
 /* ==========================================================================
    LANDSCAPE / HORIZONTAL SCREEN START SCREEN RESPONSIVE (Màn Hình Ngang)
    ========================================================================== */
-@media screen and (orientation: landscape), (max-height: 560px) {
+@media screen and (max-height: 560px) {
   body .pt-start-screen-backdrop.cutecore-theme,
   .pt-start-screen-backdrop {
     position: fixed !important;
@@ -622,8 +624,8 @@ body .pt-start-screen-backdrop.cutecore-theme,
   .pt-google-login-btn {
     width: min(280px, 52vw) !important;
     height: 40px !important;
-    padding: 0 16px !important;
-    box-shadow: 0 3px 0 #cbd5e1, 0 8px 16px rgba(2, 60, 105, 0.2) !important;
+    padding: 0 !important;
+    box-shadow: none !important;
   }
 
   .pt-google-icon {
@@ -2430,7 +2432,7 @@ html.guard-dismissed #landscape-guard,
 
 .virtual-joystick{position:absolute;z-index:11;left:28px;bottom:72px;width:112px;height:112px;border:2px solid #ffffffc9;border-radius:50%;background:radial-gradient(circle,#ffffff24 0 34%,#173a325e 35% 100%);box-shadow:0 8px 24px #17271d47,inset 0 0 0 8px #ffffff18;touch-action:none;user-select:none}.virtual-joystick:before,.virtual-joystick:after{content:"";position:absolute;left:50%;top:50%;background:#ffffff3d;transform:translate(-50%,-50%)}.virtual-joystick:before{width:2px;height:74px}.virtual-joystick:after{width:74px;height:2px}.virtual-joystick>span{position:absolute;z-index:2;left:calc(50% - 25px);top:calc(50% - 25px);width:50px;height:50px;display:grid;place-items:center;border:3px solid #fff;border-radius:50%;background:linear-gradient(145deg,#72d68a,#2f9c61);color:#ffffff9c;font-size:12px;box-shadow:0 5px 13px #102b1d66;pointer-events:none;transition:transform .04s linear}.world-action-controls{position:absolute;z-index:11;right:24px;bottom:128px;display:flex;align-items:flex-end;gap:10px}.world-action-controls button{display:flex;flex-direction:column;align-items:center;justify-content:center;border:3px solid #fff;border-radius:50%;color:#fff;box-shadow:0 7px 18px #13271d59;cursor:pointer;touch-action:none}.world-action-controls i{font-style:normal;font-size:25px;line-height:1}.world-action-controls b{margin-top:3px;font-size:8px}.jump-action-btn{width:70px;height:70px;background:linear-gradient(145deg,#55bdeb,#277bc5)}.run-action-btn{width:58px;height:58px;background:linear-gradient(145deg,#ffca55,#e98024)}.world-action-controls button:active{transform:scale(.91);filter:brightness(.9)}
 @media(max-width:780px){.virtual-joystick{left:16px;bottom:68px;width:96px;height:96px}.virtual-joystick>span{left:calc(50% - 22px);top:calc(50% - 22px);width:44px;height:44px}.world-action-controls{right:12px;bottom:112px}.jump-action-btn{width:62px;height:62px}.run-action-btn{width:52px;height:52px}}
-@media screen and (orientation: landscape), (max-height: 560px) {
+@media screen and (max-height: 560px) {
   .virtual-joystick{left:max(18px,var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))))!important;bottom:max(12px,var(--safe-bottom, var(--sab, 0px)))!important;width:96px!important;height:96px!important}
   .virtual-joystick>span{left:calc(50% - 21px)!important;top:calc(50% - 21px)!important;width:42px!important;height:42px!important}
   .world-action-controls{right:max(18px,var(--safe-side, max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))))!important;bottom:max(12px,var(--safe-bottom, var(--sab, 0px)))!important;gap:8px!important}
@@ -4915,30 +4917,6 @@ html.guard-dismissed #landscape-guard,
 
 .pt-topbar > * {
   pointer-events: auto;
-}
-
-/* 2. PLAYER PROFILE CARD */
-.pt-profile-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 14px 5px 5px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #ffffff 0%, #fffdf0 100%);
-  border: 3px solid #ffffff;
-  box-shadow: 0 5px 0 #b45309, 0 10px 24px rgba(0, 0, 0, 0.18);
-  cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  user-select: none;
-}
-
-.pt-profile-card:hover {
-  transform: translateY(-2px) scale(1.02);
-}
-
-.pt-profile-card:active {
-  transform: translateY(2px) scale(0.98);
-  box-shadow: 0 2px 0 #b45309;
 }
 
 .pt-avatar-ring {
@@ -9278,42 +9256,6 @@ html.guard-dismissed #landscape-guard,
   gap: 18px;
 }
 
-.pt-profile-card {
-  min-width: 324px;
-  padding: 6px 16px 6px 6px;
-  gap: 12px;
-  border-radius: 26px;
-  background: linear-gradient(180deg, #fffef8 0%, #fff4d5 100%);
-  border-color: #fff;
-  box-shadow: 0 6px 0 #c47a17, 0 14px 28px rgba(45, 76, 104, 0.22);
-}
-
-.pt-avatar-ring {
-  width: 68px;
-  height: 68px;
-  overflow: hidden;
-  background: linear-gradient(180deg, #ffe97a 0%, #f59e0b 100%);
-  border: 3px solid #fff;
-  box-shadow: 0 4px 12px rgba(198, 116, 19, 0.28);
-}
-
-.pt-avatar-ring .pt-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.pt-profile-info {
-  min-width: 196px;
-  gap: 5px;
-}
-
-.pt-player-name {
-  max-width: 160px;
-  font-size: 16px;
-  color: #163563;
-}
-
 .pt-role-pill {
   padding: 2px 8px;
   background: #ffecc2;
@@ -11177,94 +11119,10 @@ body .pt-start-screen-backdrop .pt-start-footer {
 .pt-game-shell .venue-banner-actions button:first-child { background: #a8e1cf; color: #286b65; }
 .pt-game-shell.in-venue .pt-candy-quest-tracker { display: none; }
 .pt-game-shell .pt-candy-btn { filter: none; }
-.pt-game-shell .pt-profile-card {
-  background: #fff7e7;
-  box-shadow: 0 4px 0 #d3dbe3, 0 10px 22px #34557618;
-}
-.pt-game-shell .pt-quest-card-frame {
-  background: #fffdf5;
-  box-shadow: 0 4px 0 #d3dbe3, 0 10px 22px #34557618;
-}
 
-/* Compact gameplay HUD: edge docks, one contextual action, no center banner. */
-.pt-game-shell .topbar.pt-topbar { inset: 12px 14px auto; width: auto; min-width: 0; min-height: 52px; gap: 12px; }
-.pt-game-shell .pt-profile-card { min-width: 0; width: 208px; padding: 5px 10px 5px 5px; gap: 8px; border-radius: 18px; border-width: 2px; }
-.pt-game-shell .pt-avatar-ring { width: 42px; height: 42px; min-width: 42px; border-width: 2px; box-shadow: none; }
-.pt-game-shell .pt-profile-info { min-width: 0; flex: 1; }
-.pt-game-shell .pt-player-name { font-size: 13px; max-width: 140px; }
-.pt-game-shell .pt-role-pill, .pt-game-shell .pt-exp-val, .pt-game-shell .pt-seed-pill { display: none; }
-.pt-game-shell .pt-exp-track { height: 5px; }
-.pt-game-shell .pt-island-capsule {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  max-width: none;
-  padding: 5px 12px;
-  border-radius: 999px;
-  background: rgba(255, 253, 247, 0.94);
-  border: 2px solid #ffffff;
-  box-shadow: 0 3px 12px #34557618;
-  user-select: none;
-}
-.pt-game-shell .pt-island-badge {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12.5px;
-  font-weight: 800;
-  color: #1e3a8a;
-  white-space: nowrap;
-}
-.pt-game-shell .pt-island-capsule .pt-clock-strip {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: rgba(241, 245, 249, 0.7);
-  border: 1px solid rgba(203, 213, 225, 0.6);
-  font-size: 11px;
-  font-weight: 800;
-  color: #334155;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.pt-game-shell .pt-island-capsule .pt-clock-strip:hover {
-  background: #ffffff;
-}
-.pt-game-shell .pt-currency-dock { gap: 6px; }
-.pt-game-shell .pt-candy-pill { min-height: 34px; padding: 3px 7px; gap: 5px; border-width: 2px; box-shadow: 0 3px 10px #34557618; }
-.pt-game-shell .pt-pill-icon, .pt-game-shell .pt-pill-icon .pt-hud-img-icon { width: 26px; height: 26px; flex-basis: 26px; }
-.pt-game-shell .pt-pill-val { font-size: 13px; }
-.pt-game-shell .pt-pill-plus { display: none; }
-.pt-game-shell .pt-phone-btn { width: 42px; height: 42px; min-width: 42px; padding: 6px; border-width: 2px; box-shadow: 0 3px 10px #34557618; }
-.pt-game-shell .pt-phone-btn .pt-btn-label { display: none; }
-.pt-game-shell .pt-candy-quest-tracker { top: 80px; left: 14px; }
-.pt-game-shell .pt-quest-collapsed-bubble { max-width: 245px; padding: 6px 10px; border: 2px solid #fff; border-radius: 16px; background: #fff8edee; box-shadow: 0 3px 12px #34557618; }
-.pt-game-shell .pt-collapsed-avatar { width: 30px; height: 30px; min-width: 30px; box-shadow: none; }
-.pt-game-shell .pt-collapsed-avatar svg { width: 26px; height: 26px; }
-.pt-game-shell .pt-collapsed-text b { font-size: 12px; }
-.pt-game-shell .pt-collapsed-text small { font-size: 10px; }
-.pt-game-shell .pt-quest-card-frame { width: min(320px, calc(100vw - 28px)); }
-.hud-map-button { position: absolute; z-index: 8; top: 76px; right: 14px; width: 42px; height: 42px; border: 2px solid #fff; border-radius: 15px; background: #fff8ed; font-size: 23px; box-shadow: 0 3px 12px #34557618; cursor: pointer; }
-.pt-game-shell .pt-joystick { left: 18px; bottom: 22px; width: 100px !important; height: 100px !important; border-width: 2px !important; box-shadow: none !important; opacity: .8; }
-.pt-game-shell .pt-joystick-knob { width: 42px !important; height: 42px !important; }
-.pt-game-shell .pt-action-bubbles { right: 16px; bottom: 20px; gap: 10px; }
-.pt-game-shell .pt-action-bubble { width: 62px !important; height: 62px !important; border-width: 2px; box-shadow: 0 3px 10px #34557620; }
-.pt-game-shell .pt-action-bubble i, .pt-game-shell .pt-action-bubble .pt-hud-img-icon { width: 30px; height: 30px; }
-.pt-game-shell .pt-context-action-wrap { right: auto; left: 50%; bottom: 26px; transform: translateX(-50%); max-width: calc(100% - 260px); }
-.pt-game-shell .pt-context-glow-ring { display: none; }
-.pt-game-shell .venue-banner { display: contents; }
-.pt-game-shell .venue-banner-content b { position: absolute; z-index: 8; top: 76px; left: 50%; transform: translateX(-50%); padding: 6px 12px; background: #fff8eddf; border-radius: 14px; font-size: 12px; }
-.pt-game-shell .venue-banner-content span { display: none; }
-.pt-game-shell .venue-banner-actions { display: contents; }
-.pt-game-shell .venue-banner-actions button:first-child { position: absolute; z-index: 8; bottom: 26px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 260px); padding: 10px 14px; font-size: 12px; }
-.pt-game-shell .venue-banner-actions button:last-child { position: absolute; z-index: 8; top: 76px; right: 14px; padding: 8px 12px; font-size: 12px; }
-.pt-game-shell .debug-panel { top: auto; bottom: 132px; left: 14px; max-width: 160px; font-size: 10px; opacity: .85; }
-.pt-game-shell .status { left: 50%; bottom: 94px; transform: translateX(-50%); max-width: min(440px, 70vw); font-size: 11px; padding: 5px 10px; }
-.pt-game-shell.hud-modal-open :is(.pt-topbar, .pt-candy-quest-tracker, .pt-joystick, .pt-action-bubbles, .hud-map-button, .pt-context-action-wrap, .pt-hotbar, .farm-gate-action, .livestock-card, .farm-zone-badge, .dismount-vehicle-btn, .venue-banner-content, .venue-banner-actions) { display: none; }
+/* Dedicated Play Together HUD styling is loaded from CompactGameHud.css */
+.pt-game-shell.hud-modal-open :is(.pt-candy-quest-tracker, .pt-joystick, .pt-action-bubbles, .hud-map-button, .pt-context-action-wrap, .pt-hotbar, .farm-gate-action, .livestock-card, .farm-zone-badge, .dismount-vehicle-btn, .venue-banner-content, .venue-banner-actions) { display: none; }
+.pt-game-shell.hud-modal-open .player-name-label { display: none; }
 .pt-game-shell.hud-modal-open .player-name-label { display: none; }
 @media (max-width: 700px) {
   .pt-game-shell .topbar.pt-topbar { inset: 8px 8px auto; gap: 4px; }
@@ -11350,7 +11208,7 @@ html.is-mobile-device .game-canvas {
    COMPREHENSIVE MOBILE LANDSCAPE SAFE-AREA & HUD BALANCING
    Ensures 0px screen drift/offset and symmetrical margins in landscape mode
    ========================================================================= */
-@media screen and (orientation: landscape), (max-height: 560px) {
+@media screen and (max-height: 560px) {
   html, body {
     width: 100% !important;
     height: 100% !important;
@@ -12373,4 +12231,34 @@ html.chrome-ios-contained {
   .bb-daily-streak { margin-left: 0; }
   .bb-daily-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .bb-day-card { min-height: 125px; }
+}
+
+/* Start screen art direction: spare game-menu composition, one primary action. */
+body .pt-start-screen-backdrop.cutecore-theme {
+  background: radial-gradient(ellipse at 50% 20%, #427f82 0%, #245567 46%, #183d50 100%) !important;
+}
+body .pt-start-screen-backdrop .pt-start-center-content { gap: 32px !important; }
+body .pt-start-screen-backdrop .pt-generated-logo-lockup {
+  width: min(440px, 80vw) !important;
+  max-width: min(440px, 80vw) !important;
+  animation: none;
+  filter: drop-shadow(0 9px 0 #0e3948);
+}
+body .pt-start-screen-backdrop .pt-ready-action-stage { gap: 20px; }
+body .pt-start-screen-backdrop .pt-play-now-wrap { width: min(356px, 88vw); }
+body .pt-start-screen-backdrop .pt-play-now-btn {
+  width: 100%; height: 62px; border: 2px solid #f7e5a4; border-radius: 11px;
+  background: #edb64e; box-shadow: 0 6px 0 #9e6c2f, 0 11px 17px #122d3566;
+}
+body .pt-start-screen-backdrop .pt-play-now-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #9e6c2f, 0 13px 17px #122d3566; }
+body .pt-start-screen-backdrop .pt-play-now-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #9e6c2f; }
+body .pt-start-screen-backdrop .pt-play-now-text { color: #3e311d; font-size: 22px; text-shadow: none; letter-spacing: .02em; }
+body .pt-start-screen-backdrop .pt-play-now-icon { color: #3e311d; filter: none; }
+body .pt-start-screen-backdrop .pt-play-now-icon svg { width: 21px; height: 21px; }
+body .pt-start-screen-backdrop .pt-google-login-btn { width: min(356px, 88vw); height: auto; }
+body .pt-start-screen-backdrop .game-auth-google-disabled { width: min(356px, 88vw); border-radius: 9px; }
+@media (max-height: 550px) {
+  body .pt-start-screen-backdrop .pt-start-center-content { gap: 10px !important; }
+  body .pt-start-screen-backdrop .pt-generated-logo-lockup { width: min(260px, 52vw) !important; }
+  body .pt-start-screen-backdrop .pt-ready-action-stage { gap: 8px; }
 }

@@ -170,12 +170,13 @@ export function createStarterFarmhouse(scene, shadowGenerator, position) {
     potClay: createToyMaterial(scene, 'mat-vn-pot-clay', '#9a3412', { specularPower: 20 }),
   };
 
-  // Ánh sáng cửa sổ ban đêm giữ độ sáng ấm áp liên tục, không tính toán lại nguồn sáng bên ngoài
+  // Ánh sáng cửa sổ & đèn lồng ban đêm giữ độ sáng ấm áp liên tục, triệt tiêu 100% can thiệp từ bóng đổ và nguồn sáng ngoài
   mats.windowGlow.disableLighting = true;
+  mats.lanternSilk.disableLighting = true;
 
-  // Đảm bảo toàn bộ vật liệu có thể nhận tới 6 nguồn sáng ban đêm mà không bị đảo nguồn gây nhấp nháy
+  // Đảm bảo toàn bộ vật liệu có thể nhận tới 8 nguồn sáng ban đêm mà không bị đảo nguồn gây nhấp nháy
   Object.values(mats).forEach((mat) => {
-    if (mat) mat.maxSimultaneousLights = 6;
+    if (mat) mat.maxSimultaneousLights = 8;
   });
 
   // Kích thước chuẩn nhà 3 gian Việt Nam
@@ -198,7 +199,7 @@ export function createStarterFarmhouse(scene, shadowGenerator, position) {
   foundation.position.set(0, plinthH / 2, -porchD / 2);
   foundation.material = mats.lateritePlinth;
   foundation.parent = root;
-  foundation.receiveShadows = true;
+  foundation.receiveShadows = false; // Triệt tiêu răng cưa bóng đổ ban đêm
 
   // Lớp gạch Bát Tràng lát nền hiên nhà (nhô cao 4cm so với móng chống Z-fighting)
   const porchFloor = MeshBuilder.CreateBox('vn-house-porch-floor', {
@@ -209,7 +210,7 @@ export function createStarterFarmhouse(scene, shadowGenerator, position) {
   porchFloor.position.set(0, plinthH + 0.03, -houseD / 2 - porchD / 2);
   porchFloor.material = mats.brickFloor;
   porchFloor.parent = root;
-  porchFloor.receiveShadows = true;
+  porchFloor.receiveShadows = false;
 
   // 3 Bậc tam cấp bằng đá ong dẫn lên hiên nhà (đặt hoàn toàn phía trước móng)
   const stepFrontStart = -houseD / 2 - porchD;
@@ -226,7 +227,7 @@ export function createStarterFarmhouse(scene, shadowGenerator, position) {
     step.position.set(0, st.h / 2, stepFrontStart + st.offZ);
     step.material = mats.lateritePlinth;
     step.parent = root;
-    step.receiveShadows = true;
+    step.receiveShadows = false;
   });
 
   // =========================================================================
@@ -243,7 +244,7 @@ export function createStarterFarmhouse(scene, shadowGenerator, position) {
   walls.position.set(0, plinthH + wallH / 2, 0);
   walls.material = mats.wallOchre;
   walls.parent = root;
-  walls.receiveShadows = true;
+  walls.receiveShadows = false; // Triệt tiêu sọc bóng đổ chập chờn trên vách tường
   shadowGenerator?.addShadowCaster(walls);
 
   // 4 Cột gỗ lim góc nhà (kích thước 0.22m, nhô hẳn ra ngoài tường 4cm)
@@ -302,7 +303,7 @@ export function createStarterFarmhouse(scene, shadowGenerator, position) {
     baseStone.position.set(px, plinthH + 0.06 + 0.07, pillarZ);
     baseStone.material = mats.stoneLotus;
     baseStone.parent = root;
-    baseStone.receiveShadows = true;
+    baseStone.receiveShadows = false;
 
     // Thân cột gỗ lim tròn tiện
     const pillar = MeshBuilder.CreateCylinder(`vn-veranda-pillar-${idx}`, {
@@ -379,19 +380,7 @@ export function createStarterFarmhouse(scene, shadowGenerator, position) {
     panelTrim.parent = root;
   });
 
-  // Ô thoáng con tiện gỗ phía trên cửa chính
-  // Ô thoáng con tiện gỗ phía trên cửa chính (đặt cao hơn khung cửa, không giao cắt)
-  const transomH = 0.22;
-  const transom = MeshBuilder.CreateBox('vn-door-transom', {
-    width: mainDoorW - 0.08,
-    height: transomH,
-    depth: 0.02,
-  }, scene);
-  transom.position.set(0, plinthH + mainDoorH + transomH / 2 + 0.08, facadeZ + 0.02);
-  transom.material = mats.windowGlow;
-  transom.parent = root;
-
-  // Hoành phi gỗ mạ vàng trang trọng trên cửa chính
+  // Hoành phi gỗ mạ vàng trang trọng trên cửa chính (đặt trang nghiêm phía trên cửa bức bàn)
   const signboardMesh = MeshBuilder.CreatePlane('vn-house-signboard', { width: 1.8, height: 0.45 }, scene);
   signboardMesh.position.set(0, plinthH + mainDoorH + 0.24, facadeZ - 0.07);
   const signDT = createLacqueredSignboard(scene, 'AN GIA · THÔN VIỆT', 1.8, 0.45);
@@ -768,10 +757,37 @@ export function createStarterFarmhouse(scene, shadowGenerator, position) {
   smokeSystem.direction2 = new Vector3(0.1, 2.2, 0.35);
   smokeSystem.start();
 
+  // Triệt tiêu 100% hiện tượng đèn nhấp nháy ban đêm:
+  // Loại trừ toàn bộ mesh của ngôi nhà khỏi tất cả PointLight trong scene (đèn đường, đèn quảng trường, heroNightLight)
+  const excludeFromPointLights = () => {
+    const meshes = root.getChildMeshes();
+    if (!meshes || !meshes.length) return;
+    scene.lights.forEach((light) => {
+      if (light.getClassName?.() === 'PointLight') {
+        if (!light.excludedMeshes) light.excludedMeshes = [];
+        meshes.forEach((m) => {
+          if (!light.excludedMeshes.includes(m)) {
+            light.excludedMeshes.push(m);
+          }
+        });
+      }
+    });
+  };
+  excludeFromPointLights();
+  const lightAddObserver = scene.onNewLightAddedObservable?.add(excludeFromPointLights);
+
   return {
     root,
     smokeSystem,
     dispose() {
+      if (lightAddObserver) {
+        scene.onNewLightAddedObservable?.remove(lightAddObserver);
+      }
+      scene.lights.forEach((light) => {
+        if (light.excludedMeshes?.length) {
+          light.excludedMeshes = light.excludedMeshes.filter((m) => m && m.parent !== root && m !== root);
+        }
+      });
       smokeSystem.dispose();
       root.dispose(false, false);
     },
@@ -814,6 +830,7 @@ export function createUpgradedFarmhouse(scene, shadowGenerator, position) {
     wingBody.position.set(wingX, 0.32 + wingH / 2, 0.1);
     wingBody.material = mats.wallOchre;
     wingBody.parent = root;
+    wingBody.receiveShadows = false;
     shadowGenerator?.addShadowCaster(wingBody);
 
     const wingRoof = MeshBuilder.CreateBox(`vn-wing-roof-${idx}`, { width: wingW + 0.4, depth: wingD + 0.4, height: 0.12 }, scene);
@@ -821,13 +838,39 @@ export function createUpgradedFarmhouse(scene, shadowGenerator, position) {
     wingRoof.rotation.z = idx === 0 ? 0.30 : -0.30;
     wingRoof.material = mats.roofTile;
     wingRoof.parent = root;
+    wingRoof.receiveShadows = false;
     shadowGenerator?.addShadowCaster(wingRoof);
   });
+
+  const excludeWingFromPointLights = () => {
+    const meshes = root.getChildMeshes();
+    if (!meshes || !meshes.length) return;
+    scene.lights.forEach((light) => {
+      if (light.getClassName?.() === 'PointLight') {
+        if (!light.excludedMeshes) light.excludedMeshes = [];
+        meshes.forEach((m) => {
+          if (!light.excludedMeshes.includes(m)) {
+            light.excludedMeshes.push(m);
+          }
+        });
+      }
+    });
+  };
+  excludeWingFromPointLights();
+  const lightAddObserver = scene.onNewLightAddedObservable?.add(excludeWingFromPointLights);
 
   return {
     root,
     smokeSystem: mainCottage.smokeSystem,
     dispose() {
+      if (lightAddObserver) {
+        scene.onNewLightAddedObservable?.remove(lightAddObserver);
+      }
+      scene.lights.forEach((light) => {
+        if (light.excludedMeshes?.length) {
+          light.excludedMeshes = light.excludedMeshes.filter((m) => m && m.parent !== root && m !== root);
+        }
+      });
       mainCottage.dispose();
       root.dispose(false, false);
     },

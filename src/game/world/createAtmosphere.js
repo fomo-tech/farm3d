@@ -282,7 +282,7 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
   const villageNightLight = new PointLight('village-night-light', new Vector3(-112, 5.0, 35), scene);
   villageNightLight.diffuse = Color3.FromHexString('#f59e0b');
   villageNightLight.intensity = 0;
-  villageNightLight.range = 85;
+  villageNightLight.range = 35;
 
   // Đài phun nước trung tâm Quảng trường: x = 0, z = 0
   const plazaNightLight = new PointLight('plaza-night-light', new Vector3(0, 4.5, 0), scene);

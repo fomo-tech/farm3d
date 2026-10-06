@@ -5,6 +5,7 @@ import { CROPS as CLIENT_CROPS, barnCapacity } from '../src/game/economy/GamePro
 assert.equal(CLIENT_CROPS, CROPS);
 assert.equal(CROPS.carrot.growMs, 60000, 'existing balance is preserved');
 assert.equal(farmBarnCapacity(1), 20);
+assert.equal(farmBarnCapacity(0), 20, 'a new account has usable storage before buying land');
 assert.equal(farmBarnUpgradeCost(3), 1050);
 assert.deepEqual([0, .25, .75, 1].map(farmGrowthStage), [0, 1, 2, 3]);
 assert.equal(barnCapacity({ barnLevel: 3 }), 60);

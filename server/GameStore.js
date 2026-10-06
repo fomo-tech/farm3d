@@ -45,6 +45,7 @@ export async function initGameStore() {
   await recoverFarmWrites();
   await Promise.all([
     collections.players.createIndex({ playerId: 1 }, { unique: true }),
+    collections.players.createIndex({ googleSub: 1 }, { unique: true, sparse: true }),
     collections.players.createIndex({ 'progress.nameKey': 1 }, { unique: true, sparse: true }),
     collections.crops.createIndex({ villageId: 1, farmId: 1, tileKey: 1 }, { unique: true }),
     collections.likes.createIndex({ villageId: 1, farmId: 1, playerId: 1 }, { unique: true }),
@@ -134,7 +135,7 @@ function docToPlayer(doc, sessionToken = null) {
   progress.fishing = normalizeFishingState(progress.fishing);
   progress.level = levelFromXp(progress.xp);
   const livestock = (doc.livestock || initialLivestock()).map((a, index) => ({ ...a, id: a.id || `legacy-${a.species}-${index}` }));
-  return { playerId: doc.playerId, token: sessionToken, name: doc.name, progress, position: doc.position || null, livestock, revision: doc.revision || 0 };
+  return { playerId: doc.playerId, token: sessionToken, name: doc.name, googleLinked: Boolean(doc.googleSub), progress, position: doc.position || null, livestock, revision: doc.revision || 0 };
 }
 
 export async function authenticate(playerId, token, name = 'Nông dân') {
@@ -147,7 +148,8 @@ export async function authenticate(playerId, token, name = 'Nông dân') {
     return docToPlayer(doc, sessionToken);
   }
 
-  let valid = tokensMatch(token, doc.sessionTokenHash);
+  let valid = tokensMatch(token, doc.sessionTokenHash)
+    || (doc.sessions || []).some(session => Date.now() - session.issuedAt < SESSION_TTL_MS && tokensMatch(token, session.hash));
   // One-time migration for accounts created before Phase 5 stored plaintext tokens.
   if (!valid && token && doc.sessionToken && token === doc.sessionToken) {
     valid = true;
@@ -155,10 +157,53 @@ export async function authenticate(playerId, token, name = 'Nông dân') {
     doc.sessionTokenHash = hashSessionToken(token);
   }
   const issuedAt = Number(doc.sessionIssuedAt || doc.updatedAt || doc.createdAt || 0);
-  if (!valid || !issuedAt || Date.now() - issuedAt > SESSION_TTL_MS) {
+  const modernSession = (doc.sessions || []).some(session => Date.now() - session.issuedAt < SESSION_TTL_MS && tokensMatch(token, session.hash));
+  if (!valid || (!modernSession && (!issuedAt || Date.now() - issuedAt > SESSION_TTL_MS))) {
     return { error: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.' };
   }
   return docToPlayer(doc, token);
+}
+
+export async function googleAccountLogin(googleSub) {
+  let doc = await collections.players.findOne({ googleSub });
+  if (!doc) {
+    const now = Date.now();
+    const playerId = `player_${randomBytes(16).toString('hex')}`;
+    const candidate = { playerId, googleSub, googleLinkedAt: now, name: 'Nông dân mới', progress: initialProgress(),
+      position: null, livestock: initialLivestock(), revision: 0, createdAt: now, updatedAt: now, sessions: [] };
+    try { await collections.players.insertOne(candidate); doc = candidate; }
+    catch (error) {
+      if (error.code !== 11000) throw error;
+      doc = await collections.players.findOne({ googleSub });
+      if (!doc) throw error;
+    }
+  }
+  const token = randomBytes(24).toString('hex');
+  const session = { hash: hashSessionToken(token), issuedAt: Date.now() };
+  await collections.players.updateOne({ playerId: doc.playerId, googleSub }, {
+    $push: { sessions: { $each: [session], $slice: -8 } }, $set: { updatedAt: Date.now() },
+  });
+  return { ...docToPlayer(doc, token), linked: true };
+}
+
+export async function linkGoogleAccount(playerId, googleSub) {
+  const existing = await collections.players.findOne({ googleSub }, { projection: { playerId: 1, name: 1, 'progress.xp': 1 } });
+  if (existing) return existing.playerId === playerId ? { status: 'already-linked' }
+    : { status: 'conflict', name: existing.name, level: levelFromXp(existing.progress?.xp || 0) };
+  try {
+    const result = await collections.players.updateOne({ playerId, googleSub: { $exists: false } },
+      { $set: { googleSub, googleLinkedAt: Date.now(), updatedAt: Date.now() } });
+    return result.modifiedCount ? { status: 'linked' } : { status: 'different-google' };
+  } catch (error) {
+    if (error.code === 11000) return { status: 'conflict' };
+    throw error;
+  }
+}
+
+export async function revokeGameSession(playerId, token) {
+  const hash = hashSessionToken(token);
+  await collections.players.updateOne({ playerId }, { $pull: { sessions: { hash } } });
+  await collections.players.updateOne({ playerId, sessionTokenHash: hash }, { $unset: { sessionTokenHash: '', sessionIssuedAt: '' } });
 }
 
 export async function savePosition(playerId, position) {

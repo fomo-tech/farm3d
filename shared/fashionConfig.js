@@ -26,10 +26,10 @@ export {
  */
 
 export const FASHION_RARITY = Object.freeze({
-  COMMON: { id: 'common', label: 'Phổ thông', color: '#94a3b8', stars: 1 },
-  RARE: { id: 'rare', label: 'Hiếm', color: '#3b82f6', stars: 2 },
-  EPIC: { id: 'epic', label: 'Cao cấp', color: '#a855f7', stars: 3 },
-  LEGENDARY: { id: 'legendary', label: 'Huyền thoại', color: '#eab308', stars: 4 },
+  COMMON: { id: 'common', label: 'Thường', color: '#64748b', borderColor: '#cbd5e1', bgColor: '#ffffff' },
+  RARE: { id: 'rare', label: 'Hiếm', color: '#0284c7', borderColor: '#38bdf8', bgColor: '#f0f9ff' },
+  EPIC: { id: 'epic', label: 'Sử thi', color: '#9333ea', borderColor: '#c084fc', bgColor: '#faf5ff' },
+  LEGENDARY: { id: 'legendary', label: 'Huyền thoại', color: '#d97706', borderColor: '#facc15', bgColor: '#fefce8' },
 });
 
 export const FASHION_CATEGORIES = Object.freeze([

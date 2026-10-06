@@ -90,7 +90,8 @@ export function farmGrowthStage(progress) {
 }
 export function farmBarnUpgradeCost(level) { return level * FARM_CONFIG.buildings.barn.upgradeCostPerLevel; }
 export function farmBarnCapacity(level) {
-  return FARM_CONFIG.buildings.barn.baseCapacity + (level - 1) * FARM_CONFIG.buildings.barn.capacityPerLevel;
+  const effectiveLevel = Number.isInteger(level) ? Math.max(1, level) : 1;
+  return FARM_CONFIG.buildings.barn.baseCapacity + (effectiveLevel - 1) * FARM_CONFIG.buildings.barn.capacityPerLevel;
 }
 
 export function collectFarmProducts(animals, now = Date.now()) {

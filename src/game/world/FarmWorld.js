@@ -1967,8 +1967,8 @@ export class FarmWorld {
   resetCameraView() {
     if (!this.camera) return;
     this.camera.alpha = RENDER_CONFIG.cameraAlpha;
-    this.camera.beta = this.currentVenue ? RENDER_CONFIG.interiorCameraBeta : this.cameraViewMode === 'farm' ? RENDER_CONFIG.farmCameraBeta : RENDER_CONFIG.cameraBeta;
-    const baseRadius = this.currentVenue ? RENDER_CONFIG.interiorCameraRadius : this.cameraViewMode === 'farm' ? RENDER_CONFIG.farmCameraRadius : RENDER_CONFIG.cameraRadius;
+    this.camera.beta = this.cameraViewMode === 'farm' ? RENDER_CONFIG.farmCameraBeta : RENDER_CONFIG.cameraBeta;
+    const baseRadius = this.cameraViewMode === 'farm' ? RENDER_CONFIG.farmCameraRadius : RENDER_CONFIG.cameraRadius;
     this.camera.radius = (!this.isGameStarted && !this.currentVenue) ? (baseRadius + 8) : baseRadius;
     this.camera.inertialAlphaOffset = 0;
     this.camera.inertialBetaOffset = 0;
@@ -2410,6 +2410,13 @@ export class FarmWorld {
   }
 
   setVenueView(kind = null) {
+    if (kind && !this.outdoorCameraView) {
+      this.outdoorCameraView = {
+        alpha: this.camera.alpha,
+        beta: this.camera.beta,
+        radius: this.camera.radius,
+      };
+    }
     this.casinoVisible = kind === 'casino';
     this.setCasinoRoom(this.casinoRoom);
     // Interior point lights are scene-level objects rather than meshes, so
@@ -2433,24 +2440,12 @@ export class FarmWorld {
       // 1. Cull outdoor world 100%
       this.setOutdoorWorldEnabled(false);
 
-      // 2. Interior camera limits - cozy & clamped
-      if (kind === 'casino') {
-        this.camera.lowerRadiusLimit = 3.2;
-        this.camera.upperRadiusLimit = 10.5;
-        this.camera.radius = 7.2;
-        this.camera.alpha = -Math.PI / 2;
-        this.camera.beta = 1.12;
-        this.camera.lowerBetaLimit = 0.60;
-        this.camera.upperBetaLimit = 1.35;
-      } else {
-        this.camera.lowerRadiusLimit = 2.4;
-        this.camera.upperRadiusLimit = 6.2;
-        this.camera.radius = 5.2;
-        this.camera.alpha = -Math.PI / 2;
-        this.camera.beta = 1.15;
-        this.camera.lowerBetaLimit = 0.70;
-        this.camera.upperBetaLimit = 1.35;
-      }
+      // Keep the player's outside orientation. The per-frame wall clamp only
+      // shortens camera distance when a wall would otherwise hide the room.
+      this.camera.lowerRadiusLimit = 2.4;
+      this.camera.upperRadiusLimit = RENDER_CONFIG.cameraMaxRadius;
+      this.camera.lowerBetaLimit = RENDER_CONFIG.cameraMinBeta;
+      this.camera.upperBetaLimit = RENDER_CONFIG.cameraMaxBeta;
 
       if (!this._outdoorClearColor && this.scene.clearColor) {
         this._outdoorClearColor = this.scene.clearColor.clone();
@@ -2494,11 +2489,20 @@ export class FarmWorld {
       // 1. Restore outdoor world
       this.setOutdoorWorldEnabled(true);
 
-      // 2. Exploration camera limits
+      // 2. Restore the exact view from before entering, not the default angle.
       this.camera.lowerRadiusLimit = RENDER_CONFIG.cameraMinRadius;
       this.camera.upperRadiusLimit = RENDER_CONFIG.cameraMaxRadius;
-      this.camera.lowerBetaLimit = null;
-      this.camera.upperBetaLimit = Math.PI / 2 - 0.05;
+      this.camera.lowerBetaLimit = RENDER_CONFIG.cameraMinBeta;
+      this.camera.upperBetaLimit = RENDER_CONFIG.cameraMaxBeta;
+      if (this.outdoorCameraView) {
+        this.camera.alpha = this.outdoorCameraView.alpha;
+        this.camera.beta = this.outdoorCameraView.beta;
+        this.camera.radius = this.outdoorCameraView.radius;
+        this.camera.inertialAlphaOffset = 0;
+        this.camera.inertialBetaOffset = 0;
+        this.camera.inertialRadiusOffset = 0;
+        this.outdoorCameraView = null;
+      }
       if (this._outdoorClearColor) {
         this.scene.clearColor = this._outdoorClearColor;
       }
@@ -2518,7 +2522,6 @@ export class FarmWorld {
         if (this._outdoorAmbientDiffuse) this.ambient.diffuse = this._outdoorAmbientDiffuse;
         if (this._outdoorAmbientGround) this.ambient.groundColor = this._outdoorAmbientGround;
       }
-      this.resetCameraView();
     }
   }
 

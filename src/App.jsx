@@ -22,7 +22,8 @@ import { VehicleShowroom } from './components/VehicleShowroom.jsx';
 import { fishingMissionProgress } from '../shared/fishingSession.js';
 import { AvatarChatBar } from './components/chat/AvatarChatBar.jsx';
 import { readGraphicsQuality } from './game/rendering/GraphicsSettings.js';
-import { loadWorldSession, saveWorldSession } from './game/network/WorldSession.js';
+import { loadWorldSession, saveWorldSession, switchWorldIdentity, restoreGuestIdentity } from './game/network/WorldSession.js';
+import { GameAccountSettings, GoogleAccountConflictDialog } from './components/GameAccountUI.jsx';
 import { GameClient } from './game/network/GameClient.js';
 import { DEFAULT_VILLAGES, keepAvailableVillages } from './game/data/villages.js';
 import { initialLivestockState, livestockSummary } from './game/livestock/LivestockStore.js';
@@ -221,6 +222,15 @@ function HudImageIcon({ asset, className = '', alt = '' }) {
   );
 }
 
+function formatCompactCurrency(val) {
+  if (val == null || !Number.isFinite(val)) return '0';
+  if (val >= 1_000_000_000) return `${(val / 1_000_000_000).toFixed(1)}B`;
+  if (val >= 10_000_000) return `${(val / 1_000_000).toFixed(1)}M`;
+  if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(2)}M`;
+  if (val >= 100_000) return `${(val / 1_000).toFixed(0)}K`;
+  return val.toLocaleString('vi-VN');
+}
+
 function playerFarmTarget(farmId) {
   const farm = WORLD_LAYOUT.farms.find(item => item.id === farmId) || WORLD_LAYOUT.farms[0];
   return { x: farm.x + 6, z: farm.z - 4 };
@@ -250,6 +260,9 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [status]);
   const [session, setSession] = useState(loadWorldSession);
+  const [authError, setAuthError] = useState('');
+  const [authConflict, setAuthConflict] = useState(null);
+  const googleCredentialRef = useRef(null);
   const sessionRef = useRef(session);
   sessionRef.current = session;
   const initialLocationRef = useRef(null);
@@ -262,7 +275,9 @@ export default function App() {
   const missionRewardSerial = useRef(0);
   const [activeTool, setActiveTool] = useState('hand');
   const [boot, setBoot] = useState({ phase: 'idle', error: '' });
-  const [startRequested, setStartRequested] = useState(false);
+  // Warm the 3D world behind the title screen so the player lands in the game
+  // world instead of waiting on a blank splash after pressing Play.
+  const [startRequested, setStartRequested] = useState(true);
   const [bootProgress, setBootProgress] = useState({ phase: 'init', percentage: 0, message: 'Đang khởi động thế giới 3D…', current: 0, total: 40 });
   const [debugEnabled, setDebugEnabled] = useState(() => new URLSearchParams(window.location.search).get('debug') === '1');
   const clockRef = useRef(Math.floor(Date.now() / 1000));
@@ -553,6 +568,9 @@ export default function App() {
         if (worldRef.current) worldRef.current.casinoLastError = message;
       },
       onAccountState: state => {
+        if (typeof state.googleLinked === 'boolean' && state.googleLinked !== sessionRef.current.googleLinked) {
+          setSession(previous => { const next = { ...previous, googleLinked: state.googleLinked }; saveWorldSession(next); return next; });
+        }
         if (state.name && state.name !== sessionRef.current.name) {
           setSession(previous => { const next = { ...previous, name: state.name }; saveWorldSession(next); return next; });
         }
@@ -656,6 +674,25 @@ export default function App() {
         if (state.result?.casinoSettlement) {
           const { reward, amount } = state.result.casinoSettlement;
           setCasinoResult(reward === amount ? `Hoàn lại ${reward} xu` : reward > amount ? `Nhận ${reward} xu · lãi ${reward - amount} xu` : `Nhận ${reward} xu · giảm ${amount - reward} xu`);
+        }
+      },
+      onGoogleAuthResult: result => {
+        if (result.status === 'login') {
+          try { switchWorldIdentity(result); window.location.reload(); }
+          catch (error) { setAuthError(error.message); }
+        } else if (result.status === 'logged-out') {
+          if (restoreGuestIdentity()) window.location.reload();
+        } else if (result.status === 'linked' || result.status === 'already-linked') {
+          setSession(previous => { const next = { ...previous, googleLinked: true }; saveWorldSession(next); return next; });
+          setStatus('Đã bảo vệ nhân vật bằng Google.');
+          setAuthError('');
+          setAuthConflict(null);
+        } else if (result.status === 'conflict') {
+          setAuthConflict({ name: result.name || 'Nhân vật Google', level: result.level || 1 });
+          setStatus('Google này đã gắn với một nhân vật khác.');
+        } else {
+          setAuthError(result.message || 'Không thể xác thực Google.');
+          setStatus(result.message || 'Không thể xác thực Google.');
         }
       },
       onWelcome: welcome => {
@@ -1121,6 +1158,13 @@ export default function App() {
   };
 
   const showCharacterCreation = !progress.onboarding?.characterCreated || villageRequired;
+  const handleGoogleCredential = (credential, mode) => {
+    googleCredentialRef.current = credential;
+    setAuthError('');
+    const sent = gameClientRef.current?.sendNow({ type: mode === 'link' ? 'google_link' : 'google_login', credential });
+    if (!sent) setAuthError('Chưa kết nối server. Vui lòng thử lại.');
+    else setStatus(mode === 'link' ? 'Đang bảo vệ nhân vật bằng Google…' : 'Đang đăng nhập Google…');
+  };
   const updateJoystick = event => {
     const pad = event.currentTarget;
     const rect = pad.getBoundingClientRect();
@@ -1174,6 +1218,11 @@ export default function App() {
           bootError={boot.error}
           bootProgress={bootProgress}
           onRequestStart={() => setStartRequested(true)}
+          onGoogleCredential={credential => handleGoogleCredential(credential, 'login')}
+          authError={authError}
+          playerName={session.name}
+          playerLevel={progress.level}
+          googleLinked={session.googleLinked}
           onBeginExit={() => {
             worldRef.current?.playStartCinematic?.();
           }}
@@ -1197,6 +1246,11 @@ export default function App() {
           }}
         />
       )}
+
+      {authConflict && <GoogleAccountConflictDialog current={{ name: session.name, level: progress.level }} saved={authConflict}
+        onSwitch={() => { setAuthConflict(null); handleGoogleCredential(googleCredentialRef.current, 'login'); }}
+        onStay={() => { setAuthConflict(null); googleCredentialRef.current = null; }}/>
+      }
 
       {debugEnabled && <LiveWorldDebug worldRef={worldRef} />}
       {venueMode && (
@@ -1244,94 +1298,104 @@ export default function App() {
 
       {gameStarted && (
         <>
-          {/* PLAY TOGETHER STANDARD TOPBAR */}
-          <header className="topbar pt-topbar">
-        {/* Left: Player Profile Card with 3D Level Star & Jelly EXP */}
-        <button type="button" className="pt-profile-card" onClick={() => { setProfileTarget(session.playerId); setViewedProfile(null); gameClientRef.current?.send({ type: 'get_profile', playerId: session.playerId }); }} title="Mở hồ sơ của bạn" aria-label="Mở hồ sơ của bạn">
-          <div className="pt-avatar-ring">
-            <HudImageIcon asset="farmer-avatar" className="pt-avatar-img" alt="" />
-            <div className="pt-level-star" title={`Cấp độ nông dân: ${progress.level}`}>
-              <Icon3dStar size={14} />
-              <span>{progress.level}</span>
-            </div>
-          </div>
-          <div className="pt-profile-info">
-            <div className="pt-name-row">
-              <strong className="pt-player-name">{session.name}</strong>
-              <span className="pt-role-pill">
-                {vehicles.find(vehicle => vehicle.id === progress.vehicle)?.icon || <Icon3dWalk size={15} />}
-                <small>{progress.vehicle === 'walk' ? 'Nông Dân' : vehicles.find(vehicle => vehicle.id === progress.vehicle)?.name}</small>
-              </span>
-            </div>
-            <div className="pt-exp-wrap" title={`Kinh nghiệm: ${progress.xp} XP`}>
-              <div className="pt-exp-track">
-                <div
-                  className="pt-exp-jelly"
-                  style={{
-                    width: `${Math.min(100, Math.max(5, Math.round(((progress.xp - levelFloor(progress.level)) / Math.max(1, levelCeiling(progress.level) - levelFloor(progress.level))) * 100)))}%`
-                  }}
-                />
-              </div>
-              <span className="pt-exp-val">
-                {Math.round(((progress.xp - levelFloor(progress.level)) / Math.max(1, levelCeiling(progress.level) - levelFloor(progress.level))) * 100)}%
-              </span>
-            </div>
-          </div>
-        </button>
-
-        {/* Center: Unified Game Island & Clock Capsule */}
-        <div className="pt-island-capsule" title="Khu vực và thời gian thế giới">
-          <span className="pt-island-badge">
-            <Icon3dVillageGate size={18} />
-            <b>{session.farmAddress?.villageName || worldRegion?.village?.name || 'Thung Lũng Bình Minh'}</b>
-          </span>
-          <GameClock />
-        </div>
-
-        {/* Right: Candy Currency Dock & System Bubbles */}
-        <div className="pt-currency-dock">
-          {/* Gold Coin Candy Pill */}
-          <button type="button" className="pt-candy-pill pt-gold-pill" onClick={() => setPanel('shop')} title="Đồng vàng nông trại (Bấm để mở Cửa Hàng)" aria-label={`Mở cửa hàng, ${progress.coins.toLocaleString('vi-VN')} xu`}>
-            <div className="pt-pill-icon"><HudImageIcon asset="coin" alt="" /></div>
-            <span className="pt-pill-val">{progress.coins.toLocaleString('vi-VN')}</span>
-            <span className="pt-pill-plus" aria-hidden="true">
-              <Icon3dPlus size={14} />
-            </span>
-          </button>
-
-          {/* Free Seeds Pill */}
-          {progress.freeSeeds > 0 && (
-            <div className="pt-candy-pill pt-seed-pill" title="Hạt giống cà rốt miễn phí">
-              <div className="pt-pill-icon"><Icon3dCarrot size={22} /></div>
-              <span className="pt-pill-val">{progress.freeSeeds}</span>
-            </div>
-          )}
-
-          {/* Gems Candy Pill */}
-          <div className="pt-candy-pill pt-gem-pill" title="Đá quý xanh">
-            <div className="pt-pill-icon"><HudImageIcon asset="gem" alt="" /></div>
-            <span className="pt-pill-val">{progress.gems}</span>
-          </div>
-
-          {/* Fashion Boutique Quick Button */}
+      {/* PLAY TOGETHER STANDARD TOPBAR */}
+      {gameStarted && (
+        <header className="topbar pt-topbar">
+          {/* Left: Compact Play Together Player Profile Card */}
           <button
             type="button"
-            className="pt-candy-btn pt-fashion-btn"
-            onClick={() => setPanel('fashion')}
-            aria-label="Mở tiệm thời trang"
-            title="Thời Trang & Tủ Đồ Play Together"
+            className="pt-profile-card"
+            onClick={() => {
+              setProfileTarget(session.playerId);
+              setViewedProfile(null);
+              gameClientRef.current?.send({ type: 'get_profile', playerId: session.playerId });
+            }}
+            title="Mở hồ sơ cá nhân"
+            aria-label="Mở hồ sơ cá nhân"
           >
-            <Icon3dFashionLogo size={24} />
-            <span className="pt-btn-label">Thời Trang</span>
+            <div className="pt-avatar-ring">
+              <HudImageIcon asset="farmer-avatar" className="pt-avatar-img" alt="" />
+              <div className="pt-level-star" title={`Cấp độ: ${progress.level}`}>
+                <Icon3dStar size={18} />
+                <span>{progress.level}</span>
+              </div>
+            </div>
+            <div className="pt-profile-info">
+              <div className="pt-name-row">
+                <strong className="pt-player-name">{session.name}</strong>
+              </div>
+              <div className="pt-exp-wrap" title={`Kinh nghiệm: ${progress.xp} XP`}>
+                <div className="pt-exp-track">
+                  <div
+                    className="pt-exp-jelly"
+                    style={{
+                      width: `${Math.min(100, Math.max(5, Math.round(((progress.xp - levelFloor(progress.level)) / Math.max(1, levelCeiling(progress.level) - levelFloor(progress.level))) * 100)))}%`
+                    }}
+                  />
+                </div>
+                <span className="pt-exp-val">
+                  {Math.round(((progress.xp - levelFloor(progress.level)) / Math.max(1, levelCeiling(progress.level) - levelFloor(progress.level))) * 100)}%
+                </span>
+              </div>
+            </div>
           </button>
 
-          <button type="button" className="pt-candy-btn pt-phone-btn" onClick={() => setPhoneOpen(true)} aria-label="Mở menu" title="Menu (P)">
-            <Icon3dSmartPhone size={26} />
-            <span className="pt-btn-label">Menu</span>
-            {hasPendingNotifications && <i className="pt-menu-ping" />}
-          </button>
-        </div>
-      </header>
+          {/* Right: Candy Currency Dock & Iconic 3D Game Buttons */}
+          <div className="pt-currency-dock">
+            {/* Gold Coin Candy Pill */}
+            <button
+              type="button"
+              className="pt-candy-pill pt-gold-pill"
+              onClick={() => setPanel('shop')}
+              title="Cửa Hàng Nông Trại"
+              aria-label={`Mở cửa hàng, ${progress.coins.toLocaleString('vi-VN')} xu`}
+            >
+              <div className="pt-pill-icon"><HudImageIcon asset="coin" alt="" /></div>
+              <span className="pt-pill-val">{formatCompactCurrency(progress.coins)}</span>
+              <span className="pt-pill-plus" aria-hidden="true">
+                <Icon3dPlus size={13} />
+              </span>
+            </button>
+
+            {/* Free Seeds Pill (if any) */}
+            {progress.freeSeeds > 0 && (
+              <div className="pt-candy-pill pt-seed-pill" title="Hạt giống cà rốt miễn phí">
+                <div className="pt-pill-icon"><Icon3dCarrot size={20} /></div>
+                <span className="pt-pill-val">{progress.freeSeeds}</span>
+              </div>
+            )}
+
+            {/* Gems Candy Pill */}
+            <div className="pt-candy-pill pt-gem-pill" title="Đá quý xanh">
+              <div className="pt-pill-icon"><HudImageIcon asset="gem" alt="" /></div>
+              <span className="pt-pill-val">{progress.gems}</span>
+            </div>
+
+            {/* Fashion Boutique 3D Icon Button */}
+            <button
+              type="button"
+              className="pt-candy-btn pt-fashion-btn"
+              onClick={() => setPanel('fashion')}
+              aria-label="Tiệm Thời Trang"
+              title="Thời Trang & Tủ Đồ Play Together"
+            >
+              <Icon3dFashionLogo size={24} />
+            </button>
+
+            {/* Play Together Smartphone OS / Menu Master Button */}
+            <button
+              type="button"
+              className="pt-candy-btn pt-phone-btn"
+              onClick={() => setPhoneOpen(true)}
+              aria-label="Menu trò chơi"
+              title="Điện thoại Kaia / Menu (Phím P)"
+            >
+              <Icon3dSmartPhone size={24} />
+              {hasPendingNotifications && <i className="pt-menu-ping" />}
+            </button>
+          </div>
+        </header>
+      )}
 
       {/* One objective tracker for the entire newcomer journey. */}
       {!showCharacterCreation && progress.onboarding && !progress.onboarding.completed && (
@@ -1346,9 +1410,10 @@ export default function App() {
             : setDialogueOpen(true)}
           onOpenGuide={() => setGuideOpen(true)}
           onOpenOrders={handleOpenOrders}
+          onOpenMissions={() => { setQuestOpenTab('main'); setPanel('quests'); }}
         />
       )}
-      {gameStarted && !showCharacterCreation && <MissionTracker progress={progress} legacyQuests={QUESTS} trackedMission={trackedMission} onOpen={kind => { setQuestOpenTab(kind); setPanel('quests'); }} />}
+      {gameStarted && !showCharacterCreation && progress.onboarding?.completed && <MissionTracker progress={progress} legacyQuests={QUESTS} trackedMission={trackedMission} onOpen={kind => { setQuestOpenTab(kind); setPanel('quests'); }} />}
 
       {/* Dismount Bubble */}
       {gameStarted && !showCharacterCreation && !venueMode && !panel && (
@@ -1523,6 +1588,11 @@ export default function App() {
             </div>}
 
             {phonePage === 'settings' && <div className="pt-phone-submenu" aria-label="Thiết lập trò chơi">
+              <GameAccountSettings name={session.name} level={progress.level} googleLinked={session.googleLinked}
+                onCredential={credential => handleGoogleCredential(credential, 'link')} error={authError}
+                onLogout={() => {
+                  if (!gameClientRef.current?.sendNow({ type: 'google_logout' })) setAuthError('Chưa kết nối server để đăng xuất.');
+                }}/>
               <button type="button" onClick={() => { const muted = farmAudio.toggleMute(); setIsMuted(muted); }}>
                 {isMuted ? <Icon3dAudioOff size={20} /> : <Icon3dAudioOn size={20} />}
                 <span>Âm thanh: {isMuted ? 'Tắt' : 'Bật'}</span>
@@ -1593,55 +1663,12 @@ export default function App() {
         onOpenFashion={() => setPanel('fashion')}
         progress={progress}
         onUseItem={(item) => {
-          if (item.category === 'clothing') {
-            const currentCustom = progress.customization || getDefaultCustomization();
-            const earOptions = [
-              'duck_floatie', 'frog_backpack', 'cat_headphones', 'round_glasses', 'angel_wings',
-              'cat_ears', 'rabbit_ears', 'bear_ears', 'elf_ears', 'shiba_ears', 'duck_beak', 'halo_crown',
-              'fox_tail', 'devil_horns', 'toast_mouth', 'lollipop_sweet', 'steampunk_goggles',
-              'crown_royal', 'tiara_princess', 'aura_stars', 'cape_royal', 'cape_vampire', 'wings_faerie', 'wings_bat'
-            ];
-            let nextCustom = { ...currentCustom };
-            if (item.id.startsWith('top_')) {
-              nextCustom.topId = item.id;
-            } else if (item.id.startsWith('bot_')) {
-              nextCustom.bottomId = item.id;
-            } else if (item.id.startsWith('shoe_')) {
-              nextCustom.shoeId = item.id;
-            } else if (item.id.startsWith('hair_')) {
-              nextCustom.hairStyle = item.id;
-            } else if (earOptions.includes(item.id)) {
-              nextCustom.ears = item.id;
-            } else if (item.id === 'straw_hat') {
-              if (!network.connected || !progress.ownedOutfits?.includes('farmer')) { setStatus('Bạn chưa sở hữu bộ nông dân hoặc chưa kết nối server.');return; }
-              gameClientRef.current?.sendGameAction('buy_outfit',{id:'farmer'});return;
-            } else if (item.id === 'blue_backpack') {
-              if (!network.connected || !progress.ownedOutfits?.includes('farmer')) { setStatus('Bạn chưa sở hữu bộ nông dân hoặc chưa kết nối server.');return; }
-              gameClientRef.current?.sendGameAction('buy_outfit',{id:'farmer'});return;
-            }
-            if (!network.connected) { setStatus('Cần kết nối server để trang bị.');return; }
-            gameClientRef.current?.sendGameAction('fashion_save_customization',{customization:nextCustom,newOwnedItemIds:[]});
+          if (!network.connected) { setStatus('Cần kết nối server để thao tác với túi đồ.'); return; }
+          if (item.kind === 'crop') sellItem(item.itemId);
+          else if (['rod', 'bait', 'gear'].includes(item.kind)) {
+            gameClientRef.current?.sendGameAction('fishing_equip', { id: item.itemId });
             setStatus('Đang chờ server xác nhận trang bị…');
-            return;
           }
-          if (item.id === 'watering_can') {
-            setStatus('Đã cầm Bình tưới nước!');
-            setPanel(null);
-          } else if (item.id === 'hoe') {
-            setStatus('Đã cầm Cuốc làm đất!');
-            setPanel(null);
-          } else if (item.id === 'carrot') {
-            sellItem('carrot');
-            setStatus('Đã bán Cà rốt tươi!');
-          } else if (item.id === 'blue_fish') {
-            fishingSellAll();
-            setStatus('Đã bán Cá biển!');
-          } else {
-            setStatus(`Đã sử dụng ${item.name}!`);
-          }
-        }}
-        onDropItem={(item) => {
-          setStatus(`Đã chuyển ${item.name} vào kho lưu trữ.`);
         }}
         farmAudio={farmAudio}
       />

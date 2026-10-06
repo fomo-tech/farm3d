@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { GoogleSignInButton } from './GoogleSignInButton.jsx';
+import { StartAccountBadge } from './GameAccountUI.jsx';
 import {
   Icon3dCrystalDiamond,
   Icon3dHotAirBalloon,
@@ -111,6 +113,11 @@ export function GameStartScreen({
   onBeginExit,
   onRequestStart,
   onStart,
+  onGoogleCredential,
+  authError,
+  playerName,
+  playerLevel,
+  googleLinked,
 }) {
   const [displayProgress, setDisplayProgress] = useState(0);
   const displayProgressRef = useRef(0);
@@ -136,15 +143,6 @@ export function GameStartScreen({
 
   const isReady = bootPhase === 'ready' && displayProgress >= 99.5;
 
-  // One click requests loading; only a genuinely ready world can dismiss the cover.
-  useEffect(() => {
-    if (!isReady) return undefined;
-    setIsExiting(true);
-    onBeginExit?.();
-    const timer = setTimeout(() => onStart?.(), 420);
-    return () => clearTimeout(timer);
-  }, [isReady]);
-
   const handleStartGame = () => {
     if (bootPhase === 'idle') { onRequestStart?.(); return; }
     if (!isReady || isExiting) return;
@@ -166,7 +164,6 @@ export function GameStartScreen({
       <main className="pt-start-center-content">
         {/* Brand Logo Lockup with 3D Mascot & Flanking Golden Stars */}
         <div className="pt-generated-logo-lockup">
-          <Cute3DStar className="pt-star-left" />
           <img
             className="pt-generated-brand-logo"
             src="/assets/loading/vibe-city-logo.webp"
@@ -174,7 +171,6 @@ export function GameStartScreen({
             fetchpriority="high"
             decoding="async"
           />
-          <Cute3DStar className="pt-star-right" />
         </div>
 
         {/* Error State if WebGL / Asset Loading Failed */}
@@ -218,14 +214,11 @@ export function GameStartScreen({
         )}
 
         {/* State B: Ready State - Login Actions (Matching Reference Image 1:1) */}
-        {bootPhase === 'idle' && (
+        {(bootPhase === 'idle' || isReady) && (
           <div className="pt-ready-action-stage">
-            {/* Primary Golden Play Button: CHƠI NGAY with Radiant Cartoon Whiskers */}
+            <StartAccountBadge name={playerName} level={playerLevel} googleLinked={googleLinked} />
+            {/* One primary action; account and sign-in stay secondary. */}
             <div className="pt-play-now-wrap">
-              <div className="pt-burst-rays-left" aria-hidden="true">
-                <span className="ray ray-top" />
-                <span className="ray ray-bottom" />
-              </div>
 
               <button
                 type="button"
@@ -241,33 +234,16 @@ export function GameStartScreen({
                     <path d="M8 5.14v13.72a1.2 1.2 0 0 0 1.83 1.02l11.14-6.86a1.2 1.2 0 0 0 0-2.04L9.83 4.12A1.2 1.2 0 0 0 8 5.14z" />
                   </svg>
                 </span>
-                <span className="pt-play-now-text">CHƠI NGAY</span>
+                <span className="pt-play-now-text">VÀO THẾ GIỚI</span>
               </button>
 
-              <div className="pt-burst-rays-right" aria-hidden="true">
-                <span className="ray ray-top" />
-                <span className="ray ray-bottom" />
-              </div>
             </div>
 
             {/* Secondary Google Login Button: Đăng nhập Google */}
-            <button
-              type="button"
-              className="pt-google-login-btn"
-              onClick={e => {
-                e.stopPropagation();
-                handleStartGame();
-              }}
-              aria-label="Đăng nhập Google"
-            >
-              <svg className="pt-google-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.665-5.17 3.665-9.12z"/>
-                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.28v3.13C3.26 21.3 7.31 24 12 24z"/>
-                <path fill="#FBBC05" d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.58H1.28C.46 8.2 0 10.04 0 12s.46 3.8 1.28 5.42l4-3.13z"/>
-                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.28 6.58l4 3.13c.95-2.83 3.6-4.96 6.72-4.96z"/>
-              </svg>
-              <span className="pt-google-login-text">Đăng nhập Google</span>
-            </button>
+            <div className="pt-google-login-btn" onClick={event => event.stopPropagation()}>
+              <GoogleSignInButton onCredential={onGoogleCredential} />
+            </div>
+            {authError && <small role="alert" className="pt-google-config-note">{authError}</small>}
           </div>
         )}
       </main>

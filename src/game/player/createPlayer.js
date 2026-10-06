@@ -558,7 +558,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
   const heroNightLight = new PointLight('hero-night-light', new Vector3(0, 1.85, 0.45), scene);
   heroNightLight.diffuse = Color3.FromHexString('#fff3db'); // Vàng kem ấm áp
   heroNightLight.specular = Color3.FromHexString('#fef08a');
-  heroNightLight.range = 7.5;
+  heroNightLight.range = 2.4; // Thu hẹp bán kính chỉ bao quanh cơ thể nhân vật
   heroNightLight.intensity = 0;
   heroNightLight.parent = root;
   const updateHeroMeshes = () => {
@@ -852,11 +852,15 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       return human.isPerformingAction();
     },
     setNightLighting(factor = 0) {
-      // Khi trời tối (factor từ 0 -> 0.95), đèn heroNightLight tự động tỏa sáng êm dịu lên nhân vật
-      const targetIntensity = Math.max(0, Math.min(1, Number(factor) || 0)) * 0.72;
-      heroNightLight.intensity = targetIntensity;
       if (!heroNightLight.includedOnlyMeshes?.length) {
         updateHeroMeshes();
+      }
+      // Khóa cứng: Chỉ phát sáng khi ĐÃ CÓ danh sách mesh giới hạn của nhân vật, tuyệt đối không rọi vào công trình/nhà ở
+      if (heroNightLight.includedOnlyMeshes && heroNightLight.includedOnlyMeshes.length > 0) {
+        const targetIntensity = Math.max(0, Math.min(1, Number(factor) || 0)) * 0.45;
+        heroNightLight.intensity = targetIntensity;
+      } else {
+        heroNightLight.intensity = 0;
       }
     },
     dispose() {

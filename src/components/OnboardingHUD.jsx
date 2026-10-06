@@ -8,6 +8,7 @@ import {
   Icon3dCarrot,
   Icon3dCompass,
   Icon3dSparkleStar,
+  Icon3dTrophyCup,
 } from './icons3d/GameIcons3D.jsx';
 
 export function OnboardingHUD({
@@ -19,8 +20,8 @@ export function OnboardingHUD({
   onTalkToElder,
   onOpenGuide,
   onOpenOrders,
+  onOpenMissions,
 }) {
-  const [collapsed, setCollapsed] = useState(true);
   const onboarding = progress?.onboarding;
   if (!onboarding || onboarding.completed) return null;
 
@@ -95,99 +96,61 @@ export function OnboardingHUD({
   const isNear = targetDistance != null && targetDistance <= 3.5;
 
   return (
-    <aside
-      className={`pt-candy-quest-tracker ${collapsed ? 'is-collapsed' : ''}`}
-      aria-label="Nhiệm vụ tân thủ"
-    >
-      {/* Collapsed Pill State */}
-      {collapsed ? (
+    <aside className="pt-candy-quest-tracker pt-quest-ribbon-dock" aria-label="Nhiệm vụ tân thủ">
+      {/* Sleek Play Together Quest Ribbon Banner */}
+      <div className="pt-quest-ribbon">
+        {/* Left: 3D NPC / Item Avatar Pod with Step Badge */}
+        <div
+          className="pt-quest-ribbon-avatar"
+          onClick={onOpenMissions}
+          role="button"
+          tabIndex={0}
+          title="Xem danh sách nhiệm vụ"
+        >
+          <div className="pt-quest-avatar-circle">
+            {avatarIcon}
+          </div>
+          <span className="pt-quest-step-pill-mini">{stepNumber}/6</span>
+        </div>
+
+        {/* Center: Quest Goal & Distance Tag */}
+        <div
+          className="pt-quest-ribbon-body"
+          onClick={onOpenMissions}
+          role="button"
+          tabIndex={0}
+          title={`${title} - ${desc} (Bấm để xem chi tiết)`}
+        >
+          <strong className="pt-quest-title-text">{title}</strong>
+          {targetDistance != null && (
+            <span className={`pt-quest-dist-chip ${isNear ? 'is-arrived' : ''}`}>
+              {isNear ? 'ĐÃ ĐẾN' : `${targetDistance}m`}
+            </span>
+          )}
+        </div>
+
+        {/* Right: Glossy 3D Candy Action Button */}
         <button
           type="button"
-          className="pt-quest-collapsed-bubble"
-          onClick={() => setCollapsed(false)}
-          title="Mở bảng nhiệm vụ tân thủ"
-          aria-label="Mở nhiệm vụ tân thủ"
+          className={`pt-quest-action-candy-btn ${isNear ? 'is-ready-pulse' : ''}`}
+          onClick={onAction}
+          title={`${actionText}: ${desc}`}
+          aria-label={actionText}
         >
-          <div className="pt-collapsed-avatar">
-            {avatarIcon}
-            <span className="pt-quest-step-badge">{stepNumber}/6</span>
-          </div>
-          <div className="pt-collapsed-text">
-            <b>{title}</b>
-            <small>{hasFarm && isNear ? 'Đã đến!' : hasFarm && targetDistance != null ? `${targetDistance}m` : targetName}</small>
-          </div>
-          <span className="pt-collapsed-expand-btn">▶</span>
+          <span className="pt-action-candy-text">{actionText}</span>
         </button>
-      ) : (
-        /* Full Expanded Play Together Quest Card */
-        <div className="pt-quest-card-frame">
-          {/* Top Quest Header Bar */}
-          <div className="pt-quest-header-strip">
-            <div className="pt-quest-step-pill">
-              <Icon3dSparkleStar size={12} />
-              <span>Nhiệm Vụ Tân Thủ ({stepNumber}/6)</span>
-            </div>
 
-            <div className="pt-quest-top-actions">
-              <button
-                type="button"
-                className="pt-quest-book-btn"
-                onClick={onOpenGuide}
-                title="Mở Sổ Tay Con Dấu Tân Thủ"
-              >
-                <Icon3dStamp size={16} />
-                <span>Sổ Dấu</span>
-              </button>
-
-              <button
-                type="button"
-                className="pt-quest-fold-btn"
-                onClick={() => setCollapsed(true)}
-                title="Thu gọn"
-                aria-label="Thu gọn widget"
-              >
-                —
-              </button>
-            </div>
-          </div>
-
-          {/* Main Quest Content Row */}
-          <div className="pt-quest-content-row">
-            {/* 3D Chibi Avatar with glowing ring */}
-            <div className="pt-quest-avatar-pod">
-              <div className="pt-quest-avatar-circle">
-                {avatarIcon}
-              </div>
-              <span className="pt-quest-pod-badge">{stepNumber}</span>
-            </div>
-
-            {/* Quest Details & Distance Tag */}
-            <div className="pt-quest-text-box">
-              <div className="pt-quest-name-row">
-                <strong className="pt-quest-name">{title}</strong>
-                {targetDistance != null && (
-                  <span className={`pt-quest-gps-pill ${isNear ? 'is-arrived' : ''}`}>
-                    {isNear ? 'ĐÃ ĐẾN' : `${targetDistance}m`}
-                  </span>
-                )}
-              </div>
-              <p className="pt-quest-instruction">{desc}</p>
-            </div>
-
-            {/* Action GO! Button with 3D Bevel & Shine Sweep */}
-            <button
-              type="button"
-              className={`pt-quest-action-btn ${isNear ? 'is-ready-pulse' : ''}`}
-              onClick={onAction}
-              title={actionText}
-            >
-              <div className="pt-action-shine" />
-              <Icon3dCompass size={20} className="pt-action-compass-icon" />
-              <span className="pt-action-label">{actionText}</span>
-            </button>
-          </div>
-        </div>
-      )}
+        {/* Satellite Stamp Book Button */}
+        <button
+          type="button"
+          className="pt-quest-stamp-mini-btn"
+          onClick={onOpenGuide}
+          title="Sổ Tay Con Dấu Tân Thủ"
+          aria-label="Sổ Tay Con Dấu Tân Thủ"
+        >
+          <Icon3dStamp size={16} />
+        </button>
+      </div>
     </aside>
   );
 }

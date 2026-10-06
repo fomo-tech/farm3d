@@ -14,6 +14,7 @@ function makeMat(scene, name, hex, emissiveHex = null, specular = 0.25) {
   m.ambientColor = m.diffuseColor.scale(0.42);
   m.specularColor = new Color3(specular, specular, specular);
   if (emissiveHex) m.emissiveColor = Color3.FromHexString(emissiveHex);
+  m.maxSimultaneousLights = 6;
   return m;
 }
 
@@ -42,6 +43,7 @@ export function createModernFarmhouse(scene, shadows, position = { x: -35, y: 0,
     warmLight: makeMat(scene, 'manor-porch-light', '#fef08a', '#facc15', 0.9),
   };
   mats.glass.alpha = 0.82;
+  mats.warmLight.disableLighting = true;
 
   // Bệ móng đá cuội sa thạch nâng cao 0.5m
   const plinth = MeshBuilder.CreateBox('farmhouse-plinth', { width: 14.4, height: 0.55, depth: 10.4 }, scene);

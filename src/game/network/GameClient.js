@@ -22,6 +22,7 @@ export class GameClient {
     this.onVillageRequired = options.onVillageRequired || (() => {});
     this.onVillageError = options.onVillageError || (() => {});
     this.onAccountState = options.onAccountState || (() => {});
+    this.onGoogleAuthResult = options.onGoogleAuthResult || (() => {});
     this.onActionError = options.onActionError || (() => {});
     this.onSocialState = options.onSocialState || (() => {});
     this.onProfileState = options.onProfileState || (() => {});
@@ -133,6 +134,8 @@ export class GameClient {
         } else if (message.type === 'account_state') {
           this.acknowledge(message.requestId);
           this.onAccountState(message);
+        } else if (message.type === 'google_auth_result') {
+          this.onGoogleAuthResult(message);
         } else if (message.type === 'action_error' || message.type === 'auth_error') {
           this.acknowledge(message.requestId);
           this.onActionError(message.message || 'Server từ chối hành động.');
