@@ -18,7 +18,7 @@ import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
-import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
+import { isPointOnRoadCorridor, isRoadFootprintBlocked } from './RoadSafetyZone.js';
 import { beachOceanHalfWidth, beachResourceWaterAt, beachGroundHeight } from '../../../shared/beachConfig.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
 import { WORLD_VILLAGES } from '../../../shared/villageLayout.js';
@@ -343,7 +343,7 @@ export function* createScenicLandscapesSteps(scene, foliage, shadows, foliageIns
   ];
     yield;
   for (const [_index, pasture] of (highlandPastures).entries()) {
-    if (!isPointOnRoadCorridor(pasture.x, pasture.z, 3.5)) {
+    if (!isRoadFootprintBlocked(pasture.x, pasture.z, 5, 5, 1)) {
       spawnModelSync(scene, pasture.animal === 'cow' ? MODEL_PATHS.animals.cow : MODEL_PATHS.animals.alpaca, {
         position: new Vector3(pasture.x, 0, pasture.z),
         rotation: new Vector3(0, Math.random() * Math.PI * 2, 0),
@@ -351,6 +351,8 @@ export function* createScenicLandscapesSteps(scene, foliage, shadows, foliageIns
         parent: root,
         name: `scenic-grazer-${pasture.x}`,
       });
+    }
+    if (!isRoadFootprintBlocked(pasture.x + 3.8, pasture.z - 1.2, 3, 3, 1)) {
       spawnModelSync(scene, MODEL_PATHS.rocks.large, {
         position: new Vector3(pasture.x + 3.8, 0, pasture.z - 1.2),
         scaling: new Vector3(1.2, 1.2, 1.2),
@@ -814,10 +816,10 @@ function createAllVillageThematicLandmarks(scene, parent, foliage, shadows) {
 
   // 1. Làng Hoa Mai (x = -300, offsetZ = 0): Vườn Mai Vàng & Xe Mật Ong tại Quảng trường Cổng làng (z = 74)
   [-18, 18].forEach((dx) => {
-    foliage.createGoldenMaple(-300 + dx, 74, 1.35, true);
-    foliage.createFlowerPatch(-300 + dx, 77, 10, 2.2);
+    if (!isRoadFootprintBlocked(-300 + dx, 74, 2.7, 2.7, 0.5)) foliage.createGoldenMaple(-300 + dx, 74, 1.35, true);
+    if (!isRoadFootprintBlocked(-300 + dx, 77, 2.2, 2.2, 0.5)) foliage.createFlowerPatch(-300 + dx, 77, 10, 2.2);
   });
-  spawnModelSync(scene, MODEL_PATHS.town.cartHigh, {
+  if (!isRoadFootprintBlocked(-314, 77, 4, 4, 1)) spawnModelSync(scene, MODEL_PATHS.town.cartHigh, {
     position: new Vector3(-300 - 14, 0, 77),
     rotation: new Vector3(0, 0.4, 0),
     scaling: new Vector3(1.3, 1.3, 1.3),
@@ -827,7 +829,7 @@ function createAllVillageThematicLandmarks(scene, parent, foliage, shadows) {
 
   // 2. Làng Đồi Gió (x = -600, offsetZ = 0): Quần thể Cối Xay Gió trên Đồi Cỏ Phía Tây (x = -675, ngoài nông trại)
   [-35, 35].forEach((dz, i) => {
-    spawnModelSync(scene, MODEL_PATHS.town.windmill, {
+    if (!isRoadFootprintBlocked(-675, 175 + dz, 9, 9, 1)) spawnModelSync(scene, MODEL_PATHS.town.windmill, {
       position: new Vector3(-675, 0, 175 + dz),
       rotation: new Vector3(0, 0.5 + i * 0.7, 0),
       scaling: new Vector3(2.2, 2.2, 2.2),
@@ -836,7 +838,7 @@ function createAllVillageThematicLandmarks(scene, parent, foliage, shadows) {
       name: `doigio-windmill-${i}`,
     });
   });
-  spawnModelSync(scene, MODEL_PATHS.animals.alpaca, {
+  if (!isRoadFootprintBlocked(-670, 175, 2, 2, 1)) spawnModelSync(scene, MODEL_PATHS.animals.alpaca, {
     position: new Vector3(-670, 0, 175),
     rotation: new Vector3(0, 1.2, 0),
     scaling: new Vector3(1.3, 1.3, 1.3),
@@ -846,20 +848,20 @@ function createAllVillageThematicLandmarks(scene, parent, foliage, shadows) {
 
   // 3. Làng An Nhiên (x = 600, offsetZ = 0): Vườn Trúc Thiền Tịnh tại Cổng Làng (z = 74)
   [-18, 18].forEach((dx) => {
-    foliage.createCloudTree(600 + dx, 74, 1.35, true);
-    foliage.createFlowerPatch(600 + dx, 77, 10, 2.2);
+    if (!isRoadFootprintBlocked(600 + dx, 74, 2.7, 2.7, 0.5)) foliage.createCloudTree(600 + dx, 74, 1.35, true);
+    if (!isRoadFootprintBlocked(600 + dx, 77, 2.2, 2.2, 0.5)) foliage.createFlowerPatch(600 + dx, 77, 10, 2.2);
   });
 
   // 4. Làng Thanh Hà (x = -300, offsetZ = -320): Rừng Hoa Anh Đào tại Cổng Làng (z = -246)
   [-18, 18].forEach((dx) => {
-    foliage.createSakuraTree(-300 + dx, -246, 1.35, true);
-    foliage.createFlowerPatch(-300 + dx, -249, 10, 2.2);
+    if (!isRoadFootprintBlocked(-300 + dx, -246, 2.7, 2.7, 0.5)) foliage.createSakuraTree(-300 + dx, -246, 1.35, true);
+    if (!isRoadFootprintBlocked(-300 + dx, -249, 2.2, 2.2, 0.5)) foliage.createFlowerPatch(-300 + dx, -249, 10, 2.2);
   });
 
   // 5. Làng Thu Phong (x = -300, offsetZ = 320): Vườn Phong Đỏ & Bí Ngô Mùa Thu tại Cổng Làng (z = 394)
   [-18, 18].forEach((dx, i) => {
-    foliage.createGoldenMaple(-300 + dx, 394, 1.35, true);
-    spawnModelSync(scene, MODEL_PATHS.crops.pumpkin, {
+    if (!isRoadFootprintBlocked(-300 + dx, 394, 2.7, 2.7, 0.5)) foliage.createGoldenMaple(-300 + dx, 394, 1.35, true);
+    if (!isRoadFootprintBlocked(-300 + dx, 397, 2.5, 2.5, 1)) spawnModelSync(scene, MODEL_PATHS.crops.pumpkin, {
       position: new Vector3(-300 + dx, 0, 397),
       scaling: new Vector3(1.6, 1.6, 1.6),
       parent: root,
@@ -869,12 +871,12 @@ function createAllVillageThematicLandmarks(scene, parent, foliage, shadows) {
 
   // 6. Làng Hướng Dương (x = 300, offsetZ = 320): Thảo Nguyên Hướng Dương tại Cổng Làng (z = 394)
   [-18, 18].forEach((dx) => {
-    foliage.createFlowerPatch(300 + dx, 394, 14, 2.8);
-    foliage.createGoldenMaple(300 + dx, 397, 1.35, true);
+    if (!isRoadFootprintBlocked(300 + dx, 394, 2.8, 2.8, 0.5)) foliage.createFlowerPatch(300 + dx, 394, 14, 2.8);
+    if (!isRoadFootprintBlocked(300 + dx, 397, 2.7, 2.7, 0.5)) foliage.createGoldenMaple(300 + dx, 397, 1.35, true);
   });
 
   // 7. Làng Phú Điền (x = 0, offsetZ = -480): Cối Xay Nước Cổ Truyền (z = -406)
-  spawnModelSync(scene, MODEL_PATHS.town.watermill, {
+  if (!isRoadFootprintBlocked(-25, -406, 8, 8, 1)) spawnModelSync(scene, MODEL_PATHS.town.watermill, {
     position: new Vector3(-25, 0, -406),
     rotation: new Vector3(0, 0.4, 0),
     scaling: new Vector3(1.85, 1.85, 1.85),
@@ -906,6 +908,7 @@ function createScenicPergolas(scene, parent, foliage, shadows) {
   ];
 
   pergolaSpots.forEach((spot, idx) => {
+    if (isRoadFootprintBlocked(spot.x, spot.z, 2.1, 1.4, 0.3)) return;
     const pRoot = new TransformNode(`pergola-${idx}`, scene);
     pRoot.position.set(spot.x, 0, spot.z);
     pRoot.rotation.y = spot.rot;

@@ -11,4 +11,8 @@
 .vehicle-quick-panel > button small { font-size:10px; }
 .vehicle-quick-panel > button em { font-size:11px; font-style:normal; }
 .hud-modal-open .vehicle-quick-menu { display:none; }
-@media(max-width:600px) { .vehicle-quick-menu { right:12px; bottom:198px; } .vehicle-quick-panel { right:70px; width:min(245px,calc(100vw - 105px)); } .vehicle-quick-trigger { width:58px; min-height:58px; } }
+@media(max-width:600px) { .vehicle-quick-menu { right:12px; bottom:198px; } .vehicle-quick-panel { right:0; bottom:calc(100% + 66px); width:min(245px,calc(100vw - 24px)); } .vehicle-quick-trigger { width:58px; min-height:58px; } }
+.vehicle-quick-panel{border:2px solid #fff8e6;border-radius:13px;background:#fff9eb;box-shadow:0 3px 0 #98a9ab,0 9px 22px #142c3c38}
+.vehicle-quick-panel>button{min-height:45px;border:2px solid #d4e0dd;border-radius:10px;background:#fffdf4}
+.vehicle-quick-panel>button[aria-pressed=true]{border-color:#9dc6b1;background:#e3f1e8}
+.vehicle-quick-panel>button:focus-visible,.vehicle-quick-trigger:focus-visible{outline:3px solid #e9aa34;outline-offset:2px}

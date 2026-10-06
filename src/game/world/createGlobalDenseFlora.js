@@ -16,7 +16,7 @@ import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
-import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
+import { isPointOnRoadCorridor, isRoadFootprintBlocked } from './RoadSafetyZone.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
 import { isPointInLakeOrRiver } from './WaterSafetyZone.js';
 import { FoliageInstancingEngine } from './FoliageInstancingEngine.js';
@@ -74,7 +74,7 @@ export function* createGlobalDenseFloraSteps(scene, foliage, shadows, foliageIns
       const isScenicGrove = rand3 > 0.82;
       if (isScenicGrove) {
         // Natural rock boulder
-        if (rand2 > 0.5) {
+        if (rand2 > 0.5 && !isRoadFootprintBlocked(px + 1.2, pz + 0.8, 2.8, 2.8, 1)) {
           spawnModelSync(scene, rand1 > 0.5 ? MODEL_PATHS.rocks.large : MODEL_PATHS.rocks.small, {
             position: new Vector3(px + 1.2, 0, pz + 0.8),
             rotation: new Vector3(0, rand4 * Math.PI * 2, 0),

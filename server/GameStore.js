@@ -287,10 +287,30 @@ export async function performAction(playerId, action, payload = {}, context = {}
     player.name = name; p.nameKey = nameKey;
     p.outfit = 'starter'; p.onboarding.characterCreated = true; p.onboarding.step = 1;
   }
+  else if (action === 'profile_update') {
+    if (!p.onboarding?.characterCreated) return fail('Hãy tạo nhân vật trước khi sửa hồ sơ.');
+    const rawName = payload.name;
+    const rawBio = payload.bio;
+    if (typeof rawName !== 'string' || typeof rawBio !== 'string') return fail('Hồ sơ không hợp lệ.');
+    const name = sanitizeName(rawName.normalize('NFC')).replace(/\s+/g, ' ').trim();
+    const bio = rawBio.normalize('NFC').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (name.length < 3 || name.length > 18) return fail('Tên nhân vật cần từ 3 đến 18 ký tự.');
+    if (bio.length > 80) return fail('Giới thiệu tối đa 80 ký tự.');
+    if (name !== player.name) {
+      const nameKey = name.toLocaleLowerCase('vi');
+      const existing = await collections.players.findOne({ playerId: { $ne: playerId }, 'progress.onboarding.characterCreated': true,
+        $or: [{ 'progress.nameKey': nameKey }, { name }] }, { collation: { locale: 'vi', strength: 2 } });
+      if (existing) return fail('Tên nhân vật đã được sử dụng. Hãy chọn tên khác.');
+      player.name = name;
+      p.nameKey = nameKey;
+    }
+    p.profileBio = bio;
+    actionResult = { profileUpdated: { name, bio } };
+  }
   else if (action === 'select_crop') { if (!CROPS[payload.crop] || p.level < CROPS[payload.crop].level) return fail('Hạt giống chưa mở khóa.'); p.selectedCrop = payload.crop; }
   else if (action === 'sell_item') { const crop = CROPS[payload.id]; const amount = Number(payload.amount ?? 1); if (!Number.isSafeInteger(amount) || amount < 1 || amount > 99) return fail('Số lượng bán phải là số nguyên từ 1 đến 99.'); if (!crop || (p.inventory[payload.id] || 0) < amount) return fail('Không đủ nông sản.'); p.inventory[payload.id] -= amount; p.coins += crop.sellPrice * amount; }
   else if (action === 'deliver_order') { const order = ORDERS[payload.id]; if (!order || p.completedOrders.includes(payload.id) || !requireItems(p, order.items)) return fail('Không thể giao đơn hàng.'); consume(p, order.items); p.coins += order.coins; p.xp += order.xp; p.stats.orders += 1; p.completedOrders.push(payload.id); if (p.onboarding.step === 4) p.onboarding.step = 5; }
-  else if (action === 'claim_quest') { const quest = QUESTS[payload.id]; if (!quest || p.claimedQuests.includes(payload.id) || p.stats[quest.stat] < quest.goal) return fail('Nhiệm vụ chưa hoàn thành.'); p.coins += quest.coins; p.xp += quest.xp; p.claimedQuests.push(payload.id); }
+  else if (action === 'claim_quest') { const quest = QUESTS[payload.id]; if (!quest || p.claimedQuests.includes(payload.id) || p.stats[quest.stat] < quest.goal) return fail('Nhiệm vụ chưa hoàn thành.'); p.coins += quest.coins; p.xp += quest.xp; p.claimedQuests.push(payload.id); actionResult = { questClaimed: { id: payload.id } }; }
   else if (action === 'claim_mission') { const error = claimMission(p, payload.kind, payload.id); if (error) return fail(error); actionResult = { missionClaimed: { kind: payload.kind, id: payload.id } }; }
   else if (action === 'craft') { const recipe = RECIPES[payload.id]; if (!recipe || !requireItems(p, recipe.inputs)) return fail('Không đủ nguyên liệu.'); consume(p, recipe.inputs); p.inventory[payload.id] += 1; p.xp += recipe.xp; p.stats.crafted += 1; }
   else if (action === 'sell_product') { const recipe = RECIPES[payload.id]; if (!recipe || !p.inventory[payload.id]) return fail('Không có sản phẩm.'); p.inventory[payload.id] -= 1; p.coins += recipe.sell; }
@@ -450,7 +470,7 @@ export async function performAction(playerId, action, payload = {}, context = {}
   try {
     if (!(await savePlayer(player))) return fail('Xung đột giao dịch, vui lòng thử lại.');
   } catch (error) {
-    if (action === 'character_create' && error.code === 11000) return fail('Tên nhân vật đã được sử dụng. Hãy chọn tên khác.');
+    if (['character_create', 'profile_update'].includes(action) && error.code === 11000) return fail('Tên nhân vật đã được sử dụng. Hãy chọn tên khác.');
     throw error;
   }
   return { player, ...(actionResult ? { result: actionResult } : {}) };
@@ -550,6 +570,27 @@ export async function loadPublicFarmProfiles(playerIds) {
       return counts;
     }, {}),
   }));
+}
+
+export async function loadPublicPlayerProfile(playerId) {
+  if (typeof playerId !== 'string' || !/^[\w:-]{1,64}$/.test(playerId)) return null;
+  const doc = await collections.players.findOne({ playerId }, { projection: {
+    _id: 0, playerId: 1, name: 1, createdAt: 1,
+    'progress.onboarding.characterCreated': 1, 'progress.profileBio': 1,
+    'progress.xp': 1, 'progress.level': 1, 'progress.outfit': 1,
+    'progress.homeTier': 1, 'progress.stats.planted': 1,
+    'progress.stats.harvested': 1, 'progress.stats.orders': 1,
+    'progress.fishing.stats.totalCaught': 1,
+  } });
+  if (!doc?.progress?.onboarding?.characterCreated) return null;
+  const p = doc.progress;
+  return {
+    playerId: doc.playerId, name: doc.name, bio: p.profileBio || '',
+    level: levelFromXp(p.xp || 0), xp: p.xp || 0,
+    outfit: p.outfit || 'starter', homeTier: p.homeTier || 0,
+    joinedAt: doc.createdAt || null,
+    stats: { planted: p.stats?.planted || 0, harvested: p.stats?.harvested || 0, orders: p.stats?.orders || 0, fish: p.fishing?.stats?.totalCaught || 0 },
+  };
 }
 
 export async function likeFarm(playerId, villageId, farmId) {

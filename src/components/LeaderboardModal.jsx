@@ -21,21 +21,7 @@ export function LeaderboardModal({
 }) {
   const [tab, setTab] = useState('xp'); // 'xp' | 'level' | 'home'
 
-  // Dữ liệu mẫu phong phú nếu chưa có nhiều người chơi online
-  const defaultList = [
-    { playerId: 'bot-1', name: 'Đại Phú Hào Kaia', progress: { level: 45, xp: 1250000, homeTier: 4 } },
-    { playerId: 'bot-2', name: 'Nông Trại Vui Vẻ', progress: { level: 42, xp: 980000, homeTier: 3 } },
-    { playerId: 'bot-3', name: 'Thần Nông Vườn Đào', progress: { level: 39, xp: 820000, homeTier: 3 } },
-    { playerId: 'bot-4', name: 'Hải Tặc Hồ Pha Lê', progress: { level: 36, xp: 640000, homeTier: 2 } },
-    { playerId: 'bot-5', name: 'Nông Dân Chăm Chỉ', progress: { level: 33, xp: 510000, homeTier: 2 } },
-    { playerId: 'bot-6', name: 'Bé Mầm Đáng Yêu', progress: { level: 30, xp: 420000, homeTier: 2 } },
-    { playerId: 'bot-7', name: 'Vua Câu Cá Bờ Biển', progress: { level: 28, xp: 350000, homeTier: 1 } },
-    { playerId: 'bot-8', name: 'Kẹo Ngọt Marshmallow', progress: { level: 25, xp: 290000, homeTier: 1 } },
-    { playerId: 'bot-9', name: 'Gió Mùa Thu', progress: { level: 22, xp: 230000, homeTier: 1 } },
-    { playerId: 'bot-10', name: 'Cư Dân Thị Trấn', progress: { level: 20, xp: 180000, homeTier: 1 } },
-  ];
-
-  const displayList = leaderboard && leaderboard.length > 0 ? leaderboard : defaultList;
+  const displayList = leaderboard || [];
 
   // Sắp xếp theo tab
   const sortedList = [...displayList].sort((a, b) => {
@@ -116,6 +102,7 @@ export function LeaderboardModal({
 
         {/* List Ranks 4 to 20 */}
         <div className="ld-list-scroll">
+          {sortedList.length === 0 && <p>Chưa có cư dân nào trên bảng xếp hạng.</p>}
           {sortedList.slice(3).map((item, idx) => {
             const actualRank = idx + 3;
             return (
@@ -144,9 +131,9 @@ export function LeaderboardModal({
                     <button
                       className="ld-action-btn visit"
                       onClick={() => onVisitFarm(item.playerId)}
-                      title="Thăm vườn"
+                      title="Xem hồ sơ"
                     >
-                      Thăm vườn
+                      Hồ sơ
                     </button>
                   )}
                 </div>

@@ -466,11 +466,9 @@ export function addShopFacade(scene, parent, kind, glazeHex, accentHex, mats) {
   // 9. BẢNG HIỆU HOÀNH PHI GỖ KHẮC CHỮ VÀNG (VIETNAMESE CALLIGRAPHIC LACQUER SIGNBOARD)
   const signTitle = style?.title || (kind === 'shop-test' ? 'CỬA HÀNG MẪU' : 'CỬA HÀNG NÔNG TRẠI');
   const signSubtitle = style?.subtitle || 'HẠT GIỐNG · VẬT TƯ · CỬA HÀNG';
-  const signIcon = style?.icon || '🌾';
   createStorefrontSignboard(scene, {
     title: signTitle,
     subtitle: signSubtitle,
-    icon: signIcon,
     accentColor: style?.accent || accentHex,
     parent,
     width: 6.8,

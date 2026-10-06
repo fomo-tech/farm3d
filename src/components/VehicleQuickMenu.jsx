@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Icon3dBike } from './icons3d/GameIcons3D.jsx';
 import './VehicleQuickMenu.css';
 
 export function VehicleQuickMenu({ vehicles, owned, current, connected, onSelect }) {
@@ -16,7 +17,7 @@ export function VehicleQuickMenu({ vehicles, owned, current, connected, onSelect
       {!connected && <small role="status">Đang chờ kết nối server…</small>}
     </section>}
     <button type="button" className="vehicle-quick-trigger" aria-expanded={open} aria-label="Gọi phương tiện đã sở hữu" onClick={() => setOpen(value => !value)}>
-      <span>{vehicles.find(vehicle => vehicle.id === current)?.icon}</span><b>{current === 'walk' ? 'Gọi xe' : 'Đổi xe'}</b>
+      <span aria-hidden="true"><Icon3dBike size={25} /></span><b>{current === 'walk' ? 'Gọi xe' : 'Đổi xe'}</b>
     </button>
   </div>;
 }

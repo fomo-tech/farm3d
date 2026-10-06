@@ -24,6 +24,7 @@ export class GameClient {
     this.onAccountState = options.onAccountState || (() => {});
     this.onActionError = options.onActionError || (() => {});
     this.onSocialState = options.onSocialState || (() => {});
+    this.onProfileState = options.onProfileState || (() => {});
     this.onMoveAck = options.onMoveAck || (() => {});
     this.onChat = options.onChat || (() => {});
     this.onCasinoState = options.onCasinoState || (() => {});
@@ -139,6 +140,8 @@ export class GameClient {
           this.lastPongAt = Date.now();
         } else if (message.type === 'social_state') {
           this.onSocialState(message);
+        } else if (message.type === 'profile_state') {
+          this.onProfileState(message);
         } else if (message.type === 'casino_state') {
           this.acknowledge(message.requestId);
           this.onCasinoState(message);

@@ -68,6 +68,20 @@ export function isRoadResourceBlocked(x, z, clearance = ROAD_SAFETY_CONFIG.defau
   return isPointOnRoadCorridor(x, z, clearance);
 }
 
+/** Reserve the whole ground footprint, not just an object's pivot. */
+export function isRoadFootprintBlocked(x, z, halfWidth = 0, halfDepth = halfWidth, clearance = 0) {
+  if (![x, z, halfWidth, halfDepth, clearance].every(Number.isFinite)) return true;
+  if (halfWidth < 0 || halfDepth < 0 || clearance < 0) return true;
+  const sample = (center, halfExtent) => {
+    if (!halfExtent) return [center];
+    const count = Math.ceil(halfExtent * 2 / 2);
+    return Array.from({ length: count + 1 }, (_, index) => center - halfExtent + index * halfExtent * 2 / count);
+  };
+  const xs = sample(x, halfWidth);
+  const zs = sample(z, halfDepth);
+  return xs.some(px => zs.some(pz => isPointOnRoadCorridor(px, pz, clearance)));
+}
+
 /**
  * Checks if a 2D world coordinate (x, z) infringes on any road, highway, spine, or intersection corridor.
  * @param {number} x - World X position
@@ -104,10 +118,14 @@ export function isPointOnRoadCorridor(x, z, clearance = 4.0) {
     return true;
   }
 
+  // Turnaround pads extend beyond the ends of the inter-village highways.
+  if ([-680, 680].some(cx => [86, -234, -650].some(cz => Math.hypot(x - cx, z - cz) < 6.8 + clearance))) return true;
+
   // 6. Tuyến Đại lộ Đông - Tây (z = 0) & Trục Phố Chợ Phía Tây & Hồ Pha Lê (z = 3, x từ -140 đến 160)
   if ((Math.abs(z) < (4.6 + clearance) || Math.abs(z - 3) < (4.2 + clearance)) && x >= -140 && x <= 160) {
     return true;
   }
+  if (Math.hypot(x + 122, z) < 7.2 + clearance) return true;
 
   // 6b. Hai trục nối Cửa Tây & Cửa Đông Đô thị xuống Quốc Lộ 86 (x = ±122, z từ 0 đến 86)
   if (Math.abs(Math.abs(x) - 122) < (4.2 + clearance) && z >= -2 && z <= 88) {
@@ -181,6 +199,7 @@ if (typeof window !== 'undefined') {
     getBlockedCount: getBlockedRoadResourcesCount,
     isPointOnRoadCorridor,
     isRoadResourceBlocked,
+    isRoadFootprintBlocked,
     setBlockRoadResources,
   };
 }

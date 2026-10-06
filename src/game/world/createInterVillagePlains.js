@@ -18,7 +18,7 @@ import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 import { WORLD_PALETTE, createCozyMaterial } from './worldDesignSystem.js';
-import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
+import { isPointOnRoadCorridor, isRoadFootprintBlocked } from './RoadSafetyZone.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
 
 function mat(scene, name, hex, emissiveHex = null, specular = 0.08) {
@@ -56,7 +56,7 @@ export function* createInterVillagePlainsSteps(scene, foliage, shadows) {
   for (const [i, dx] of ([-32, 32]).entries()) {
     const wx = westCenter.x + dx;
     const wz = westCenter.z + (i === 0 ? -28 : 28);
-    if (!isPointOnRoadCorridor(wx, wz, 4.0) && !isPointInsideAnyFarmLot(wx, wz, 2.0)) {
+    if (!isRoadFootprintBlocked(wx, wz, 8, 8, 1) && !isPointInsideAnyFarmLot(wx, wz, 8)) {
       spawnModelSync(scene, MODEL_PATHS.town.windmill, {
         position: new Vector3(wx, 0, wz),
         rotation: new Vector3(0, 0.4 + i * 0.8, 0),
@@ -85,8 +85,8 @@ export function* createInterVillagePlainsSteps(scene, foliage, shadows) {
         const isMaple = (Math.abs(gx + gz) % 2 === 0);
         if (isMaple) foliage.createGoldenMaple(px, pz, 1.0, true);
         else foliage.createCloudTree(px, pz, 1.0, true);
-        foliage.createFlowerPatch(px + 2.5, pz, 8, 2.2);
-        if ((gx + gz) % 52 === 0) foliage.createHydrangeaBush(px - 3.2, pz, 1.0, '#fde047');
+        if (!isRoadFootprintBlocked(px + 2.5, pz, 2.2, 2.2, 1)) foliage.createFlowerPatch(px + 2.5, pz, 8, 2.2);
+        if ((gx + gz) % 52 === 0 && !isRoadFootprintBlocked(px - 3.2, pz, 1.2, 1.2, 1)) foliage.createHydrangeaBush(px - 3.2, pz, 1.0, '#fde047');
       }
 
       yield;
@@ -114,8 +114,8 @@ export function* createInterVillagePlainsSteps(scene, foliage, shadows) {
         const isMaple = ((gx + gz) % 2 === 0);
         if (isMaple) foliage.createGoldenMaple(px, pz, 1.0, true);
         else foliage.createCloudTree(px, pz, 1.0, true);
-        foliage.createHydrangeaBush(px + 3.0, pz, 1.0, '#f59e0b');
-        foliage.createFlowerPatch(px - 2.5, pz, 8, 2.2);
+        if (!isRoadFootprintBlocked(px + 3.0, pz, 1.2, 1.2, 1)) foliage.createHydrangeaBush(px + 3.0, pz, 1.0, '#f59e0b');
+        if (!isRoadFootprintBlocked(px - 2.5, pz, 2.2, 2.2, 1)) foliage.createFlowerPatch(px - 2.5, pz, 8, 2.2);
       }
 
       yield;
@@ -133,7 +133,7 @@ export function* createInterVillagePlainsSteps(scene, foliage, shadows) {
     yield;
 
   // Cối xay nước cổ truyền ven đồi cỏ (Scale 1.85x)
-  if (!isPointOnRoadCorridor(eastCenter.x - 22, eastCenter.z, 4.0) && !isPointInsideAnyFarmLot(eastCenter.x - 22, eastCenter.z, 2.0)) {
+  if (!isRoadFootprintBlocked(eastCenter.x - 22, eastCenter.z, 7, 7, 1) && !isPointInsideAnyFarmLot(eastCenter.x - 22, eastCenter.z, 7)) {
     spawnModelSync(scene, MODEL_PATHS.town.watermill, {
       position: new Vector3(eastCenter.x - 22, 0, eastCenter.z),
       rotation: new Vector3(0, -0.3, 0),
@@ -154,9 +154,9 @@ export function* createInterVillagePlainsSteps(scene, foliage, shadows) {
       const pz = gz + offsetZ;
       if (!isPointOnRoadCorridor(px, pz, 4.0) && !isPointInsideAnyFarmLot(px, pz, 2.0)) {
         if ((gx + gz) % 48 === 0) foliage.createScarecrow(px, pz);
-        foliage.createFlowerPatch(px + 2.5, pz, 10, 2.6);
-        foliage.createCloudTree(px - 3.5, pz, 1.0, true);
-        foliage.createGoldenMaple(px + 3.0, pz + 3.0, 0.95, true);
+        if (!isRoadFootprintBlocked(px + 2.5, pz, 2.6, 2.6, 1)) foliage.createFlowerPatch(px + 2.5, pz, 10, 2.6);
+        if (!isRoadFootprintBlocked(px - 3.5, pz, 1.6, 1.6, 1)) foliage.createCloudTree(px - 3.5, pz, 1.0, true);
+        if (!isRoadFootprintBlocked(px + 3.0, pz + 3.0, 1.6, 1.6, 1)) foliage.createGoldenMaple(px + 3.0, pz + 3.0, 0.95, true);
       }
 
       yield;
@@ -177,7 +177,7 @@ export function* createInterVillagePlainsSteps(scene, foliage, shadows) {
       foliage.createAlpinePine(hx, hz, 1.0, true);
 
       // Xen kẽ các vách đá hoa cương tự nhiên
-      if (Math.abs(hx) % 56 === 0) {
+      if (Math.abs(hx) % 56 === 0 && !isRoadFootprintBlocked(hx + 4.5, hz + 2.0, 3, 3, 1)) {
         spawnModelSync(scene, MODEL_PATHS.rocks.large, {
           position: new Vector3(hx + 4.5, 0, hz + 2.0),
           scaling: new Vector3(1.4, 1.4, 1.4),
@@ -201,8 +201,8 @@ export function* createInterVillagePlainsSteps(scene, foliage, shadows) {
     for (let tz = -425; tz >= -485; tz -= 26) {
       if (!isPointOnRoadCorridor(tx, tz, 4.0) && !isPointInsideAnyFarmLot(tx, tz, 2.0)) {
         foliage.createCloudTree(tx, tz, 1.0, true);
-        foliage.createHydrangeaBush(tx + 3.2, tz, 1.0, '#10b981');
-        if ((tx + tz) % 52 === 0) {
+        if (!isRoadFootprintBlocked(tx + 3.2, tz, 1.2, 1.2, 1)) foliage.createHydrangeaBush(tx + 3.2, tz, 1.0, '#10b981');
+        if ((tx + tz) % 52 === 0 && !isRoadFootprintBlocked(tx - 3.0, tz, 1.5, 1, 1)) {
           foliage.createRusticBench(tx - 3.0, tz, 0.4);
         }
       }
@@ -222,7 +222,7 @@ export function* createInterVillagePlainsSteps(scene, foliage, shadows) {
     const sz = 485 + ((sx * 17) % 25) - 12;
     if (!isPointOnRoadCorridor(sx, sz, 4.0) && !isPointInsideAnyFarmLot(sx, sz, 2.0)) {
       foliage.createTropicalPalm(sx, sz, 1.0, 0.2, true);
-      foliage.createFlowerPatch(sx + 3.0, sz, 8, 2.4);
+      if (!isRoadFootprintBlocked(sx + 3.0, sz, 2.4, 2.4, 1)) foliage.createFlowerPatch(sx + 3.0, sz, 8, 2.4);
 
     }
 

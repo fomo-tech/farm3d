@@ -7,7 +7,7 @@ import './FarmMinimap.css';
 
 // Key Landmarks across Vibe City (Play Together Theme)
 const POIS = [
-  { id: 'plaza', label: 'Quảng Trường', x: 0, z: 18, color: '#f59e0b', symbol: '★', icon: '🌟' },
+  { id: 'plaza', label: 'Quảng Trường', x: 0, z: 18, color: '#f59e0b', symbol: 'P', icon: '🏛️' },
   { id: 'lake', label: 'Hồ Pha Lê', x: 126, z: 2, color: '#0ea5e9', symbol: '🎣', icon: '🎣' },
   { id: 'fashion', label: 'Thời Trang', x: 29, z: -25, color: '#ec4899', symbol: '👗', icon: '👗' },
   { id: 'casino', label: 'Hội Quán', x: -29, z: -25, color: '#8b5cf6', symbol: '🎲', icon: '🎲' },
@@ -123,11 +123,11 @@ export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
       aria-label="Radar Bản Đồ Nhỏ Play Together"
     >
       {/* 1. Radar Glass Dial Container */}
-      <div
+      <button
+        type="button"
         className="pt-minimap-disc"
         onClick={handleOpenMap}
-        role="button"
-        tabIndex={0}
+        aria-label="Mở bản đồ thế giới"
         title="Bấm để mở Bản Đồ Thế Giới (Phím M)"
       >
         {/* Candy Bezel Gloss & Specular Sheen */}
@@ -329,13 +329,15 @@ export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
             </g>
           </svg>
         </div>
-      </div>
+      </button>
 
       {/* 2. Tactile Location Pill Badge (Docked Under Radar) */}
       {!minimized && (
-        <div
+        <button
+          type="button"
           className="pt-radar-location-pill"
           onClick={handleOpenMap}
+          aria-label={`Mở bản đồ: ${zoneName}`}
           title="Bấm để mở Bản Đồ Toàn Cảnh (Phím M)"
         >
           <span className="pt-location-badge-icon" aria-hidden="true">{zoneIcon}</span>
@@ -344,7 +346,7 @@ export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
             <Icon3dMap size={12} />
             <small>M</small>
           </span>
-        </div>
+        </button>
       )}
 
       {/* 3. Sleek Toggle Minimize / Expand Button */}
@@ -359,7 +361,7 @@ export function FarmMinimap({ worldRef, farmTarget, onOpenMap }) {
         title={minimized ? 'Mở rộng Radar' : 'Thu nhỏ Radar'}
         aria-label={minimized ? 'Mở rộng Radar' : 'Thu nhỏ Radar'}
       >
-        <span>{minimized ? '🗺️' : '−'}</span>
+        <span>{minimized ? '+' : '−'}</span>
       </button>
     </aside>
   );

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ATTENDANCE_REWARDS, getAttendanceStatus } from '../../shared/dailyAttendance.js';
 import {
   Icon3dMegaphoneGold,
   Icon3dSparkleStar,
@@ -28,17 +29,18 @@ export function PlazaEventNoticeModal({
   onNavigateVenue = null,
   onClose,
 }) {
-  const [activeTab, setActiveTab] = useState('ads'); // 'ads' | 'events' | 'daily' | 'giftcode'
+  const [activeTab, setActiveTab] = useState('daily'); // 'ads' | 'events' | 'daily' | 'giftcode'
   const [giftCode, setGiftCode] = useState('');
   const [codeMessage, setCodeMessage] = useState(null);
-  const claimedDay = rewardState?.daily?.includes(new Date().toISOString().slice(0,10));
+  const attendance = getAttendanceStatus(rewardState?.daily);
+  const claimedDay = attendance.claimedToday;
   const [bookingForm, setBookingForm] = useState({ brand: '', contact: '', package: 'led_diamond' });
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
   const events = [
     {
       id: 'fishing',
-      title: '★ Đại Hội Câu Cá Hồ Pha Lê',
+      title: 'Đại Hội Câu Cá Hồ Pha Lê',
       tag: 'HOT EVENT',
       tagColor: '#ef4444',
       venue: 'fishing',
@@ -49,7 +51,7 @@ export function PlazaEventNoticeModal({
     },
     {
       id: 'fashion',
-      title: '★ Tuần Lễ Thời Trang Sophie',
+      title: 'Tuần Lễ Thời Trang Sophie',
       tag: 'FASHION WEEK',
       tagColor: '#ec4899',
       venue: 'fashion',
@@ -60,7 +62,7 @@ export function PlazaEventNoticeModal({
     },
     {
       id: 'casino',
-      title: '★ Vòng Quay May Mắn Casino Kaia',
+      title: 'Vòng Quay May Mắn Casino Kaia',
       tag: 'JACKPOT',
       tagColor: '#f59e0b',
       venue: 'casino',
@@ -71,7 +73,7 @@ export function PlazaEventNoticeModal({
     },
     {
       id: 'supplies',
-      title: '★ Lễ Hội Mùa Màng Bội Thu',
+      title: 'Lễ Hội Mùa Màng Bội Thu',
       tag: 'FARM BOOST',
       tagColor: '#22c55e',
       venue: 'supplies',
@@ -82,11 +84,9 @@ export function PlazaEventNoticeModal({
     },
   ];
 
-  const dailyDays = [{day:1,reward:'200 Xu',icon:<Icon3dGoldCoin size={24}/>,done:claimedDay}];
-
   const handleClaim = () => {
     if (!connected || claimedDay) return;
-    onClaimDailyReward?.({ day: 3, reward: '200 Xu' });
+    onClaimDailyReward?.();
   };
 
   const handleApplyCode = (e) => {
@@ -185,19 +185,29 @@ export function PlazaEventNoticeModal({
         {activeTab === 'daily' && (
           <div className="bb-daily-container">
             <div className="bb-daily-banner">
-              <h4>Điểm danh hằng ngày · 200 Xu</h4>
-              <p>Mỗi tài khoản nhận một lần/ngày UTC. Trạng thái được lưu trên server.</p>
+              <div className="bb-daily-banner-icon"><Icon3dGiftBoxRibbon size={42} /></div>
+              <div>
+                <h4>Quà điểm danh 7 ngày</h4>
+                <p>Đăng nhập liên tiếp để mở quà ngày 7. Bỏ lỡ một ngày sẽ bắt đầu lại từ ngày 1.</p>
+              </div>
+              <strong className="bb-daily-streak">{attendance.streak} ngày liên tiếp</strong>
             </div>
 
             <div className="bb-daily-grid">
-              {dailyDays.map((d) => (
-                <div key={d.day} className={`bb-day-card ${d.done ? 'claimed' : 'today'}`}>
-                  <div className="bb-day-num">Hôm nay</div>
-                  <div className="bb-day-icon">{d.icon}</div>
-                  <div className="bb-day-reward">{d.reward}</div>
-                  {d.done && <div className="bb-day-check">✓ Đã nhận</div>}
-                </div>
-              ))}
+              {ATTENDANCE_REWARDS.map((coins, index) => {
+                const day = index + 1;
+                const completed = claimedDay ? day <= attendance.day : day < attendance.day;
+                const today = day === attendance.day;
+                return (
+                  <div key={day} className={`bb-day-card ${completed ? 'claimed' : today ? 'today' : 'locked'} ${day === 7 ? 'milestone' : ''}`}
+                    aria-label={`Ngày ${day}: ${coins.toLocaleString('vi-VN')} xu${completed ? ', đã nhận' : today ? ', quà hôm nay' : ', chưa mở'}`}>
+                    <div className="bb-day-num">Ngày {day}</div>
+                    <div className="bb-day-icon">{day === 7 ? <Icon3dGiftBoxRibbon size={36} /> : <Icon3dGoldCoin size={32} />}</div>
+                    <div className="bb-day-reward">{coins.toLocaleString('vi-VN')} xu</div>
+                    <div className="bb-day-check">{completed ? '✓ Đã nhận' : today ? 'Hôm nay' : 'Chưa mở'}</div>
+                  </div>
+                );
+              })}
             </div>
 
             <div className="bb-daily-action">
@@ -206,8 +216,9 @@ export function PlazaEventNoticeModal({
                 onClick={handleClaim}
                 disabled={!connected || claimedDay}
               >
-                {claimedDay ? '✓ Server đã ghi nhận hôm nay' : 'Nhận thưởng hôm nay (+200 Xu)'}
+                {claimedDay ? '✓ Đã nhận quà hôm nay' : `Nhận ${attendance.coins.toLocaleString('vi-VN')} xu`}
               </button>
+              <small>{connected ? 'Điểm danh tính theo ngày UTC · Server xác nhận phần thưởng' : 'Mất kết nối · kết nối lại để nhận quà'}</small>
             </div>
           </div>
         )}

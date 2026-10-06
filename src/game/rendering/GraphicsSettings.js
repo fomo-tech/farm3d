@@ -8,8 +8,8 @@ export const GRAPHICS_PRESETS = {
 export function readGraphicsQuality() {
   try {
     const saved = localStorage.getItem('farm.graphics.quality');
-    return GRAPHICS_PRESETS[saved] ? saved : 'auto';
-  } catch { return 'auto'; }
+    return GRAPHICS_PRESETS[saved] ? saved : 'ultra';
+  } catch { return 'ultra'; }
 }
 
 export function saveGraphicsQuality(quality) {
@@ -17,18 +17,16 @@ export function saveGraphicsQuality(quality) {
 }
 
 export function calculateRenderDpr({ quality = 'ultra', nativeDpr = 1, width = 1, height = 1, mobile = false, scale = 1, allowBelowNative = false }) {
-  const preset = GRAPHICS_PRESETS[quality] || GRAPHICS_PRESETS.balanced;
+  const preset = GRAPHICS_PRESETS[quality] || GRAPHICS_PRESETS.ultra;
   // Keep 2x Retina pixels; bound allocations before iOS can kill the process.
   const limit = mobile ? (quality === 'eco' ? 1 : 2) : preset.maxDpr;
   const pixelBudget = mobile ? Math.min(preset.pixels, 1800000) : preset.pixels;
   const pixelLimit = Math.sqrt(pixelBudget / Math.max(1, width * height));
   // Ultra and Balanced prioritize crisp native 1:1 pixel mapping on High-DPI screens.
   const targetDpr = Math.min(Math.max(1, nativeDpr), limit, pixelLimit);
-  const minDpr = (mobile && quality !== 'eco') ? 1.6 : (mobile || quality === 'eco' || allowBelowNative) ? 0.75 : 1.0;
-  // Mobile's adaptive safety scale is allowed to step down after sustained
-  // slow frames, including when the player selected a high-quality preset.
-  // Desktop's explicit Ultra/Balanced presets continue to preserve resolution.
-  const effectiveScale = mobile || (quality !== 'ultra' && quality !== 'balanced') ? scale : 1;
+  const minDpr = mobile ? (quality === 'eco' ? 0.75 : 1.6) : (quality === 'eco' && allowBelowNative ? 0.75 : 1.0);
+  // Desktop never downscales native resolution unless player explicitly chooses eco
+  const effectiveScale = mobile || quality === 'eco' ? scale : 1;
   const resolved = Math.max(minDpr, targetDpr * effectiveScale);
   return mobile ? Math.min(resolved, pixelLimit) : resolved;
 }

@@ -8,7 +8,7 @@ import { isolateColorGrading, applyColorPreset } from './IsolatedColorGrading.js
  * Highlights roll off softly without burning out, preserving lush grass and pastel toy colors.
  */
 export function resolveAntialiasSamples(quality, supportedSamples = 1) {
-  return Math.min(quality === 'ultra' ? 4 : quality === 'eco' ? 1 : 2, Math.max(1, supportedSamples));
+  return Math.min(quality === 'eco' ? 1 : 4, Math.max(1, supportedSamples));
 }
 
 export function createCinematicRenderingPipeline(scene, camera, options = {}) {
@@ -43,8 +43,8 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     // reserve GPU memory for world geometry rather than HDR/MSAA buffers.
     pipeline.samples = resolveSamples(quality);
 
-    // Tắt hoàn toàn FXAA khi có MSAA phần cứng để triệt tiêu hiện tượng mờ nhòe (FXAA làm mờ texture & viền)
-    pipeline.fxaaEnabled = !options.lightweight && pipeline.samples < 2;
+    // Tắt hoàn toàn FXAA để giữ trọn vẹn độ phân giải cao và viền texture siêu sắc nét (FXAA làm mờ hình)
+    pipeline.fxaaEnabled = false;
 
     // Babylon's sharpen is an edge filter, not CAS. Native pixels and MSAA
     // provide clarity without enhancing aliasing or adding a full-screen pass.
@@ -63,8 +63,8 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     pipeline.imageProcessingEnabled = true;
     pipeline.imageProcessing.toneMappingEnabled = true;
     pipeline.imageProcessing.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_KHR_PBR_NEUTRAL;
-    pipeline.imageProcessing.contrast = 1.01;
-    pipeline.imageProcessing.exposure = 0.92;
+    pipeline.imageProcessing.contrast = 1.04;
+    pipeline.imageProcessing.exposure = 0.90;
     pipeline.imageProcessing.vignetteEnabled = false;
     isolateColorGrading(scene, pipeline.imageProcessing);
   } catch (err) {
@@ -75,8 +75,8 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
       scene.imageProcessingConfiguration.isEnabled = true;
       scene.imageProcessingConfiguration.toneMappingEnabled = true;
       scene.imageProcessingConfiguration.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_KHR_PBR_NEUTRAL;
-      scene.imageProcessingConfiguration.contrast = 1.01;
-      scene.imageProcessingConfiguration.exposure = 0.92;
+      scene.imageProcessingConfiguration.contrast = 1.04;
+      scene.imageProcessingConfiguration.exposure = 0.90;
     }
   }
 

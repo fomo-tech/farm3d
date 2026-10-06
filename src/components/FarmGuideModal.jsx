@@ -195,7 +195,7 @@ export function FarmGuideModal({ progress, onClose, onResetTutorial, onNavigateS
                             <div className="pt-stamp-circle">
                               <span>HOÀN THÀNH</span>
                               <small>VIBE CITY</small>
-                              <div className="pt-stamp-star">★</div>
+                              <div className="pt-stamp-star"><Icon3dStar size={14} /></div>
                             </div>
                           </div>
                         ) : stepActive ? (

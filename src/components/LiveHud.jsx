@@ -16,7 +16,12 @@ function useClock() {
 const timeIcons = [Icon3dDawn, Icon3dSun, Icon3dSunset, Icon3dMoon];
 const seasonIcons = [Icon3dSpring, Icon3dSummer, Icon3dAutumn, Icon3dWinter];
 const seasons = ['Xuân', 'Hạ', 'Thu', 'Đông'];
-const clockText = clock => `${String(Math.floor((clock % 240) / 10) + 6).padStart(2, '0')}:${String((clock % 10) * 6).padStart(2, '0')}`;
+const clockText = clock => {
+  const cycleSeconds = Math.floor(Math.max(0, Number(clock) || 0)) % 240;
+  const hour = (Math.floor(cycleSeconds / 10) + 6) % 24;
+  const minute = (cycleSeconds % 10) * 6;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+};
 
 export const GameClock = memo(function GameClock({ compact = false, timeMode = 'auto', onToggleTime = null, currentClock = null }) {
   const internalClock = useClock();
@@ -33,9 +38,9 @@ export const GameClock = memo(function GameClock({ compact = false, timeMode = '
     : null;
 
   return <div
-    className="pt-clock-strip"
-    onClick={onToggleTime}
-    title="Bấm để đổi thời gian: Ban Ngày / Hoàng Hôn / Ban Đêm / Tự Động"
+    className={`pt-clock-strip${onToggleTime ? ' is-clickable' : ''}`}
+    onClick={onToggleTime || undefined}
+    title={onToggleTime ? "Bấm để đổi thời gian" : undefined}
   >
     <span className="pt-clock-icon"><TimeIcon size={24} /></span>
     <span className="pt-clock-time">{clockText(clock)}</span>

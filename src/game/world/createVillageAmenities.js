@@ -18,7 +18,7 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js'
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
 import { WORLD_PALETTE, VILLAGE_THEME_GROUPS, createCozyMaterial, createWarmHangingLantern } from './worldDesignSystem.js';
 import { WORLD_VILLAGES } from '../../../shared/villageLayout.js';
-import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
+import { isPointOnRoadCorridor, isRoadFootprintBlocked } from './RoadSafetyZone.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 import { FoliageInstancingEngine } from './FoliageInstancingEngine.js';
@@ -288,13 +288,13 @@ export function* createVillageAmenitiesAndGreenbeltsSteps(scene, foliage, shadow
     const noticeX = offsetX - 12.0;
     const flowerX = offsetX + 12.0;
 
-    if (!isPointOnRoadCorridor(wellX, plazaZ, 3.2) && !isPointInsideAnyFarmLot(wellX, plazaZ, 1.0)) {
+    if (!isRoadFootprintBlocked(wellX, plazaZ, 3.2, 3.2, 1) && !isPointInsideAnyFarmLot(wellX, plazaZ, 3.2)) {
       createVillageWell(scene, wellX, plazaZ, shadows, root);
     }
-    if (!isPointOnRoadCorridor(gazeboX, plazaZ, 3.2) && !isPointInsideAnyFarmLot(gazeboX, plazaZ, 1.0)) {
+    if (!isRoadFootprintBlocked(gazeboX, plazaZ, 4, 4, 1) && !isPointInsideAnyFarmLot(gazeboX, plazaZ, 4)) {
       createVillageGazebo(scene, gazeboX, plazaZ, shadows, root);
     }
-    if (!isPointOnRoadCorridor(noticeX, plazaZ, 3.2) && !isPointInsideAnyFarmLot(noticeX, plazaZ, 1.0)) {
+    if (!isRoadFootprintBlocked(noticeX, plazaZ, 2, 1.5, 1) && !isPointInsideAnyFarmLot(noticeX, plazaZ, 2)) {
       createVillageNoticeBoard(scene, noticeX, plazaZ, name, root);
     }
 
@@ -310,17 +310,17 @@ export function* createVillageAmenitiesAndGreenbeltsSteps(scene, foliage, shadow
 
     // Luống hoa và bụi cẩm tú cầu ôm chân cột biển báo, giếng làng
     if (!isPointOnRoadCorridor(flowerX, plazaZ, 3.2) && !isPointInsideAnyFarmLot(flowerX, plazaZ, 1.0)) {
-      foliage.createFlowerPatch(flowerX, plazaZ, 10, 2.4);
-      foliageInstancing.spawnBush(flowerX + 2.0, plazaZ, 1.25);
+      if (!isRoadFootprintBlocked(flowerX, plazaZ, 2.4, 2.4, 0.5)) foliage.createFlowerPatch(flowerX, plazaZ, 10, 2.4);
+      if (!isRoadFootprintBlocked(flowerX + 2.0, plazaZ, 1.5, 1.5, 0.5)) foliageInstancing.spawnBush(flowerX + 2.0, plazaZ, 1.25);
     }
-    if (!isPointOnRoadCorridor(wellX - 2.5, plazaZ + 1.5, 3.0) && !isPointInsideAnyFarmLot(wellX - 2.5, plazaZ + 1.5, 1.0)) {
+    if (!isRoadFootprintBlocked(wellX - 2.5, plazaZ + 1.5, 1.5, 1.5, 0.5) && !isPointInsideAnyFarmLot(wellX - 2.5, plazaZ + 1.5, 1.0)) {
       foliageInstancing.spawnBush(wellX - 2.5, plazaZ + 1.5, 1.2);
     }
 
     // Xe kéo nông sản chở bí ngô đỗ bên cạnh lối vào cổng làng
     const cartX = offsetX - 10.0;
     const cartZ = offsetZ + 68;
-    if (!isPointOnRoadCorridor(cartX, cartZ, 3.8) && !isPointInsideAnyFarmLot(cartX, cartZ, 1.2)) {
+    if (!isRoadFootprintBlocked(cartX, cartZ, 3.8, 3.8, 1) && !isPointInsideAnyFarmLot(cartX, cartZ, 3.8)) {
       spawnModelSync(scene, MODEL_PATHS.town.cart, {
         position: new Vector3(cartX, 0, cartZ),
         rotation: new Vector3(0, 0.45, 0),

@@ -30,13 +30,13 @@ for (let i = 0; i < 100; i++) {
   for (const phase of ['dawn', 'day', 'dusk', 'night']) applyColorPreset(isolated, phase);
 }
 assert.equal(dirtyScans, 0, 'phase changes must not scan world materials');
-assert.equal(isolated.exposure, 0.95);
+assert.equal(isolated.exposure, 0.92);
 assert.equal(shared.exposure, 1.02);
 assert.equal(shared.applyByPostProcess, true);
 // A quality rebuild can attach the scene config to a new postprocess.
 const rebuilt = { imageProcessingConfiguration: shared };
 applyColorPreset(isolateColorGrading(scene, rebuilt), 'dusk');
-assert.equal(rebuilt.imageProcessingConfiguration.contrast, 1.05);
+assert.equal(rebuilt.imageProcessingConfiguration.contrast, 1.06);
 assert.equal(dirtyScans, 0);
 assert.equal(isolateColorGrading(scene, null), null);
 applyColorPreset(null, 'night');
@@ -50,7 +50,7 @@ for (const quality of ['eco', 'balanced', 'ultra']) {
   grading.setCinematicPreset('night');
   grading.setQuality(quality);
   assert.notEqual(grading.pipeline.imageProcessing.imageProcessingConfiguration, shared);
-  assert.equal(grading.pipeline.imageProcessing.exposure, 0.95);
+  assert.equal(grading.pipeline.imageProcessing.exposure, 0.92);
   // NullEngine has no HDR framebuffer, so Babylon legitimately uses direct
   // processing. Presets must preserve whichever path the engine selected.
   const processingPath = shared.applyByPostProcess;

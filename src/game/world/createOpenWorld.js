@@ -44,7 +44,7 @@ import {
   createClawMachine3D,
   createSkateboardRack,
 } from './landmarks/createPlazaAmenities.js';
-import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
+import { isPointOnRoadCorridor, isRoadFootprintBlocked } from './RoadSafetyZone.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 
@@ -408,7 +408,7 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
     [165, 45, 1.5], [212, 35, 1.3], [124, 15, 1.2], [215, -3, 1.25],
   ];
     yield;
-  pineCoords.forEach(([px, pz, ps]) => foliage.createAlpinePine(px, pz, ps));
+  pineCoords.forEach(([px, pz, ps]) => { if (!isRoadFootprintBlocked(px, pz, 2 * ps, 2 * ps, 0.5)) foliage.createAlpinePine(px, pz, ps); });
     yield;
   foliage.createRusticBench(150, 31, -Math.PI / 4);
     yield;
@@ -426,7 +426,7 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
     [-54, 42, 1.1], [54, 42, 1.1],
   ];
     yield;
-  mapleCoords.forEach(([mx, mz, ms]) => foliage.createGoldenMaple(mx, mz, ms));
+  mapleCoords.forEach(([mx, mz, ms]) => { if (!isRoadFootprintBlocked(mx, mz, 2 * ms, 2 * ms, 0.5)) foliage.createGoldenMaple(mx, mz, ms); });
     yield;
 
   // === BIOME 4: BỜ BIỂN BÌNH MINH (Hàng dừa nghiêng nhiệt đới) ===
@@ -436,7 +436,7 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
     [82, 327, 1.35, 0.3], [-32, 331, 1.2, 0.18], [32, 329, 1.25, -0.2],
   ];
     yield;
-  palmCoords.forEach(([px, pz, ps, pt]) => foliage.createTropicalPalm(px, pz, ps, pt));
+  palmCoords.forEach(([px, pz, ps, pt]) => { if (!isRoadFootprintBlocked(px, pz, 1.8 * ps, 1.8 * ps, 0.5)) foliage.createTropicalPalm(px, pz, ps, pt); });
     yield;
 
   // Danh sách 7 trục ngang Nông Trại
@@ -487,6 +487,7 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
 
   // 3. Hàng rào gỗ & Xe kéo nông sản cổ điển dọc đường làng Nông Trại (z: 35)
   for (let rx = -146; rx <= -74; rx += 14) {
+    if (isRoadFootprintBlocked(rx, 39.2, 3.2, 1.2, 0.5)) continue;
     spawnModelSync(scene, MODEL_PATHS.town.fence, {
       position: new Vector3(rx, 0, 39.2),
       scaling: new Vector3(1.2, 1.2, 1.2),
@@ -498,7 +499,7 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
 }
     yield;
   // Xe kéo nông sản chở bí ngô & cà rốt đỗ cạnh lối rẽ vào làng
-  spawnModelSync(scene, MODEL_PATHS.town.cart, {
+  if (!isRoadFootprintBlocked(-68, 31, 4, 4, 0.5)) spawnModelSync(scene, MODEL_PATHS.town.cart, {
     position: new Vector3(-68, 0, 31),
     rotation: new Vector3(0, 0.45, 0),
     scaling: new Vector3(1.4, 1.4, 1.4),

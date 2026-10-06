@@ -188,7 +188,7 @@ export function createConcertStage(scene, shadows, position = { x: 28, y: 0, z: 
   ledCtx.textAlign = 'center';
   ledCtx.shadowColor = '#00f2fe';
   ledCtx.shadowBlur = 48;
-  ledCtx.fillText('★ KAIA LIVE STAGE ★', 1024, 260);
+  ledCtx.fillText('KAIA LIVE STAGE', 1024, 260);
 
   ledCtx.font = 'bold 56px "Montserrat", "Segoe UI", Arial, sans-serif';
   ledCtx.fillStyle = '#facc15';
@@ -979,12 +979,12 @@ export function createTownDirectoryKiosk(scene, shadows, position = { x: -6.4, y
 
   // Danh sách các địa điểm
   const venues = [
-    { name: '★ FASHION MALL', color: '#f43f5e' },
-    { name: '★ GAME & CASINO', color: '#fbbf24' },
-    { name: '★ AGRI-MART', color: '#22c55e' },
-    { name: '★ MOTOR SHOWROOM', color: '#38bdf8' },
-    { name: '★ FISHING WHARF', color: '#06b6d4' },
-    { name: '★ CIVIC CITY HALL', color: '#c084fc' },
+    { name: 'FASHION MALL', color: '#f43f5e' },
+    { name: 'GAME & CASINO', color: '#fbbf24' },
+    { name: 'AGRI-MART', color: '#22c55e' },
+    { name: 'MOTOR SHOWROOM', color: '#38bdf8' },
+    { name: 'FISHING WHARF', color: '#06b6d4' },
+    { name: 'CIVIC CITY HALL', color: '#c084fc' },
   ];
 
   ctx.font = 'bold 24px Arial';

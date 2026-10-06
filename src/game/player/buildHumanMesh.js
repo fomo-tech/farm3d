@@ -155,7 +155,7 @@ function makeMat(scene, name, hex, emissiveHex = null, specular = 0.14, specular
   if (!m) {
     m = new StandardMaterial(name, scene);
     m.diffuseColor = Color3.FromHexString(safeCharacterHex(hex, '#f1f5f9'));
-    m.ambientColor = m.diffuseColor.scale(0.24);
+    m.ambientColor = m.diffuseColor.scale(0.32);
     m.specularColor = new Color3(specular, specular, specular);
     m.specularPower = specularPower;
     if (emissiveHex) {

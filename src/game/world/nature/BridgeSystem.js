@@ -120,7 +120,7 @@ function createBridgeSignMonument(scene, bridge, parent, position, rotationY = 0
     ctx.textBaseline = 'middle';
     ctx.shadowColor = 'rgba(0,0,0,0.9)';
     ctx.shadowBlur = 10;
-    const badgeText = isTimber ? '★ CẦU VÒM GỖ CẢNH QUAN ★' : (isStone ? '★ CẦU ĐÁ TIỂU CẢNH ★' : '★ ĐẠI CẦU GIAO THÔNG XA LỘ ★');
+    const badgeText = isTimber ? 'CẦU VÒM GỖ CẢNH QUAN' : (isStone ? 'CẦU ĐÁ TIỂU CẢNH' : 'ĐẠI CẦU GIAO THÔNG XA LỘ');
     ctx.fillText(badgeText, 1024, 180);
 
     // Tên cầu chính (Font to 132px, cực đậm, viền đen dày chống chìm màu)

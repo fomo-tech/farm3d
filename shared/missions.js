@@ -2,6 +2,15 @@ export const MAIN_MISSIONS = Object.freeze([
   { id: 'main-harvest-3', title: 'Vụ mùa đầu tiên', description: 'Thu hoạch tổng cộng 3 ô cây.', stat: 'harvested', goal: 3, coins: 80, xp: 40 },
   { id: 'main-orders-2', title: 'Người giao hàng', description: 'Giao tổng cộng 2 đơn hàng.', stat: 'orders', goal: 2, coins: 120, xp: 60 },
   { id: 'main-feed-2', title: 'Chăm sóc vật nuôi', description: 'Cho vật nuôi ăn tổng cộng 2 lần.', stat: 'animalsFed', goal: 2, coins: 150, xp: 75 },
+  { id: 'main-plant-5', title: 'Thêm một luống mới', description: 'Gieo tổng cộng 5 hạt giống.', stat: 'planted', goal: 5, coins: 90, xp: 45 },
+  { id: 'main-water-5', title: 'Giữ vườn xanh tốt', description: 'Tưới tổng cộng 5 ô cây.', stat: 'watered', goal: 5, coins: 100, xp: 50 },
+  { id: 'main-harvest-6', title: 'Mùa rau bội thu', description: 'Thu hoạch tổng cộng 6 ô cây.', stat: 'harvested', goal: 6, coins: 120, xp: 60 },
+  { id: 'main-craft-1', title: 'Vào bếp thử tài', description: 'Chế biến 1 sản phẩm tại xưởng.', stat: 'crafted', goal: 1, coins: 130, xp: 65 },
+  { id: 'main-orders-3', title: 'Quen mặt ở thị trấn', description: 'Giao tổng cộng 3 đơn hàng.', stat: 'orders', goal: 3, coins: 160, xp: 80 },
+  { id: 'main-feed-4', title: 'Đàn vật nuôi khỏe mạnh', description: 'Cho vật nuôi ăn tổng cộng 4 lần.', stat: 'animalsFed', goal: 4, coins: 170, xp: 85 },
+  { id: 'main-harvest-10', title: 'Nông trại vào vụ', description: 'Thu hoạch tổng cộng 10 ô cây.', stat: 'harvested', goal: 10, coins: 180, xp: 90 },
+  { id: 'main-craft-3', title: 'Tay nghề lên cao', description: 'Chế biến tổng cộng 3 sản phẩm.', stat: 'crafted', goal: 3, coins: 190, xp: 95 },
+  { id: 'main-plant-15', title: 'Người gieo mùa mới', description: 'Gieo tổng cộng 15 hạt giống.', stat: 'planted', goal: 15, coins: 200, xp: 100 },
 ]);
 
 export const DAILY_MISSIONS = Object.freeze([

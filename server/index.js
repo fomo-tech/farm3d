@@ -3,7 +3,7 @@ import { travelCost } from '../shared/travelConfig.js';
 import { chargeTravel } from './GameStore.js';
 import { WebSocketServer, WebSocket } from 'ws';
 import { purchaseFarm, listLandMarket, getAssignment, initVillageRegistry, isAssignedFarm, listVillageAssignments, listVillages, positionForLot, villageChannel, villageForFarm } from './VillageRegistry.js';
-import { authenticate, casinoRefundStale, farmAction, initGameStore, initFarmSecurity, farmSecurity, loadFarmAssignment, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
+import { authenticate, casinoRefundStale, farmAction, initGameStore, initFarmSecurity, farmSecurity, loadFarmAssignment, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadPublicPlayerProfile, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
 import { decodeFarmId } from '../shared/villageLayout.js';
 import { farmGateOpen } from '../shared/farmSecurity.js';
 import { CasinoActionError } from './casino/CasinoActionError.js';
@@ -243,7 +243,7 @@ wss.on('connection', socket => {
       }
       client.vehicle = account.progress?.vehicle || 'walk';
       client.outfit = account.progress?.outfit || 'starter';
-      safeSend(socket, { type: 'account_state', sessionToken: account.token, progress: account.progress, livestock: account.livestock, position: account.position?.layoutVersion === MAP_LAYOUT_VERSION ? account.position : null });
+      safeSend(socket, { type: 'account_state', name: account.name, sessionToken: account.token, progress: account.progress, livestock: account.livestock, position: account.position?.layoutVersion === MAP_LAYOUT_VERSION ? account.position : null });
       safeSend(socket, { type: 'village_list', villages: await listVillages() });
       const existing = await getAssignment(client.playerId);
       const assignedLot = existing || { farmId: null, villageId: 'town', villageName: 'Thị trấn', lot: null, spawn: TOWN_SPAWN, farmConfig: null };
@@ -507,12 +507,21 @@ wss.on('connection', socket => {
       const response = { type: 'account_state', requestId: message.requestId, progress: result.player.progress, livestock: result.player.livestock, result: result.result };
       safeSend(socket, response);
       finishAction(tracked.key, [response]);
+      if (message.action === 'profile_update') {
+        safeSend(socket, { type: 'profile_state', profile: await loadPublicPlayerProfile(client.playerId) });
+        broadcastPresence(client.channelId);
+      }
       if (['character_create', 'build_pen', 'buy_animal', 'sell_animal', 'feed_animals', 'collect_animals', 'upgrade_barn', 'upgrade_home', 'buy_outfit', 'fashion_save_customization'].includes(message.action)) {
         await refreshPublicFarms(client.channelId);
       }
     }
     if (message.type === 'get_social_state') {
       safeSend(socket, { type: 'social_state', ...(await loadSocialState(client.playerId)) });
+      return;
+    }
+    if (message.type === 'get_profile') {
+      const targetId = typeof message.playerId === 'string' ? message.playerId : client.playerId;
+      safeSend(socket, { type: 'profile_state', profile: await loadPublicPlayerProfile(targetId), requestedId: targetId });
       return;
     }
     if (message.type === 'social_action') {

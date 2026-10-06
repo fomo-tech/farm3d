@@ -48,7 +48,7 @@ function drawSafeRoundRect(ctx, x, y, w, h, r) {
  * CẤU HÌNH THÔNG TIN NÔNG TRẠI VIỆT NAM (BẢNG TIN HỢP TÁC XÃ LÀNG)
  */
 export const PLAZA_BILLBOARD_SPONSOR = {
-  headerTag: '🌾 BẢNG TIN LÀNG BÌNH MINH · HỢP TÁC XÃ NÔNG SẢN VIỆT 🌾',
+  headerTag: 'BẢNG TIN LÀNG BÌNH MINH · HỢP TÁC XÃ NÔNG SẢN VIỆT',
   mainHeadline: 'CỔNG THÔNG TIN & QUẢNG BÁ NÔNG SẢN',
   subHeadline: 'KẾT NỐI BÀ CON NHÀ VƯỜN · GIAO THƯƠNG NÔNG SẢN · ĐÓN ĐẦU DU KHÁCH',
   bullet1: 'Bản tin thời tiết mùa vụ, giá nông sản & lịch gieo trồng rau củ quả hữu cơ',
@@ -58,7 +58,7 @@ export const PLAZA_BILLBOARD_SPONSOR = {
   contactHotline: 'BAN QUẢN LÝ NÔNG TRẠI · HOTLINE: 0988.888.XXX',
   brandName: 'NÔNG SẢN BÌNH MINH',
   promoBadge: 'ƯU ĐÃI NÔNG DÂN MỚI -30%',
-  tickerNotice: '🌾 CHÚC BÀ CON & DU KHÁCH MỘT MÙA MÀNG BỘI THU · MƯA THUẬN GIÓ HÒA · VẠN SỰ HANH THÔNG 🌾',
+  tickerNotice: 'CHÚC BÀ CON & DU KHÁCH MỘT MÙA MÀNG BỘI THU · MƯA THUẬN GIÓ HÒA · VẠN SỰ HANH THÔNG',
 };
 
 // =============================================================================
@@ -272,7 +272,7 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     ctx.textBaseline = 'middle';
     ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
     ctx.shadowBlur = 6;
-    ctx.fillText(adConfig.headerTag || '🌾 BẢNG TIN LÀNG BÌNH MINH · HỢP TÁC XÃ NÔNG SẢN VIỆT 🌾', 1024, 102);
+    ctx.fillText(adConfig.headerTag || 'BẢNG TIN LÀNG BÌNH MINH · HỢP TÁC XÃ NÔNG SẢN VIỆT', 1024, 102);
     ctx.shadowBlur = 0;
 
     // 2. KHU VỰC THÔNG TIN BÊN TRÁI (Width: 1260px)
@@ -295,10 +295,10 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
 
     // 4 DÒNG BẢN TIN NÔNG TRẠI
     const bullets = [
-      `🌾  ${adConfig.bullet1}`,
-      `🌾  ${adConfig.bullet2}`,
-      `🌾  ${adConfig.bullet3}`,
-      `🌾  ${adConfig.bullet4 || 'Hỗ trợ mở gian hàng chợ quê 3D & dựng biển hiệu riêng'}`,
+      `•  ${adConfig.bullet1}`,
+      `•  ${adConfig.bullet2}`,
+      `•  ${adConfig.bullet3}`,
+      `•  ${adConfig.bullet4 || 'Hỗ trợ mở gian hàng chợ quê 3D & dựng biển hiệu riêng'}`,
     ];
     bullets.forEach((b, bIdx) => {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
@@ -490,23 +490,23 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     ctx.textBaseline = 'middle';
     ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
     ctx.shadowBlur = 8;
-    ctx.fillText('★ BẢNG VÀNG DANH DỰ · THẦN NÔNG XUẤT SẮC LÀNG BÌNH MINH ★', 1024, 98);
+    ctx.fillText('BẢNG VÀNG DANH DỰ · THẦN NÔNG XUẤT SẮC LÀNG BÌNH MINH', 1024, 98);
     ctx.shadowBlur = 0;
 
     // CỘT TRÁI: TOP 3 THẦN NÔNG TIÊU BIỂU
     const top3 = [
       {
-        rank: '[1] THẦN NÔNG VÀNG', crown: '👑', name: 'ĐẠI PHÚ HÀO LÀNG NÔNG',
+        rank: 'HẠNG 1 · VÀNG', crown: '◆', name: 'ĐẠI PHÚ HÀO LÀNG NÔNG',
         lv: 'Cấp 50 · Dinh Thự Nông Trang · Thần Nông VIP', xp: '2,850,000 XP',
         border: '#f59e0b', h: 240,
       },
       {
-        rank: '[2] THẦN NÔNG BẠC', crown: '✦', name: 'NÔNG DÂN TIÊU BIỂU',
+        rank: 'HẠNG 2 · BẠC', crown: '◆', name: 'NÔNG DÂN TIÊU BIỂU',
         lv: 'Cấp 46 · Trang Trại Cây Ăn Trái Trù Phú', xp: '2,180,000 XP',
         border: '#cbd5e1', h: 200,
       },
       {
-        rank: '[3] THẦN NÔNG ĐỒNG', crown: '◆', name: 'NÔNG TRẠI CHĂM CHỈ',
+        rank: 'HẠNG 3 · ĐỒNG', crown: '▲', name: 'NÔNG TRẠI CHĂM CHỈ',
         lv: 'Cấp 43 · Vườn Rau Củ Quả Hữu Cơ', xp: '1,790,000 XP',
         border: '#d97706', h: 200,
       },
@@ -532,7 +532,7 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
       ctx.textAlign = 'center';
       ctx.fillText(t.rank, 210, leftY + 44);
 
-      ctx.font = '48px Arial';
+      ctx.font = '36px Arial';
       ctx.fillText(t.crown, 370, leftY + 45);
 
       ctx.font = '900 44px Arial, "Nunito", sans-serif';
@@ -612,7 +612,7 @@ export function createPlazaGrandPortal(scene, parent, position = { x: 0, y: 0, z
     ctx.font = '800 30px Arial, "Nunito", sans-serif';
     ctx.fillStyle = '#fef08a';
     ctx.textAlign = 'center';
-    ctx.fillText('🌾 DỮ LIỆU ĐỒNG BỘ TRỰC TIẾP · BƯỚC LẠI GẦN VÀ NHẤN [E] ĐỂ XEM CHI TIẾT BẢNG VÀNG 🌾', 1024, 1056);
+    ctx.fillText('DỮ LIỆU ĐỒNG BỘ TRỰC TIẾP · BƯỚC LẠI GẦN VÀ NHẤN [E] ĐỂ XEM CHI TIẾT BẢNG VÀNG', 1024, 1056);
 
     sdtLd.update();
     ctx.restore();

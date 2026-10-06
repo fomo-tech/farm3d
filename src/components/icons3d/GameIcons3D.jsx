@@ -1358,14 +1358,24 @@ export function Icon3dSunset({ size = 22, className = '' }) {
 export function Icon3dMoon({ size = 22, className = '' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none" className={`icon-3d ${className}`}>
+      {/* Vành trăng lưỡi liềm chuẩn game hoạt họa, có đổ bóng nhẹ */}
+      <defs>
+        <linearGradient id="moon_gold_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fffbeb" />
+          <stop offset="40%" stopColor="#fde047" />
+          <stop offset="100%" stopColor="#eab308" />
+        </linearGradient>
+      </defs>
       <path
-        d="M 23 8 C 15 8, 10 14, 11 22 C 18 24, 25 18, 24 10 C 23.7 9.3, 23.4 8.6, 23 8 Z"
-        fill="#fef08a"
+        d="M 22 5 C 13.5 5.5, 7 12.5, 7.5 21 C 8 28, 14.5 31, 21 29 C 15 26.5, 13.5 19, 17 13 C 18.5 10.5, 20.5 8.5, 22 5 Z"
+        fill="url(#moon_gold_grad)"
         stroke="#ca8a04"
-        strokeWidth="1.8"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
       />
-      <circle cx="8" cy="9" r="1.5" fill="#fef08a" />
-      <circle cx="10" cy="18" r="1.2" fill="#ffffff" />
+      {/* Ngôi sao lấp lánh nhỏ bên cạnh trăng */}
+      <circle cx="24" cy="9" r="1.5" fill="#fef08a" />
+      <circle cx="21" cy="22" r="1.2" fill="#ffffff" opacity="0.9" />
     </svg>
   );
 }

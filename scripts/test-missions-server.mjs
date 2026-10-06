@@ -64,10 +64,13 @@ try {
   await players.updateOne({ playerId }, { $inc: { 'progress.stats.planted': 2 } });
   assert.equal((await action('claim_mission', { kind: 'daily', id: 'daily-plant-2' })).type, 'account_state');
   assert.equal((await action('claim_mission', { kind: 'daily', id: 'daily-plant-2' })).type, 'action_error');
+  const legacyClaim = await action('claim_quest', { id: 'harvest-3' });
+  assert.deepEqual(legacyClaim.result?.questClaimed, { id: 'harvest-3' }, 'legacy reward animation only starts after server confirmation');
+  assert.equal((await action('claim_quest', { id: 'harvest-3' })).type, 'action_error', 'legacy reward cannot be claimed twice');
   const saved = await players.findOne({ playerId });
   assert.deepEqual(saved.progress.missions.main.claimed, ['main-harvest-3']);
   assert.deepEqual(saved.progress.missions.daily.claimed, ['daily-plant-2']);
-  assert.equal(saved.progress.coins, 180 + 80 + 30);
+  assert.equal(saved.progress.coins, 180 + 80 + 30 + 60);
   await players.updateOne({ playerId }, { $set: { 'progress.missions.daily.dayKey': '2020-01-01' } });
   const beforeSync = messages.length;
   socket.send(JSON.stringify({ type: 'missions_sync' }));

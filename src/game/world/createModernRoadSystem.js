@@ -73,7 +73,7 @@ function getOrCreateMat(scene, name, hex, emissiveHex = null, specular = 0.15) {
   if (!m) {
     m = new StandardMaterial(name, scene);
     m.diffuseColor = Color3.FromHexString(hex);
-    m.ambientColor = m.diffuseColor.scale(0.45);
+    m.ambientColor = m.diffuseColor.scale(0.10);
     m.specularColor = new Color3(specular, specular, specular);
     if (emissiveHex) m.emissiveColor = Color3.FromHexString(emissiveHex);
   }
@@ -128,13 +128,13 @@ export function* createModernBoulevardSteps(scene, options = {}) {
     // Mặt đường lát đá cuội sa thạch ấm áp
     roadCobble: getOrCreateMat(scene, 'ghibli-road-cobble', WORLD_PALETTE.roadStone, null, 0.08),
     // Gờ đá tự nhiên đẽo mộc mạc
-    curbStone: getOrCreateMat(scene, 'ghibli-road-curb', '#bcb2a4', null, 0.15),
+    curbStone: getOrCreateMat(scene, 'ghibli-road-curb', '#a39584', null, 0.12),
     // Vỉa hè lát đá phiến kem ngà mềm mại
-    sidewalkStone: getOrCreateMat(scene, 'ghibli-road-sidewalk', WORLD_PALETTE.sidewalkCream, null, 0.12),
+    sidewalkStone: getOrCreateMat(scene, 'ghibli-road-sidewalk', WORLD_PALETTE.sidewalkCream, null, 0.10),
     // Tim đường hoa văn đá sa thạch màu cát ấm
-    centerInlay: getOrCreateMat(scene, 'ghibli-road-inlay', '#ded7ca', null, 0.15),
+    centerInlay: getOrCreateMat(scene, 'ghibli-road-inlay', '#c7bdae', null, 0.12),
     // Viền mép đá sa thạch sáng
-    edgeInlay: getOrCreateMat(scene, 'ghibli-road-edge-stone', '#d3c9bc', null, 0.15),
+    edgeInlay: getOrCreateMat(scene, 'ghibli-road-edge-stone', '#b8ac9d', null, 0.12),
     // Cột đèn sắt rèn graphite ấm (không đen kịt)
     wroughtIron: getOrCreateMat(scene, 'ghibli-lamp-iron', WORLD_PALETTE.lampIronGraphite, null, 0.18),
     // Đèn khí ga vàng hổ phách ấm áp
@@ -444,7 +444,7 @@ export function createZebraCrosswalk(scene, options = {}) {
     root.rotation.y = Math.PI / 2;
   }
 
-  const matStripe = getOrCreateMat(scene, 'ghibli-crosswalk-stone', '#ded6c8', '#faf5ee', 0.25);
+  const matStripe = getOrCreateMat(scene, 'ghibli-crosswalk-stone', '#f1ede6', null, 0.12);
   matStripe.zOffset = -4;
 
   const stripeWidth = 0.58;
@@ -517,9 +517,9 @@ export function* createCountryRoadSteps(scene, options = {}) {
 
   const mats = {
     roadCobble: getOrCreateMat(scene, 'ghibli-road-cobble', WORLD_PALETTE.roadStone, null, 0.08),
-    curbStone: getOrCreateMat(scene, 'ghibli-road-curb', '#bcb2a4', null, 0.15),
-    sidewalkStone: getOrCreateMat(scene, 'ghibli-road-sidewalk', WORLD_PALETTE.sidewalkCream, null, 0.12),
-    centerInlay: getOrCreateMat(scene, 'ghibli-road-inlay', '#ded7ca', null, 0.15),
+    curbStone: getOrCreateMat(scene, 'ghibli-road-curb', '#a39584', null, 0.12),
+    sidewalkStone: getOrCreateMat(scene, 'ghibli-road-sidewalk', WORLD_PALETTE.sidewalkCream, null, 0.10),
+    centerInlay: getOrCreateMat(scene, 'ghibli-road-inlay', '#c7bdae', null, 0.12),
     wroughtIron: getOrCreateMat(scene, 'ghibli-lamp-iron', WORLD_PALETTE.lampIronGraphite, null, 0.18),
     gaslightGlow: getOrCreateMat(scene, 'ghibli-lamp-glow', '#fef08a', '#f59e0b', 0.9),
   };

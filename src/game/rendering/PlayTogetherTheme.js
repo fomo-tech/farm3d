@@ -69,7 +69,7 @@ export function createToyMaterial(scene, name, hexColor, options = {}) {
     materialCache.set(scene, cache);
     scene.onDisposeObservable.addOnce(() => cache.clear());
   }
-  const cacheKey = JSON.stringify([name, hexColor, options.ambientScale ?? 0.42,
+  const cacheKey = JSON.stringify([name, hexColor, options.ambientScale ?? 0.12,
     options.specularLevel ?? 0.12, options.specularPower ?? 64,
     options.emissiveHex ?? null, options.emissiveScale ?? 0,
     options.alpha ?? 1, options.backFaceCulling ?? true, options.zOffset ?? 0]);
@@ -81,8 +81,8 @@ export function createToyMaterial(scene, name, hexColor, options = {}) {
   const baseCol = Color3.FromHexString(hexColor);
   mat.diffuseColor = baseCol;
 
-  // Ambient boost: nâng sáng hốc bóng đổ, màu sắc luôn tươi vui như ban ngày
-  const ambientScale = options.ambientScale ?? 0.42;
+  // Ambient response: nâng sáng nhẹ nhàng các góc khuất, không làm cháy sáng bề mặt
+  const ambientScale = options.ambientScale ?? 0.12;
   mat.ambientColor = baseCol.scale(ambientScale);
 
   // Điểm sáng phản chiếu Specular bóng dẻo đồ chơi (Toy Sheen)
@@ -109,6 +109,8 @@ export function createToyMaterial(scene, name, hexColor, options = {}) {
   if (options.zOffset !== undefined) {
     mat.zOffset = options.zOffset;
   }
+
+  mat.maxSimultaneousLights = options.maxSimultaneousLights ?? 6;
 
   cache.set(cacheKey, mat);
   return mat;

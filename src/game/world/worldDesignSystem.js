@@ -23,7 +23,7 @@ export const WORLD_PALETTE = Object.freeze({
   grassShade: ART.grassMid,
   roadWarm: ART.pathLight,
   roadStone: ART.path,
-  sidewalkCream: '#d2c7b8',     // Đá phiến kem ngà êm dịu, không chói lóa
+  sidewalkCream: '#c5b8a6',     // Đá phiến kem ngà êm dịu, ấm áp, sáng trong
   waterShallow: ART.shallows,
   waterDeep: ART.water,
   // 1. Tường & Bệ móng
@@ -44,15 +44,15 @@ export const WORLD_PALETTE = Object.freeze({
   woodOakDark: '#94715e',       // Warm readable structural wood.
   woodOakWarm: '#c39470',       // Honey wood trim.
   woodTeak: '#c8a27d',          // Light furniture wood.
-  woodFenceWhite: '#ede6dc',    // Hàng rào gỗ sơn trắng kem sữa ngọc trai mềm
+  woodFenceWhite: '#e8dfd2',    // Hàng rào gỗ sơn kem sữa ngọc trai sáng sạch, không chói
   woodPlankWeathered: '#8d6e53',// Ván gỗ bến nước mộc mạc
 
   // 4. Đường dạo & Quảng trường
-  plazaMarbleWhite: '#f1ebdf',   // Cream plaza tiles.
+  plazaMarbleWhite: '#ded5c6',   // Cream plaza tiles.
   plazaMarbleCream: '#dfd9eb',   // Lavender paving border.
-  pathCobblestone: '#d5c7b3',   // Lối đi sỏi nhẵn màu kem bơ
+  pathCobblestone: '#c0b39f',   // Lối đi sỏi nhẵn màu kem bơ
   roadHoneyEarth: '#c7a391',    // Đất nện hồng cát sáng
-  curbStone: '#c5bbae',         // Viền đá bó vỉa hè
+  curbStone: '#a39584',         // Viền đá bó vỉa hè ấm áp
 
   // 5. Đèn & Ánh sáng ấm
   lampIronGraphite: '#424956',  // Sắt rèn xám graphite ấm (không đen kịt)
@@ -296,7 +296,7 @@ export const VILLAGE_THEME_GROUPS = Object.freeze(Object.fromEntries(
 export function createCozyMaterial(scene, name, hex, emissiveHex = null, specular = 0.08) {
   const mat = new StandardMaterial(name, scene);
   mat.diffuseColor = Color3.FromHexString(hex);
-  mat.ambientColor = mat.diffuseColor.scale(0.45);
+  mat.ambientColor = mat.diffuseColor.scale(0.12);
   mat.specularColor = new Color3(specular, specular, specular);
   if (emissiveHex) mat.emissiveColor = Color3.FromHexString(emissiveHex);
   return mat;

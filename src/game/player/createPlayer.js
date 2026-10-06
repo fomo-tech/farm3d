@@ -4,6 +4,7 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
+import { PointLight } from '@babylonjs/core/Lights/pointLight.js';
 import { FARM_CONFIG } from '../config.js';
 import { FISHING_CONFIG } from '../../../shared/fishingConfig.js';
 import { buildHumanMesh } from './buildHumanMesh.js';
@@ -553,6 +554,19 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
   const initialVehicle = controls.getVehicle?.() || 'walk';
   vehicleRigs.setVehicle(initialVehicle);
 
+  // Hero Night Light: Đèn chiếu sáng ấm áp CHỈ chiếu lên nhân vật vào ban đêm, không làm nhấp nháy công trình thế giới
+  const heroNightLight = new PointLight('hero-night-light', new Vector3(0, 1.85, 0.45), scene);
+  heroNightLight.diffuse = Color3.FromHexString('#fff3db'); // Vàng kem ấm áp
+  heroNightLight.specular = Color3.FromHexString('#fef08a');
+  heroNightLight.range = 7.5;
+  heroNightLight.intensity = 0;
+  heroNightLight.parent = root;
+  const updateHeroMeshes = () => {
+    const meshes = human.root.getChildMeshes();
+    if (meshes?.length) heroNightLight.includedOnlyMeshes = meshes;
+  };
+  updateHeroMeshes();
+
   const keys = new Set();
   const virtualInput = { x: 0, y: 0 };
   let sprinting = false;
@@ -837,11 +851,20 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
     isBusy() {
       return human.isPerformingAction();
     },
+    setNightLighting(factor = 0) {
+      // Khi trời tối (factor từ 0 -> 0.95), đèn heroNightLight tự động tỏa sáng êm dịu lên nhân vật
+      const targetIntensity = Math.max(0, Math.min(1, Number(factor) || 0)) * 0.72;
+      heroNightLight.intensity = targetIntensity;
+      if (!heroNightLight.includedOnlyMeshes?.length) {
+        updateHeroMeshes();
+      }
+    },
     dispose() {
       window.removeEventListener('keydown', down, true);
       window.removeEventListener('keyup', up, true);
       window.removeEventListener('blur', clearKeys);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      heroNightLight.dispose();
       fishingRig.dispose();
       vehicleRigs.dispose();
     },

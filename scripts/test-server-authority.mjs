@@ -22,7 +22,7 @@ applyCommunityReward(rewards,'claim_daily_reward',{},100000);
 assert.throws(()=>applyCommunityReward(rewards,'claim_daily_reward',{},100000));
 applyCommunityReward(rewards,'claim_daily_reward',{},100000+86400000);
 applyCommunityReward(rewards,'redeem_giftcode',{code:'kaiafarm',coins:999999});
-assert.equal(rewards.coins,900);
+assert.equal(rewards.coins,950);
 assert.throws(()=>applyCommunityReward(rewards,'redeem_giftcode',{code:'KAIAFARM'}));
 assert.throws(()=>applyCommunityReward(rewards,'redeem_giftcode',{code:'constructor'}));
 assert.throws(()=>applyCommunityReward(rewards,'redeem_giftcode',{code:'OLD'},100,{OLD:{coins:1,enabled:true,expiresAt:99}}));

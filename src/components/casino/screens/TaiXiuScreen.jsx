@@ -132,7 +132,7 @@ export function TaiXiuScreen({
             disabled={!isOpen}
             onClick={() => putBet('any_triple')}
           >
-            <span className="sub-title">★ BÃO ★</span>
+            <span className="sub-title">BÃO BẤT KỲ</span>
             <small className="sub-ratio">1:30</small>
             {myBets.any_triple > 0 && <span className="sub-chip">{myBets.any_triple} xu</span>}
           </button>

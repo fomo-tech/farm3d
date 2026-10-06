@@ -159,7 +159,7 @@ export function createBeachDistrict(scene, shadows) {
     post.parent = barNode;
   });
 
-  // Biển hiệu gỗ: ★ TIKI COCONUT BAR ★ (1024x256 High-Res)
+  // Biển hiệu gỗ: TIKI COCONUT BAR (1024x256 High-Res)
   const dtBar = new DynamicTexture('dt-bar-sign', { width: 1024, height: 256 }, scene, false, Texture.TRILINEAR_SAMPLINGMODE);
   dtBar.anisotropicFilteringLevel = 16;
   dtBar.hasAlpha = true;
@@ -174,7 +174,7 @@ export function createBeachDistrict(scene, shadows) {
   ctxB.strokeStyle = '#f59e0b';
   ctxB.lineWidth = 16;
   ctxB.stroke();
-  dtBar.drawText('★ TIKI COCONUT BAR ★', null, 152, 'bold 68px Arial', '#ffffff', null, true, true);
+  dtBar.drawText('TIKI COCONUT BAR', null, 152, 'bold 68px Arial', '#ffffff', null, true, true);
 
   const matBarSign = new StandardMaterial('bar-sign-mat', scene);
   matBarSign.diffuseTexture = dtBar;

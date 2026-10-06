@@ -114,3 +114,46 @@
   .compact-game-hud:has(.farm-seed-tray) .pt-context-action-wrap {display:none}
 }
 .compact-game-hud.hud-modal-open :is(.pt-candy-quest-tracker,.pt-chibi-minimap-root,.farm-zone-badge,.farm-herd-compact,.farm-game-dock,.pt-joystick,.pt-action-bubbles,.vehicle-quick-menu,.pt-context-action-wrap,.avatar-chat-bar-container) {display:none!important}
+
+/* One button language for the live world HUD. Navigation stays light;
+   movement is blue, context actions are gold. */
+.compact-game-hud{
+  --hud-button-radius:13px;
+  --hud-button-border:2px solid #fff8e6;
+  --hud-button-shadow:0 3px 0 #98a9ab,0 7px 15px #142c3c30;
+  --hud-nav-size:50px;
+  --hud-action-size:60px;
+}
+.compact-game-hud :is(.pt-phone-btn,.pt-candy-pill,.vehicle-quick-trigger,.pt-action-bubble,.pt-radar-location-pill,.pt-radar-minimize-toggle,.mission-tracker){
+  border:var(--hud-button-border)!important;
+  border-radius:var(--hud-button-radius)!important;
+  box-shadow:var(--hud-button-shadow)!important;
+  font-family:inherit;
+}
+.compact-game-hud :is(.pt-phone-btn,.pt-candy-pill,.vehicle-quick-trigger,.pt-radar-location-pill,.pt-radar-minimize-toggle,.mission-tracker):is(:hover,:focus-visible){background:#fff4d8!important}
+.compact-game-hud :is(.pt-phone-btn,.vehicle-quick-trigger,.pt-action-bubble,.pt-radar-location-pill,.pt-radar-minimize-toggle,.mission-tracker):active{transform:translateY(2px)!important;box-shadow:0 1px 0 #98a9ab!important}
+.compact-game-hud :is(.pt-phone-btn,.vehicle-quick-trigger,.pt-action-bubble,.pt-minimap-disc,.pt-radar-location-pill,.pt-radar-minimize-toggle,.mission-tracker):focus-visible{outline:3px solid #e9aa34!important;outline-offset:3px}
+.compact-game-hud .pt-phone-btn{width:var(--hud-nav-size)!important;height:var(--hud-nav-size)!important;min-width:var(--hud-nav-size)!important;padding:8px!important;background:var(--hud-surface)!important;color:var(--hud-ink)!important}
+.compact-game-hud .pt-candy-pill{height:var(--hud-nav-size)!important;min-height:var(--hud-nav-size)!important;padding:5px 9px!important;background:var(--hud-surface)!important}
+.compact-game-hud .pt-action-bubble{width:var(--hud-action-size)!important;height:var(--hud-action-size)!important;min-height:var(--hud-action-size)!important;background:#197da8!important;color:#fff!important}
+.compact-game-hud .pt-run-bubble{background:#ba692e!important}
+.compact-game-hud .pt-action-bubble :is(i,.pt-hud-img-icon){width:28px!important;height:28px!important}
+.compact-game-hud .vehicle-quick-trigger{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:var(--hud-action-size)!important;height:var(--hud-action-size)!important;min-height:var(--hud-action-size)!important;padding:4px!important;background:var(--hud-surface)!important;color:var(--hud-ink)!important}
+.compact-game-hud .vehicle-quick-trigger span{display:grid;place-items:center;height:27px}
+.compact-game-hud .vehicle-quick-trigger b{font-size:10px}
+.compact-game-hud .vehicle-quick-menu{bottom:calc(var(--hud-bottom) + var(--hud-action-size) + 10px)!important}
+.compact-game-hud .pt-minimap-disc{width:76px!important;height:76px!important;padding:0;border:0;background:transparent}
+.compact-game-hud .pt-minimap-candy-bezel{border:var(--hud-button-border)!important;background:#277eaa!important;box-shadow:var(--hud-button-shadow)!important}
+.compact-game-hud .pt-bezel-highlight{display:none}
+.compact-game-hud .pt-radar-location-pill{max-width:150px;padding:5px 8px;background:var(--hud-surface)!important;color:var(--hud-ink)!important}
+.compact-game-hud .pt-radar-minimize-toggle{background:var(--hud-surface)!important;color:var(--hud-ink)!important}
+.compact-game-hud .mission-tracker{min-height:49px;width:245px;max-width:calc(100vw - 28px);background:var(--hud-surface)!important;color:var(--hud-ink)!important}
+.compact-game-hud .mission-tracker small{color:#4c7381}
+.compact-game-hud .mission-tracker em{color:#186d89}
+.compact-game-hud .mission-tracker.is-ready{border-color:#efb83e!important;background:#fff1c3!important}
+@media(max-width:600px){
+  .compact-game-hud{--hud-nav-size:42px;--hud-action-size:54px}
+  .compact-game-hud .pt-minimap-disc{width:70px!important;height:70px!important}
+  .compact-game-hud .mission-tracker{width:205px}
+  .compact-game-hud .pt-candy-pill{padding:3px 5px!important}
+}

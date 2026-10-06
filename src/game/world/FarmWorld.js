@@ -69,7 +69,7 @@ import { SHOP_CONFIG } from '../../../shared/shopConfig.js';
 import { VenueVisibility } from '../rendering/VenueVisibility.js';
 import { FARM_CONFIG as SHARED_FARM_CONFIG } from '../../../shared/farmConfig.js';
 import { farmGatePosition } from '../../../shared/farmSecurity.js';
-import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
+import { isPointOnRoadCorridor, isRoadFootprintBlocked } from './RoadSafetyZone.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
 import { isPointInLakeOrRiver } from './WaterSafetyZone.js';
 import { WorldCollisionSystem } from '../physics/WorldCollisionSystem.js';
@@ -476,10 +476,8 @@ export class FarmWorld {
     this.isMobile = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
     this.graphicsQuality = ['auto', 'ultra', 'balanced', 'eco'].includes(callbacks.graphicsQuality)
       ? callbacks.graphicsQuality : readGraphicsQuality();
-    // 16x anisotropic filtering is expensive when the streamed scene owns
-    // thousands of textured submeshes.  8x keeps long road/ground views crisp
-    // while leaving headroom for Babylon's draw and shadow passes.
-    this.textureAnisotropy = this.isMobile ? 4 : (this.graphicsQuality === 'ultra' ? 8 : 4);
+    // 16x Anisotropic filtering trên Desktop giúp bề mặt đường, hoa văn cỏ và cảnh vật ở xa nét căng 100%
+    this.textureAnisotropy = this.isMobile ? 4 : 16;
     Texture.DEFAULT_ANISOTROPIC_FILTERING_LEVEL = this.textureAnisotropy;
     this.resolutionController = new RenderResolutionController();
     this.autoGraphics = new AutoGraphicsController(this.isMobile);
@@ -499,9 +497,8 @@ export class FarmWorld {
         width: this.canvas.clientWidth || window.innerWidth,
         height: this.canvas.clientHeight || window.innerHeight,
         mobile: this.isMobile,
-        scale: (this.graphicsQuality === 'auto' || this.isMobile)
-          ? this.autoGraphics.scale : this.resolutionController.scale,
-        allowBelowNative: this.graphicsQuality === 'auto' });
+        scale: this.isMobile ? this.autoGraphics.scale : 1,
+        allowBelowNative: false });
     };
 
     // Bật độ phân giải sắc nét Native Retina 1:1 trên màn hình High-DPI
@@ -681,6 +678,10 @@ export class FarmWorld {
         if (pointerInfo.type === 1 /* POINTERDOWN */ && pointerInfo.pickInfo?.hit) {
           let node = pointerInfo.pickInfo.pickedMesh;
           while (node) {
+            if (node.metadata?.remotePlayerId) {
+              this.callbacks.onPlayerProfile?.(node.metadata.remotePlayerId);
+              break;
+            }
             if (node.metadata?.interactive === 'leaderboard') {
               this.callbacks.onLeaderboard?.();
               break;
@@ -731,14 +732,23 @@ export class FarmWorld {
         window.__farmDebug?.stage('scene.render');
         this.frameResize.flush();
         this.scene.render();
-        if (this.bootReady && (this.graphicsQuality === 'auto' || (this.isMobile && this.graphicsQuality !== 'eco')) &&
+        if (this.bootReady && (this.graphicsQuality === 'auto' || this.graphicsQuality === 'ultra' || (this.isMobile && this.graphicsQuality !== 'eco')) &&
           !document.hidden && this.autoGraphics.sample(this.engine.getDeltaTime())) {
           if (this.graphicsQuality === 'auto') this.cinematic?.setQuality(this.autoGraphics.effects, true);
+          if (this.graphicsQuality === 'ultra' && !this.isMobile && this.cinematic?.pipeline) {
+            // Preserve native pixels. Under sustained load, reduce full-screen
+            // multisampling before compromising image resolution.
+            const supported = Math.max(1, this.engine.getCaps().maxMSAASamples || 1);
+            const samples = Math.min(this.autoGraphics.level > 0 ? 2 : 4, supported);
+            if (this.cinematic.pipeline.samples !== samples) this.cinematic.pipeline.samples = samples;
+          }
           // Apply the mobile safety scale even for a manually selected preset;
           // sustained low frame rate on iOS must lower GPU memory pressure.
-          this.resize();
-          if (this.shadows) {
-            const targetSize = this.autoGraphics.level > 0 ? 512 : (this.isMobile ? 512 : 1024);
+          if (this.isMobile) this.resize();
+          if (this.shadows && (this.isMobile || this.graphicsQuality === 'ultra')) {
+            const targetSize = this.isMobile
+              ? (this.autoGraphics.level > 0 ? 512 : 1024)
+              : (this.autoGraphics.level > 0 ? 1024 : 2048);
             if (this.shadows.mapSize !== targetSize) this.shadows.mapSize = targetSize;
             if (this.shadows.filteringQuality !== ShadowGenerator.QUALITY_MEDIUM) this.shadows.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
           }
@@ -952,26 +962,26 @@ export class FarmWorld {
     yield;
 
     // === HỆ THỐNG CHIẾU SÁNG 4 TẦNG CHUẨN COZY GHIBLI & PLAY TOGETHER ===
-    // 1. Tầng 1: Skylight vòm trời thiên thanh dịu nhẹ + Ground Bounce xanh ngọc cỏ nâng sáng vùng khuất
+    // 1. Tầng 1: Skylight vòm trời thiên thanh dịu nhẹ + Ground Bounce xanh ngọc cỏ nâng sáng vùng khuất (êm dịu, không cháy sáng)
     const ambient = new HemisphericLight('ambient', new Vector3(0, 1, 0), scene);
     yield;
-    ambient.intensity = 0.50;
+    ambient.intensity = 0.40;
     yield;
-    ambient.diffuse = Color3.FromHexString('#e0f2fe');
+    ambient.diffuse = Color3.FromHexString('#dbeafe');
     yield;
-    ambient.groundColor = Color3.FromHexString('#9bb698');
+    ambient.groundColor = Color3.FromHexString('#76a36c');
     yield;
     this.ambient = ambient;
     yield;
 
-    // 2. Tầng 2: Key Sunlight vàng kem mật ong tự nhiên (Góc xiên 55 độ, êm dịu không chói)
+    // 2. Tầng 2: Key Sunlight vàng mật ong tự nhiên (Góc xiên 55 độ, sắc nét tươi sáng)
     const sun = new DirectionalLight('sun', new Vector3(-0.45, -0.85, -0.32), scene);
     yield;
     sun.position = new Vector3(35, 55, 25);
     yield;
-    sun.intensity = 0.60;
+    sun.intensity = 0.58;
     yield;
-    sun.diffuse = Color3.FromHexString('#fff7ed');
+    sun.diffuse = Color3.FromHexString('#fff6e5');
     yield;
     // Frustum bóng đổ cố định 56m bám theo người chơi: 36.5 texels/m với 2048px map (chuẩn sắc nét Cozy Farmy)
     sun.shadowFrustumSize = this.isMobile ? 40 : 56;
@@ -983,10 +993,10 @@ export class FarmWorld {
     this.sun = sun;
     yield;
 
-    // 3. Tầng 3: Rim Backlight phụ trợ tạo viền sáng khối Chibi đồ chơi Vinyl
+    // 3. Tầng 3: Rim Backlight phụ trợ tạo viền sáng khối Chibi đồ chơi Vinyl sắc nét
     const rimLight = new DirectionalLight('rim-light', new Vector3(0.45, -0.65, 0.45), scene);
     yield;
-    rimLight.intensity = 0.14;
+    rimLight.intensity = 0.10;
     yield;
     rimLight.diffuse = Color3.FromHexString('#fdf2e9');
     yield; // Viền sáng ngọc trai bồng bềnh
@@ -1017,8 +1027,8 @@ export class FarmWorld {
     this.shadows = shadows;
     // Limit shadow draw calls during construction too, not only after boot.
     this.getNearbyShadowCount = installNearbyShadows(shadows, () => this.player?.root.position, {
-      radius: this.isMobile ? 22 : 32,
-      maxCasters: this.isMobile ? 16 : 24,
+      radius: this.isMobile ? 24 : 36,
+      maxCasters: this.isMobile ? 24 : 48,
     });
     yield;
     this.rimLight = rimLight;
@@ -1613,6 +1623,7 @@ export class FarmWorld {
     ];
     yield;
     for (const [_index, t] of (farmRoadTrees).entries()) {
+      if (isRoadFootprintBlocked(t.x, t.z, 2.4 * t.scale, 2.4 * t.scale, 0.6)) continue;
       if (t.type === 'oak') foliage.createCloudTree(t.x, t.z, t.scale, true);
       else if (t.type === 'maple') foliage.createGoldenMaple(t.x, t.z, t.scale);
       else if (t.type === 'sakura') foliage.createSakuraTree(t.x, t.z, t.scale);
@@ -1623,14 +1634,15 @@ export class FarmWorld {
 
     // Bụi cây cảnh cắt tỉa gọn gàng ven đường dẫn vào nông trại (đặt lùi ra ngoài vỉa hè)
     for (const [_index, fz] of ([54, 66, 78]).entries()) {
-      foliage.createHydrangeaBush(-9.6, fz, 1.1, '#10b981');
-      foliage.createHydrangeaBush(9.6, fz, 1.1, '#10b981');
+      if (!isRoadFootprintBlocked(-9.6, fz, 1.3, 1.3, 0.4)) foliage.createHydrangeaBush(-9.6, fz, 1.1, '#10b981');
+      if (!isRoadFootprintBlocked(9.6, fz, 1.3, 1.3, 0.4)) foliage.createHydrangeaBush(9.6, fz, 1.1, '#10b981');
 
       yield;
     }
     yield;
 
     // Hiên nghỉ chân & ghế băng cho Bác Trưởng Làng tại vỉa hè phía Tây (x: -6.8, z: 76)
+    if (!isRoadFootprintBlocked(-7.4, 76.8, 1.3, 0.8, 0.4)) {
     const elderBench = MeshBuilder.CreateBox('elder-rest-bench', { width: 2.2, height: 0.45, depth: 0.9 }, scene);
     yield;
     elderBench.position.set(-7.4, 0.23, 76.8);
@@ -1642,6 +1654,7 @@ export class FarmWorld {
     elderAwning.position.set(-7.4, 2.7, 76.8);
     yield;
     elderAwning.material = material(scene, 'elder-awning-fabric', '#f59e0b');
+    }
     yield;
 
     // Phủ thêm cây đại thụ đa dạng & khóm hoa dại ở các vùng phụ cận theo lưới phân bổ đều, nhịp nhàng
@@ -1706,6 +1719,8 @@ export class FarmWorld {
       const dt = Math.min(0.1, Math.max(0, this.engine.getDeltaTime() / 1000));
       window.__farmDebug?.stage('player.update / collision');
       player.update(dt);
+      const nightFactor = this.atmosphere?.getNightFactor?.() ?? (this.atmosphere?.isNight?.() ? 0.85 : 0);
+      player.setNightLighting?.(nightFactor);
       window.__farmDebug?.stage('atmosphere / water / bus');
       this.atmosphere?.update(dt);
       if (!this.currentVenue) this.fogStreaming?.update(dt);
@@ -2074,6 +2089,8 @@ export class FarmWorld {
       const effectiveY = Number.isFinite(player.y) && player.y !== 0 ? player.y : (VENUES[player.venue]?.interior.y ?? getTerrainHeight(player.x, player.z));
       if (!remote) {
         remote = createRemoteAvatar(this.scene, player.playerId, player.name, avatarAppearance(player.outfit, player.customization), this.shadows);
+        remote.metadata ||= {};
+        remote.metadata.remotePlayerId = player.playerId;
         remote.position.set(player.x, effectiveY, player.z);
         this.remotePlayers.set(player.playerId, remote);
       }

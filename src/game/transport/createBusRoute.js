@@ -209,7 +209,7 @@ function createLedSignTexture(scene, id, text, routeNum, colorHex = '#38bdf8') {
   // Dòng phụ City Tour Việt Nam
   ctx.fillStyle = colorHex;
   ctx.font = 'bold 18px "Segoe UI", sans-serif';
-  ctx.fillText('VIETNAM CITY TOUR ★ XE MUI TRẦN', 140, 92);
+  ctx.fillText('VIETNAM CITY TOUR · XE MUI TRẦN', 140, 92);
 
   dt.update();
   return dt;
@@ -937,7 +937,8 @@ export function* createBusRouteSteps(scene, shadows) {
     { x: 54, z: 6.2, name: 'Trạm Cửa Đông - Hồ Pha Lê', badge: 'Tuyến 04B', rot: 0 },
 
     // 2. Trục Đại lộ Nam (x = 0):
-    { x: 6.2, z: 98, name: 'Làng Bình Minh', badge: 'T1 · T2', rot: Math.PI / 2 },
+    // Bình Minh already has the smart shelter at (9.6, 80). A second wooden
+    // shelter at (6.2, 98) occupied the farm crossroad in front of lot 3.
     { ...COASTAL_BUS_CONFIG.shelter, name: 'Bãi Biển Bình Minh', badge: 'Tuyến 02', rot: Math.PI },
     { x: 6.0, z: -380, name: 'Làng Phú Điền', badge: 'Tuyến 03', rot: Math.PI / 2 },
 

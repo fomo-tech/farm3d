@@ -8,9 +8,10 @@ export function applyCommunityReward(progress, action, payload = {}, now = Date.
   claims.daily ||= []; claims.codes ||= [];
   let coins, key;
   if (action==='claim_daily_reward') {
-    key=new Date(now).toISOString().slice(0,10);
-    if(claims.daily.includes(key))throw new Error('Hôm nay bạn đã nhận thưởng (ngày UTC).');
-    coins=200;claims.daily.push(key);claims.daily=claims.daily.slice(-32);
+    const attendance = getAttendanceStatus(claims.daily, now);
+    key=attendance.today;
+    if(attendance.claimedToday)throw new Error('Hôm nay bạn đã nhận thưởng (ngày UTC).');
+    coins=attendance.coins;claims.daily.push(key);claims.daily=claims.daily.slice(-32);
   } else {
     key=String(payload.code||'').trim().toUpperCase();
     if(!Object.hasOwn(codes,key) || !codes[key].enabled || (codes[key].expiresAt!==null && now>=codes[key].expiresAt))throw new Error('Giftcode không hợp lệ hoặc đã hết hạn.');
@@ -20,3 +21,5 @@ export function applyCommunityReward(progress, action, payload = {}, now = Date.
   progress.coins+=coins;
   return { communityReward:{action,coins,key} };
 }
+import { getAttendanceStatus } from '../shared/dailyAttendance.js';
+
