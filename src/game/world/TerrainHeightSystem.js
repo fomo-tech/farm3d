@@ -1,3 +1,4 @@
+import {shoreTerrainHeight} from './nature/ShoreTerrain.js';
 /**
  * TerrainHeightSystem.js
  * High-Performance Analytical 3D Terrain Height & Elevation Engine.
@@ -50,7 +51,7 @@ export function getTerrainHeight(x, z) {
   if (isPointOnRoadCorridor(x, z, 0.0)) {
     return 0.08;
   }
-  return 0.0;
+  return shoreTerrainHeight(x,z) ?? 0.0;
 }
 
 /**

@@ -121,6 +121,9 @@ export function OnboardingHUD({
           </div>
         </div>
 
+        <div className="quest-stage-pips" aria-label={`Bước ${stepNumber} trên ${hasFarm ? 6 : 4}`}>
+          {Array.from({length:hasFarm?6:4},(_,i)=><span key={i} className={i<stepNumber?'is-lit':''} />)}
+        </div>
         {/* Right: Tactile 3D Candy Action Button */}
         <button
           type="button"
@@ -129,7 +132,7 @@ export function OnboardingHUD({
           title={`${actionText}: ${desc}`}
           aria-label={actionText}
         >
-          <span>{actionText}</span>
+          <svg className="quest-route-arrow" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4 21 10 13 13 10 21Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg><span>{actionText}</span>
         </button>
       </div>
     </aside>

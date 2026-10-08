@@ -30,6 +30,6 @@ const streamer=getWorldChunkStreamer(scene);assert.equal(streamer.entries.size,s
 const first=records[0];streamer.update(first,{x:0,z:0},100000);await new Promise(resolve=>setTimeout(resolve,0));
 assert.ok(streamed.getChildMeshes().some(m=>m.isEnabled()),'nearby shore cells load');
 streamer.update({x:10000,z:10000},{x:0,z:0},101000);await new Promise(resolve=>setTimeout(resolve,0));
-assert.ok(streamed.getChildMeshes().every(m=>!m.isEnabled()),'far shore cells unload');
+assert.ok(streamed.getChildMeshes().filter(m=>!m.metadata?.shoreTerrain).every(m=>!m.isEnabled()),'far shore cells unload');
 streamed.dispose();assert.equal(streamer.entries.size,0,'scenery disposal removes streaming entries');
 scene.dispose();e.dispose();console.log('PASS waterfront: both shores/banks, safe access, deterministic placement, merged geometry and disposal');

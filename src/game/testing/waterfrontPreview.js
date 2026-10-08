@@ -1,3 +1,4 @@
+import {NETWORK_LAKES,NETWORK_STREAMS,networkLakeOutline} from '../../../shared/waterNetwork.js';
 import {Engine} from '@babylonjs/core/Engines/engine.js';
 import {Scene} from '@babylonjs/core/scene.js';
 import {ArcRotateCamera} from '@babylonjs/core/Cameras/arcRotateCamera.js';
@@ -24,6 +25,13 @@ createWaterNetwork(scene,root,null,bank,shadows);const scenery=createWaterfrontS
 const ground=MeshBuilder.CreateGround('grass',{width:2000,height:2200},scene);const gm=new StandardMaterial('grass',scene);gm.diffuseColor=Color3.FromHexString('#8ba66c');gm.specularColor=Color3.Black();gm.diffuseTexture=createMeadowTexture(scene,512);gm.diffuseTexture.uScale=gm.diffuseTexture.vScale=100;ground.material=gm;ground.receiveShadows=true;
 const rest=scenery.metadata.placements.find(p=>p.body==='lotus'&&p.kind==='rest');
 const view=id=>{
+ if(id==='shore'||id==='stream-shore'){
+  const lake=NETWORK_LAKES.find(l=>l.id==='lotus'),stream=NETWORK_STREAMS.find(s=>s.id==='western-river');
+  const index=Math.floor(stream.samples.length*.65),p=id==='shore'?networkLakeOutline(lake)[24]:stream.banks[0][index],center=id==='shore'?lake:stream.samples[index];
+  const dx=p.x-center.x,dz=p.z-center.z,r=Math.hypot(dx,dz);
+  camera.setTarget(new Vector3(p.x,.3,p.z));camera.radius=12;camera.beta=1.15;camera.alpha=Math.atan2(dz,dx)+1.5;sun.position.set(p.x+100,160,p.z-90);return;
+ }
+
  const p=id==='pine'?{x:120,z:-540,r:185,b:.8}:id==='lotus'?{x:-450,z:10,r:190,b:.8}:id==='river'?{x:-458,z:-330,r:110,b:.85}:{x:rest.x,z:rest.z,r:25,b:1.1};
  camera.setTarget(new Vector3(p.x,id==='close'?1.3:0,p.z));camera.radius=p.r;camera.beta=p.b;camera.alpha=id==='close'?rest.yaw-.7:-1.25;
  sun.position.set(p.x+100,160,p.z-90);

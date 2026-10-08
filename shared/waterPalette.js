@@ -1,5 +1,5 @@
 // One palette for Crystal Lake, the regional lakes, and every river channel.
-export const WATER_PALETTE=Object.freeze({deep:'#3e8eae',body:'#499fb5',mid:'#63b6c3',shallow:'#86ccd0',edge:'#86ccd0'});
+export const WATER_PALETTE=Object.freeze({deep:'#3e8eae',body:'#499fb5',mid:'#63b6c3',shallow:'#499fb5',edge:'#499fb5'});
 export function seaWaterColor(x,z){
  const stops=[[360,WATER_PALETTE.edge],[474,WATER_PALETTE.mid],[650,WATER_PALETTE.body],[970,WATER_PALETTE.deep]];
  const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255);

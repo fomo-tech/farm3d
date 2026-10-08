@@ -6,6 +6,8 @@ import './styles.css';
 import './game-ui.css';
 import './components/CompactGameHud.css';
 import './components/MobileViewport.css';
+import './components/GameButtonStates.css';
+import './components/QuestHudGame.css';
 import './game/rendering/RuntimeAudit.js';
 
 window.__farmDebug?.mark('React entry executing');

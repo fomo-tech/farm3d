@@ -1,3 +1,5 @@
+import {createShoreTerrain} from './createShoreTerrain.js';
+import {shoreTerrainHeight} from './ShoreTerrain.js';
 import {TransformNode} from '@babylonjs/core/Meshes/transformNode.js';
 import {MeshBuilder} from '@babylonjs/core/Meshes/meshBuilder.js';
 import {Mesh} from '@babylonjs/core/Meshes/mesh.js';
@@ -9,6 +11,7 @@ import {NETWORK_LAKES,networkLakeOutline} from '../../../../shared/waterNetwork.
 
 export function* createWaterfrontScenerySteps(scene,parent,shadows=null,{stream=true}={}){
  const root=new TransformNode('shore-scenery',scene);root.parent=parent;
+ createShoreTerrain(scene,root);
  const palette={bark:'#8a6950',wood:'#ba9265',leaf:'#6d9b68',light:'#90b877',pine:'#517f67',willow:'#82a975',blossom:'#e3b7be',grass:'#9cab6b',reed:'#b5ac7c',stone:'#a3aaa0',moss:'#7d916c',lavender:'#b2a5cf',cream:'#eaddb5',pink:'#d8a3b4',metal:'#667c70',lantern:'#ffe2a1'};
  const materials=Object.fromEntries(Object.entries(palette).map(([key,color])=>{
   const m=new StandardMaterial('shore-'+key,scene);m.diffuseColor=Color3.FromHexString(color);m.ambientColor=m.diffuseColor.scale(.3);m.specularColor=Color3.Black();return [key,m];
@@ -20,7 +23,7 @@ export function* createWaterfrontScenerySteps(scene,parent,shadows=null,{stream=
   const mesh=MeshBuilder[type](`shore-${name}`,options,scene);
   // Rotate individual pieces around the object center, facing the water.
   const c=Math.cos(record.yaw),s=Math.sin(record.yaw);
-  mesh.position.set(record.x+x*c+z*s,y,record.z-x*s+z*c);mesh.rotation.y=record.yaw+rotation;
+  mesh.position.set(record.x+x*c+z*s,y+(shoreTerrainHeight(record.x+x*c+z*s,record.z-x*s+z*c)||0),record.z-x*s+z*c);mesh.rotation.y=record.yaw+rotation;
   if(scale)mesh.scaling.set(...scale);
   mesh.material=materials[key];mesh.isPickable=false;mesh.receiveShadows=true;
   if(!current.has(key))current.set(key,[]);current.get(key).push(mesh);return mesh;

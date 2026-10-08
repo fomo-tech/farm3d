@@ -1,0 +1,61 @@
+/* Compact quest dock, with a gold quest rail and detached category buttons. */
+@media (min-width: 901px) and (hover: hover) {
+  .compact-game-hud .pt-profile-card {
+    height: 52px !important;
+    max-width: 205px !important;
+    border: 2px solid #fff3ba !important;
+    border-radius: 18px !important;
+    background: linear-gradient(#fffdf0,#e9f4f3) !important;
+    box-shadow: 0 4px 0 #477981,0 7px 12px #173f4938 !important;
+  }
+  .compact-game-hud .pt-player-name {font-size:14px !important;color:#234b5b !important;text-align:left}
+  .compact-game-hud .pt-exp-track {height:7px !important;background:#bdd5d9 !important;border:1px solid #8bb2ba !important}
+  .compact-game-hud .pt-exp-jelly {background:linear-gradient(#a9f378,#51bd64) !important}
+  .compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock {width:300px !important;top:82px !important}
+  .compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock .pt-quest-card {
+    min-height:76px !important;
+    padding:9px !important;
+    gap:10px !important;
+    border:2px solid #ffda72 !important;
+    border-left:5px solid #efad2f !important;
+    border-radius:16px !important;
+    background:linear-gradient(110deg,#fff4cf,#fffcf0) !important;
+    box-shadow:0 4px 0 #8f7241,0 8px 14px #263a4338 !important;
+  }
+  .compact-game-hud .pt-quest-card .pt-quest-avatar-inner {background:linear-gradient(#ffdc78,#ffb846) !important;width:43px !important;height:48px !important;border-radius:12px !important}
+  .compact-game-hud .pt-quest-card .pt-quest-avatar-pod {flex-basis:43px !important;height:48px !important}
+  .compact-game-hud .pt-quest-card .pt-quest-step-badge {background:#a8651b !important;font-size:10px !important}
+  .compact-game-hud .pt-quest-card .pt-quest-title {color:#294d61 !important;font-size:14px !important}
+  .compact-game-hud .pt-quest-card .pt-quest-dist-badge {background:#e0eff3 !important;color:#316d81 !important;padding:3px 8px !important;border-radius:7px !important}
+  .compact-game-hud .pt-quest-card .pt-quest-action-btn {background:linear-gradient(#37bfdb,#1286b6) !important;box-shadow:0 4px 0 #075679,inset 0 2px 0 #ffffff70 !important;height:44px !important;min-width:45px !important;border-radius:12px !important;font-size:12px !important}
+  .compact-game-hud .mission-hud-links {top:168px !important;width:300px !important;padding:0 !important;gap:6px !important;background:transparent !important;border:0 !important;box-shadow:none !important;border-radius:0 !important}
+  .compact-game-hud .mission-hud-links button {height:34px !important;min-height:34px !important;padding:4px !important;border:2px solid #fff4d0 !important;border-radius:11px !important;background:#f5f8ec !important;box-shadow:0 3px 0 #55747b !important;color:#315769 !important;font-size:10px !important}
+  .compact-game-hud .mission-hud-links button[aria-current="step"] {background:linear-gradient(#ffe79c,#ffd16a) !important;color:#714315 !important;border-color:#fff3b9 !important;box-shadow:0 3px 0 #a46c26 !important}
+  .compact-game-hud .mission-hud-links img {width:21px;height:21px}
+}
+.quest-stage-pips,.quest-route-arrow {display:none}
+@media (min-width:901px) and (hover:hover) {
+  .compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock {width:278px !important}
+  .compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock .pt-quest-card {
+    position:relative;min-height:64px !important;padding:8px 8px 14px 58px !important;
+    border:1px solid #b5e4e7 !important;border-left:0 !important;border-radius:10px 22px 22px 10px !important;
+    background:linear-gradient(100deg,#244b64f2,#32617ce8) !important;
+    box-shadow:0 4px 0 #16394e,0 6px 12px #14394d35 !important;
+  }
+  .compact-game-hud .pt-quest-card .pt-quest-avatar-pod {position:absolute !important;left:-4px;top:0;transform:rotate(-6deg);width:54px !important;height:61px !important}
+  .compact-game-hud .pt-quest-card .pt-quest-avatar-inner {width:54px !important;height:61px !important;border:2px solid #fff5c4 !important;border-radius:16px !important;box-shadow:0 4px 0 #b07324 !important}
+  .compact-game-hud .pt-quest-card .pt-quest-title {color:#fff9e6 !important;font-size:13px !important;text-shadow:0 1px 1px #17374c}
+  .compact-game-hud .pt-quest-card .pt-quest-dist-badge {background:transparent !important;color:#a9dcea !important;padding:0 !important;font-size:10px !important}
+  .compact-game-hud .pt-quest-card .pt-quest-step-badge {display:none !important}
+  .compact-game-hud .pt-quest-card .pt-quest-action-btn {width:38px !important;min-width:38px !important;height:38px !important;border-radius:50% !important;background:linear-gradient(#ffe88a,#ffbb43) !important;color:#774411 !important;border:2px solid #fff7c8 !important;box-shadow:0 3px 0 #b16b20 !important}
+  .compact-game-hud .pt-quest-action-btn>span {display:none}
+  .quest-route-arrow {display:block}
+  .quest-stage-pips {position:absolute;left:59px;bottom:7px;display:flex;gap:5px}
+  .quest-stage-pips span {width:14px;height:4px;border-radius:3px;background:#16394f;border:1px solid #5d8395}
+  .quest-stage-pips .is-lit {background:#ffd163;border-color:#ffedb0}
+  .compact-game-hud .mission-hud-links {top:158px !important;left:20px !important;width:auto !important;gap:9px !important}
+  .compact-game-hud .mission-hud-links button {flex:none !important;width:42px !important;height:42px !important;border-radius:50% !important;background:linear-gradient(#fcfffb,#d4e6ed) !important;border:2px solid #fff !important;box-shadow:0 3px 0 #456c83 !important}
+  .compact-game-hud .mission-hud-links button span {display:none}
+  .compact-game-hud .mission-hud-links img {width:29px;height:29px;filter:drop-shadow(0 2px 1px #294a5c30)}
+  .compact-game-hud .mission-hud-links button[aria-current="step"] {border-color:#fff1a1 !important;box-shadow:0 3px 0 #a46c26,0 0 0 2px #fff0b344 !important}
+}

@@ -27,13 +27,8 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { MODEL_PATHS, spawnModelSync } from '../../rendering/ModelAssetManager.js';
 import { WORLD_PALETTE } from '../worldDesignSystem.js';
 import {
-  createRiverStreamTexture,
-  createStylizedWaterMaterial,
-  createWaterRippleRingSystem,
   createWaterSunSparkles,
-  createRiverbankTexture,
-  createRiverStoneCurbTexture,
-  createRiverFoamTexture,
+  createWaterRippleRingSystem,
 } from './StylizedWaterEngine.js';
 import {
   createLowLyingRiverMist,
@@ -226,212 +221,7 @@ export function* createGrandWindingRiverSteps(scene, parent = null, shadows = nu
   riverMesh.isPickable = false;
   yield;
 
-  // 4. BỜ KÈ VÀ BÃI CÁT SỎI ĐA TẦNG TỰ NHIÊN (MULTI-TIERED NATURAL RIVERBANKS)
-  // Vân cát sông tự nhiên, sỏi đá suối và gờ đá cuội mài mòn thay thế dải màu phẳng
-  const bankSandTex = createRiverbankTexture(scene, 256);
-  if (bankSandTex && bankSandTex.uScale !== undefined) {
-    bankSandTex.uScale = 2;
-    bankSandTex.vScale = 24;
-  }
-  const matSandBank = new StandardMaterial('grand-river-sand-mat', scene);
-  if (bankSandTex && typeof bankSandTex.getClassName === 'function') {
-    matSandBank.diffuseTexture = bankSandTex;
-    matSandBank.diffuseColor = Color3.White();
-  } else {
-    matSandBank.diffuseColor = Color3.FromHexString('#dfc499');
-  }
-  matSandBank.ambientColor = new Color3(0.55, 0.55, 0.55);
-  matSandBank.specularColor = new Color3(0.55, 0.60, 0.65); // Wet sand glistening reflection
-  matSandBank.specularPower = 44;
-  matSandBank.zOffset = 1;
 
-  const bankStoneTex = createRiverStoneCurbTexture(scene, 256);
-  if (bankStoneTex && bankStoneTex.uScale !== undefined) {
-    bankStoneTex.uScale = 1;
-    bankStoneTex.vScale = 24;
-  }
-  const matBank = new StandardMaterial('grand-river-bank-mat', scene);
-  if (bankStoneTex && typeof bankStoneTex.getClassName === 'function') {
-    matBank.diffuseTexture = bankStoneTex;
-    matBank.diffuseColor = Color3.White();
-  } else {
-    matBank.diffuseColor = Color3.FromHexString('#b7a896');
-  }
-  matBank.ambientColor = new Color3(0.5, 0.5, 0.5);
-  matBank.specularColor = new Color3(0.06, 0.06, 0.06);
-  matBank.zOffset = 0;
-
-  // Dải bọt trắng mép bờ sông nhịp thở (Breathing River Shoreline Foam)
-  const riverFoamTex = createRiverFoamTexture(scene, 256);
-  if (riverFoamTex && riverFoamTex.uScale !== undefined) {
-    riverFoamTex.uScale = 1;
-    riverFoamTex.vScale = 16;
-  }
-  const matRiverFoam = new StandardMaterial('grand-river-foam-mat', scene);
-  if (riverFoamTex && typeof riverFoamTex.getClassName === 'function') {
-    matRiverFoam.diffuseTexture = riverFoamTex;
-    matRiverFoam.diffuseColor = Color3.White();
-  } else {
-    matRiverFoam.diffuseColor = Color3.White();
-  }
-  matRiverFoam.emissiveColor = Color3.White().scale(0.85);
-  matRiverFoam.specularColor = Color3.Black();
-  matRiverFoam.disableLighting = true;
-  matRiverFoam.alpha = 0.72;
-  matRiverFoam.zOffset = -2;
-
-  // Dải cát vàng (Sand Shelf: 1.1m) và gờ đá (Stone Curb: 1.0m)
-  const sandWidth = 1.1;
-  const curbWidth = 1.0;
-
-  // Bờ Tây (left) chia 2 đoạn Bắc & Nam để để hở hoàn toàn Vịnh Hòa Lưu sang Hồ Pha Lê (z in [-36, 44])
-  const leftSandNorthInner = [];
-  const leftSandNorthOuter = [];
-  const leftCurbNorthOuter = [];
-  const leftFoamNorthInner = [];
-  const leftFoamNorthOuter = [];
-
-  const leftSandSouthInner = [];
-  const leftSandSouthOuter = [];
-  const leftCurbSouthOuter = [];
-  const leftFoamSouthInner = [];
-  const leftFoamSouthOuter = [];
-
-  // Bờ Đông (right) chạy liên tục suốt dọc sông
-  const rightSandInner = [];
-  const rightSandOuter = [];
-  const rightCurbOuter = [];
-  const rightFoamInner = [];
-  const rightFoamOuter = [];
-
-  for (let i = 0; i < sampledSpline.length; i++) {
-    const cur = sampledSpline[i];
-    const prev = i > 0 ? sampledSpline[i - 1] : cur;
-    const next = i < sampledSpline.length - 1 ? sampledSpline[i + 1] : cur;
-    let tx = next.x - prev.x;
-    let tz = next.z - prev.z;
-    const len = Math.hypot(tx, tz) || 1;
-    tx /= len;
-    tz /= len;
-    const nx = -tz;
-    const nz = tx;
-    const halfW = cur.w / 2;
-
-    // Thềm cát bắt đầu tại mép ngoài bờ sông (y = 0.084 > y_water 0.082) triệt tiêu hoàn toàn Z-fighting
-    const pSandInL = new Vector3(cur.x + nx * (halfW + 0.02), 0.084, cur.z + nz * (halfW + 0.02));
-    const pSandLeft = new Vector3(cur.x + nx * (halfW + sandWidth), 0.105, cur.z + nz * (halfW + sandWidth));
-    const pCurbLeft = new Vector3(cur.x + nx * (halfW + sandWidth + curbWidth), 0.145, cur.z + nz * (halfW + sandWidth + curbWidth));
-
-    const pFoamInL = new Vector3(cur.x + nx * (halfW - 0.20), 0.084, cur.z + nz * (halfW - 0.20));
-    const pFoamOutL = new Vector3(cur.x + nx * (halfW + 0.35), 0.086, cur.z + nz * (halfW + 0.35));
-
-    if (cur.z <= -36) {
-      leftSandNorthInner.push(pSandInL);
-      leftSandNorthOuter.push(pSandLeft);
-      leftCurbNorthOuter.push(pCurbLeft);
-      leftFoamNorthInner.push(pFoamInL);
-      leftFoamNorthOuter.push(pFoamOutL);
-    } else if (cur.z >= 44) {
-      leftSandSouthInner.push(pSandInL);
-      leftSandSouthOuter.push(pSandLeft);
-      leftCurbSouthOuter.push(pCurbLeft);
-      leftFoamSouthInner.push(pFoamInL);
-      leftFoamSouthOuter.push(pFoamOutL);
-    }
-
-    const pSandInR = new Vector3(cur.x - nx * (halfW + 0.02), 0.084, cur.z - nz * (halfW + 0.02));
-    const pSandRight = new Vector3(cur.x - nx * (halfW + sandWidth), 0.105, cur.z - nz * (halfW + sandWidth));
-    const pCurbRight = new Vector3(cur.x - nx * (halfW + sandWidth + curbWidth), 0.145, cur.z - nz * (halfW + sandWidth + curbWidth));
-
-    const pFoamInR = new Vector3(cur.x - nx * (halfW - 0.20), 0.084, cur.z - nz * (halfW - 0.20));
-    const pFoamOutR = new Vector3(cur.x - nx * (halfW + 0.35), 0.086, cur.z - nz * (halfW + 0.35));
-
-    rightSandInner.push(pSandInR);
-    rightSandOuter.push(pSandRight);
-    rightCurbOuter.push(pCurbRight);
-    rightFoamInner.push(pFoamInR);
-    rightFoamOuter.push(pFoamOutR);
-  }
-  yield;
-
-  // A. Tạo các ribbon thềm cát & gờ đá bờ Tây (Bắc & Nam)
-  if (leftSandNorthInner.length >= 2) {
-    const leftSandNorthMesh = MeshBuilder.CreateRibbon('grand-river-sand-left-north', {
-      pathArray: [leftSandNorthInner, leftSandNorthOuter],
-      sideOrientation: Mesh.DOUBLESIDE,
-    }, scene);
-    leftSandNorthMesh.material = matSandBank;
-    leftSandNorthMesh.parent = root;
-    leftSandNorthMesh.freezeWorldMatrix();
-
-    const leftBankNorthMesh = MeshBuilder.CreateRibbon('grand-river-bank-left-north', {
-      pathArray: [leftSandNorthOuter, leftCurbNorthOuter],
-      sideOrientation: Mesh.DOUBLESIDE,
-    }, scene);
-    leftBankNorthMesh.material = matBank;
-    leftBankNorthMesh.parent = root;
-    leftBankNorthMesh.freezeWorldMatrix();
-
-    const leftFoamNorthMesh = MeshBuilder.CreateRibbon('grand-river-foam-left-north', {
-      pathArray: [leftFoamNorthInner, leftFoamNorthOuter],
-      sideOrientation: Mesh.DOUBLESIDE,
-    }, scene);
-    leftFoamNorthMesh.material = matRiverFoam;
-    leftFoamNorthMesh.parent = root;
-    leftFoamNorthMesh.freezeWorldMatrix();
-  }
-
-  if (leftSandSouthInner.length >= 2) {
-    const leftSandSouthMesh = MeshBuilder.CreateRibbon('grand-river-sand-left-south', {
-      pathArray: [leftSandSouthInner, leftSandSouthOuter],
-      sideOrientation: Mesh.DOUBLESIDE,
-    }, scene);
-    leftSandSouthMesh.material = matSandBank;
-    leftSandSouthMesh.parent = root;
-    leftSandSouthMesh.freezeWorldMatrix();
-
-    const leftBankSouthMesh = MeshBuilder.CreateRibbon('grand-river-bank-left-south', {
-      pathArray: [leftSandSouthOuter, leftCurbSouthOuter],
-      sideOrientation: Mesh.DOUBLESIDE,
-    }, scene);
-    leftBankSouthMesh.material = matBank;
-    leftBankSouthMesh.parent = root;
-    leftBankSouthMesh.freezeWorldMatrix();
-
-    const leftFoamSouthMesh = MeshBuilder.CreateRibbon('grand-river-foam-left-south', {
-      pathArray: [leftFoamSouthInner, leftFoamSouthOuter],
-      sideOrientation: Mesh.DOUBLESIDE,
-    }, scene);
-    leftFoamSouthMesh.material = matRiverFoam;
-    leftFoamSouthMesh.parent = root;
-    leftFoamSouthMesh.freezeWorldMatrix();
-  }
-
-  // B. Tạo ribbon thềm cát & gờ đá bờ Đông (Right Bank)
-  const rightSandMesh = MeshBuilder.CreateRibbon('grand-river-sand-right', {
-    pathArray: [rightSandInner, rightSandOuter],
-    sideOrientation: Mesh.DOUBLESIDE,
-  }, scene);
-  rightSandMesh.material = matSandBank;
-  rightSandMesh.parent = root;
-  rightSandMesh.freezeWorldMatrix();
-
-  const rightBankMesh = MeshBuilder.CreateRibbon('grand-river-bank-right', {
-    pathArray: [rightSandOuter, rightCurbOuter],
-    sideOrientation: Mesh.DOUBLESIDE,
-  }, scene);
-  rightBankMesh.material = matBank;
-  rightBankMesh.parent = root;
-  rightBankMesh.freezeWorldMatrix();
-
-  const rightFoamMesh = MeshBuilder.CreateRibbon('grand-river-foam-right', {
-    pathArray: [rightFoamInner, rightFoamOuter],
-    sideOrientation: Mesh.DOUBLESIDE,
-  }, scene);
-  rightFoamMesh.material = matRiverFoam;
-  rightFoamMesh.parent = root;
-  rightFoamMesh.freezeWorldMatrix();
-  yield;
 
   // ========================================================
   // 4B. TIỂU CẢNH THIÊN NHIÊN 2 BÊN BỜ SÔNG (RIVERSIDE GHIBLI SCENERY)
@@ -498,7 +288,8 @@ export function* createGrandWindingRiverSteps(scene, parent = null, shadows = nu
         // Bờ Tây trong khoảng Vịnh Hòa Lưu Hồ (-38 đến 44) giữ thông thoáng tối đa
         if (side === 1 && cur.z >= -38 && cur.z <= 44) continue;
 
-        const baseOffset = halfW + sandWidth + curbWidth;
+        // Keep scenery behind the raised earth bank; legacy sand/curb strips were removed.
+        const baseOffset = halfW + 4.5;
         const typeChoice = (p + (side === 1 ? 0 : 3)) % 5;
 
         if (typeChoice === 0 || typeChoice === 2) {
@@ -761,10 +552,7 @@ export function* createGrandWindingRiverSteps(scene, parent = null, shadows = nu
   }
   yield;
 
-  for(const mesh of root.getChildMeshes()){
-    if(/^grand-river-(sand|bank|foam)-/.test(mesh.name))mesh.dispose();
-  }
-  collisionBoxes.push(...createWaterNetwork(scene,root,matWater,matSandBank,shadows));
+  collisionBoxes.push(...createWaterNetwork(scene,root,matWater,null,shadows));
   yield* createWaterfrontScenerySteps(scene,root,shadows);
   yield;
 
@@ -796,8 +584,7 @@ export function* createGrandWindingRiverSteps(scene, parent = null, shadows = nu
     // E. Cập nhật các điểm sáng quang học trên mặt sông
     riverSparkles?.update(nowSec);
 
-    // F. Nhịp thở êm đềm của dải bọt mép bờ sông (Breathing Shoreline Foam)
-    matRiverFoam.alpha = 0.65 + 0.18 * Math.sin(nowSec * 1.8);
+
   });
 
   return {
@@ -815,15 +602,8 @@ export function* createGrandWindingRiverSteps(scene, parent = null, shadows = nu
       if (animObserver) scene.onBeforeRenderObservable.remove(animObserver);
       pierWakes.forEach(wake => wake.dispose());
       riverSparkles?.dispose();
-      riverTex.dispose();
-      bankSandTex.dispose();
-      bankStoneTex.dispose();
-      riverFoamTex.dispose();
+      riverTex?.dispose();
       matWater.dispose();
-      matSandBank.dispose();
-      matBank.dispose();
-      matRiverFoam.dispose();
-      matRiverBed.dispose();
       matPebble?.dispose();
       matMossRock?.dispose();
       matReedStalk?.dispose();

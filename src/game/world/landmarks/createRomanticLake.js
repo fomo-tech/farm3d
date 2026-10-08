@@ -1,4 +1,4 @@
-import {clipShoreAtWaterways,otherWaterAt} from '../nature/clipShoreAtWaterways.js';
+import {otherWaterAt} from '../nature/clipShoreAtWaterways.js';
 import {WATER_PALETTE as WATER} from '../../../../shared/waterPalette.js';
 /**
  * Crystal Lake: one continuous lagoon, an unobstructed town entrance and a
@@ -43,7 +43,6 @@ function surface(scene, scope, name, rings, colors, material, {start=0,end=Math.
   const mesh=new Mesh(name,scene),data=new VertexData();
   data.positions=positions;data.indices=indices;data.normals=normals;data.colors=vertexColors;
   data.applyToMesh(mesh);
-  if(name==='lake-sandy-shore')clipShoreAtWaterways(mesh,'crystal-lake');
   scope.own(mesh,material,scope.root,{staticMesh:false});
   return mesh;
 }
@@ -81,7 +80,6 @@ export function* createRomanticLakeSteps(scene, shadows=null) {
   const waterMat=scope.material('lake-water-mat','#ffffff');
   waterMat.backFaceCulling=false;
   waterMat.specularColor=new Color3(.10,.16,.18);waterMat.specularPower=32;
-  const shoreMat=scope.material('lake-shore-mat','#ffffff');shoreMat.backFaceCulling=false;
   const pathMat=scope.material('lake-path-mat','#e8d8b6');
   const wood=scope.material('lake-pier-wood','#b58b62');
   const alternate=scope.material('lake-pier-wood-alt','#a67e59');
@@ -97,9 +95,7 @@ export function* createRomanticLakeSteps(scene, shadows=null) {
 
   const water=surface(scene,scope,'crystal-lake',[0,.35,.72,.91,1],
     [WATER.deep,WATER.body,WATER.mid,WATER.shallow,WATER.edge],waterMat,{y:.082});
-  const shore=surface(scene,scope,'lake-sandy-shore',[1.002,1.055,1.16],
-    ['#c6b99d','#dbcba9','#e8d8b6'],shoreMat,{start:.65,end:Math.PI*2-.70,closed:false,y:.096});
-  yield 'lake: shoreline';
+  yield 'lake: water surface';
 
   const a=LAKE_CONFIG.approach,p=LAKE_CONFIG.pier,h=LAKE_CONFIG.pierHead;
   box(scene,scope,'lake-town-approach',{width:a.width,height:.04,depth:a.depth},
@@ -274,7 +270,7 @@ export function* createRomanticLakeSteps(scene, shadows=null) {
   const before=root.getChildMeshes().length;
   const removed=yield* mergeLakeStaticsSteps(root,shadows);
   root.metadata={...root.metadata,layoutVersion:2,meshesBeforeBatch:before,removedStaticMeshes:removed,meshesAfterBatch:root.getChildMeshes().length};
-  return {root,water,shore,meshes:root.getChildMeshes(),dispose:scope.dispose};
+  return {root,water,shore:null,meshes:root.getChildMeshes(),dispose:scope.dispose};
 }
 
 export function createRomanticLake(scene,shadows=null) {

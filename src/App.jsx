@@ -1484,9 +1484,9 @@ export default function App() {
 
       {gameStarted && !showCharacterCreation && (
         <nav className="mission-hud-links" aria-label="Nhiệm vụ">
-          {!progress.onboarding?.completed && <button type="button" aria-current="step" onClick={() => { if (!session.farmId) { const guide = preLandJourney(progress); if (guide.target === 'land') setPanel('land'); else handleNavigateFishing(guide.target); } else if (progress.onboarding?.step === ONBOARDING_STEPS.DELIVER_ORDER) handleOpenOrders(); else handleNavigateTarget(); }}><HudIcon asset="seeds" size={26}/><span>Tân thủ</span></button>}
-          <button type="button" onClick={() => { setQuestOpenTab('main'); setPanel('quests'); }}><HudIcon asset="quest" size={26}/><span>Chính tuyến</span></button>
-          <button type="button" onClick={() => { setQuestOpenTab('daily'); setPanel('quests'); }}><HudIcon asset="basket" size={26}/><span>Hằng ngày</span></button>
+          {!progress.onboarding?.completed && <button type="button" aria-label="Hành trình tân thủ" title="Hành trình tân thủ" aria-current="step" onClick={() => { if (!session.farmId) { const guide = preLandJourney(progress); if (guide.target === 'land') setPanel('land'); else handleNavigateFishing(guide.target); } else if (progress.onboarding?.step === ONBOARDING_STEPS.DELIVER_ORDER) handleOpenOrders(); else handleNavigateTarget(); }}><HudIcon asset="seeds" size={26}/><span>Tân thủ</span></button>}
+          <button type="button" aria-label="Sổ nhiệm vụ" title="Sổ nhiệm vụ" onClick={() => { setQuestOpenTab('main'); setPanel('quests'); }}><HudIcon asset="quest" size={26}/><span>Chính tuyến</span></button>
+          <button type="button" aria-label="Nhiệm vụ hằng ngày" title="Nhiệm vụ hằng ngày" onClick={() => { setQuestOpenTab('daily'); setPanel('quests'); }}><HudIcon asset="basket" size={26}/><span>Hằng ngày</span></button>
         </nav>
       )}
 

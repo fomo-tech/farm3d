@@ -62,3 +62,8 @@ export function resolveModelAsset(idOrUrl) {
   if (typeof idOrUrl !== 'string' || !idOrUrl.trim()) return null;
   return ASSET_REGISTRY[idOrUrl] || PATH_TO_ASSET.get(idOrUrl) || Object.freeze({ id: idOrUrl, url: idOrUrl });
 }
+
+// This source GLB was authored in centimetres (196.8 units across the wings).
+export function modelUnitScale(idOrUrl) {
+  return resolveModelAsset(idOrUrl)?.url === MODEL_PATHS.animals.stork ? .01 : 1;
+}

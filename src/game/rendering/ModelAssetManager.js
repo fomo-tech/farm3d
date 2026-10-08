@@ -5,7 +5,7 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
-import { MODEL_PATHS, resolveModelAsset } from './AssetRegistry.js';
+import { MODEL_PATHS, resolveModelAsset, modelUnitScale } from './AssetRegistry.js';
 import { getWorldChunkStreamer } from '../world/WorldChunkStreamer.js';
 import { modelWorldPosition, modelSubtreePredicate, attachVillageHouse } from './ModelPlacement.js';
 import { ModelSpawnQueue } from './ModelSpawnQueue.js';
@@ -334,7 +334,7 @@ export function spawnModelSync(scene, idOrUrl, options = {}) {
   const root = new TransformNode(`${name}_${instanceId}`, scene);
   root.position.copyFrom(position);
   root.rotation.copyFrom(rotation);
-  root.scaling.copyFrom(scaling);
+  root.scaling.copyFrom(scaling).scaleInPlace(modelUnitScale(idOrUrl));
   root.parent = parent;
   root.metadata = { ...(root.metadata || {}), asset: idOrUrl, assetStatus: 'loading' };
   let activeInstance = null;
