@@ -30,7 +30,7 @@ export function HudContextAction({ action }) {
     <div className="pt-context-action-wrap">
       <button
         type="button"
-        className="hud-context-action pt-context-action-btn"
+        className={`hud-context-action pt-context-action-btn ${action.iconAsset==='fishing'?'context-fishing-icon':''}`}
         onClick={handleClick}
         aria-label={action.label}
         title={`${action.label} (Phím [E])`}

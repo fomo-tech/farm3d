@@ -19,9 +19,11 @@ export function mobileBuildPlugin() {
         const file = resolve(root, entry && pathname === '/' ? 'index.html' : pathname.slice(1));
         if (!file.startsWith(root + sep) || !existsSync(file)) return next();
         res.setHeader('Content-Type', mime[file.slice(file.lastIndexOf('.'))] || 'application/octet-stream');
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
+        // Vite content hashes change with each build, so unchanged bundles can
+        // be reused on mobile rather than downloaded again on every launch.
+        const hashedAsset = !entry && /-[A-Za-z0-9_-]{8}\.(?:js|css|woff2|png|webp|jpg|svg)$/.test(pathname);
+        res.setHeader('Cache-Control', hashedAsset ? 'public, max-age=31536000, immutable' : 'no-cache');
+        if (!hashedAsset) res.setHeader('Pragma', 'no-cache');
         res.setHeader('Vary', 'User-Agent');
         res.setHeader('X-Game-Build', 'mobile-bundled-v11');
         if (req.method === 'HEAD') return res.end();

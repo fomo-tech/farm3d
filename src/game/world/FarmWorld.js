@@ -732,7 +732,9 @@ export class FarmWorld {
       try {
         if (!this.scene.activeCamera) throw new Error('Cảnh 3D không có camera hoạt động.');
         window.__farmDebug?.stage('scheduler.update');
-        this.scheduler.update(this.isMobile ? (this.bootReady ? 1 : 3) : (this.bootReady ? 2.5 : 6));
+        // The opaque loading screen leaves the frame free for construction.
+        // Keep a small budget again as soon as gameplay becomes visible.
+        this.scheduler.update(this.bootReady ? (this.isMobile ? 1 : 2.5) : (this.bootFrameRequested ? 3 : 12));
         // The opaque start screen covers this canvas. Rendering thousands of
         // half-built meshes here starves construction and keeps boot at 7fps.
         // Only draw once the pipeline explicitly requests its first frame.
@@ -861,6 +863,10 @@ export class FarmWorld {
   }
 
   async populateBackgroundScenery() {
+      if (this.isMobile && this.grandRiver?.scenerySteps) {
+        await this.scheduleConstruction(this.grandRiver.scenerySteps(), 'nearby waterfront scenery', 5);
+        if (this.scene.isDisposed) return;
+      }
       await new Promise(resolve => setTimeout(resolve, 0));
       await this.scheduleConstruction(createScenicLandscapesSteps(this.scene, this.foliage, this.shadows, this.foliageInstancing), 'scenic landscape');
       window.__farmDebug?.mark(`Scenic landscapes: ${this.scene.meshes.length} meshes`);
@@ -1337,7 +1343,7 @@ export class FarmWorld {
 
       // === ĐẠI THỐNG SÔNG UỐN LƯỢN HOÀN VŨ & HỆ THỐNG CẦU VƯỢT GIAO THÔNG ===
       yield 'boot: winding river';
-      this.grandRiver = yield* createGrandWindingRiverSteps(scene, null, shadows);
+      this.grandRiver = yield* createGrandWindingRiverSteps(scene, null, shadows, { deferScenery: this.isMobile });
     yield;
       this.collisionSystem.initRiverColliders(this.grandRiver.getCollisionBoxes());
     yield;

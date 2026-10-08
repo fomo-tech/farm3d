@@ -1,0 +1,33 @@
+{
+  "scope": "3D initialization only, warm local assets, desktop Chrome at mobile breakpoint; both runs defer waterfront scenery",
+  "baseline3ms": {
+    "construction": {
+      "lastBatchMs": 14.5,
+      "maxStepMs": 308.8999996185303,
+      "overruns": 10,
+      "pending": 0,
+      "slowestStep": {
+        "label": "boot: town citizen -64:26",
+        "ms": 308.8999996185303
+      },
+      "steps": 10128
+    },
+    "mobile": true,
+    "playableMs": 19437
+  },
+  "optimized12ms": {
+    "construction": {
+      "lastBatchMs": 4.799999713897705,
+      "maxStepMs": 191.2000002861023,
+      "overruns": 5,
+      "pending": 0,
+      "slowestStep": {
+        "label": "boot: farm animals",
+        "ms": 191.2000002861023
+      },
+      "steps": 10128
+    },
+    "mobile": true,
+    "playableMs": 3239
+  }
+}

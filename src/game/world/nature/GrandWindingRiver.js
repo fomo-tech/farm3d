@@ -128,7 +128,7 @@ function* createBridgesSteps(scene, root, shadows) {
 /**
  * Creates the complete Grand Winding River System.
  */
-export function* createGrandWindingRiverSteps(scene, parent = null, shadows = null) {
+export function* createGrandWindingRiverSteps(scene, parent = null, shadows = null, { deferScenery = false } = {}) {
   const root = new TransformNode('grand-winding-river-system', scene);
     yield;
   if (parent) root.parent = parent;
@@ -553,7 +553,7 @@ export function* createGrandWindingRiverSteps(scene, parent = null, shadows = nu
   yield;
 
   collisionBoxes.push(...createWaterNetwork(scene,root,matWater,null,shadows));
-  yield* createWaterfrontScenerySteps(scene,root,shadows);
+  if (!deferScenery) yield* createWaterfrontScenerySteps(scene,root,shadows);
   yield;
 
   // 9. Vòng lặp hoạt ảnh tự vận hành (Autonomous 60 FPS Render Observer)
@@ -590,6 +590,7 @@ export function* createGrandWindingRiverSteps(scene, parent = null, shadows = nu
   return {
     root,
     riverMesh,
+    scenerySteps: deferScenery ? () => createWaterfrontScenerySteps(scene,root,shadows) : null,
     bridges: RIVER_BRIDGES,
     getCollisionBoxes: () => collisionBoxes,
     update(dt) {

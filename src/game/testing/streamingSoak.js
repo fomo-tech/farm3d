@@ -44,6 +44,7 @@ const observer = new PerformanceObserver(list => {
 });
 observer.observe({ type: 'longtask', buffered: false });
 
+const bootStarted=performance.now();
 let world;
 let auditBootChannel=null;
 world = new FarmWorld(canvas, text => { status.textContent = text; }, {
@@ -51,7 +52,9 @@ world = new FarmWorld(canvas, text => { status.textContent = text; }, {
   graphicsQuality: params.get('quality'),
   getPlayerName: () => 'Streaming Test', getPlayerFarmId: () => farms[0].id,
   getUnlockedPlots: () => 12, getCrop: () => 'carrot',
+  onBootProgress: progress => { metrics.textContent=JSON.stringify({phase:progress.phase,percentage:progress.percentage,elapsedMs:Math.round(performance.now()-bootStarted)},null,2); },
   onReady: () => {
+    metrics.textContent=JSON.stringify({playableMs:Math.round(performance.now()-bootStarted),mobile:world.isMobile,construction:world.scheduler.getStats()},null,2);
     world.applyPublicFarmScope([0, 8, 16, 32, 64, 96, 128, 160, 200, 240].map(index => ({
       farmId: farms[index].id, userName: `Local Test ${index}`,
       homeTier: params.get('tier2') === '1' && [8, 32].includes(index) ? 2 : 1, barnLevel: 1,
@@ -62,6 +65,8 @@ world = new FarmWorld(canvas, text => { status.textContent = text; }, {
   },
   onFatalError: message => { report.failures.push(message); status.textContent = message; },
 });
+// Compare the former 3ms boot budget in this isolated harness only.
+if(params.get('bootBudget')==='3'){const update=world.scheduler.update.bind(world.scheduler);world.scheduler.update=budget=>update(!world.bootReady?3:budget);}
 
 // Geometry audit setup only: build the identical world with short cooperative
 // tasks even when the browser throttles RAF. Never use this mode for FPS claims.

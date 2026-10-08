@@ -6,16 +6,18 @@ import {VertexData} from '@babylonjs/core/Meshes/mesh.vertexData.js';
 import {StandardMaterial} from '@babylonjs/core/Materials/standardMaterial.js';
 import {Color3} from '@babylonjs/core/Maths/math.color.js';
 import {shoreTerrainLayout,shoreTerrainHeight} from './ShoreTerrain.js';
-export function createShoreTerrain(scene,parent){
+export function* createShoreTerrainSteps(scene,parent){
  const material=new StandardMaterial('shore-earth-slope',scene);material.diffuseColor=Color3.White();material.specularColor=Color3.Black();material.backFaceCulling=false;
  const grain=new Uint8Array(64*64*3);let seed=731;for(let i=0;i<4096;i++){seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;grain.fill(240+((seed>>>0)%15),i*3,i*3+3);}
  const texture=RawTexture.CreateRGBTexture(grain,64,64,scene,true,false,Texture.TRILINEAR_SAMPLINGMODE);texture.wrapU=texture.wrapV=Texture.WRAP_ADDRESSMODE;material.diffuseTexture=texture;
+ parent.onDisposeObservable.addOnce(()=>{texture.dispose();material.dispose();});
  const layout=shoreTerrainLayout();
- const meshes=layout.map(({id,positions,indices,colors},i)=>{
+ const meshes=[];
+ for(const [i,{id,positions,indices,colors}] of layout.entries()){
   const mesh=new Mesh(`shore-earth-${id}-${i}`,scene),data=new VertexData(),normals=[];
   VertexData.ComputeNormals(positions,indices,normals);for(let k=0;k<normals.length;k+=3)if(normals[k+1]<0){normals[k]*=-1;normals[k+1]*=-1;normals[k+2]*=-1;}
-  data.uvs=[];for(let k=0;k<positions.length;k+=3)data.uvs.push(positions[k]/3,positions[k+2]/3);data.positions=positions;data.indices=indices;data.normals=normals;data.colors=colors;data.applyToMesh(mesh);mesh.hasVertexAlpha=true;mesh.material=material;mesh.parent=parent;mesh.isPickable=false;mesh.receiveShadows=true;mesh.metadata={shoreTerrain:true,waterBody:id};return mesh;
- });
+  data.uvs=[];for(let k=0;k<positions.length;k+=3)data.uvs.push(positions[k]/3,positions[k+2]/3);data.positions=positions;data.indices=indices;data.normals=normals;data.colors=colors;data.applyToMesh(mesh);mesh.hasVertexAlpha=true;mesh.material=material;mesh.parent=parent;mesh.isPickable=false;mesh.receiveShadows=true;mesh.metadata={shoreTerrain:true,waterBody:id};meshes.push(mesh);yield 'waterfront: bank strip';
+ }
  const positions=[],colors=[],indices=[];
  for(const {edge,normal} of layout)for(let i=2;i<edge.length-2;i+=4){
   const p=edge[i],n=normal[i],v=Math.sin(p.x*12.99+p.z*78.23)*43758.54,noise=v-Math.floor(v);if(noise>.55)continue;
@@ -46,7 +48,10 @@ export function createShoreTerrain(scene,parent){
     for(const index of ti)quayIndices.push(index+offset);
    }
   }
+  if(i%8===0)yield 'waterfront: stone course';
  }
  if(quayIndices.length){const quay=new Mesh('shore-stone-quay',scene),qd=new VertexData();qd.positions=quayPositions;qd.normals=quayNormals;qd.colors=quayColors;qd.indices=quayIndices;qd.uvs=quayPositions.filter((_,i)=>i%3!==1).map(v=>v/3);qd.applyToMesh(quay);quay.material=material;quay.parent=parent;quay.isPickable=false;quay.receiveShadows=true;quay.metadata={shoreTerrain:true,stoneQuay:true};}
- parent.onDisposeObservable.addOnce(()=>{texture.dispose();material.dispose();});return meshes;
+ return meshes;
 }
+
+export function createShoreTerrain(scene,parent){const steps=createShoreTerrainSteps(scene,parent);let result;do{result=steps.next();}while(!result.done);return result.value;}

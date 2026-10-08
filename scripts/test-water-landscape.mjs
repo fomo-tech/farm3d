@@ -26,8 +26,15 @@ for(const mesh of scene.meshes.filter(m=>m.metadata?.shoreWaterId)){
 assert.ok(surfaces.length===9);
 assert.ok(boxes.length<500,'collision cells remain merged for mobile');
 root.dispose(false,true);water.dispose();bank.dispose();
-const steps=createGrandWindingRiverSteps(scene);let main;for(let i=0;i<30&&!main;i++){steps.next();main=scene.getMeshByName('grand-river-surface');}assert.ok(main);assert.equal(main.material.metadata.landscapeWater,true);assert.equal(main.getVerticesData('color').length,main.getTotalVertices()*4);let result; let constructionSteps=0; do { result=steps.next(); assert.ok(++constructionSteps<10000,'river construction must finish'); } while(!result.done);
+const steps=createGrandWindingRiverSteps(scene,null,null,{deferScenery:true});let main;for(let i=0;i<30&&!main;i++){steps.next();main=scene.getMeshByName('grand-river-surface');}assert.ok(main);assert.equal(main.material.metadata.landscapeWater,true);assert.equal(main.getVerticesData('color').length,main.getTotalVertices()*4);let result; let constructionSteps=0; do { result=steps.next(); assert.ok(++constructionSteps<10000,'river construction must finish'); } while(!result.done);
 assert.equal(result.value.riverMesh,main);
+assert.ok(result.value.getCollisionBoxes().length>0,'water collision must exist before scenery');
+assert.ok(!result.value.root.getChildMeshes().some(m=>m.metadata?.shoreTerrain),'mobile boot must defer the shoreline mesh');
+const scenery=result.value.scenerySteps();let sceneryResult,scenerySlices=0;
+do{sceneryResult=scenery.next();scenerySlices++;}while(!sceneryResult.done);
+assert.ok(scenerySlices>50,'background shoreline must cooperate with the frame scheduler');
+assert.ok(result.value.root.getChildMeshes().some(m=>m.metadata?.shoreTerrain),'deferred scenery must still build the full banks');
+console.log('Deferred waterfront slices:',scenerySlices);
 scene.onBeforeRenderObservable.notifyObservers(scene);
 result.value.update(1/60);
 result.value.dispose();
