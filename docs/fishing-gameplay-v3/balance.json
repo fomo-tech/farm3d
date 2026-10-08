@@ -1,0 +1,151 @@
+{
+  "description": "Simulation with a competent hold/release policy, 750 ms reaction, 400 ms pulses; not measured player telemetry.",
+  "pricesChanged": false,
+  "hookWindowMs": 2400,
+  "biteRangeMs": [
+    1300,
+    3100
+  ],
+  "rows": [
+    {
+      "rod": "rod_bamboo",
+      "fish": "carp",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 4400,
+      "medianMs": 4800,
+      "p95Ms": 5200,
+      "maxMs": 5200
+    },
+    {
+      "rod": "rod_bamboo",
+      "fish": "perch",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 4400,
+      "medianMs": 4400,
+      "p95Ms": 4800,
+      "maxMs": 4800
+    },
+    {
+      "rod": "rod_bamboo",
+      "fish": "golden_carp",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 12000,
+      "medianMs": 12800,
+      "p95Ms": 16000,
+      "maxMs": 16400
+    },
+    {
+      "rod": "rod_bamboo",
+      "fish": "river_catfish",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 6000,
+      "medianMs": 6400,
+      "p95Ms": 7200,
+      "maxMs": 7200
+    },
+    {
+      "rod": "rod_bamboo",
+      "fish": "river_barb",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 4800,
+      "medianMs": 5200,
+      "p95Ms": 6000,
+      "maxMs": 6000
+    },
+    {
+      "rod": "rod_bamboo",
+      "fish": "sea_mackerel",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 6000,
+      "medianMs": 6400,
+      "p95Ms": 6800,
+      "maxMs": 7200
+    },
+    {
+      "rod": "rod_bamboo",
+      "fish": "sea_snapper",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 10000,
+      "medianMs": 10800,
+      "p95Ms": 11200,
+      "maxMs": 11600
+    },
+    {
+      "rod": "rod_carbon",
+      "fish": "carp",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 2400,
+      "medianMs": 2800,
+      "p95Ms": 2800,
+      "maxMs": 2800
+    },
+    {
+      "rod": "rod_carbon",
+      "fish": "perch",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 2400,
+      "medianMs": 2400,
+      "p95Ms": 2800,
+      "maxMs": 2800
+    },
+    {
+      "rod": "rod_carbon",
+      "fish": "golden_carp",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 10400,
+      "medianMs": 10800,
+      "p95Ms": 11600,
+      "maxMs": 11600
+    },
+    {
+      "rod": "rod_carbon",
+      "fish": "river_catfish",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 5200,
+      "medianMs": 5600,
+      "p95Ms": 6000,
+      "maxMs": 6000
+    },
+    {
+      "rod": "rod_carbon",
+      "fish": "river_barb",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 2800,
+      "medianMs": 4400,
+      "p95Ms": 4400,
+      "maxMs": 4800
+    },
+    {
+      "rod": "rod_carbon",
+      "fish": "sea_mackerel",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 4800,
+      "medianMs": 5200,
+      "p95Ms": 5600,
+      "maxMs": 5600
+    },
+    {
+      "rod": "rod_carbon",
+      "fish": "sea_snapper",
+      "samples": 100,
+      "failures": 0,
+      "minMs": 6800,
+      "medianMs": 7600,
+      "p95Ms": 10000,
+      "maxMs": 10000
+    }
+  ]
+}

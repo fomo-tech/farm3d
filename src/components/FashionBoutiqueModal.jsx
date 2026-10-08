@@ -33,10 +33,7 @@ import {
   normalizeCustomization,
   calculateVerifiedCustomizationCost,
 } from '../../shared/fashionConfig.js';
-import { Icon3dGoldCoin, Icon3dCheck } from './icons3d/GameIcons3D.jsx';
-import { Icon3dCloseButton } from './icons3d/Inventory3DIcons.jsx';
 import {
-  Icon3dFashionLogo,
   Icon3dTabBody,
   Icon3dTabHair,
   Icon3dTabTop,
@@ -65,7 +62,9 @@ import {
 import { farmAudio } from '../game/audio/FarmAudioSystem.js';
 import { InventoryItemArt } from './InventoryItemArt.jsx';
 import { FashionMeshThumbnail } from './FashionMeshThumbnail.jsx';
-import './FashionBoutiqueRedesign.css';
+import { selectFashionObjectMeshes, snapshotFashionMeshVisibility, restoreFashionMeshVisibility } from './fashionInventoryMesh.js';
+import { HudIcon } from './icons3d/HudIcon.jsx';
+import './FarmFashion.css';
 
 /* =========================================================================
    PLAY TOGETHER UNIFIED FASHION ITEM TILE (PHASE 1)
@@ -85,7 +84,6 @@ function FashionItemTile({
   showPrice = true,
 }) {
   const rarity = (item.rarity || 'common').toLowerCase();
-  const rarityObj = FASHION_RARITY[rarity.toUpperCase()] || FASHION_RARITY.COMMON;
 
   return (
     <button
@@ -95,12 +93,14 @@ function FashionItemTile({
         onSelect?.();
         onInspect?.(item);
       }}
-      onMouseEnter={() => onInspect?.(item)}
+      aria-pressed={isSelected}
       title={item.name || item.label}
     >
-      <div className="fashion-tile-thumb" style={{ backgroundColor: rarityObj.bgColor }}>
+      <div className="fashion-tile-thumb" >
         {customThumb ? (
           customThumb
+        ) : thumbnailRef && field !== 'set' ? (
+          <FashionMeshThumbnail item={item} field={field} capture={thumbnailRef}/>
         ) : (
           <InventoryItemArt
             item={{ id: item.id, itemId: item.id, ...item, category: 'fashion', field }}
@@ -111,7 +111,7 @@ function FashionItemTile({
         {isEquipped && <span className="tile-badge-equipped">Đang mặc</span>}
         {isSelected && (
           <span className="tile-badge-selected">
-            <Icon3dCheck size={14} />
+            <span aria-hidden="true">✓</span>
           </span>
         )}
       </div>
@@ -128,7 +128,7 @@ function FashionItemTile({
               <span className="status-free">Miễn phí</span>
             ) : (
               <span className="status-cost">
-                <Icon3dGoldCoin size={12} /> {item.cost.toLocaleString()} xu
+                <HudIcon asset="coin" size={12} /> {(item.cost || 0).toLocaleString()} xu
               </span>
             )}
           </div>
@@ -147,11 +147,12 @@ export function FashionBoutiqueModal({
   currentCustomization,
   ownedItems = [],
   coins = 0,
+  connected = true,
   onSaveAndEquip,
   onClose,
 }) {
   const [boutiqueMode, setBoutiqueMode] = useState('shop'); // 'shop' | 'wardrobe'
-  const [activeTab, setActiveTab] = useState('accessories'); // body, hair, top, bottom, shoes, accessories, face, sets
+  const [activeTab, setActiveTab] = useState('top'); // body, hair, top, bottom, shoes, accessories, face, sets
   const [faceSubTab, setFaceSubTab] = useState('eyes'); // eyes, nose, mouth, blush
   const [cameraMode, setCameraMode] = useState('body'); // body, face, accessories
   const [filterScope, setFilterScope] = useState('all'); // 'all' | 'unowned' | 'owned'
@@ -195,6 +196,24 @@ export function FashionBoutiqueModal({
   const sparkleRef = useRef(null);
   const isFirstRender = useRef(true);
 
+  const dialogRef = useRef(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  useEffect(() => {
+    const previous = document.activeElement;
+    const dialog = dialogRef.current;
+    dialog?.querySelector('.fashion-close-btn')?.focus();
+    const keydown = event => {
+      if (event.key === 'Escape') { event.preventDefault(); closeRef.current?.(); }
+      if (event.key !== 'Tab') return;
+      const nodes = [...dialog.querySelectorAll('button:not(:disabled),input,canvas[tabindex]')];
+      const first = nodes[0], last = nodes.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener('keydown', keydown);
+    return () => { document.removeEventListener('keydown', keydown); previous?.focus?.(); };
+  }, []);
   const canvasRef = useRef(null);
   const avatarRef = useRef(null);
   const cameraRef = useRef(null);
@@ -209,7 +228,7 @@ export function FashionBoutiqueModal({
     const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
     engine.setHardwareScalingLevel(1 / Math.min(window.devicePixelRatio || 1, 2));
     const scene = new Scene(engine);
-    scene.clearColor = new Color4(0.89, 0.95, 0.97, 1);
+    scene.clearColor = new Color4(0.94, 0.95, 0.88, 1);
 
     // Warm Boutique Studio Lighting (Calibrated, Glare-Free)
     const hemi = new HemisphericLight('boutique-preview-hemi', new Vector3(0, 1, 0), scene);
@@ -223,11 +242,11 @@ export function FashionBoutiqueModal({
 
     // Luxury Runway Podium
     const podiumMat = new StandardMaterial('podium-marble', scene);
-    podiumMat.diffuseColor = Color3.FromHexString('#e8dfd5');
-    podiumMat.specularColor = new Color3(0.3, 0.3, 0.3);
+    podiumMat.diffuseColor = Color3.FromHexString('#fff4dc');
+    podiumMat.specularColor = Color3.Black();
 
     const goldMat = new StandardMaterial('podium-gold-mat', scene);
-    goldMat.diffuseColor = Color3.FromHexString('#a68344');
+    goldMat.diffuseColor = Color3.FromHexString('#64b9c4');
     goldMat.emissiveColor = Color3.Black();
 
     const podium = MeshBuilder.CreateCylinder('boutique-podium', { diameter: 1.85, height: 0.12, tessellation: 36 }, scene);
@@ -243,7 +262,7 @@ export function FashionBoutiqueModal({
     starPodium.rotation.x = Math.PI / 2;
     starPodium.position.y = 0.002;
     const starPodiumMat = new StandardMaterial('boutique-star-mat', scene);
-    starPodiumMat.diffuseColor = Color3.FromHexString('#fff1f2');
+    starPodiumMat.diffuseColor = Color3.FromHexString('#fff4dc');
     starPodiumMat.specularColor = Color3.Black();
     starPodium.material = starPodiumMat;
 
@@ -296,7 +315,7 @@ export function FashionBoutiqueModal({
     sparkleRef.current = triggerSparkleVFX;
 
     // Camera setup
-    const camera = new ArcRotateCamera('boutique-camera', Math.PI / 2, 1.45, 4.5, new Vector3(0, 1.15, 0), scene);
+    const camera = new ArcRotateCamera('boutique-camera', Math.PI / 2, 1.45, window.innerWidth <= 700 ? 3.1 : 4.5, new Vector3(0, 1.15, 0), scene);
     camera.lowerRadiusLimit = 0.9;
     camera.upperRadiusLimit = 7;
     camera.wheelPrecision = 40;
@@ -405,8 +424,21 @@ export function FashionBoutiqueModal({
         camera.radius = 4.0;
       }
 
+      const visibilityBefore = snapshotFashionMeshVisibility(scene);
       try {
         avatar.applyCustomization(custom);
+        const type = { topId: 'top', bottomId: 'bottom', shoeId: 'shoes', hairStyle: 'hair' }[field];
+        if (type) {
+          const objects = selectFashionObjectMeshes(avatar, type, item.id);
+          if (objects.length) {
+            const selectedMeshes = new Set(objects);
+            scene.meshes.forEach(mesh => { if (mesh.getTotalVertices?.() > 0 && !selectedMeshes.has(mesh)) mesh.setEnabled(false); });
+            let min = new Vector3(Infinity, Infinity, Infinity), max = new Vector3(-Infinity, -Infinity, -Infinity);
+            objects.forEach(mesh => { mesh.computeWorldMatrix(true); const box = mesh.getBoundingInfo().boundingBox; min = Vector3.Minimize(min, box.minimumWorld); max = Vector3.Maximize(max, box.maximumWorld); });
+            camera.target.copyFrom(min.add(max).scale(.5));
+            camera.radius = Math.max(.8, Vector3.Distance(min, max) * 1.5);
+          }
+        }
         scene.render();
         const image = document.createElement('canvas');
         image.width = image.height = 160;
@@ -414,6 +446,7 @@ export function FashionBoutiqueModal({
         image.getContext('2d').drawImage(canvas, (canvas.width - size) / 2, (canvas.height - size) / 2, size, size, 0, 0, 160, 160);
         return image.toDataURL('image/webp', 0.85);
       } finally {
+        restoreFashionMeshVisibility(visibilityBefore);
         avatar.applyCustomization(customizationRef.current);
         camera.alpha = saved.alpha; camera.beta = saved.beta; camera.radius = saved.radius; camera.target.copyFrom(saved.target);
         camera.viewport = saved.viewport;
@@ -503,7 +536,7 @@ export function FashionBoutiqueModal({
       camera.beta = 1.40;
     } else {
       camera.target.set(0, 1.05, 0);
-      camera.radius = 4.2;
+      camera.radius = window.innerWidth <= 700 ? 3.1 : 4.2;
       camera.beta = 1.45;
     }
   };
@@ -627,7 +660,7 @@ export function FashionBoutiqueModal({
   }, [previewCustom, initialEquipped]);
 
   const handleCheckout = () => {
-    if (totalCartCost > coins) {
+    if (!connected || totalCartCost > coins) {
       farmAudio?.playPop?.();
       return;
     }
@@ -833,15 +866,15 @@ export function FashionBoutiqueModal({
 
   return (
     <div className="fashion-modal-backdrop fashion-redesign" onClick={onClose}>
-      <section className="fashion-modal-card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+      <section ref={dialogRef} className="fashion-modal-card" aria-label="Thời trang" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
         {/* Header Thời Trang Play Together */}
         <header className="fashion-modal-header">
           <div className="fashion-brand">
             <span className="fashion-brand-icon">
-              <Icon3dFashionLogo size={38} />
+              <HudIcon asset="wardrobe" size={44} />
             </span>
             <div className="fashion-title-wrap">
-              <h2>TIỆM THỜI TRANG</h2>
+              <h2>Thời trang</h2><small>Thử đồ theo phong cách của bạn</small>
             </div>
           </div>
 
@@ -856,7 +889,7 @@ export function FashionBoutiqueModal({
                 setFilterScope('all');
               }}
             >
-              <Icon3dTabTop size={16} active={boutiqueMode === 'shop'} />
+              <HudIcon asset="shop" size={22} />
               <span>Cửa Hàng</span>
             </button>
             <button
@@ -868,18 +901,18 @@ export function FashionBoutiqueModal({
                 setFilterScope('owned');
               }}
             >
-              <Icon3dTabWardrobe size={16} active={boutiqueMode === 'wardrobe'} />
+              <HudIcon asset="wardrobe" size={22} />
               <span>Tủ Đồ</span>
             </button>
           </div>
 
           <div className="fashion-header-right">
             <div className="fashion-coin-pill">
-              <Icon3dGoldCoin size={22} />
+              <HudIcon asset="coin" size={22} />
               <span>{coins.toLocaleString()} xu</span>
             </div>
             <button className="fashion-close-btn" type="button" onClick={onClose} aria-label="Đóng cửa hàng">
-              <Icon3dCloseButton size={34} />
+              <span aria-hidden="true">×</span>
             </button>
           </div>
         </header>
@@ -889,7 +922,7 @@ export function FashionBoutiqueModal({
           {/* Left: 3D Live Interactive Runway Viewport */}
           <div className="fashion-preview-column">
             <div className="fashion-viewport-container">
-              <canvas ref={canvasRef} className="fashion-viewport-canvas" width={380} height={460} />
+              <canvas aria-label="Thử trang phục trên nhân vật" ref={canvasRef} className="fashion-viewport-canvas" width={380} height={460} />
 
               {/* Viewport Control Badges - Trái */}
               <div className="fashion-viewport-tools top-left">
@@ -1022,7 +1055,7 @@ export function FashionBoutiqueModal({
                   <div className="fashion-cart-alert shopping">
                     <span>Đang thử <strong>{unownedItems.length}</strong> món đồ mới</span>
                     <div className="fashion-cart-price">
-                      <Icon3dGoldCoin size={18} />
+                      <HudIcon asset="coin" size={18} />
                       <strong>{totalCartCost.toLocaleString()} xu</strong>
                     </div>
                   </div>
@@ -1077,15 +1110,15 @@ export function FashionBoutiqueModal({
                           className={`fashion-preset-btn ${presets[idx] ? 'saved' : 'empty'}`}
                           onClick={() => loadPreset(idx)}
                           disabled={!presets[idx]}
-                          title={presets[idx] ? `Mặc Set ${idx + 1}` : 'Chưa lưu set'}
+                          title={presets[idx] ? `Mặc bộ ${idx + 1}` : 'Chưa lưu bộ đồ'}
                         >
-                          {presets[idx] ? `★ Set ${idx + 1}` : `Set ${idx + 1}`}
+                          {presets[idx] ? `★ Bộ ${idx + 1}` : `Bộ ${idx + 1}`}
                         </button>
                         <button
                           type="button"
                           className="fashion-preset-save"
                           onClick={() => savePreset(idx)}
-                          title={`Lưu outfit hiện tại vào Set ${idx + 1}`}
+                          title={`Lưu outfit hiện tại vào Bộ ${idx + 1}`}
                         >
                           Lưu
                         </button>
@@ -1095,6 +1128,7 @@ export function FashionBoutiqueModal({
                 )}
 
                 <div className="fashion-cart-actions">
+                  {!connected && <small role="status">Kết nối lại để lưu trang phục.</small>}
                   {totalCartCost > coins && <small role="status">Bạn còn thiếu {(totalCartCost - coins).toLocaleString()} xu</small>}
                   {isDifferentFromEquipped && (
                     <button type="button" className="fashion-btn-secondary" onClick={handleResetPreview}>
@@ -1106,14 +1140,14 @@ export function FashionBoutiqueModal({
                     type="button"
                     className={`fashion-btn-primary ${totalCartCost > coins ? 'disabled' : ''}`}
                     onClick={handleCheckout}
-                    disabled={!isDifferentFromEquipped || totalCartCost > coins}
+                    disabled={!connected || !isDifferentFromEquipped || totalCartCost > coins}
                   >
                     {totalCartCost > 0 ? (
-                      <>Mua & Mặc Ngay ({totalCartCost.toLocaleString()} xu)</>
+                      <>Mua & mặc · {totalCartCost.toLocaleString()} xu</>
                     ) : isDifferentFromEquipped ? (
-                      <>Mặc Ngay</>
+                      <>Mặc ngay</>
                     ) : (
-                      <>Đang Mặc</>
+                      <>Đang mặc</>
                     )}
                   </button>
                 </div>
@@ -1572,7 +1606,7 @@ export function FashionBoutiqueModal({
                     <span className="inspect-status-owned">Đã có</span>
                   ) : inspectedItem.cost ? (
                     <span className="inspect-status-cost">
-                      <Icon3dGoldCoin size={14} /> {inspectedItem.cost.toLocaleString()} xu
+                      <HudIcon asset="coin" size={14} /> {inspectedItem.cost.toLocaleString()} xu
                     </span>
                   ) : null}
                 </div>
@@ -1643,7 +1677,7 @@ export function FashionBoutiqueModal({
               title="Set Phối Sẵn"
             >
               <div className="rail-tab-icon"><Icon3dTabSets active={activeTab === 'sets'} /></div>
-              <span className="rail-tab-label">Sets</span>
+              <span className="rail-tab-label">Bộ đồ</span>
             </button>
             <button
               type="button"

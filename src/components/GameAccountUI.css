@@ -85,3 +85,11 @@
 .game-auth-conflict-actions button{min-height:48px;border:0;border-radius:9px;background:#d8e0d1;box-shadow:0 4px 0 #94a398;color:#29413b}
 .game-auth-conflict-actions button.switch{border:0;background:#f0bc55;box-shadow:0 4px 0 #aa7b30;color:#423015}
 @media(max-width:600px){.game-auth-start-player{min-height:76px}.game-auth-start-player .game-auth-portrait{width:48px;height:48px}.game-auth-start-player .game-auth-portrait-face{width:48px;height:48px}.game-auth-conflict-actions{grid-template-columns:1fr}}
+
+.game-auth-account-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.game-auth-account-actions button{flex:1;min-height:42px;padding:8px 12px;border:2px solid #fff;border-radius:13px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.game-auth-account-actions .game-auth-logout{background:#e8eedf;color:#5e795d;box-shadow:0 3px 0 #b7c5ab;margin:0}
+.game-auth-account-actions .game-auth-delete{background:#f9e8df;color:#b76a56;box-shadow:0 3px 0 #dab5a7}
+
+.game-auth-account-actions .game-auth-logout{display:flex;align-items:center;justify-content:center;gap:6px}
+.game-auth-account-actions .game-auth-logout img{object-fit:contain;flex-shrink:0}

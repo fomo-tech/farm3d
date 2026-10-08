@@ -13,8 +13,11 @@ for (let day = 1; day <= 7; day++) {
   assert.equal(getAttendanceStatus(player.communityRewards.daily, at(date)).claimedToday, true);
   assert.throws(() => applyCommunityReward(player, 'claim_daily_reward', {}, at(date)));
 }
-assert.equal(player.coins, 3000);
+assert.equal(player.coins, 1220);
 assert.equal(getAttendanceStatus(player.communityRewards.daily, at('2026-10-08')).day, 1);
 assert.equal(getAttendanceStatus(player.communityRewards.daily, at('2026-10-09')).day, 1, 'a missed day resets the streak');
-assert.equal(applyCommunityReward(player, 'claim_daily_reward', {}, at('2026-10-09')).communityReward.coins, 200);
+assert.equal(applyCommunityReward(player, 'claim_daily_reward', {}, at('2026-10-09')).communityReward.coins, 100);
+const reset = Date.parse('2026-10-10T00:00:00.000Z');
+assert.equal(getAttendanceStatus(player.communityRewards.daily, reset - 1).claimedToday, true, 'daily badge stays hidden before 07:00 Vietnam');
+assert.equal(getAttendanceStatus(player.communityRewards.daily, reset).claimedToday, false, 'daily badge becomes available at the next UTC day');
 console.log('PASS: seven-day rewards, duplicate protection, cycle rollover and missed-day reset.');

@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { FARM_CONFIG, CROPS, validateFarmConfig, collectFarmProducts, farmBarnCapacity, farmBarnUpgradeCost, farmGrowthStage } from '../shared/farmConfig.js';
 import { CROPS as CLIENT_CROPS, barnCapacity } from '../src/game/economy/GameProgress.js';
 assert.equal(CLIENT_CROPS, CROPS);
-assert.equal(CROPS.carrot.growMs, 60000, 'existing balance is preserved');
+assert.equal(CROPS.carrot.growMs, 1800000, 'minimum thirty-minute ordinary crop');
 assert.equal(farmBarnCapacity(1), 20);
 assert.equal(farmBarnCapacity(0), 20, 'a new account has usable storage before buying land');
 assert.equal(farmBarnUpgradeCost(3), 1050);
@@ -25,4 +25,4 @@ assert.equal(collectFarmProducts(animals, 99).count, 0, 'early collection reject
 const server = await readFile(new URL('../server/GameStore.js', import.meta.url), 'utf8');
 assert.match(server, /from '..\/shared\/farmConfig.js'/);
 assert.ok(!server.includes('const CROPS ='), 'server must not maintain a duplicate catalog');
-console.log('PASS: shared farm configuration, preserved balance, validation and five-species products');
+console.log('PASS: shared farm configuration, growth balance, validation and five-species products');

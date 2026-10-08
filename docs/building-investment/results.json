@@ -1,0 +1,184 @@
+{
+  "actionMs": 2500,
+  "yield": 4,
+  "workshopCost": 300,
+  "crops": [
+    {
+      "id": "carrot",
+      "name": "Cà rốt",
+      "icon": "carrot",
+      "seedCost": 5,
+      "sellPrice": 12,
+      "growMs": 60000,
+      "level": 1,
+      "color": "#ed8b35",
+      "netPerHarvest": 43,
+      "netPerTileMinute": 38.22222222222222
+    },
+    {
+      "id": "wheat",
+      "name": "Lúa mì",
+      "icon": "wheat",
+      "seedCost": 12,
+      "sellPrice": 30,
+      "growMs": 180000,
+      "level": 2,
+      "color": "#d9ad45",
+      "netPerHarvest": 108,
+      "netPerTileMinute": 34.56
+    },
+    {
+      "id": "tomato",
+      "name": "Cà chua",
+      "icon": "tomato",
+      "seedCost": 20,
+      "sellPrice": 52,
+      "growMs": 300000,
+      "level": 3,
+      "color": "#d94c3d",
+      "netPerHarvest": 188,
+      "netPerTileMinute": 36.68292682926829
+    },
+    {
+      "id": "strawberry",
+      "name": "Dâu tây",
+      "icon": "strawberry",
+      "seedCost": 45,
+      "sellPrice": 120,
+      "growMs": 600000,
+      "level": 5,
+      "color": "#ca3858",
+      "netPerHarvest": 435,
+      "netPerTileMinute": 42.96296296296296
+    },
+    {
+      "id": "pumpkin",
+      "name": "Bí ngô",
+      "icon": "pumpkin",
+      "seedCost": 32,
+      "sellPrice": 86,
+      "growMs": 420000,
+      "level": 4,
+      "color": "#f97316",
+      "netPerHarvest": 312,
+      "netPerTileMinute": 43.78947368421053
+    },
+    {
+      "id": "melon",
+      "name": "Dưa hấu",
+      "icon": "melon",
+      "seedCost": 58,
+      "sellPrice": 155,
+      "growMs": 720000,
+      "level": 6,
+      "color": "#22c55e",
+      "netPerHarvest": 562,
+      "netPerTileMinute": 46.350515463917525
+    },
+    {
+      "id": "turnip",
+      "name": "Củ cải",
+      "icon": "turnip",
+      "seedCost": 76,
+      "sellPrice": 205,
+      "growMs": 900000,
+      "level": 8,
+      "color": "#d8b4fe",
+      "netPerHarvest": 744,
+      "netPerTileMinute": 49.1900826446281
+    }
+  ],
+  "animals": [
+    {
+      "id": "chicken",
+      "name": "Gà",
+      "slots": 2,
+      "quantity": 3,
+      "initialCost": 260,
+      "netPerCycle": 39,
+      "cycleMs": 102500,
+      "netPerMinute": 22.829268292682926,
+      "displacedCropPerMinute": 76.44444444444444,
+      "incrementalPerMinute": -53.61517615176152,
+      "paybackMinutes": 11.38888888888889
+    },
+    {
+      "id": "duck",
+      "name": "Vịt",
+      "slots": 2,
+      "quantity": 3,
+      "initialCost": 340,
+      "netPerCycle": 54,
+      "cycleMs": 132500,
+      "netPerMinute": 24.452830188679247,
+      "displacedCropPerMinute": 76.44444444444444,
+      "incrementalPerMinute": -51.9916142557652,
+      "paybackMinutes": 13.90432098765432
+    },
+    {
+      "id": "pig",
+      "name": "Heo",
+      "slots": 4,
+      "quantity": 3,
+      "initialCost": 610,
+      "netPerCycle": 234,
+      "cycleMs": 617500,
+      "netPerMinute": 22.736842105263158,
+      "displacedCropPerMinute": 152.88888888888889,
+      "incrementalPerMinute": -130.15204678362574,
+      "paybackMinutes": 26.828703703703702
+    },
+    {
+      "id": "cow",
+      "name": "Bò sữa",
+      "slots": 4,
+      "quantity": 3,
+      "initialCost": 860,
+      "netPerCycle": 75,
+      "cycleMs": 192500,
+      "netPerMinute": 23.376623376623378,
+      "displacedCropPerMinute": 152.88888888888889,
+      "incrementalPerMinute": -129.51226551226551,
+      "paybackMinutes": 36.788888888888884
+    },
+    {
+      "id": "sheep",
+      "name": "Cừu",
+      "slots": 4,
+      "quantity": 3,
+      "initialCost": 1020,
+      "netPerCycle": 90,
+      "cycleMs": 252500,
+      "netPerMinute": 21.386138613861387,
+      "displacedCropPerMinute": 152.88888888888889,
+      "incrementalPerMinute": -131.5027502750275,
+      "paybackMinutes": 47.69444444444444
+    }
+  ],
+  "recipes": [
+    {
+      "id": "flour",
+      "name": "Bột mì",
+      "rawValue": 60,
+      "sell": 18,
+      "margin": -42,
+      "xp": 12
+    },
+    {
+      "id": "cheese",
+      "name": "Phô mai",
+      "rawValue": 80,
+      "sell": 35,
+      "margin": -45,
+      "xp": 20
+    },
+    {
+      "id": "jam",
+      "name": "Mứt dâu",
+      "rawValue": 240,
+      "sell": 55,
+      "margin": -185,
+      "xp": 30
+    }
+  ]
+}

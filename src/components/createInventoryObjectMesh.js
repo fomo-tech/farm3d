@@ -5,7 +5,7 @@ import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 
 // Small, actual Babylon objects for inventory goods that have no world asset yet.
-export const INVENTORY_OBJECT_IDS = ['egg', 'duckEgg', 'milk', 'wool', 'maturePig', 'flour', 'cheese', 'jam',
+export const INVENTORY_OBJECT_IDS = ['apple', 'egg', 'duckEgg', 'milk', 'wool', 'maturePig', 'flour', 'cheese', 'jam',
   'rod_bamboo', 'rod_carbon', 'bait_worm', 'bait_lure', 'fish_chum', 'cooler_box'];
 
 export function createInventoryObjectMesh(scene, id) {
@@ -49,7 +49,12 @@ export function createInventoryObjectMesh(scene, id) {
     return mesh;
   };
 
-  if (id === 'egg' || id === 'duckEgg') {
+  if(id==='apple'){
+    sphere('apple-left',[-.16,0,0],[.65,.72,.72],colors.red);
+    sphere('apple-right',[.16,0,0],[.65,.72,.72],colors.red);
+    cylinder('apple-stem',[0,.43,0],.065,.25,colors.brown);
+    sphere('apple-leaf',[.14,.47,0],[.3,.055,.15],colors.green);
+  } else if (id === 'egg' || id === 'duckEgg') {
     sphere('egg', [0, .12, 0], [.62, .88, .62], id === 'egg' ? colors.cream : colors.blue);
   } else if (id === 'milk') {
     cylinder('bottle', [0, 0, 0], .68, 1.05, colors.white);

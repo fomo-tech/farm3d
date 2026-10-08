@@ -1,0 +1,75 @@
+.game-shell .farm-upgrade-panel { width: min(760px, calc(100vw - 24px)); background: #fffaf0; }
+.game-shell .farm-upgrade-panel > header { background: #287b6b; padding: 18px 22px; }
+.game-shell .farm-upgrade-panel > header small { color: #d3f0d9; }
+.game-shell .farm-upgrade-panel > header h2 { margin: 4px 0 0; font-size: clamp(21px, 4vw, 28px); }
+.farm-upgrade-content { padding: 18px; display: flex; flex-direction: column; gap: 18px; }
+.farm-upgrade-wallet { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #70857a; font-size: 13px; }
+.farm-upgrade-wallet > b { display: flex; align-items: center; gap: 7px; background: #fff0c9; border-radius: 24px; padding: 7px 12px; color: #785021; font-size: 18px; }
+.farm-upgrade-wallet small { font-size: 12px; }
+.land-expansion { width: 100%; padding: 18px; box-sizing: border-box; border: 2px solid #dce5cb; border-radius: 24px; background: #f2f6e8; color: #294e41; }
+.land-expansion header { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.land-expansion header > div { display: flex; align-items: center; gap: 10px; }
+.land-expansion header strong { display: block; font-size: 20px; }
+.land-expansion header small { font-size: 10px; letter-spacing: .06em; color: #708568; }
+.land-expansion header > span { padding: 8px 12px; border-radius: 16px; background: #fffdf4; font-weight: 900; font-size: 24px; white-space: nowrap; }
+.land-expansion header > span small { font-size: 12px; letter-spacing: 0; }
+.land-expansion p { font-size: 13px; line-height: 1.5; margin: 10px 0; }
+.land-expansion-grid { display: grid; gap: 7px; padding: 12px; background: #dce7c9; border-radius: 18px; border: 1px solid #c5d5ae; }
+.game-shell .land-expansion-grid button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 0; min-height: 64px; padding: 5px 2px; border: 2px solid #b4c69e; border-radius: 12px; background: #d1debd; color: #7b8f68; text-align: center; box-shadow: 0 3px 0 #b5c49f; cursor: pointer; }
+.game-shell .land-expansion-grid button.opened { background: #be8753; opacity: 1; border-color: #deb480; color: #fff9e9; box-shadow: 0 3px 0 #94663e; }
+.game-shell .land-expansion-grid button.available { background: #f8ffed; border: 2px dashed #77a875; color: #397951; box-shadow: 0 3px 0 #b0c49c; }
+.game-shell .land-expansion-grid button.selected { border: 2px solid #e5a137; background: #fff0bf; color: #815a21; box-shadow: 0 0 0 2px #ffe2a3, 0 3px 0 #d0a254; }
+.garden-tile-symbol { display: flex; align-items: center; justify-content: center; height: 30px; font-size: 30px; font-weight: 900; line-height: 1; }
+.land-expansion-grid button small { font-size: 10px; color: inherit; white-space: nowrap; }
+.land-expansion-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; font-size: 11px; color: #61765b; }
+.land-expansion-legend span { display: flex; align-items: center; gap: 4px; }
+.land-expansion-legend i { width: 9px; height: 9px; background: #be8753; border-radius: 3px; }
+.land-expansion-legend span:nth-child(2) i { background: #f8ffed; border: 1px dashed #77a875; }
+.land-expansion-legend > b { margin-left: auto; color: #805a29; }
+.land-expansion-confirm { border-top: 1px solid #d0dcbd; margin-top: 14px; padding-top: 4px; }
+.game-shell .land-expansion-confirm > button { width: 100%; min-height: 48px; border: 2px solid #fff; border-radius: 16px; background: #2c927b; color: white; font-weight: 900; padding: 10px; box-shadow: 0 4px 0 #206756; cursor: pointer; }
+.game-shell .land-expansion-confirm > button:disabled { opacity: .5; cursor: default; }
+.land-budget-details { margin: 10px 0 14px; font-size: 12px; }
+.land-budget-details summary { cursor: pointer; color: #50725e; font-weight: 800; padding: 6px 0; }
+.land-expansion-budget { margin: 8px 0; font-size: 12px; }
+.land-expansion-budget > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; margin: 7px 0; }
+.land-expansion-budget dd { margin: 0; font-weight: 800; }
+.land-expansion-warning { padding: 12px; margin: 12px 0; border: 1px solid #dfb866; border-radius: 14px; background: #fff1d3; color: #785626; font-size: 13px; }
+.land-expansion-warning label { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.5; }
+.land-expansion-warning input { flex: 0 0 auto; width: 20px; height: 20px; accent-color: #287b6b; }
+.farm-building-upgrades { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.farm-building-upgrades article { display: grid; grid-template-columns: 68px 1fr; gap: 12px 8px; align-items: center; padding: 16px; background: #fffdf8; border: 2px solid #eadfca; border-radius: 22px; }
+.farm-building-art { display: grid; place-items: center; width: 68px; height: 76px; background: #f9e8bd; border-radius: 20px; }
+.farm-building-art.home { background: #e3f0e4; }
+.farm-building-art svg { max-width: 64px; }
+.farm-building-upgrades article small { font-size: 9px; font-weight: 900; color: #8d8064; }
+.farm-building-upgrades article h3 { margin: 4px 0; font-size: 17px; color: #35554b; }
+.game-shell .farm-building-upgrades article p { margin: 0; font-size: 12px; color: #7d8b7e; }
+.farm-building-upgrades article button { grid-column: 1/-1; display: flex; justify-content: space-between; align-items: center; gap: 6px; min-height: 46px; padding: 10px 12px; border: 0; border-radius: 13px; background: #f8d575; color: #684b22; box-shadow: 0 3px 0 #d6ad53; font-size: 13px; font-weight: 900; cursor: pointer; }
+.farm-building-upgrades article button:disabled { background: #ecece1; color: #899085; box-shadow: 0 3px 0 #d9dccf; cursor: default; }
+@media(max-width: 540px) {
+ .farm-upgrade-content { padding: 12px; gap: 12px; }
+ .farm-upgrade-wallet > span { font-size: 11px; }
+ .land-expansion { padding: 12px; border-radius: 20px; }
+ .land-expansion header strong { font-size: 17px; }
+ .land-expansion header > span { font-size: 20px; padding: 6px 8px; }
+ .land-expansion header img { width: 36px; height: 36px; }
+ .land-expansion-grid { gap: 5px; padding: 8px; }
+ .game-shell .land-expansion-grid button { min-height: 54px; border-radius: 9px; }
+ .land-expansion-grid button small { font-size: 8px; }
+ .farm-building-upgrades { grid-template-columns: 1fr; }
+ .farm-building-upgrades article { grid-template-columns: 60px 1fr; padding: 12px; }
+ .farm-building-art { width: 60px; height: 64px; }
+}
+/* Keep the garden heading independent of the legacy modal header rules. */
+.game-shell .farm-upgrade-panel .land-expansion > header { background: none; box-shadow: none; padding: 0; border: 0; border-radius: 0; min-height: 0; color: #294e41; text-shadow: none; }
+.game-shell .farm-upgrade-panel .land-expansion > header small { background: none; box-shadow: none; padding: 0; border: 0; border-radius: 0; color: #708568; text-shadow: none; text-transform: none; }
+.game-shell .farm-upgrade-panel .land-expansion > header strong { color: #294e41; text-shadow: none; }
+.game-shell .farm-upgrade-panel .land-expansion > header > span { color: #294e41; }
+.farm-upgrade-icon { display: block; object-fit: contain; flex: 0 0 auto; filter: drop-shadow(0 2px 1px #5a422018); }
+.farm-building-art .farm-upgrade-icon { max-width: none; width: 76px; height: 76px; }
+.game-shell .farm-upgrade-panel .land-expansion > header .farm-upgrade-icon { width: 52px; height: 52px; }
+@media(max-width:540px) {
+ .farm-building-art .farm-upgrade-icon { width: 68px; height: 68px; }
+ .game-shell .farm-upgrade-panel .land-expansion > header .farm-upgrade-icon { width: 44px; height: 44px; }
+}

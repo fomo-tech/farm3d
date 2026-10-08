@@ -22,6 +22,7 @@ import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData.js';
 import '@babylonjs/core/Meshes/thinInstanceMesh.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { FARM_CONFIG } from '../config.js';
+import {APPLE_ORCHARD} from '../../../shared/appleOrchard.js';
 import { createSoilTexture, createMeadowTexture } from '../world/createStylizedTextures.js';
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
 import { LANDSCAPE_ART as ART } from '../world/LandscapeArt.js';
@@ -231,30 +232,30 @@ export class FarmChunk {
     basePlate.parent = this.detailRoot;
 
     const entryPath = MeshBuilder.CreateBox(`detail-entry-${this.farmId}`, { width: 4.6, depth: 3.8, height: 0.08 }, scene);
-    entryPath.position.set(0, 0.11, -7.8);
+    entryPath.position.set(0, 0.13, -7.8);
     entryPath.material = this.materials.stonePathMat;
     entryPath.receiveShadows = true;
     entryPath.parent = this.detailRoot;
 
     const drivewayApron = MeshBuilder.CreateBox(`detail-driveway-${this.farmId}`, { width: 3.8, depth: 3.2, height: 0.07 }, scene);
-    drivewayApron.position.set(0, 0.075, -11.2);
+    drivewayApron.position.set(0, 0.095, -11.2);
     drivewayApron.material = this.materials.stonePathMat;
     drivewayApron.receiveShadows = true;
     drivewayApron.parent = this.detailRoot;
 
     const midWalkway = MeshBuilder.CreateBox(`detail-midwalk-${this.farmId}`, { width: 14.8, depth: 1.8, height: 0.08 }, scene);
-    midWalkway.position.set(0, 0.11, 0.8);
+    midWalkway.position.set(0, 0.15, 0.8);
     midWalkway.material = this.materials.stonePathMat;
     midWalkway.receiveShadows = true;
     midWalkway.parent = this.detailRoot;
 
     const homePath = MeshBuilder.CreateBox(`detail-homepath-${this.farmId}`, { width: 2.4, depth: 2.4, height: 0.08 }, scene);
-    homePath.position.set(-4.8, 0.11, 2.0);
+    homePath.position.set(-4.8, 0.17, 2.0);
     homePath.material = this.materials.stonePathMat;
     homePath.parent = this.detailRoot;
 
     const corralPath = MeshBuilder.CreateBox(`detail-corralpath-${this.farmId}`, { width: 2.4, depth: 2.4, height: 0.08 }, scene);
-    corralPath.position.set(4.8, 0.11, 2.0);
+    corralPath.position.set(4.8, 0.17, 2.0);
     corralPath.material = this.materials.stonePathMat;
     corralPath.parent = this.detailRoot;
 
@@ -291,7 +292,8 @@ export class FarmChunk {
 
     // STEP 3: Apple Tree & 4 Corner Lantern Posts
     const treeRoot = new TransformNode(`detail-tree-${this.farmId}`, scene);
-    treeRoot.position.set(-7.2, 0, -3.0);
+    treeRoot.position.set(APPLE_ORCHARD.x, 0, APPLE_ORCHARD.z);
+    this.appleTree=treeRoot;this.appleFruits=[];
     treeRoot.parent = this.detailRoot;
     const trunk = MeshBuilder.CreateCylinder(`detail-trunk-${this.farmId}`, { height: 2.8, diameterTop: 0.35, diameterBottom: 0.55, tessellation: 10 }, scene);
     trunk.position.set(0, 1.4, 0);
@@ -312,17 +314,34 @@ export class FarmChunk {
       this.shadows?.addShadowCaster(leaf);
     });
 
-    [
-      { x: -0.6, y: 2.3, z: 0.8 },
-      { x: 0.5, y: 2.4, z: 0.7 },
-      { x: -0.8, y: 2.8, z: -0.3 },
-      { x: 0.8, y: 2.6, z: -0.5 },
-      { x: 0.1, y: 2.2, z: -0.9 },
-    ].forEach((apple, idx) => {
-      const ap = MeshBuilder.CreateSphere(`detail-apple-${this.farmId}-${idx}`, { diameter: 0.24, segments: 8 }, scene);
-      ap.position.set(apple.x, apple.y, apple.z);
-      ap.material = this.materials.appleRed;
-      ap.parent = treeRoot;
+    const fruitMaterials=['#dc493c','#ec6246','#c93838'].map((color,index)=>createToyMaterial(scene,`apple-skin-${this.farmId}-${index}`,color,{specularLevel:.16,specularPower:38,ambientScale:.35}));
+    const stemMaterial=createToyMaterial(scene,`apple-stem-${this.farmId}`,'#795331',{specularLevel:.02});
+    const fruitPositions=[[-.9,2.55,-.8],[.2,2.45,-1.02],[.98,2.72,-.72],[-1.12,3.05,-.36],[-.2,3.3,-1.05],[.7,3.24,-.82],[-.7,3.65,-.68],[.4,3.8,-.72],[-.6,2.7,.98],[.85,3.08,.76]];
+    for(let idx=0;idx<APPLE_ORCHARD.yield;idx++){
+      const size=.37+(idx%3)*.025;
+      const ap=MeshBuilder.CreateSphere(`detail-apple-${this.farmId}-${idx}`,{diameter:size,segments:12},scene);
+      ap.position.set(...fruitPositions[idx]);
+      ap.scaling.set(1,.94,1);ap.rotation.z=(idx%3-1)*.12;
+      ap.material=fruitMaterials[idx%fruitMaterials.length];ap.parent=treeRoot;
+      // A shallow crown and fuller shoulders give the fruit an apple silhouette.
+      const vertices=ap.getVerticesData('position');
+      for(let i=0;i<vertices.length;i+=3){
+        const y=vertices[i+1],radial=Math.hypot(vertices[i],vertices[i+2]);
+        if(y>size*.28)vertices[i+1]-=.032*Math.max(0,1-radial/(size*.28));
+        const lobe=1+.045*Math.cos(Math.atan2(vertices[i+2],vertices[i])*5);
+        vertices[i]*=lobe;vertices[i+2]*=lobe;
+      }
+      ap.setVerticesData('position',vertices);
+      const normals=[];VertexData.ComputeNormals(vertices,ap.getIndices(),normals);ap.setVerticesData('normal',normals);ap.refreshBoundingInfo();
+      const stem=MeshBuilder.CreateCylinder(`apple-stem-${idx}`,{height:.14,diameter:.035,tessellation:6},scene);
+      stem.parent=ap;stem.position.set(0,size*.48,0);stem.rotation.z=-.18;stem.material=stemMaterial;
+      const leaf=MeshBuilder.CreateSphere(`apple-leaf-${idx}`,{diameter:1,segments:6},scene);
+      leaf.parent=ap;leaf.position.set(.085,size*.57,.012);leaf.scaling.set(.19,.035,.09);leaf.rotation.z=.3;leaf.material=this.materials.leafBright;
+      this.appleFruits.push(ap);
+    }
+    treeRoot.getChildMeshes().forEach(mesh=>{
+      const fruit=this.appleFruits.some(root=>root===mesh||mesh.parent===root);
+      mesh.isPickable=true;mesh.metadata={type:'apple-tree',farmId:this.farmId,spatialBoundsMutable:fruit};
     });
 
     // 4 Corner Lantern Posts

@@ -1,0 +1,66 @@
+import assert from 'node:assert/strict';
+import { simulatePreLand, rewardCatalog, seededRandom, CURRENT_POLICY, TRIAL_POLICY, summarizeRuns, percentile } from './economy/preLandSimulation.js';
+import { pickFishingCatch } from '../shared/fishingCatch.js';
+import { FISHING_CONFIG } from '../shared/fishingConfig.js';
+import { ECONOMY_REWARD_CONFIG } from '../shared/economyRewardConfig.js';
+import { applyCommunityReward, COMMUNITY_CODES } from '../server/CommunityRewards.js';
+
+const randomA=seededRandom(7),randomB=seededRandom(7);
+assert.deepEqual(Array.from({length:50},randomA),Array.from({length:50},randomB));
+const options={seed:42,sessionMinutes:15,sessions:4};
+assert.deepEqual(simulatePreLand(options),simulatePreLand(options));
+const gifts=simulatePreLand({...options,useCodes:true,policy:{...CURRENT_POLICY,landPrice:2000,attendance:[200,250,300,350,400,500,1000]}});
+assert.equal(gifts.firstAffordable.activeMinutes,0);
+assert.equal(gifts.firstAffordable.coins,2180);
+assert.equal(gifts.firstAffordable.walletAfterLand,180);
+assert.equal(gifts.cashflow.giftcode,1800);
+assert.equal(gifts.cashflow.attendance,450,'two sessions a day must not claim twice on the same day');
+assert.equal(gifts.cashflow.rod,-150,'buy rod once, not each session');
+for(const baitId of [null,...Object.keys(FISHING_CONFIG.baits)]) {
+ const r=simulatePreLand({...options,baitId});
+ assert.equal(r.coins,Object.values(r.cashflow).reduce((a,b)=>a+b,0));
+ assert.equal(r.attempts,r.caught+r.escaped);
+ assert.equal(r.caught,r.sold+r.unsoldFish);
+ assert.ok(r.unsoldFish<=FISHING_CONFIG.defaults.coolerCapacity);
+ assert.ok(r.sessionsDetail.every(s=>s.endingCoins-s.startingCoins===s.netCoins));
+ assert.ok(r.ledger.every(item=>Number.isSafeInteger(item.delta)&&item.activeMs<=15*4*60000));
+ assert.equal(new Set(r.claimedFishingMissions).size,r.claimedFishingMissions.length);
+ assert.ok((r.cashflow['fishing-mission']||0)<=160,'one-time missions cannot reset on reconnect/session');
+ if(baitId)assert.equal((-r.cashflow.bait)%FISHING_CONFIG.baits[baitId].cost,0,'pay whole bait packets');
+ assert.ok(r.firstAffordable?.activeMinutes===undefined||r.firstAffordable.activeMinutes<=60);
+}
+const travelOnly=simulatePreLand({sessionMinutes:1,sessions:1,profile:'fast',attendance:false});
+assert.equal(travelOnly.caught,0);assert.equal(travelOnly.coins,30);
+assert.equal(travelOnly.cashflow['fish-sale'],undefined);
+const poor=simulatePreLand({sessions:2,sessionMinutes:1,attendance:false,policy:{...CURRENT_POLICY,initialCoins:100}});
+assert.equal(poor.attempts,0);assert.equal(poor.coins,100);assert.equal(poor.firstAffordable,null);
+assert.equal(poor.cashflow.rod,undefined);
+const expiry=simulatePreLand({sessions:1,sessionMinutes:1,policy:{...CURRENT_POLICY,codes:{expired:{enabled:true,coins:5000,expiresAt:Date.UTC(2026,9,6)}}},useCodes:true,attendance:false});
+assert.equal(expiry.cashflow.giftcode,undefined);
+const counter=simulatePreLand({sessions:1,sessionMinutes:1,policy:{...CURRENT_POLICY,landPrice:1},attendance:false});
+assert.equal(counter.firstAffordable.coins,180);
+assert.equal(counter.firstAffordable.walletAfterLand,179);
+assert.equal(counter.coins,30,'affordable-land milestone must not spend actual land money in fishing-only projection');
+// Longer wait lowers catch throughput; use a longer trial horizon for the land milestone.
+const trial=simulatePreLand({sessionMinutes:60,sessions:4,useCodes:true,policy:TRIAL_POLICY});
+assert.ok(trial.firstAffordable&&trial.firstAffordable.activeMinutes>0);
+assert.equal(trial.cashflow.giftcode,300);
+assert.equal(trial.cashflow.attendance,220);
+assert.equal(CURRENT_POLICY.landPrice,6000);assert.equal(COMMUNITY_CODES.PLAYTOGETHER.coins,1000,'trial must not change production codes');
+const catalog=rewardCatalog();
+assert.equal(catalog.totals.activeCodes,1800);assert.equal(catalog.totals.onboardingOneTime,250);
+assert.equal(catalog.entries.find(e=>e.id==='tutorial-seeds').availableBeforeLand,false);
+assert.ok(catalog.entries.filter(e=>e.kind==='main-mission'||e.kind==='daily-mission').every(e=>!e.availableBeforeLand));
+const attendanceProgress={coins:0};
+applyCommunityReward(attendanceProgress,'claim_daily_reward',{},Date.UTC(2026,9,6,2),TRIAL_POLICY.codes,TRIAL_POLICY.attendance);
+assert.equal(attendanceProgress.coins,100);
+assert.throws(()=>applyCommunityReward(attendanceProgress,'claim_daily_reward',{},Date.UTC(2026,9,6,12),TRIAL_POLICY.codes,TRIAL_POLICY.attendance));
+// Exact selections test rare/common routing and weight rounding in the actual server sampler.
+let sequence=[.01,0,.5];
+assert.deepEqual(pickFishingCatch('lake',null,()=>sequence.shift(),0),{fishId:'golden_carp',weight:3});
+sequence=[.5,0,.5];assert.deepEqual(pickFishingCatch('lake',null,()=>sequence.shift(),0),{fishId:'carp',weight:1.5});
+assert.equal(pickFishingCatch('missing'),null);
+const summary=summarizeRuns([poor,gifts]);assert.equal(summary.reached,1);assert.equal(summary.reachedFraction,.5);assert.equal(summary.activeMinutes.p50,0);
+assert.equal(percentile([], .5),null);
+for(const invalid of [{sessionMinutes:0},{sessionMinutes:1.5},{sessions:0},{profile:'missing'},{baitId:'bad'},{policy:{...CURRENT_POLICY,landPrice:-1}}])assert.throws(()=>simulatePreLand(invalid));
+console.log('PASS economy simulation: deterministic server sampling/fights/sales, conserved integer cash/inventory, one-time rewards, attendance, bait packets, travel, expiry, no offline income or unpaid sales, censored summaries and trial isolation.');

@@ -1,3 +1,4 @@
+import {seaWaterColor} from '../shared/waterPalette.js';
 import assert from 'node:assert/strict';
 import { NullEngine } from '@babylonjs/core/Engines/nullEngine.js';
 import { Scene } from '@babylonjs/core/scene.js';
@@ -21,14 +22,19 @@ assert.equal(collision.isColliding(0,370),true);
 assert.equal(getTerrainHeight(-63,363),BEACH_CONFIG.fishingPier.deckY);
 assert.equal(getTerrainHeight(0,328),.21);
 const engine=new NullEngine(); const scene=new Scene(engine);
-const ocean=createSeasideOcean(scene); assert.equal(ocean.shoreZ(55),beachShoreZ(55));
+const ocean=createSeasideOcean(scene);assert.equal(scene.getMeshByName('sea-shore-rim'),null);assert.equal(scene.meshes.some(m=>m.name.startsWith('sea-shore-foam')),false); assert.equal(ocean.shoreZ(55),beachShoreZ(55));
 for(const side of [-1,1]) for(const kind of ['wet','dry','path']) {
   const mesh=scene.getMeshByName(`beach-side-${kind}-${side}`);
   assert.ok(mesh,`Both bay edges need ${kind}`);
   assert.ok(mesh.getTotalVertices()>100);
   assert.equal(mesh.getVerticesData('normal')[1],1,'Bank surface must face upward');
 }
-for(const name of ['seaside-wet-sand','sea-shallow-water-mat','sea-mid-water-mat']) assert.equal(scene.getMaterialByName(name).alpha,1);
+for(const name of ['sea-shallow-water','sea-mid-water','sea-fog-horizon']){
+ const mesh=scene.getMeshByName(name),positions=mesh.getVerticesData('position'),colors=mesh.getVerticesData('color');
+ assert.equal(colors.length,mesh.getTotalVertices()*4);
+ for(let i=0;i<positions.length/3;i++){const expected=seaWaterColor(positions[i*3],positions[i*3+2]);for(let j=0;j<3;j++)assert.ok(Math.abs(colors[i*4+j]-expected[j])<1e-6,'shared depth colors stay continuous at band joins');}
+}
+for(const name of ['seaside-wet-sand' ,'sea-shallow-water-mat','sea-mid-water-mat']) assert.equal(scene.getMaterialByName(name).alpha,1);
 scene.activeCamera={target:new Vector3(0,0,350)}; scene.onBeforeRenderObservable.notifyObservers(scene); scene.activeCamera=null;
 for(const mesh of ocean.meshes.filter(m=>m.name.startsWith('sea-shore-foam'))) assert.equal(mesh.scaling.z,1);
 const beach=createCozyBeach(scene,null); const streamer=getWorldChunkStreamer(scene);

@@ -1,0 +1,27 @@
+{
+  "base": "Use case: stylized-concept. Asset type: ONE transparent production HUD inventory icon for a bright cozy 3D farming social mobile game. Reference image is STYLE AND PALETTE ONLY; replace its backpack subject with the requested subject. Match its simple chunky rounded geometry, matte painted game material, soft low-detail shading and cheerful colors. Coral orange #F58A50, turquoise #49BCD0, warm ivory #FFF4DC, minimal dark navy #25475B accents; warm yellow only where needed for currency/face. Avoid olive, khaki, mustard, dull brown, metallic gold, glossy highlights, luxury product styling, realistic textures, stitching, thin details and web app icon appearance. Front three-quarter orthographic view with mild depth. Only a few broad modeled parts. Subject must read instantly at 32-40 pixels. Center full object with 12% clear margin on every edge. Soft bright upper-left light, subtle object shading, no external cast shadow. Actual transparent background. No surrounding tile, circle, pedestal, text, labels, logo, watermark or unrelated objects. Subject: ",
+  "subjects": {
+    "wardrobe": "One simple turquoise short-sleeve T-shirt with ivory collar and tiny coral hem. No folds or fabric weave.",
+    "camera": "One simple turquoise compact camera with coral grip, ivory lens surround and single dark navy lens. Only five large parts, no buttons or tiny controls.",
+    "phone": "One simple ivory smartphone with turquoise frame, dark navy screen and exactly four large coral/turquoise square app blocks. No text.",
+    "coin": "One simple thick warm yellow coin with a large embossed five-point star. Matte painted yellow, not metallic gold, no rim lettering.",
+    "gem": "One simple cyan diamond, only a few broad flat facets, soft matte shading. No gold setting, sparkles or glass reflections.",
+    "quest": "One simple ivory wooden clipboard with coral top clip and three large turquoise checkmarks. No writing or tiny details.",
+    "bike": "One chunky toy-like coral bicycle, turquoise seat, cream frame details, two thick dark navy tires. Simplified game prop, no spokes or basket clutter.",
+    "chat": "One simple ivory rounded speech bubble with exactly three large turquoise dots. Slight chunky 3D depth, no metallic border.",
+    "emote": "One happy round warm yellow face with two dark navy oval eyes and a simple curved smile. Matte game prop, not glossy emoji.",
+    "land": "One tiny cream farm cottage with coral pitched roof and turquoise door, on one simple green rectangular grass base. No trees, windows or added ornaments.",
+    "sprint": "One chunky turquoise running shoe, ivory sole and coral heel, pointing right, accompanied by two short thick coral speed marks. No laces or text.",
+    "jump": "One chunky turquoise shoe with ivory sole and coral heel, pointing right, with one thick turquoise upward arrow above it. No laces or text.",
+    "hand": "One friendly simplified ivory open hand with turquoise wrist cuff. Five fingers with anatomically correct count, rounded shapes and clear gesture, no fingernails.",
+    "fish": "One plump turquoise fish with coral tail and fins and one dark navy dot eye. Only broad shapes, no scales.",
+    "gate": "One small simple cream wooden farm gate with two coral posts and turquoise cross rails. No wood grain, no foliage.",
+    "basket": "One chunky coral harvest basket with ivory handle and two large turquoise leaves peeking over its rim. Smooth simplified shape, no woven texture or fruit clutter.",
+    "seeds": "One simple ivory seed packet with coral folded top and one large turquoise two-leaf sprout emblem. No writing.",
+    "map": "One simple folded ivory paper map with broad turquoise river and one coral location pin. No lettering, no roads or detailed markings.",
+    "shop": "One simple tiny cream farm market stall with coral and ivory striped canopy, turquoise counter and a single large seed sack. No lettering, no clutter.",
+    "settings": "One chunky turquoise six-tooth gear with ivory center and a small coral hub. Rounded matte toy-like shape, no metallic finish."
+  },
+  "tool": "built-in image_gen",
+  "transparent_background": true
+}

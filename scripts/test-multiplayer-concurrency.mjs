@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:net';
 import { MongoClient } from 'mongodb';
 import { WebSocket } from 'ws';
+import { ECONOMY_REWARD_CONFIG } from '../shared/economyRewardConfig.js';
 import { TOWN_SPAWN } from '../shared/playerSpawn.js';
 
 const databaseName = `farm_multiplayer_test_${randomUUID().replaceAll('-', '')}`;
@@ -81,15 +82,30 @@ try {
   const rewardRequest={type:'game_action',requestId:randomUUID(),action:'claim_daily_reward',payload:{coins:999999}};
   players[0].socket.send(JSON.stringify(rewardRequest));
   const reward=await players[0].waitFor(message=>message.type==='account_state'&&message.requestId===rewardRequest.requestId);
-  assert.equal(reward.result.communityReward.coins,200);
-  assert.equal(reward.progress.coins,380);
+  assert.equal(reward.result.communityReward.coins,100);
+  assert.equal(reward.progress.coins,ECONOMY_REWARD_CONFIG.initial.coins + 100);
   players[0].socket.send(JSON.stringify({...rewardRequest,requestId:randomUUID()}));
   await players[0].waitFor(message=>message.type==='action_error'&&message.message.includes('đã nhận thưởng'));
   const persisted=await mongo.db(databaseName).collection('players').findOne({playerId:players[0].playerId});
-  assert.equal(persisted.progress.coins,380,'network retries cannot duplicate daily reward');
+  assert.equal(persisted.progress.coins,ECONOMY_REWARD_CONFIG.initial.coins + 100,'network retries cannot duplicate daily reward');
   await Promise.all(players.map(player => player.waitFor(message =>
     message.type === 'world_state' && message.players.length === 8 &&
     new Set(message.players.map(other => other.playerId)).size === 8)));
+
+  const sessionTokens = await Promise.all(players.map(async player => {
+    const account = await player.waitFor(message => message.type === 'account_state' && message.sessionToken);
+    return account.sessionToken;
+  }));
+  for (const receiver of players) {
+    const publicMessages = receiver.messages.filter(message => message.type === 'world_state');
+    assert.ok(publicMessages.length > 0);
+    for (const message of publicMessages) {
+      const wire = JSON.stringify(message);
+      assert.ok(!wire.includes('sessionToken'), 'world_state contains no authentication field');
+      for (const token of sessionTokens) assert.ok(!wire.includes(token), 'no viewer can receive another session credential');
+      assert.ok(message.players.every(player => !Object.hasOwn(player, 'messages') && !Object.hasOwn(player, 'telemetrySessionId')));
+    }
+  }
 
   const start = Date.now();
   await Promise.all(players.map((player, index) => {
@@ -107,7 +123,17 @@ try {
   await players[0].waitFor(message => message.type === 'world_state' && message.players.length === 7);
   const health = await fetch(`http://127.0.0.1:${port}/health`).then(response => response.json());
   assert.equal(health.players, 7);
-  console.log(`PASS: 8 clients connected together; 8-player presence; parallel movement ACK ${moveAckMs}ms; movement sync; disconnect leaves 7 clients.`);
+  players[6].socket.send(JSON.stringify({ type: 'account_delete', confirm: 'DELETE_ACCOUNT' }));
+  await players[6].waitFor(message => message.type === 'google_auth_result' && message.status === 'deleted');
+  await players[0].waitFor(message => message.type === 'world_state' && message.players.length === 6);
+  assert.equal(await mongo.db(databaseName).collection('players').countDocuments({ playerId: players[6].playerId, deletedAt: { $exists: false } }), 0, 'private token store still authorizes owner account deletion');
+  await mongo.db(databaseName).collection('players').updateOne({ playerId: players[5].playerId }, { $set: { googleSub: 'test-only-google-sub' } });
+  players[5].socket.send(JSON.stringify({ type: 'google_logout' }));
+  await players[5].waitFor(message => message.type === 'google_auth_result' && message.status === 'logged-out');
+  const loggedOut = await mongo.db(databaseName).collection('players').findOne({ playerId: players[5].playerId });
+  assert.equal(loggedOut.sessionTokenHash, undefined, 'private token store still supports session revocation');
+
+  console.log(`PASS: 8 clients connected together; 8-player presence without session credential disclosure; parallel movement ACK ${moveAckMs}ms; movement sync; disconnect leaves 7 clients.`);
 } finally {
   sockets.forEach(socket => socket.terminate());
   if (server && server.exitCode === null) {

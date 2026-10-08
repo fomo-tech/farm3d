@@ -1,19 +1,615 @@
-/* Character selection screen: scene-first composition, not a web form card. */
-.arrival-screen.pt-onboarding-backdrop { background:linear-gradient(160deg,#173d59,#327d9e 60%,#84c8c5); padding:20px; }
-.arrival-screen .pt-studio-card { width:980px; background:#12334fe8; border:2px solid #6ba0b5; border-radius:22px; box-shadow:0 8px 0 #0c263c,0 22px 60px #061c3b55; color:#fff; }
-.arrival-screen .pt-studio-header h2 { color:#fff; font-size:27px; }
-.arrival-screen .pt-studio-header p { color:#c8dfeb; font-size:13px; }
-.arrival-screen .pt-studio-badge { color:#9bdded; letter-spacing:1px; }
-.arrival-screen .pt-studio-body { grid-template-columns:1.2fr 1fr; gap:24px; }
-.arrival-screen .pt-studio-podium-wrap { min-height:420px; background:radial-gradient(ellipse at 50% 70%,#8bd0d9,#397c99 58%,#245772); border-radius:16px; }
-.arrival-screen .pt-studio-podium-wrap:before { content:'NHÂN VẬT CỦA BẠN'; color:#dbf3ff; letter-spacing:1px; }
-.arrival-screen .arrival-avatar-canvas { height:350px; }
-.arrival-screen .pt-studio-podium-wrap:after { background:#d9f5f5; box-shadow:0 8px 0 #377f99,0 14px 30px #122f5140; }
-.arrival-screen .pt-studio-controls { gap:14px; }
-.arrival-screen .pt-input-block label { color:#c8dfeb; letter-spacing:.4px; }
-.arrival-screen .pt-studio-tab-content { min-height:135px; }
-.arrival-screen .pt-options-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-.arrival-screen .pt-option-card { min-height:90px; border-radius:12px; }
-.arrival-screen .pt-studio-submit-btn { background:#f5ba3a; color:#293447; border:2px solid #ffdd8a; border-radius:14px; box-shadow:0 5px 0 #a77115; font-weight:900; }
-.arrival-screen .arrival-rotate-hint { color:#e2f3f7; }
-@media(max-width:700px) { .arrival-screen .pt-studio-body { grid-template-columns:1fr; } .arrival-screen .pt-studio-podium-wrap { min-height:240px; } .arrival-screen .arrival-avatar-canvas { height:230px; } }
+/* ==========================================================================
+   AUTHENTIC PLAY TOGETHER CHARACTER CREATION THEME (CANDY PASTEL 3D)
+   Light, cheerful, high-key pastel boutique palette — zero dark corporate forms.
+   ========================================================================== */
+
+.arrival-screen.pt-onboarding-backdrop {
+  background: radial-gradient(circle at 50% 20%, #fef9c3 0%, #e0f2fe 55%, #bfdbfe 100%) !important;
+  padding: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.arrival-screen .pt-studio-card {
+  width: 960px !important;
+  max-width: 96vw !important;
+  max-height: calc(100dvh - 36px) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 4px solid #ffffff !important;
+  border-radius: 30px !important;
+  box-shadow: 0 16px 0 #cbd5e1, 0 30px 70px rgba(37, 99, 235, 0.12) !important;
+  color: #1e293b !important;
+  padding: 24px 28px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  box-sizing: border-box !important;
+}
+
+/* Header */
+.arrival-screen .pt-studio-header {
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.arrival-screen .pt-studio-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: linear-gradient(135deg, #fef08a 0%, #fed7aa 100%) !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 999px !important;
+  padding: 4px 16px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.5px !important;
+  color: #92400e !important;
+  box-shadow: 0 3px 0 #fde047 !important;
+}
+
+.arrival-screen .pt-studio-header h2 {
+  font-size: 28px !important;
+  font-weight: 900 !important;
+  color: #1e3a5f !important;
+  margin: 4px 0 0 0 !important;
+  letter-spacing: -0.5px !important;
+}
+
+.arrival-screen .pt-studio-header p {
+  font-size: 13px !important;
+  color: #64748b !important;
+  margin: 0 !important;
+  font-weight: 600 !important;
+}
+
+.arrival-screen .pt-creation-error-banner {
+  background: #fef2f2 !important;
+  border: 2px solid #fca5a5 !important;
+  color: #b91c1c !important;
+  padding: 8px 16px !important;
+  border-radius: 14px !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  text-align: center !important;
+}
+
+/* Body Layout */
+.arrival-screen .pt-studio-body {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 0.95fr) minmax(340px, 1.05fr) !important;
+  gap: 24px !important;
+  align-items: stretch !important;
+  min-height: 0 !important;
+  flex: 1 !important;
+}
+
+/* 3D Stage Podium Wrap */
+.arrival-screen .pt-studio-podium-wrap {
+  position: relative !important;
+  min-height: 400px !important;
+  border-radius: 24px !important;
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f0fdf4 40%, #cbf3dd 100%) !important;
+  border: 3px solid #ffffff !important;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(16, 185, 129, 0.08) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  padding: 16px !important;
+  overflow: hidden !important;
+}
+
+.arrival-screen .pt-studio-podium-wrap:before {
+  content: 'KAIA STUDIO' !important;
+  position: absolute !important;
+  top: 16px !important;
+  left: 20px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  letter-spacing: 2px !important;
+  color: #10b981 !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  padding: 3px 10px !important;
+  border-radius: 999px !important;
+}
+
+.arrival-screen .arrival-avatar-canvas {
+  width: 100% !important;
+  height: 330px !important;
+  display: block !important;
+  touch-action: none !important;
+  outline: none !important;
+  position: relative !important;
+  z-index: 2 !important;
+  cursor: grab !important;
+}
+
+.arrival-screen .arrival-avatar-canvas:active {
+  cursor: grabbing !important;
+}
+
+/* Soft 3D base pedestal under character's feet */
+.arrival-screen .pt-studio-podium-wrap:after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: 82px !important;
+  width: 68% !important;
+  height: 38px !important;
+  background: #ffffff !important;
+  border-radius: 50% !important;
+  box-shadow: 0 10px 0 #a7f3d0, 0 18px 28px rgba(16, 185, 129, 0.22) !important;
+  border: 3px solid #ffffff !important;
+}
+
+.arrival-screen .pt-podium-name-tag {
+  z-index: 3 !important;
+  margin-top: 6px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 999px !important;
+  padding: 5px 24px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.arrival-screen .pt-tag-role {
+  color: #059669 !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 1.2px !important;
+}
+
+.arrival-screen .pt-tag-name {
+  color: #1e293b !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+}
+
+.arrival-screen .arrival-rotate-hint {
+  z-index: 3 !important;
+  color: #059669 !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  margin: 4px 0 0 0 !important;
+}
+
+/* Controls Column */
+.arrival-screen .pt-studio-controls {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+}
+
+/* Name input block */
+.arrival-screen .pt-input-block {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.arrival-screen .pt-input-block label {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 1px !important;
+  color: #64748b !important;
+}
+
+.arrival-screen .pt-input-with-dice {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.arrival-screen .pt-input-with-dice input {
+  flex: 1 !important;
+  height: 48px !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  padding: 0 16px !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: #1e293b !important;
+  background: #f8fafc !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.18s ease, background 0.18s ease !important;
+}
+
+.arrival-screen .pt-input-with-dice input:focus {
+  border-color: #3b82f6 !important;
+  background: #ffffff !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18) !important;
+}
+
+.arrival-screen .pt-dice-btn {
+  width: 48px !important;
+  height: 48px !important;
+  flex: 0 0 48px !important;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 0 #d97706, 0 6px 12px rgba(245, 158, 11, 0.3) !important;
+  display: grid !important;
+  place-items: center !important;
+  cursor: pointer !important;
+  transition: transform 0.12s ease, box-shadow 0.12s ease !important;
+}
+
+.arrival-screen .pt-dice-btn:hover {
+  transform: translateY(-2px) scale(1.04) !important;
+  box-shadow: 0 6px 0 #d97706, 0 8px 16px rgba(245, 158, 11, 0.4) !important;
+}
+
+.arrival-screen .pt-dice-btn:active,
+.arrival-screen .pt-dice-btn.is-rolling {
+  transform: translateY(3px) scale(0.96) !important;
+  box-shadow: 0 1px 0 #d97706 !important;
+}
+
+/* Gender selector */
+.arrival-screen .pt-gender-select {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+}
+
+.arrival-screen .pt-gender-select label {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 1px !important;
+  color: #64748b !important;
+}
+
+.arrival-screen .pt-gender-buttons {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+}
+
+.arrival-screen .pt-gender-btn {
+  height: 46px !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  background: #f8fafc !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.16s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  box-shadow: 0 3px 0 #cbd5e1 !important;
+}
+
+.arrival-screen .pt-gender-label {
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  letter-spacing: 1px !important;
+  color: #475569 !important;
+}
+
+.arrival-screen .pt-gender-btn:hover {
+  background: #f1f5f9 !important;
+  transform: translateY(-1px) !important;
+}
+
+.arrival-screen .pt-gender-female.selected {
+  border-color: #f43f5e !important;
+  background: #fff1f2 !important;
+  box-shadow: 0 4px 0 #fda4af, 0 6px 14px rgba(244, 63, 94, 0.18) !important;
+  transform: translateY(-2px) !important;
+}
+
+.arrival-screen .pt-gender-female.selected .pt-gender-label {
+  color: #e11d48 !important;
+}
+
+.arrival-screen .pt-gender-male.selected {
+  border-color: #3b82f6 !important;
+  background: #eff6ff !important;
+  box-shadow: 0 4px 0 #93c5fd, 0 6px 14px rgba(59, 130, 246, 0.18) !important;
+  transform: translateY(-2px) !important;
+}
+
+.arrival-screen .pt-gender-male.selected .pt-gender-label {
+  color: #1d4ed8 !important;
+}
+
+.arrival-screen .pt-check-badge {
+  color: #10b981 !important;
+  display: inline-flex !important;
+}
+
+/* Category Tabs */
+.arrival-screen .pt-studio-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 6px !important;
+  background: #f1f5f9 !important;
+  padding: 5px !important;
+  border-radius: 16px !important;
+}
+
+.arrival-screen .pt-tab-btn {
+  height: 40px !important;
+  border: none !important;
+  border-radius: 12px !important;
+  background: transparent !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: #64748b !important;
+  cursor: pointer !important;
+  transition: all 0.14s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.arrival-screen .pt-tab-btn:hover {
+  color: #1e293b !important;
+}
+
+.arrival-screen .pt-tab-btn.active {
+  background: #ffffff !important;
+  color: #2563eb !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08) !important;
+  font-weight: 900 !important;
+}
+
+/* Tab Content Box */
+.arrival-screen .pt-studio-tab-content {
+  min-height: 140px !important;
+  max-height: 180px !important;
+  overflow-y: auto !important;
+  padding: 4px !important;
+  box-sizing: border-box !important;
+}
+
+/* Starter Shirt Colors Grid */
+.arrival-screen .pt-shirt-colors-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 8px !important;
+}
+
+.arrival-screen .pt-shirt-card {
+  position: relative !important;
+  padding: 10px 6px !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  box-shadow: 0 3px 0 #cbd5e1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.arrival-screen .pt-shirt-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 5px 0 #cbd5e1 !important;
+}
+
+.arrival-screen .pt-shirt-card.selected {
+  border-color: #f59e0b !important;
+  background: #fffbeb !important;
+  box-shadow: 0 4px 0 #fcd34d, 0 8px 16px rgba(245, 158, 11, 0.18) !important;
+  transform: translateY(-2px) !important;
+}
+
+.arrival-screen .pt-shirt-swatch {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18) !important;
+}
+
+.arrival-screen .pt-shirt-name {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: #334155 !important;
+  text-align: center !important;
+}
+
+.arrival-screen .pt-card-check {
+  position: absolute !important;
+  top: 5px !important;
+  right: 5px !important;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  color: #ffffff !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+/* Hair Grid */
+.arrival-screen .pt-hairs-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 8px !important;
+}
+
+.arrival-screen .pt-hair-card {
+  position: relative !important;
+  height: 60px !important;
+  padding: 8px 12px !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  box-shadow: 0 3px 0 #cbd5e1 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  cursor: pointer !important;
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.arrival-screen .pt-hair-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 5px 0 #cbd5e1 !important;
+}
+
+.arrival-screen .pt-hair-card.selected {
+  border-color: #3b82f6 !important;
+  background: #eff6ff !important;
+  box-shadow: 0 4px 0 #93c5fd, 0 8px 16px rgba(59, 130, 246, 0.18) !important;
+  transform: translateY(-2px) !important;
+}
+
+.arrival-screen .pt-hair-preview-dot {
+  width: 24px !important;
+  height: 24px !important;
+  flex: 0 0 24px !important;
+  border-radius: 50% !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}
+
+.arrival-screen .pt-hair-info {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 2px !important;
+}
+
+.arrival-screen .pt-hair-info strong {
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  color: #1e293b !important;
+}
+
+.arrival-screen .pt-hair-info span {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: #64748b !important;
+}
+
+/* Color section */
+.arrival-screen .pt-colors-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.arrival-screen .pt-color-section {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+
+.arrival-screen .pt-section-title {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: #64748b !important;
+  letter-spacing: 0.8px !important;
+}
+
+.arrival-screen .pt-colors-grid {
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.arrival-screen .pt-color-bubble {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 50% !important;
+  border: 3px solid #ffffff !important;
+  box-shadow: 0 3px 0 #cbd5e1, 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  cursor: pointer !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #ffffff !important;
+  transition: transform 0.14s ease, box-shadow 0.14s ease !important;
+}
+
+.arrival-screen .pt-color-bubble:hover {
+  transform: translateY(-2px) scale(1.08) !important;
+}
+
+.arrival-screen .pt-color-bubble.selected {
+  transform: translateY(-2px) scale(1.12) !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 4px 0 #93c5fd, 0 8px 16px rgba(59, 130, 246, 0.25) !important;
+}
+
+/* Big 3D CTA Button (VÀO THỊ TRẤN NGAY) */
+.arrival-screen .pt-studio-submit-btn {
+  margin-top: auto !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  border-radius: 20px !important;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  color: #451a03 !important;
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.5px !important;
+  border: 3px solid #ffffff !important;
+  box-shadow: 0 6px 0 #b45309, 0 14px 28px rgba(245, 158, 11, 0.35) !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease !important;
+}
+
+.arrival-screen .pt-studio-submit-btn:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 8px 0 #b45309, 0 18px 32px rgba(245, 158, 11, 0.45) !important;
+}
+
+.arrival-screen .pt-studio-submit-btn:active {
+  transform: translateY(4px) scale(0.98) !important;
+  box-shadow: 0 2px 0 #b45309 !important;
+}
+
+.arrival-screen .pt-studio-submit-btn:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 760px) {
+  .arrival-screen.pt-onboarding-backdrop {
+    padding: 10px !important;
+  }
+  .arrival-screen .pt-studio-card {
+    padding: 16px !important;
+    border-radius: 24px !important;
+    gap: 12px !important;
+  }
+  .arrival-screen .pt-studio-header h2 {
+    font-size: 22px !important;
+  }
+  .arrival-screen .pt-studio-body {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .arrival-screen .pt-studio-podium-wrap {
+    min-height: 240px !important;
+    height: 240px !important;
+    padding: 8px !important;
+  }
+  .arrival-screen .arrival-avatar-canvas {
+    height: 200px !important;
+  }
+  .arrival-screen .pt-studio-podium-wrap:after {
+    bottom: 60px !important;
+  }
+  .arrival-screen .pt-outfits-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}

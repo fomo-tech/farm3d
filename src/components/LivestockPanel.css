@@ -1,0 +1,43 @@
+.game-shell .livestock-game-panel {width:min(700px,calc(100vw - 24px));background:#fff9ed;}
+.game-shell .livestock-game-panel>header {background:#337c68;padding:18px 22px;}
+.livestock-panel-content {padding:18px;display:flex;flex-direction:column;gap:14px;color:#31554a;}
+.livestock-wallet {display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#7a8b75;}
+.livestock-wallet b {display:flex;align-items:center;gap:6px;background:#fff0c6;padding:6px 12px;border-radius:20px;color:#795527;}
+.livestock-species-tabs {display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.livestock-species-tabs button {position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:58px;padding:8px 4px;border:2px solid #e0e6d3;border-radius:16px;background:#f1f4e7;color:#65816e;font-weight:900;cursor:pointer;}
+.livestock-species-tabs button[aria-pressed=true] {background:#337c68;color:#fff9ed;border-color:#337c68;box-shadow:0 3px 0 #235c50;}
+.livestock-species-tabs small {font-size:10px;opacity:.8;}
+.livestock-species-tabs i {position:absolute;top:-3px;right:-2px;width:10px;height:10px;border-radius:50%;background:#f5b53e;border:2px solid white;}
+.livestock-pen-overview {display:flex;align-items:center;gap:16px;padding:16px;background:#f3eedc;border-radius:20px;border:1px solid #e8dfc4;}
+.livestock-pen-overview small {font-size:10px;letter-spacing:.07em;color:#8c8061;font-weight:900;}
+.livestock-pen-overview h3 {margin:4px 0;font-size:22px;}
+.game-shell .livestock-pen-overview p {margin:0;font-size:12px;color:#7e896d;}
+.livestock-group-actions {display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.livestock-group-actions button,.livestock-empty button {display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;min-height:48px;padding:10px 12px;background:#f8d77d;border:0;border-radius:14px;color:#785622;font-weight:900;box-shadow:0 3px 0 #d9b05b;cursor:pointer;}
+.livestock-group-actions button:nth-child(2) {background:#388e76;color:white;box-shadow:0 3px 0 #26634f;}
+.livestock-animal-list {display:grid;gap:10px;}
+.livestock-animal-list article {padding:14px;border-radius:18px;border:2px solid #e4e8d8;background:#fffef9;}
+.livestock-animal-list article.focused {border-color:#e1b14c;box-shadow:0 0 0 2px #fff0c4;}
+.livestock-animal-heading,.livestock-animal-action {display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.livestock-animal-heading span {font-size:11px;border-radius:12px;background:#edf2e3;padding:5px 9px;color:#6b8062;font-weight:800;}
+.hungry .livestock-animal-heading span {background:#fff0d9;color:#ac7333;}
+.ready .livestock-animal-heading span {background:#dff3dc;color:#337d54;}
+.livestock-growth-track {height:8px;background:#eaf0e0;border-radius:6px;overflow:hidden;margin:12px 0;}
+.livestock-growth-track i {display:block;height:100%;background:#7bab74;border-radius:6px;transition:width 1s linear;}
+.livestock-animal-action small {font-size:12px;color:#869078;}
+.livestock-animal-action button,.livestock-products button {min-height:42px;border:0;border-radius:12px;background:#e5f1df;color:#397054;padding:8px 12px;font-weight:900;cursor:pointer;}
+.livestock-buy-animal {display:flex;justify-content:space-between;gap:8px;align-items:center;min-height:50px;border:2px dashed #afc69f;border-radius:15px;background:#f1f7e9;color:#52764d;padding:12px;font-weight:800;cursor:pointer;}
+.livestock-panel-content button:disabled {opacity:.45;box-shadow:none;cursor:default;}
+.livestock-empty {text-align:center;border:2px dashed #cbd9b8;border-radius:20px;padding:20px;}
+.livestock-empty h3 {font-size:18px;margin:0;}
+.livestock-empty p {font-size:13px;}
+.livestock-empty button {width:100%;}
+.livestock-products {font-size:13px;padding:12px;background:#f4f3e7;border-radius:16px;}
+.livestock-products summary {font-weight:800;cursor:pointer;}
+.livestock-products>div {display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;}
+.game-shell .livestock-warning {padding:12px;background:#fff0d5;color:#89642c;border-radius:14px;font-size:13px;}
+@media(max-width:540px){.livestock-panel-content{padding:12px;gap:12px}.livestock-species-tabs button{font-size:12px;border-radius:12px}.livestock-pen-overview{padding:12px;gap:10px}.livestock-pen-overview img{width:64px;height:64px}.livestock-pen-overview h3{font-size:19px}.livestock-group-actions button{font-size:12px}.livestock-animal-action button{font-size:12px;padding:8px}.livestock-animal-action small{max-width:48%}}
+.game-shell .livestock-game-panel .livestock-panel-content button {font-size:13px;line-height:1.3;letter-spacing:0;text-shadow:none;}
+.game-shell .livestock-game-panel .livestock-species-tabs button {min-height:60px;white-space:nowrap;}
+.game-shell .livestock-game-panel .livestock-group-actions button {min-height:54px;}
+@media(max-width:540px){.game-shell .livestock-game-panel .livestock-species-tabs button{font-size:12px}.game-shell .livestock-game-panel .livestock-group-actions button{font-size:12px}.game-shell .livestock-game-panel .livestock-animal-action button{font-size:12px;white-space:nowrap}}

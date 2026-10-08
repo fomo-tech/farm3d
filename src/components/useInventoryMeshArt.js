@@ -1,3 +1,4 @@
+import { fishForm } from '../../shared/fishAppearance.js';
 import { useEffect, useState } from 'react';
 import { FISHING_CONFIG } from '../../shared/fishingConfig.js';
 import { applyFashionInventoryItem } from './fashionInventoryMesh.js';
@@ -85,11 +86,12 @@ export function useInventoryMeshArt(isOpen, category, items) {
           if (category === 'fish') {
             const fish = FISHING_CONFIG.fish[item.itemId];
             if (!fish) throw new Error('Unknown fish species');
-            rig.finishCatch(true, fish);
+            rig.finishCatch(true, {...fish,caughtWeight:item.caughtWeight});
             caught.position.set(0, 0, 0);
             caught.rotation.set(0, 0, 0);
             camera.target.set(0, 0, 0);
-            camera.radius = 0.85;
+            camera.radius = 2.0;
+            camera.beta = fishForm(fish)==='flat'?.65:1.42;
           } else if (category === 'fashion') {
             avatar.applyCustomization(getDefaultCustomization());
             const type = applyFashionInventoryItem(avatar, item);
@@ -123,6 +125,7 @@ export function useInventoryMeshArt(isOpen, category, items) {
           scene.render();
           scene.render();
           const src = canvas.toDataURL('image/png');
+          if(imageCache.size>=128)imageCache.delete(imageCache.keys().next().value);
           imageCache.set(item.id, src);
           setImages(previous => ({ ...previous, [item.id]: src }));
         } catch (error) {

@@ -1,0 +1,437 @@
+{
+  "assumptions": "14 sessions, same production config; compare mission order, 450 new one-time rewards and daily assignment; simulated not live telemetry",
+  "rows": [
+    {
+      "mode": "crops",
+      "sessionMinutes": 15,
+      "initialCoins": 20,
+      "before": {
+        "mode": "crops",
+        "sessionMinutes": 15,
+        "initialCoins": 20,
+        "tiles": 11,
+        "coins": 13202,
+        "mainRewards": 80,
+        "dailyRewards": 1470,
+        "to8": 90.5,
+        "to12": null
+      },
+      "after": {
+        "tiles": 11,
+        "coins": 19778,
+        "mainRewards": 390,
+        "dailyRewards": 1470,
+        "to8": 83.20833333333333,
+        "to12": null
+      }
+    },
+    {
+      "mode": "crops",
+      "sessionMinutes": 15,
+      "initialCoins": 250,
+      "before": {
+        "mode": "crops",
+        "sessionMinutes": 15,
+        "initialCoins": 250,
+        "tiles": 11,
+        "coins": 17616,
+        "mainRewards": 80,
+        "dailyRewards": 1470,
+        "to8": 90.5,
+        "to12": null
+      },
+      "after": {
+        "tiles": 11,
+        "coins": 19696,
+        "mainRewards": 390,
+        "dailyRewards": 1470,
+        "to8": 83.20833333333333,
+        "to12": null
+      }
+    },
+    {
+      "mode": "crops",
+      "sessionMinutes": 30,
+      "initialCoins": 20,
+      "before": {
+        "mode": "crops",
+        "sessionMinutes": 30,
+        "initialCoins": 20,
+        "tiles": 13,
+        "coins": 39656,
+        "mainRewards": 80,
+        "dailyRewards": 1470,
+        "to8": 90.5,
+        "to12": 253.75
+      },
+      "after": {
+        "tiles": 13,
+        "coins": 41112,
+        "mainRewards": 390,
+        "dailyRewards": 1470,
+        "to8": 90.5,
+        "to12": 253.75
+      }
+    },
+    {
+      "mode": "crops",
+      "sessionMinutes": 30,
+      "initialCoins": 250,
+      "before": {
+        "mode": "crops",
+        "sessionMinutes": 30,
+        "initialCoins": 250,
+        "tiles": 13,
+        "coins": 39886,
+        "mainRewards": 80,
+        "dailyRewards": 1470,
+        "to8": 90.5,
+        "to12": 253.75
+      },
+      "after": {
+        "tiles": 13,
+        "coins": 41342,
+        "mainRewards": 390,
+        "dailyRewards": 1470,
+        "to8": 90.5,
+        "to12": 253.75
+      }
+    },
+    {
+      "mode": "crops",
+      "sessionMinutes": 60,
+      "initialCoins": 20,
+      "before": {
+        "mode": "crops",
+        "sessionMinutes": 60,
+        "initialCoins": 20,
+        "tiles": 18,
+        "coins": 38000,
+        "mainRewards": 80,
+        "dailyRewards": 1470,
+        "to8": 90.70833333333333,
+        "to12": 279.5
+      },
+      "after": {
+        "tiles": 18,
+        "coins": 38020,
+        "mainRewards": 390,
+        "dailyRewards": 1470,
+        "to8": 90.79166666666667,
+        "to12": 279.5
+      }
+    },
+    {
+      "mode": "crops",
+      "sessionMinutes": 60,
+      "initialCoins": 250,
+      "before": {
+        "mode": "crops",
+        "sessionMinutes": 60,
+        "initialCoins": 250,
+        "tiles": 18,
+        "coins": 35680,
+        "mainRewards": 80,
+        "dailyRewards": 1470,
+        "to8": 90.875,
+        "to12": 279.5
+      },
+      "after": {
+        "tiles": 18,
+        "coins": 36450,
+        "mainRewards": 390,
+        "dailyRewards": 1470,
+        "to8": 90.95833333333333,
+        "to12": 279.5
+      }
+    },
+    {
+      "mode": "orders",
+      "sessionMinutes": 15,
+      "initialCoins": 20,
+      "before": {
+        "mode": "orders",
+        "sessionMinutes": 15,
+        "initialCoins": 20,
+        "tiles": 11,
+        "coins": 5697,
+        "mainRewards": 200,
+        "dailyRewards": 1470,
+        "to8": 75.54166666666667,
+        "to12": null
+      },
+      "after": {
+        "tiles": 11,
+        "coins": 6228,
+        "mainRewards": 510,
+        "dailyRewards": 1470,
+        "to8": 73.25,
+        "to12": null
+      }
+    },
+    {
+      "mode": "orders",
+      "sessionMinutes": 15,
+      "initialCoins": 250,
+      "before": {
+        "mode": "orders",
+        "sessionMinutes": 15,
+        "initialCoins": 250,
+        "tiles": 11,
+        "coins": 5927,
+        "mainRewards": 200,
+        "dailyRewards": 1470,
+        "to8": 75.54166666666667,
+        "to12": null
+      },
+      "after": {
+        "tiles": 11,
+        "coins": 6458,
+        "mainRewards": 510,
+        "dailyRewards": 1470,
+        "to8": 73.25,
+        "to12": null
+      }
+    },
+    {
+      "mode": "orders",
+      "sessionMinutes": 30,
+      "initialCoins": 20,
+      "before": {
+        "mode": "orders",
+        "sessionMinutes": 30,
+        "initialCoins": 20,
+        "tiles": 13,
+        "coins": 44424,
+        "mainRewards": 200,
+        "dailyRewards": 1470,
+        "to8": 85.83333333333333,
+        "to12": 240.79166666666666
+      },
+      "after": {
+        "tiles": 13,
+        "coins": 48068,
+        "mainRewards": 510,
+        "dailyRewards": 1470,
+        "to8": 73.375,
+        "to12": 240.79166666666666
+      }
+    },
+    {
+      "mode": "orders",
+      "sessionMinutes": 30,
+      "initialCoins": 250,
+      "before": {
+        "mode": "orders",
+        "sessionMinutes": 30,
+        "initialCoins": 250,
+        "tiles": 13,
+        "coins": 44654,
+        "mainRewards": 200,
+        "dailyRewards": 1470,
+        "to8": 85.83333333333333,
+        "to12": 240.79166666666666
+      },
+      "after": {
+        "tiles": 13,
+        "coins": 48298,
+        "mainRewards": 510,
+        "dailyRewards": 1470,
+        "to8": 73.375,
+        "to12": 240.79166666666666
+      }
+    },
+    {
+      "mode": "orders",
+      "sessionMinutes": 60,
+      "initialCoins": 20,
+      "before": {
+        "mode": "orders",
+        "sessionMinutes": 60,
+        "initialCoins": 20,
+        "tiles": 18,
+        "coins": 52742,
+        "mainRewards": 200,
+        "dailyRewards": 1470,
+        "to8": 85.875,
+        "to12": 256.9583333333333
+      },
+      "after": {
+        "tiles": 18,
+        "coins": 50908,
+        "mainRewards": 510,
+        "dailyRewards": 1470,
+        "to8": 85.83333333333333,
+        "to12": 272.875
+      }
+    },
+    {
+      "mode": "orders",
+      "sessionMinutes": 60,
+      "initialCoins": 250,
+      "before": {
+        "mode": "orders",
+        "sessionMinutes": 60,
+        "initialCoins": 250,
+        "tiles": 18,
+        "coins": 52972,
+        "mainRewards": 200,
+        "dailyRewards": 1470,
+        "to8": 85.875,
+        "to12": 256.9583333333333
+      },
+      "after": {
+        "tiles": 18,
+        "coins": 52938,
+        "mainRewards": 510,
+        "dailyRewards": 1470,
+        "to8": 85.83333333333333,
+        "to12": 256.9583333333333
+      }
+    },
+    {
+      "mode": "combined",
+      "sessionMinutes": 15,
+      "initialCoins": 20,
+      "before": {
+        "mode": "combined",
+        "sessionMinutes": 15,
+        "initialCoins": 20,
+        "tiles": 11,
+        "coins": 16901,
+        "mainRewards": 1690,
+        "dailyRewards": 1470,
+        "to8": 60.958333333333336,
+        "to12": null
+      },
+      "after": {
+        "tiles": 11,
+        "coins": 17176,
+        "mainRewards": 1940,
+        "dailyRewards": 1470,
+        "to8": 61,
+        "to12": null
+      }
+    },
+    {
+      "mode": "combined",
+      "sessionMinutes": 15,
+      "initialCoins": 250,
+      "before": {
+        "mode": "combined",
+        "sessionMinutes": 15,
+        "initialCoins": 250,
+        "tiles": 11,
+        "coins": 17212,
+        "mainRewards": 1690,
+        "dailyRewards": 1470,
+        "to8": 60.958333333333336,
+        "to12": null
+      },
+      "after": {
+        "tiles": 11,
+        "coins": 17460,
+        "mainRewards": 1940,
+        "dailyRewards": 1470,
+        "to8": 61,
+        "to12": null
+      }
+    },
+    {
+      "mode": "combined",
+      "sessionMinutes": 30,
+      "initialCoins": 20,
+      "before": {
+        "mode": "combined",
+        "sessionMinutes": 30,
+        "initialCoins": 20,
+        "tiles": 14,
+        "coins": 9886,
+        "mainRewards": 1690,
+        "dailyRewards": 1470,
+        "to8": 60.875,
+        "to12": 227.25
+      },
+      "after": {
+        "tiles": 14,
+        "coins": 10361,
+        "mainRewards": 2140,
+        "dailyRewards": 1470,
+        "to8": 60.833333333333336,
+        "to12": 227.16666666666666
+      }
+    },
+    {
+      "mode": "combined",
+      "sessionMinutes": 30,
+      "initialCoins": 250,
+      "before": {
+        "mode": "combined",
+        "sessionMinutes": 30,
+        "initialCoins": 250,
+        "tiles": 14,
+        "coins": 9898,
+        "mainRewards": 1690,
+        "dailyRewards": 1470,
+        "to8": 60.875,
+        "to12": 227.20833333333334
+      },
+      "after": {
+        "tiles": 14,
+        "coins": 10853,
+        "mainRewards": 2140,
+        "dailyRewards": 1470,
+        "to8": 60.833333333333336,
+        "to12": 227.16666666666666
+      }
+    },
+    {
+      "mode": "combined",
+      "sessionMinutes": 60,
+      "initialCoins": 20,
+      "before": {
+        "mode": "combined",
+        "sessionMinutes": 60,
+        "initialCoins": 20,
+        "tiles": 18,
+        "coins": 111972,
+        "mainRewards": 1690,
+        "dailyRewards": 1470,
+        "to8": 76.66666666666667,
+        "to12": 241.08333333333334
+      },
+      "after": {
+        "tiles": 18,
+        "coins": 112500,
+        "mainRewards": 2140,
+        "dailyRewards": 1470,
+        "to8": 76.58333333333333,
+        "to12": 241.16666666666666
+      }
+    },
+    {
+      "mode": "combined",
+      "sessionMinutes": 60,
+      "initialCoins": 250,
+      "before": {
+        "mode": "combined",
+        "sessionMinutes": 60,
+        "initialCoins": 250,
+        "tiles": 18,
+        "coins": 112075,
+        "mainRewards": 1690,
+        "dailyRewards": 1470,
+        "to8": 76.66666666666667,
+        "to12": 241.08333333333334
+      },
+      "after": {
+        "tiles": 18,
+        "coins": 112705,
+        "mainRewards": 2140,
+        "dailyRewards": 1470,
+        "to8": 76.58333333333333,
+        "to12": 241.08333333333334
+      }
+    }
+  ]
+}

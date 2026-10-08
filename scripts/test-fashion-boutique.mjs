@@ -75,16 +75,19 @@ assert.equal(CHARACTER_RENDER_CONFIG.style, 'stylized-social-avatar');
 assert.equal(CHARACTER_RENDER_CONFIG.geometryBudget.faceTextureSize, 512);
 
 const defCustom = getDefaultCustomization();
-assert.equal(defCustom.gender, 'female');
+assert.equal(defCustom.gender, 'male');
 assert.equal(defCustom.skinTone, 'peach');
-assert.equal(defCustom.hairStyle, 'hair_classic');
+assert.equal(defCustom.hairStyle, 'hair_buzzcut');
 assert.equal(defCustom.ears, 'human');
 const normalized = normalizeCustomization({});
-assert.equal(normalized.hairStyle, 'hair_classic');
+assert.equal(normalized.hairStyle, 'hair_buzzcut');
+assert.equal(normalized.gender, 'male');
+assert.equal(normalizeCustomization({ gender: 'female', hairStyle: 'hair_chic_bob' }).hairStyle, 'hair_chic_bob');
+assert.equal(normalizeCustomization({ gender: 'female' }).gender, 'female');
 
 // Verify Server Anti-Cheat Cost Calculation
 const costResult = calculateVerifiedCustomizationCost(['hair_classic'], ['hair_twintails', 'hair_classic']);
-assert.equal(costResult.verifiedCost, 250, 'Server verifies hair_twintails cost as 250 coins');
+assert.equal(costResult.verifiedCost, HAIR_STYLES.find(item => item.id === 'hair_twintails').cost, 'Server uses the shared current hairstyle price');
 assert.deepEqual(costResult.validNewItemIds, ['hair_twintails'], 'Only unowned item is charged');
 
 // 2. Babylon.js NullEngine Tests

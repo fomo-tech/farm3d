@@ -8,6 +8,7 @@ export class GameClient {
   constructor(options = {}) {
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     this.url = options.url || import.meta.env?.VITE_MULTIPLAYER_URL || `${protocol}://${window.location.hostname}:8787`;
+    this.onFishingConditions=options.onFishingConditions||(()=>{});
     this.onState = options.onState || (() => {});
     this.onStatus = options.onStatus || (() => {});
     this.onFarmSync = options.onFarmSync || (() => {});
@@ -22,6 +23,7 @@ export class GameClient {
     this.onVillageRequired = options.onVillageRequired || (() => {});
     this.onVillageError = options.onVillageError || (() => {});
     this.onAccountState = options.onAccountState || (() => {});
+    this.onLotteryState = options.onLotteryState || (() => {});
     this.onGoogleAuthResult = options.onGoogleAuthResult || (() => {});
     this.onActionError = options.onActionError || (() => {});
     this.onSocialState = options.onSocialState || (() => {});
@@ -94,12 +96,15 @@ export class GameClient {
       try {
         const message = JSON.parse(event.data);
         messageType = message.type;
+        if(message.fishingConditions)this.onFishingConditions(message.fishingConditions,message.serverNow);
         if (message.type === 'welcome') {
           this.joined = true;
           this.retryAttempt = 0;
           this.onWelcome(message);
           this.flushPending();
           this.onStatus({ connected: true, phase: 'connected', attempt: 0, queued: this.pending.size });
+        } else if (message.type === 'lottery_state') {
+          this.onLotteryState(message.state);
         } else if (message.type === 'village_list') {
           this.onVillages(message.villages || []);
         } else if (message.type === 'village_required') {
@@ -114,6 +119,8 @@ export class GameClient {
           this.onMoveAck(message);
         } else if (message.type === 'farm_sync') {
           this.onFarmSync(message.farms);
+        } else if (message.type === 'land_market') {
+          this.onFarmScope({ lots: message.lots, marketOnly: true });
         } else if (message.type === 'farm_scope') {
           this.onFarmScope(message);
         } else if (message.type === 'farm_update') {
@@ -138,7 +145,7 @@ export class GameClient {
           this.onGoogleAuthResult(message);
         } else if (message.type === 'action_error' || message.type === 'auth_error') {
           this.acknowledge(message.requestId);
-          this.onActionError(message.message || 'Server từ chối hành động.');
+          this.onActionError(message.message || 'Chưa thể thực hiện. Hãy thử lại nhé.');
         } else if (message.type === 'pong') {
           this.lastPongAt = Date.now();
         } else if (message.type === 'social_state') {

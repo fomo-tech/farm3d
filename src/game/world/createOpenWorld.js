@@ -1,3 +1,4 @@
+import { createRegionGate } from './landmarks/createRegionGate.js';
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
@@ -175,131 +176,7 @@ function hill() {
 }
 
 function zoneGate(scene, x, z, rotation, label, color, materials, shadows) {
-  const root = new TransformNode(`zone-gate-${label}`, scene);
-  root.position.set(x, 0, z);
-  root.rotation.y = rotation;
-
-  const matStoneBase = mat(scene, `gate-stone-${label}`, '#64748b');
-  const matBeamWood = mat(scene, `gate-wood-${label}`, '#5c381e');
-
-  const halfSpan = 9.2; // Độ rộng thông thủy 18.4m, bao trọn đại lộ 8.5m và 2 bên vỉa hè an toàn tuyệt đối
-  const postHeight = 5.2; // Chiều cao 5.2m thông thoáng cho mọi phương tiện di chuyển
-
-  // 1. Hai trụ cổng gỗ phong cách đồng quê mộc mạc
-  [-halfSpan, halfSpan].forEach(px => {
-    // Chân bệ đá
-    const stoneBase = MeshBuilder.CreateCylinder(`gate-stone-base-${label}-${px}`, {
-      height: 0.7,
-      diameter: 0.85,
-      tessellation: 14,
-    }, scene);
-    stoneBase.position.set(px, 0.35, 0);
-    stoneBase.material = matStoneBase;
-    stoneBase.parent = root;
-    stoneBase.receiveShadows = true;
-    shadows?.addShadowCaster(stoneBase);
-
-    // Thân cột gỗ tròn thanh lịch
-    const post = MeshBuilder.CreateCylinder(`gate-timber-post-${label}-${px}`, {
-      height: postHeight,
-      diameter: 0.44,
-      tessellation: 16,
-    }, scene);
-    post.position.set(px, postHeight / 2 + 0.35, 0);
-    post.material = matBeamWood;
-    post.parent = root;
-    post.receiveShadows = true;
-    shadows?.addShadowCaster(post);
-
-    // Mũ chụp đá trên đầu cột
-    const cap = MeshBuilder.CreateCylinder(`gate-cap-${label}-${px}`, {
-      height: 0.16,
-      diameter: 0.65,
-      tessellation: 12,
-    }, scene);
-    cap.position.set(px, postHeight + 0.42, 0);
-    cap.material = matStoneBase;
-    cap.parent = root;
-
-    // Đèn lồng treo 3D tỏa ánh sáng ấm áp
-    spawnModelSync(scene, MODEL_PATHS.town.lantern, {
-      position: new Vector3(px + (px > 0 ? -0.5 : 0.5), postHeight - 0.2, 0),
-      scaling: new Vector3(1.0, 1.0, 1.0),
-      parent: root,
-      name: `gate-lantern-${label}-${px}`,
-    });
-
-    // Kèo chống chéo thanh nhã
-    const brace = MeshBuilder.CreateBox(`gate-brace-${label}-${px}`, { width: 0.2, height: 1.1, depth: 0.2 }, scene);
-    brace.position.set(px + (px > 0 ? -0.4 : 0.4), postHeight - 0.1, 0);
-    brace.rotation.z = px > 0 ? 0.6 : -0.6;
-    brace.material = matBeamWood;
-    brace.parent = root;
-  });
-
-  // 2. Hệ xà ngang vòm gỗ Pergola đồng quê
-  const beamY = postHeight + 0.15;
-  const mainBeam = box(scene, 'gate-main-beam', { width: halfSpan * 2 + 1.2, height: 0.32, depth: 0.48 }, new Vector3(0, beamY, 0), matBeamWood, root);
-  mainBeam.receiveShadows = true;
-  shadows?.addShadowCaster(mainBeam);
-
-  const topBeam = box(scene, 'gate-top-beam', { width: halfSpan * 2 + 1.8, height: 0.18, depth: 0.64 }, new Vector3(0, beamY + 0.25, 0), matBeamWood, root);
-  topBeam.receiveShadows = true;
-
-  // Rui mè trang trí pergola phía trên
-  for (let rx = -halfSpan + 0.4; rx <= halfSpan - 0.4; rx += 1.2) {
-    const rafter = box(scene, `gate-rafter-${rx}`, { width: 0.14, height: 0.12, depth: 0.9 }, new Vector3(rx, beamY + 0.4, 0), matBeamWood, root);
-  }
-
-  // 3. Bảng hiệu khắc tên khu vực treo bằng xích sắt
-  worldLabel(scene, label, root, color, beamY - 0.7);
-}
-
-function worldLabel(scene, text, parent, color, posY = 3.5) {
-  const signScale = scene.metadata?.mobile ? 0.5 : 1;
-  const texture = new DynamicTexture(`label-${text}`, { width: 2048 * signScale, height: 512 * signScale }, scene, true, Texture.TRILINEAR_SAMPLINGMODE);
-  texture.anisotropicFilteringLevel = 16;
-  texture.hasAlpha = true;
-  const context = texture.getContext();
-  context.scale(signScale, signScale);
-  context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = 'high';
-  context.clearRect(0, 0, 2048, 512);
-  // Khung viền gỗ hoàng gia bo góc mềm mại
-  context.fillStyle = 'rgba(28, 20, 14, 0.92)';
-  context.beginPath();
-  context.roundRect(32, 40, 1984, 432, 64);
-  context.fill();
-  context.strokeStyle = color;
-  context.lineWidth = 24;
-  context.stroke();
-  context.font = 'bold 128px "Nunito", "Segoe UI", Arial, sans-serif';
-  context.textAlign = 'center';
-  context.fillStyle = '#fffdf0';
-  context.fillText(text, 1024, 304);
-  texture.update();
-
-  const labelMaterial = new StandardMaterial(`label-material-${text}`, scene);
-  labelMaterial.diffuseTexture = texture;
-  labelMaterial.opacityTexture = texture;
-  labelMaterial.emissiveColor = Color3.FromHexString(color).scale(0.65);
-  labelMaterial.backFaceCulling = false; // Đọc được từ cả 2 phía
-
-  // Bảng chính gắn thanh nhã dưới xà ngang
-  const labelMesh = MeshBuilder.CreatePlane(`label-plane-${text}`, { width: 5.0, height: 1.25 }, scene);
-  labelMesh.position.set(0, posY, 0);
-  labelMesh.material = labelMaterial;
-  labelMesh.isPickable = false;
-  labelMesh.parent = parent;
-
-  // Dây xích sắt treo biển vào xà ngang
-  const matChain = mat(scene, `label-chain-mat-${text}`, '#475569');
-  [-1.8, 1.8].forEach(cx => {
-    const chain = MeshBuilder.CreateCylinder(`label-chain-${text}-${cx}`, { height: 0.45, diameter: 0.04 }, scene);
-    chain.position.set(cx, posY + 0.75, 0);
-    chain.material = matChain;
-    chain.parent = parent;
-  });
+ return createRegionGate(scene,{name:`zone-gate-${label}`,position:{x,z},yaw:rotation,label,accent:color,halfSpan:9.2,shadows});
 }
 
 export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
@@ -810,11 +687,11 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
     yield;
 
   // Cổng ranh giới — phân định các phân khu thế giới mở ngoại vi (cổng trung tâm đã gỡ bỏ để tầm nhìn đại lộ thông thoáng)
-  zoneGate(scene, -82, 3, Math.PI / 2, 'PHỐ CHỢ PHÍA TÂY', '#e28743', materials, shadows);
+  zoneGate(scene, -82, 3, Math.PI / 2, 'Phố Chợ Phía Tây', '#e28743', materials, shadows);
     yield;
-  zoneGate(scene, 105, 3, Math.PI / 2, 'HỒ PHA LÊ & BẾN CÂU CÁ', '#64c4df', materials, shadows);
+  zoneGate(scene, 105, 3, Math.PI / 2, 'Hồ Pha Lê', '#64c4df', materials, shadows);
     yield;
-  zoneGate(scene, 0, 292, 0, 'BIỂN BÌNH MINH', '#f0c05f', materials, shadows);
+  zoneGate(scene, 0, 292, 0, 'Biển Bình Minh', '#f0c05f', materials, shadows);
     yield;
 
   // === TỔ HỢP ĐIỀN TRANG NÔNG TRẠI GHIBLI (GHIBLI SOCIAL FARMSTEAD) ===

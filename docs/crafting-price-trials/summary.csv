@@ -1,0 +1,13 @@
+policy,id,rawValue,sell,margin,npcCost,npcMargin,wholePackMaxProfit
+current,flour,60,18,-42,84,-66,-132
+current,cheese,80,35,-45,,,
+current,jam,240,55,-185,336,-281,-281
+premium10,flour,60,66,6,84,-18,-36
+premium10,cheese,80,88,8,,,
+premium10,jam,240,264,24,336,-72,-72
+premium20,flour,60,72,12,84,-12,-24
+premium20,cheese,80,96,16,,,
+premium20,jam,240,288,48,336,-48,-48
+premium30,flour,60,78,18,84,-6,-12
+premium30,cheese,80,104,24,,,
+premium30,jam,240,312,72,336,-24,-24

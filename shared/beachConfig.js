@@ -9,9 +9,9 @@ export function validateBeachConfig(config) {
 export const BEACH_CONFIG = freeze(validateBeachConfig({
   coast: { halfWidth: 118, landZ: 318, shoreZ: 361, amplitude: 2.5, secondaryAmplitude: 1.2 },
   road: { z:310, width:6, shoulder:1.2, detourX:240, inlandStart:278 },
-  oceanBands: [[361,118],[474,176],[650,176],[970,550]],
-  sideBeach: { endZ:650, sandWidth:24, pathOffset:28, pathWidth:5 },
-  colors: { sand:'#ead6b2', wetSand:'#cfbb9b', shallow:'#38bdf8', middle:'#38bdf8', horizon:'#38bdf8', foam:'#e5f3ed',
+  oceanBands: [[361,118],[474,176],[650,238],[970,550]],
+  sideBeach: { endZ:650, pathEndZ:560, sandWidth:24, pathOffset:28, pathWidth:5 },
+  colors: { sand:'#ead6b2', wetSand:'#cfbb9b', shallow:'#86ccd0', middle:'#499fb5', horizon:'#3e8eae', foam:'#e5f3ed',
     wood:'#b79170', darkWood:'#806752', cream:'#f2e9d7', coral:'#d88a79', blue:'#83baca', palm:'#579970', trunk:'#a08465', stone:'#c3beb0', skin:'#d7b99d', ink:'#403e39',
     yellow:'#ffd13b', pink:'#ff7599', orange:'#ff8c37', red:'#eb4d4b', white:'#ffffff', lime:'#6ab04c', purple:'#9b59b6', gold:'#f1c40f', cyan:'#22d3ee' },
   streaming: { detailDistance: 165, keepDistance: 225 },
@@ -41,7 +41,8 @@ export function beachOceanHalfWidth(z) {
   const bands=BEACH_CONFIG.oceanBands;
   for(let i=1;i<bands.length;i++) if(z<=bands[i][0]) {
     const [a,wa]=bands[i-1], [b,wb]=bands[i];
-    return wa+(wb-wa)*Math.max(0,(z-a)/(b-a));
+    const t=Math.max(0,Math.min(1,(z-a)/(b-a)));
+    return wa+(wb-wa)*t*t*(3-2*t);
   }
   return bands[bands.length-1][1];
 }

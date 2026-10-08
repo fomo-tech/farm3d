@@ -1,0 +1,18 @@
+{
+  "fishing": {
+    "source": "/Users/nguyenthanhloc/.codex/generated_images/01a1123e-a9c2-76e1-af35-b9d5ab9a3b77/exec-04cca36d-9a2e-4e42-ab19-d8587d159800.png",
+    "subject": "A teal fishing rod curved diagonally, orange reel and a clearly visible red-and-cream bobber hanging on a short line. Fishing action, not a fish inventory item."
+  },
+  "gate": {
+    "source": "/Users/nguyenthanhloc/.codex/generated_images/01a1123e-a9c2-76e1-af35-b9d5ab9a3b77/exec-a73e9845-254d-4c60-8198-55951e9af9da.png",
+    "subject": "An orange wooden farm gate with two cream posts and a bold teal right-facing entry arrow. Open or enter farm gate."
+  },
+  "ticket": {
+    "source": "/Users/nguyenthanhloc/.codex/generated_images/01a1123e-a9c2-76e1-af35-b9d5ab9a3b77/exec-13115a35-32ca-4c48-a40f-4c143f78ca67.png",
+    "subject": "One orange lucky ticket with scalloped edges, cream inset and a bold gold star. Buy lucky ticket, no writing."
+  },
+  "hand": {
+    "source": "/Users/nguyenthanhloc/.codex/generated_images/01a1123e-a9c2-76e1-af35-b9d5ab9a3b77/exec-0ee26822-50f0-4a13-b89d-5eb8a0a13e66.png",
+    "subject": "A friendly cream mitten-like hand with orange cuff and index finger pointing to a small teal sparkle. Interact."
+  }
+}

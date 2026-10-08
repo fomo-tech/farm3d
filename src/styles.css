@@ -11117,7 +11117,7 @@ body .pt-start-screen-backdrop .pt-start-footer {
   box-shadow: 0 3px 0 #c7d5e4;
 }
 .pt-game-shell .venue-banner-actions button:first-child { background: #a8e1cf; color: #286b65; }
-.pt-game-shell.in-venue .pt-candy-quest-tracker { display: none; }
+.pt-game-shell.in-venue .pt-candy-quest-tracker { display: block; }
 .pt-game-shell .pt-candy-btn { filter: none; }
 
 /* Dedicated Play Together HUD styling is loaded from CompactGameHud.css */
@@ -12235,7 +12235,7 @@ html.chrome-ios-contained {
 
 /* Start screen art direction: spare game-menu composition, one primary action. */
 body .pt-start-screen-backdrop.cutecore-theme {
-  background: radial-gradient(ellipse at 50% 20%, #427f82 0%, #245567 46%, #183d50 100%) !important;
+  background: radial-gradient(ellipse at 50% 38%, #33bbf8 0%, #1093ef 52%, #0277bd 88%, #01528c 100%) !important;
 }
 body .pt-start-screen-backdrop .pt-start-center-content { gap: 32px !important; }
 body .pt-start-screen-backdrop .pt-generated-logo-lockup {
@@ -12261,4 +12261,14 @@ body .pt-start-screen-backdrop .game-auth-google-disabled { width: min(356px, 88
   body .pt-start-screen-backdrop .pt-start-center-content { gap: 10px !important; }
   body .pt-start-screen-backdrop .pt-generated-logo-lockup { width: min(260px, 52vw) !important; }
   body .pt-start-screen-backdrop .pt-ready-action-stage { gap: 8px; }
+}
+
+/* Keep Chrome iOS fixed HUD controls in the same visible rectangle as the canvas.
+   Layout containment establishes their containing block without scaling the UI. */
+html.chrome-ios-contained .game-shell {
+  contain: layout !important;
+}
+html.chrome-ios-contained .game-shell > :is(.profile-backdrop,.ranking-overlay,.pt-phone-backdrop) {
+  width: 100% !important;
+  height: 100% !important;
 }

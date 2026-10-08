@@ -1,14 +1,12 @@
-export const COMMUNITY_CODES=Object.freeze({
-  KAIAFARM:{coins:500,enabled:true,expiresAt:null},
-  PLAYTOGETHER:{coins:1000,enabled:true,expiresAt:null},
-  CHAOCUDAN:{coins:300,enabled:true,expiresAt:null},
-});
-export function applyCommunityReward(progress, action, payload = {}, now = Date.now(), codes = COMMUNITY_CODES) {
+import { COMMUNITY_CODES } from './communityCodeConfig.js';
+export { COMMUNITY_CODES } from './communityCodeConfig.js';
+import { ATTENDANCE_REWARDS } from '../shared/dailyAttendance.js';
+export function applyCommunityReward(progress, action, payload = {}, now = Date.now(), codes = COMMUNITY_CODES, attendanceRewards = ATTENDANCE_REWARDS) {
   const claims=progress.communityRewards ||= { daily:[], codes:[] };
   claims.daily ||= []; claims.codes ||= [];
   let coins, key;
   if (action==='claim_daily_reward') {
-    const attendance = getAttendanceStatus(claims.daily, now);
+    const attendance = getAttendanceStatus(claims.daily, now, attendanceRewards);
     key=attendance.today;
     if(attendance.claimedToday)throw new Error('Hôm nay bạn đã nhận thưởng (ngày UTC).');
     coins=attendance.coins;claims.daily.push(key);claims.daily=claims.daily.slice(-32);

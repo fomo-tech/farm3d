@@ -1,3 +1,7 @@
+import {createWaterfrontScenerySteps} from './createWaterfrontScenery.js';
+import {clipShoreAtWaterways} from './clipShoreAtWaterways.js';
+import {WATER_PALETTE as WATER,seaWaterColor} from '../../../../shared/waterPalette.js';
+import {createWaterNetwork,createLandscapeWaterMaterial} from './createWaterNetwork.js';
 /**
  * GrandWindingRiver.js
  * The Grand Animated Winding River & Highway Bridge Infrastructure.
@@ -43,27 +47,8 @@ import {
  * 18 Control Points defining the gentle winding trajectory of the river from North to South.
  * Strictly avoids all 288 farm parcels, town centres, and village residential spines.
  */
-export const RIVER_CONTROL_POINTS = Object.freeze([
-  { x: 220, z: -580, w: 15 }, // 0: Thượng nguồn thác tuyết Bắc
-  { x: 215, z: -480, w: 15 }, // 1: Vùng đồi giữa Phú Điền và Tân Lộc
-  { x: 210, z: -380, w: 16 }, // 2: Thung lũng đồi thông cao nguyên
-  { x: 205, z: -280, w: 16 }, // 3: Tiếp cận QL -234
-  { x: 205, z: -234, w: 16 }, // 4: [CẦU 1: QL BẮC -234]
-  { x: 206, z: -175, w: 16 }, // 5: Uốn khúc cao nguyên đồi thông
-  { x: 212, z: -90,  w: 17 }, // 6: Đồi hoa phong vàng
-  { x: 218, z: -20,  w: 18 }, // 7: Vịnh hòa lưu Đông Hồ Pha Lê (North Confluence)
-  { x: 220, z: 20,   w: 18 }, // 8: Vịnh hòa lưu Chân Thác Nước Alpine (South Confluence)
-  { x: 216, z: 55,   w: 17 }, // 9: Thung lũng tiếp cận QL 86
-  { x: 212, z: 86,   w: 17 }, // 10: [CẦU 2: ĐẠI CẦU QL 86]
-  { x: 218, z: 140,  w: 16 }, // 11: Meander phía Tây Làng Ven Sông
-  { x: 214, z: 210,  w: 16 }, // 12: [CẦU 3: CẦU VÒM GỖ VEN SÔNG]
-  { x: 218, z: 270,  w: 16 }, // 13: Vòng cung Nam Làng Ven Sông
-  { x: 218, z: 330,  w: 17 }, // Inland side of the coastal promenade
-  { x: 220, z: 406,  w: 18 },
-  { x: 220, z: 540,  w: 20 },
-  { x: 220, z: 650,  w: 20 }, // Mouth begins after the promenade ends
-  { x: 155, z: 720,  w: 24 },
-]);
+export { RIVER_CONTROL_POINTS } from '../../../../shared/riverLayout.js';
+import { RIVER_CONTROL_POINTS, sampleRiverSpline } from '../../../../shared/riverLayout.js';
 
 /**
  * Bảng tra cứu spline chính xác 100% của bờ Tây Sông Uốn Lượn tại khu vực Hồ Pha Lê & Vịnh Hòa Lưu.
@@ -84,52 +69,6 @@ export const RIVER_BRIDGES = Object.freeze(
  * Pure mathematical Catmull-Rom spline evaluator.
  * Passes precisely through all control points with continuous C1 tangents.
  */
-function catmullRom(p0, p1, p2, p3, t) {
-  const t2 = t * t;
-  const t3 = t2 * t;
-  const x = 0.5 * (
-    (2 * p1.x) +
-    (-p0.x + p2.x) * t +
-    (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
-    (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3
-  );
-  const z = 0.5 * (
-    (2 * p1.z) +
-    (-p0.z + p2.z) * t +
-    (2 * p0.z - 5 * p1.z + 4 * p2.z - p3.z) * t2 +
-    (-p0.z + 3 * p1.z - 3 * p2.z + p3.z) * t3
-  );
-  const w = p1.w + (p2.w - p1.w) * t;
-  return { x, z, w };
-}
-
-/**
- * Evaluates the full smooth river spline at N sample steps.
- */
-function sampleRiverSpline(controlPoints, totalSamples = 120) {
-  const pts = controlPoints;
-  const samples = [];
-  const numSections = pts.length - 1;
-  const samplesPerSection = Math.ceil(totalSamples / numSections);
-
-  for (let i = 0; i < numSections; i++) {
-    const p0 = i > 0 ? pts[i - 1] : pts[0];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = i < pts.length - 2 ? pts[i + 2] : p2;
-
-    for (let s = 0; s < samplesPerSection; s++) {
-      if (i === numSections - 1 && s === samplesPerSection - 1) {
-        samples.push({ x: p2.x, z: p2.z, w: p2.w });
-        break;
-      }
-      const t = s / samplesPerSection;
-      samples.push(catmullRom(p0, p1, p2, p3, t));
-    }
-  }
-
-  return samples;
-}
 
 /**
  * Creates dynamic stylized water ripple texture for flow animation.
@@ -249,26 +188,15 @@ export function* createGrandWindingRiverSteps(scene, parent = null, shadows = nu
   const ribbonUvs = [...leftUvs, ...rightUvs];
 
   // 2. Animated River Water Material (Silky Smooth Play Together Streamflow)
-  const riverTex = createRiverStreamTexture(scene, 256);
-  const matWater = createStylizedWaterMaterial(scene, 'grand-river-water-mat', riverTex, {
-    diffuseColor: Color3.White(),
-    emissiveColor: Color3.FromHexString('#00b4d8').scale(0.35),
-    specularColor: new Color3(0.5, 0.65, 0.75),
-    specularPower: 36,
-    bumpTexture: null,
-    alpha: 1.0,
-    useFresnel: false,
-  });
-  matWater.needDepthPrePass = false;
-  matWater.forceDepthWrite = false;
-  matWater.backFaceCulling = false;
-  matWater.zOffset = 0;
+  const matWater=createLandscapeWaterMaterial(scene,root,false);
+  const riverTex=matWater.diffuseTexture;
+  matWater.zOffset=0;
   yield;
 
   // 3. Create Parametric Ribbon Mesh for River Surface
   const riverMesh = MeshBuilder.CreateRibbon('grand-river-surface', {
-    pathArray: [leftPath, rightPath],
-    uvs: ribbonUvs,
+    pathArray: [leftPath, centerPath, rightPath],
+    uvs: [...leftUvs,...leftUvs.map(uv=>new Vector2(.5,uv.y)),...rightUvs],
     sideOrientation: 0, // FRONTSIDE (Upward facing only, triệt tiêu Z-fighting)
   }, scene);
 
@@ -277,6 +205,11 @@ export function* createGrandWindingRiverSteps(scene, parent = null, shadows = nu
   const riverNormals = new Float32Array(riverVertexCount * 3);
   for (let i = 1; i < riverNormals.length; i += 3) riverNormals[i] = 1;
   riverMesh.setVerticesData('normal', riverNormals);
+  const riverColors=[],riverWorldUvs=[],positions=riverMesh.getVerticesData('position');
+  const tones=[WATER.edge,WATER.body,WATER.edge];
+  for(let i=0;i<riverVertexCount;i++){const c=Color3.FromHexString(tones[Math.floor(i/leftPath.length)]);const z=positions[i*3+2],sea=seaWaterColor(positions[i*3],z),t=Math.max(0,Math.min(1,(z-540)/100));riverColors.push(c.r+(sea[0]-c.r)*t,c.g+(sea[1]-c.g)*t,c.b+(sea[2]-c.b)*t,1);riverWorldUvs.push(positions[i*3]/48,positions[i*3+2]/48);}
+  riverMesh.setVerticesData('color',riverColors);riverMesh.setVerticesData('uv',riverWorldUvs);riverMesh.useVertexColors=true;
+
 
   const riverTangents = new Float32Array(riverVertexCount * 4);
   for (let i = 0; i < riverTangents.length; i += 4) {
@@ -776,6 +709,24 @@ export function* createGrandWindingRiverSteps(scene, parent = null, shadows = nu
       });
     });
     yield;
+
+    // 7H. Đàn cò trắng đứng rỉa cánh ven bãi bồi cao nguyên & hạ lưu
+    const riverStorks = [
+      { x: 218.5, z: -375.0, rot: 0.8 },
+      { x: 202.0, z: -85.0, rot: -1.2 },
+      { x: 219.0, z: 275.0, rot: 1.5 },
+    ];
+    riverStorks.forEach((st, sIdx) => {
+      spawnModelSync(scene, MODEL_PATHS.animals.stork, {
+        name: `river-stork-${sIdx}`,
+        position: new Vector3(st.x, 0.10, st.z),
+        scaling: new Vector3(1.25, 1.25, 1.25),
+        rotation: new Vector3(0, st.rot, 0),
+        shadows,
+        parent: root,
+      });
+    });
+    yield;
   }
 
   // 8. Compute River Collision Boxes for WorldCollisionSystem (Excluding bridge corridors & Lake Confluence)
@@ -808,6 +759,13 @@ export function* createGrandWindingRiverSteps(scene, parent = null, shadows = nu
       });
     }
   }
+  yield;
+
+  for(const mesh of root.getChildMeshes()){
+    if(/^grand-river-(sand|bank|foam)-/.test(mesh.name))mesh.dispose();
+  }
+  collisionBoxes.push(...createWaterNetwork(scene,root,matWater,matSandBank,shadows));
+  yield* createWaterfrontScenerySteps(scene,root,shadows);
   yield;
 
   // 9. Vòng lặp hoạt ảnh tự vận hành (Autonomous 60 FPS Render Observer)

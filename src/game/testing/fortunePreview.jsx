@@ -1,0 +1,13 @@
+import React,{useEffect,useRef,useState} from 'react';
+import {createRoot} from 'react-dom/client';
+import {Engine} from '@babylonjs/core/Engines/engine.js';
+import {Scene} from '@babylonjs/core/scene.js';
+import {ArcRotateCamera} from '@babylonjs/core/Cameras/arcRotateCamera.js';
+import {HemisphericLight} from '@babylonjs/core/Lights/hemisphericLight.js';
+import {Vector3} from '@babylonjs/core/Maths/math.vector.js';
+import {Color4} from '@babylonjs/core/Maths/math.color.js';
+import {createFortuneNPC} from '../npc/FortuneNPC.js';
+import {FortuneLotteryModal} from '../../components/FortuneLotteryModal.jsx';
+import {lotteryDay,lotteryDrawAt} from '../../../shared/lotteryConfig.js';
+import '../../styles.css';
+function Preview(){const canvas=useRef(null),[open,setOpen]=useState(new URLSearchParams(location.search).has('ui'));useEffect(()=>{const engine=new Engine(canvas.current,true);const scene=new Scene(engine);scene.clearColor=new Color4(.72,.84,.79,1);new HemisphericLight('sun',new Vector3(-1,2,1),scene);const camera=new ArcRotateCamera('camera',1.2,1.2,7.5,new Vector3(1.1,1.6,0),scene);camera.attachControl(canvas.current,true);const npc=createFortuneNPC(scene,null,{x:0,z:0});engine.runRenderLoop(()=>{npc.update(performance.now());scene.render();});const resize=()=>engine.resize();window.addEventListener('resize',resize);return()=>{window.removeEventListener('resize',resize);scene.dispose();engine.dispose();};},[]);const now=Date.parse(`${lotteryDay()}T12:00:00+07:00`),day=lotteryDay(now);return <main style={{height:'100dvh'}}><canvas ref={canvas} style={{width:'100%',height:'100%',display:'block'}}/><button style={{position:'fixed',bottom:22,left:22,padding:12,borderRadius:14}} onClick={()=>setOpen(true)}>Xem quầy vé</button>{open&&<FortuneLotteryModal coins={1248} connected state={{serverNow:now,receivedAt:Date.now(),saleDay:day,drawAt:lotteryDrawAt(day),closesAt:lotteryDrawAt(day)-300000,tickets:[],results:[{day:lotteryDay(now-86400000),winner:'038629'}]}} onRefresh={()=>{}} onClose={()=>setOpen(false)} onBuy={()=>{}} onClaim={()=>{}}/>}</main>};const previewRoot=import.meta.hot?.data.previewRoot||createRoot(document.getElementById('root'));if(import.meta.hot)import.meta.hot.data.previewRoot=previewRoot;previewRoot.render(<Preview/>);

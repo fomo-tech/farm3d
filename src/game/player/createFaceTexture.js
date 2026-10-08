@@ -43,15 +43,15 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
     ctx.imageSmoothingQuality = 'high';
     ctx.clearRect(0, 0, 1024, 1024);
 
-    const eyeLeftX = 340;
-    const eyeRightX = 684;
-    const eyeY = 455;
-    const eyeRadiusX = 100;
-    const eyeRadiusY = 102;
+    const eyeLeftX = 352;
+    const eyeRightX = 672;
+    const eyeY = 502;
+    const eyeRadiusX = 112;
+    const eyeRadiusY = 116;
 
     // 1. MÁ HỒNG CHIBI (BLUSH)
-    const blushY = 575;
-    const blushRadius = 95;
+    const blushY = 596;
+    const blushRadius = 90;
     if (blushType === 'peach') {
       [eyeLeftX - 60, eyeRightX + 60].forEach(bx => {
         const grad = ctx.createRadialGradient(bx, blushY, 6, bx, blushY, blushRadius);
@@ -104,14 +104,14 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
     if (noseType === 'dot') {
       ctx.fillStyle = 'rgba(126, 77, 53, 0.55)';
       ctx.beginPath();
-      ctx.ellipse(512, 552, 15, 9, 0, 0, Math.PI * 2);
+      ctx.ellipse(512, 572, 14, 8, 0, 0, Math.PI * 2);
       ctx.fill();
     } else if (noseType === 'cat_nose') {
       ctx.fillStyle = '#f43f5e';
       ctx.beginPath();
-      ctx.moveTo(503, 528);
-      ctx.lineTo(521, 528);
-      ctx.lineTo(512, 538);
+      ctx.moveTo(503, 560);
+      ctx.lineTo(521, 560);
+      ctx.lineTo(512, 570);
       ctx.closePath();
       ctx.fill();
     }
@@ -138,40 +138,40 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
     ctx.lineWidth = 16;
     ctx.lineCap = 'round';
     if (expression === 'excited') {
-      drawArc(ctx, eyeLeftX, eyeY - 105, 48, -0.22);
-      drawArc(ctx, eyeRightX, eyeY - 105, 48, 0.22);
+      drawArc(ctx, eyeLeftX, eyeY - 85, 48, -0.22);
+      drawArc(ctx, eyeRightX, eyeY - 85, 48, 0.22);
     } else if (expression === 'surprised') {
-      drawArc(ctx, eyeLeftX, eyeY - 118, 50, 0);
-      drawArc(ctx, eyeRightX, eyeY - 118, 50, 0);
+      drawArc(ctx, eyeLeftX, eyeY - 96, 50, 0);
+      drawArc(ctx, eyeRightX, eyeY - 96, 50, 0);
     } else {
       // Relaxed brows with distinct ends instead of tiny surprised arcs.
       [eyeLeftX, eyeRightX].forEach((ex, i) => {
         const side = i === 0 ? -1 : 1;
         ctx.beginPath();
-        ctx.moveTo(ex - side * 58, eyeY - 141);
-        ctx.quadraticCurveTo(ex, eyeY - 157, ex + side * 62, eyeY - 135);
+        ctx.moveTo(ex - side * 58, eyeY - 110);
+        ctx.quadraticCurveTo(ex, eyeY - 126, ex + side * 62, eyeY - 105);
         ctx.stroke();
       });
     }
 
     // 5. KHUÔN MIỆNG
     if (expression === 'surprised') {
-      drawMouthSurprised(ctx, 512, 608, smileColor);
+      drawMouthSurprised(ctx, 512, 624, smileColor);
     } else if (expression === 'excited') {
-      drawMouthExcited(ctx, 512, 608, smileColor);
+      drawMouthExcited(ctx, 512, 624, smileColor);
     } else {
       // Normal mouth style
       if (mouthType === 'beaming') {
-        drawMouthExcited(ctx, 512, 608, smileColor);
+        drawMouthExcited(ctx, 512, 624, smileColor);
       } else if (mouthType === 'cat_mouth') {
-        drawCatMouth(ctx, 512, 604, smileColor);
+        drawCatMouth(ctx, 512, 620, smileColor);
       } else if (mouthType === 'surprised_o') {
-        drawMouthSurprised(ctx, 512, 608, smileColor);
+        drawMouthSurprised(ctx, 512, 624, smileColor);
       } else if (mouthType === 'tongue') {
-        drawTongueMouth(ctx, 512, 604, smileColor);
+        drawTongueMouth(ctx, 512, 620, smileColor);
       } else {
         // Classic smile
-        drawMouthClassic(ctx, 512, 608, smileColor);
+        drawMouthClassic(ctx, 512, 624, smileColor);
       }
     }
 

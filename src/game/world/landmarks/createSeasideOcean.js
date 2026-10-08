@@ -1,3 +1,5 @@
+import {seaWaterColor} from '../../../../shared/waterPalette.js';
+import {clipShoreAtWaterways} from '../nature/clipShoreAtWaterways.js';
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
@@ -40,11 +42,12 @@ function surfaceMaterial(scene, name, hex, specular = 0.08, alpha = 1.0) {
 }
 
 function strip(scene, name, start, end, material, y, count = SAMPLES) {
-  const paths = [[], []];
-  for (let index = 0; index <= count; index += 1) {
-    const t = index / count;
-    paths[0].push(new Vector3(...start(t, y)));
-    paths[1].push(new Vector3(...end(t, y)));
+  const waterBand=['sea-shallow-water','sea-mid-water','sea-fog-horizon'].includes(name);
+  const rows=waterBand?16:1,paths=Array.from({length:rows+1},()=>[]);
+  for(let row=0;row<=rows;row++)for(let index=0;index<=count;index++){
+    const t=index/count,a=start(t,y),b=end(t,y),f=row/rows,z=a[2]+(b[2]-a[2])*f;
+    const x=waterBand?(2*t-1)*beachOceanHalfWidth(z):a[0]+(b[0]-a[0])*f;
+    paths[row].push(new Vector3(x,y,z));
   }
   const mesh = MeshBuilder.CreateRibbon(name, { pathArray: paths, sideOrientation: 2 }, scene);
   // Both ribbon sides are horizontal. Reversed path ordering must not produce
@@ -62,6 +65,12 @@ function strip(scene, name, start, end, material, y, count = SAMPLES) {
   }
   mesh.setVerticesData('tangent', tangents);
 
+  if(['sea-shallow-water','sea-mid-water','sea-fog-horizon'].includes(name)){
+    const p=mesh.getVerticesData('position'),colors=[],uvs=[];
+    for(let i=0;i<p.length;i+=3){colors.push(...seaWaterColor(p[i],p[i+2]),1);uvs.push(p[i]/48,p[i+2]/48);}
+    mesh.setVerticesData('color',colors);mesh.setVerticesData('uv',uvs);mesh.useVertexColors=true;
+  }
+  if(/^(beach-natural-shore|beach-wet-sand|beach-side-(wet|dry|path)|sea-shore-)/.test(name))clipShoreAtWaterways(mesh,'ocean');
   mesh.material = material;
   mesh.receiveShadows = false;
   mesh.isPickable = false;
@@ -125,8 +134,8 @@ export function createSeasideOcean(scene) {
   const oceanColor = Color3.FromHexString(BEACH_CONFIG.colors.shallow || '#38bdf8');
   const matOceanShallow = createStylizedWaterMaterial(scene, 'sea-shallow-water-mat', texOceanShallow, {
     diffuseColor: Color3.White(),
-    ambientColor: oceanColor.scale(0.45),
-    emissiveColor: oceanColor.scale(0.35),
+    ambientColor: new Color3(.42,.42,.42),
+    emissiveColor: Color3.FromHexString('#2b7680').scale(.16),
     specularColor: new Color3(0.12, 0.15, 0.18),
     specularPower: 32,
     alpha: 1,
@@ -134,8 +143,8 @@ export function createSeasideOcean(scene) {
 
   const matOceanMid = createStylizedWaterMaterial(scene, 'sea-mid-water-mat', texOceanMid, {
     diffuseColor: Color3.White(),
-    ambientColor: oceanColor.scale(0.45),
-    emissiveColor: oceanColor.scale(0.35),
+    ambientColor: new Color3(.42,.42,.42),
+    emissiveColor: Color3.FromHexString('#2b7680').scale(.16),
     specularColor: new Color3(0.12, 0.15, 0.18),
     specularPower: 32,
     alpha: 1,
@@ -148,8 +157,8 @@ export function createSeasideOcean(scene) {
   }
   const horizon = createStylizedWaterMaterial(scene, 'seaside-horizon', horizonTex, {
     diffuseColor: Color3.White(),
-    ambientColor: oceanColor.scale(0.45),
-    emissiveColor: oceanColor.scale(0.35),
+    ambientColor: new Color3(.42,.42,.42),
+    emissiveColor: Color3.FromHexString('#2b7680').scale(.16),
     specularColor: new Color3(0.12, 0.15, 0.18),
     specularPower: 32,
     alpha: 1,
@@ -218,13 +227,13 @@ export function createSeasideOcean(scene) {
   pathMat.ambientColor = new Color3(0.5, 0.5, 0.5);
 
   for(const sign of [-1,1]) {
-    const sideLine=offset=>(t,y)=>{
-      const z=BEACH_CONFIG.coast.landZ+t*(side.endZ-BEACH_CONFIG.coast.landZ);
+    const sideLine=(offset,endZ=side.endZ)=>(t,y)=>{
+      const z=BEACH_CONFIG.coast.landZ+t*(endZ-BEACH_CONFIG.coast.landZ);
       return [sign*(beachOceanHalfWidth(z)+offset),y,z];
     };
     meshes.push(strip(scene,`beach-side-wet-${sign}`,sideLine(0),sideLine(3.8),wetSand,.15,96));
     meshes.push(strip(scene,`beach-side-dry-${sign}`,sideLine(3.8),sideLine(side.sandWidth),sand,.145,96));
-    meshes.push(strip(scene,`beach-side-path-${sign}`,sideLine(side.pathOffset-side.pathWidth/2),sideLine(side.pathOffset+side.pathWidth/2),pathMat,.21,96));
+    meshes.push(strip(scene,`beach-side-path-${sign}`,sideLine(side.pathOffset-side.pathWidth/2,side.pathEndZ),sideLine(side.pathOffset+side.pathWidth/2,side.pathEndZ),pathMat,.21,96));
   }
 
   // Viền bọt trắng mép nước uốn lượn sắc sảo (Crisp Cel-Shaded Shoreline Rim)
@@ -234,44 +243,8 @@ export function createSeasideOcean(scene) {
   rimMat.disableLighting = true;
   rimMat.backFaceCulling = false;
   rimMat.alpha = 0.92;
-  const shoreRim = strip(
-    scene,
-    'sea-shore-rim',
-    (t, y) => {
-      const x = (2 * t - 1) * COAST_HALF_WIDTH;
-      return [x, y, seasideShoreZ(x) - 0.15];
-    },
-    (t, y) => {
-      const x = (2 * t - 1) * COAST_HALF_WIDTH;
-      return [x, y, seasideShoreZ(x) + 0.35];
-    },
-    rimMat,
-    0.164,
-    SAMPLES
-  );
-  meshes.push(shoreRim);
-
-  // Các dải viền bọt sóng mép nước êm đềm (Tĩnh, nhẹ nhàng ôm sát bờ cát)
-  const waveRibbons = [];
-  const waveWidth = 0.4;
-  for (let wave = 0; wave < BEACH_CONFIG.waves.count; wave += 1) {
-    const offset = 0.1 + wave * 0.25;
-    const line = (t, y, extra) => {
-      const x = (2 * t - 1) * 112;
-      return [x, y, seasideShoreZ(x) + offset + extra];
-    };
-    const wMesh = strip(
-      scene,
-      `sea-shore-foam-${wave}`,
-      (t, y) => line(t, y, 0),
-      (t, y) => line(t, y, waveWidth),
-      wave === 0 ? foamMat1 : foamMat2,
-      0.165 + wave * 0.001
-    );
-    wMesh.visibility = 0.65;
-    waveRibbons.push({ mesh: wMesh, baseOffset: offset, waveIdx: wave });
-    meshes.push(wMesh);
-  }
+  // Continuous white rim and parallel foam ribbons made the water look outlined.
+  const waveRibbons=[];
 
   // Các phao tiêu biển báo hiệu hàng hải dập dềnh ngoài khơi (Play Together Nautical Buoys)
   const buoy1 = createNauticalBuoy(scene, null, new Vector3(-45, 0.165, 420));

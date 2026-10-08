@@ -3,6 +3,7 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { PointerEventTypes } from '@babylonjs/core/Events/pointerEvents.js';
 
+import { LAND_EXPANSION_CONFIG, unlockedFarmTiles } from '../../../shared/landExpansionConfig.js';
 import { CROPS } from '../economy/GameProgress.js';
 import { FARM_CONFIG, farmGrowthStage } from '../../../shared/farmConfig.js';
 import { createCropMesh, spawnHarvestParticles, spawnDirtDigParticles, spawnWaterSplash } from './createCropMesh.js';
@@ -29,7 +30,7 @@ export class FarmingSystem {
     this.farmId = farmId;
     this.playerFarmId = controls.playerFarmId || farmId;
     this.getCrop = controls.getCrop || (() => 'carrot');
-    this.getUnlockedPlots = controls.getUnlockedPlots || (() => 12);
+    this.getUnlockedPlots = controls.getUnlockedPlots || (() => 0);
     this.onAction = controls.onAction || (() => true);
     this.tool = 'hand';
     this.state = {};
@@ -58,13 +59,15 @@ export class FarmingSystem {
       empty: matEmpty,
       tilled: matTilled,
       watered: matWatered,
-      locked: makeMaterial(scene, 'soil-locked', '#76bd37'), // Thảm cỏ xanh mạ non
+      locked: makeMaterial(scene, 'soil-locked', LAND_EXPANSION_CONFIG.visuals.lockedColor), // Thảm cỏ xanh mạ non
       stem: makeMaterial(scene, 'crop-stem', '#52d638'), // Thân mầm xanh non tươi rói
       ripe: Object.fromEntries(Object.values(CROPS).map(crop => [crop.id, makeMaterial(scene, `crop-${crop.id}`, crop.color)])),
     };
     tiles.forEach(tile => this.restoreTile(tile));
     this.pointerHandler = (_, pick) => {
       const picked = pick?.pickedMesh;
+      if(picked?.metadata?.type==='apple-tree'){this.controls.onAppleInteract?.(picked.metadata);return;}
+      if (picked?.metadata?.type === 'livestock-interact') { this.controls.onLivestockInteract?.(picked.metadata); return; }
       if (picked?.metadata?.type === 'farm-gate') { this.controls.onFarmGateInteract?.(picked.metadata.farmId); return; }
       if (picked?.metadata?.type === 'land-sign') { this.controls.onLandInteract?.(picked.metadata.farmId); return; }
       const npc = picked?.metadata?.npcId || picked?.parent?.metadata?.npcId;
@@ -97,8 +100,10 @@ export class FarmingSystem {
       if (cityAction === 'exit') this.controls.exitVenue?.();
       else if (cityAction) this.controls.openVenue?.(cityAction);
       else if (venue) this.controls.enterVenue?.(venue);
-      else if (tile?.metadata?.interactive) this.controls.interact?.(tile, () => this.applyTool(tile));
-      else if (pick?.pickedPoint) this.controls.move?.(pick.pickedPoint);
+      else if (tile?.metadata?.interactive) this.interactTile(tile);
+      else if (pick?.pickedPoint) {
+        this.controls.move?.(pick.pickedPoint);
+      }
     };
     // A tap/click interacts; dragging or pinching only changes the camera.
     this.pointerObserver = scene.onPointerObservable.add(info => {
@@ -106,6 +111,16 @@ export class FarmingSystem {
         this.pointerHandler(info.event, info.pickInfo);
       }
     });
+  }
+
+  interactTile(tile) {
+    this.selectedCropTile = tile;
+    const ownTile = !tile.metadata.farmId || tile.metadata.farmId === this.playerFarmId;
+    if (ownTile && !this.isTileUnlocked(tile)) {
+      this.controls.onUnlockPlot?.(this.rawTileKey(tile));
+      return;
+    }
+    this.controls.interact?.(tile, () => this.applyTool(tile));
   }
 
   key(tile) {
@@ -160,11 +175,20 @@ export class FarmingSystem {
     });
   }
 
+  isTileUnlocked(tile) {
+    const farmId = tile.metadata?.farmId || this.playerFarmId;
+    const keys = farmId === this.playerFarmId
+      ? (this.controls.getUnlockedTileKeys?.() ?? unlockedFarmTiles({ unlockedPlots: this.getUnlockedPlots() }))
+      : (this.controls.getFarmUnlockedTiles?.(farmId) || []);
+    return keys.includes(this.rawTileKey(tile));
+  }
+
   restoreTile(tile) {
+    this.selectedCropTile = tile;
     const isOwner = !tile.metadata?.farmId || tile.metadata.farmId === this.playerFarmId;
     const data = this.state[this.key(tile)] || { state: 'empty' };
     tile.metadata.state = data.state;
-    if (isOwner && tile.metadata.index >= this.getUnlockedPlots()) {
+    if (!this.isTileUnlocked(tile)) {
       tile.material = this.materials.locked;
     } else {
       tile.material = this.materials[data.state === 'watered' ? 'watered' : data.state === 'empty' ? 'empty' : 'tilled'];
@@ -234,6 +258,22 @@ export class FarmingSystem {
     return null;
   }
 
+  getSelectedCropInfo(now = Date.now()) {
+    const tile = this.selectedCropTile;
+    if (!tile || tile.isDisposed?.() || tile.isEnabled?.() === false) return null;
+    const data = this.state[this.key(tile)], crop = CROPS[data?.crop];
+    if (!crop || !['planted','watered'].includes(data.state)) return null;
+    const player = this.controls.getPlayer?.();
+    if (player?.root && Math.hypot(player.root.position.x-worldPosition(tile).x,player.root.position.z-worldPosition(tile).z) > 25) return null;
+    const growMs = data.tutorialFastGrowth ? FARM_CONFIG.care.tutorialGrowMs : crop.growMs;
+    const readyAt = data.state === 'watered' && Number.isFinite(data.wateredAt) ? data.wateredAt + growMs : null;
+    return {name:crop.name, crop:crop.id, tile, needsWater:data.state==='planted', readyAt,
+      remainingMs:readyAt===null?null:Math.max(0,readyAt-now), ready:readyAt!==null&&now>=readyAt,
+      progress:readyAt===null?0:Math.max(0,Math.min(1,(now-data.wateredAt)/growMs)),
+      isOwner:!tile.metadata?.farmId||tile.metadata.farmId===this.playerFarmId,
+      stolen:Boolean(data.stolenAmount)};
+  }
+
   applyTool(tile) {
     if (!tile?.metadata?.interactive || tile.isDisposed?.() || tile.isEnabled?.() === false) return;
     if (this.controls.getPlayer?.()?.isBusy?.()) {
@@ -247,7 +287,7 @@ export class FarmingSystem {
     const data = this.state[key] || { state: 'empty' };
     const pendingKey = `${farmId}:${rawKey}`;
     if (this.pendingActions.has(pendingKey)) {
-      this.notify?.('Đang chờ server xác nhận thao tác trước…');
+      this.notify?.('Thao tác trước chưa xong. Bạn chờ một chút nhé.');
       return;
     }
 
@@ -258,14 +298,9 @@ export class FarmingSystem {
       : data.state === 'tilled' ? 'seed'
         : data.state === 'planted' ? 'water'
           : data.state === 'watered' ? 'harvest' : null;
-    if (activeTool === 'hand' || (isOwner && expectedTool)) {
+    if (!isOwner || activeTool === 'hand' || (isOwner && expectedTool)) {
       const smart = this.determineSmartTool(tile);
       if (smart === 'inspect') {
-        const cropType = CROPS[data.crop] || CROPS.carrot;
-        const growMs = data.tutorialFastGrowth ? FARM_CONFIG.care.tutorialGrowMs : cropType.growMs;
-        const progress = Math.min(100, Math.round(((Date.now() - data.wateredAt) / growMs) * 100));
-        const seconds = Math.max(0, Math.ceil((growMs - (Date.now() - data.wateredAt)) / 1000));
-        this.notify?.(`${cropType.name} · ${progress}% · còn ${Math.floor(seconds / 60)} phút ${seconds % 60} giây`);
         return;
       }
       if (smart) {
@@ -287,7 +322,7 @@ export class FarmingSystem {
       if ((activeTool === 'hand' || activeTool === 'harvest') && data.state === 'watered' && crop && Date.now() - data.wateredAt >= crop.growMs) {
         this.pendingActions.add(pendingKey);
         this.controls.onNetworkAction?.({ farmId, tileKey: rawKey, action: 'steal_start' });
-        this.notify?.('Đang kiểm tra lượt ăn trộm với server…');
+        this.notify?.('Đang hái nông sản…');
         return;
       }
       if (activeTool === 'hoe' || activeTool === 'seed') {
@@ -306,7 +341,7 @@ export class FarmingSystem {
           farmAudio.playWater();
           this.pendingActions.add(pendingKey);
           this.controls.onNetworkAction?.({ farmId, tileKey: rawKey, action: 'water', wateredAt });
-          this.notify?.('Đang chờ server xác nhận tưới giúp hàng xóm…');
+          this.notify?.('Đang tưới giúp hàng xóm…');
         };
 
         this.runTileAction(tile, 'water', doNeighborWater);
@@ -321,8 +356,9 @@ export class FarmingSystem {
     }
 
     // 2. Nếu là đất của chính mình (Owner mode)
-    if (tile.metadata.index >= this.getUnlockedPlots()) {
-      this.notify?.(`Ô đất đang khóa · mở rộng nông trại để sử dụng`);
+    if (!this.isTileUnlocked(tile)) {
+      this.controls.onUnlockPlot?.(rawKey);
+      this.notify?.(`Chọn ô liền kề và xác nhận khai hoang trong bảng mở đất`);
       return;
     }
 
@@ -332,7 +368,7 @@ export class FarmingSystem {
         farmAudio.playHoe();
         this.pendingActions.add(pendingKey);
         this.controls.onNetworkAction?.({ farmId, tileKey: rawKey, action: 'till' });
-        this.notify?.('Đang chờ server xác nhận cuốc đất…');
+        this.notify?.('Đang xới đất…');
       };
 
       this.runTileAction(tile, 'till', doTill);
@@ -350,7 +386,7 @@ export class FarmingSystem {
         farmAudio.playPlant();
         this.pendingActions.add(pendingKey);
         this.controls.onNetworkAction?.({ farmId, tileKey: rawKey, action: 'plant', crop: crop.id, plantedAt });
-        this.notify?.(`Đang chờ server xác nhận gieo ${crop.name}…`);
+        this.notify?.(`Đang gieo ${crop.name}…`);
       };
 
       this.runTileAction(tile, 'seed', doPlant);
@@ -361,7 +397,7 @@ export class FarmingSystem {
         farmAudio.playWater();
         this.pendingActions.add(pendingKey);
         this.controls.onNetworkAction?.({ farmId, tileKey: rawKey, action: 'water', crop: data.crop, wateredAt });
-        this.notify?.(`Đang chờ server xác nhận tưới ${CROPS[data.crop]?.name || 'cây'}…`);
+        this.notify?.(`Đang tưới ${CROPS[data.crop]?.name || 'cây'}…`);
       };
 
       this.runTileAction(tile, 'water', doWater);
@@ -376,7 +412,7 @@ export class FarmingSystem {
           farmAudio.playHarvest();
           this.pendingActions.add(pendingKey);
           this.controls.onNetworkAction?.({ farmId, tileKey: rawKey, action: 'harvest', crop: data.crop });
-          this.notify?.(`Đang chờ server xác nhận thu hoạch ${CROPS[data.crop]?.name || 'cà rốt'}…`);
+          this.notify?.(`Đang thu hoạch ${CROPS[data.crop]?.name || 'cà rốt'}…`);
         };
 
         this.runTileAction(tile, 'harvest', doHarvest);
@@ -392,7 +428,7 @@ export class FarmingSystem {
     for (const tile of this.tiles) {
       if (!tile.metadata?.interactive || tile.isDisposed?.() || tile.isEnabled?.() === false) continue;
       const owner = !tile.metadata.farmId || tile.metadata.farmId === this.playerFarmId;
-      if (owner && tile.metadata.index >= this.getUnlockedPlots()) continue;
+      if (!this.isTileUnlocked(tile)) continue;
       const farmId = tile.metadata.farmId || this.playerFarmId;
       if (this.pendingActions.has(`${farmId}:${this.rawTileKey(tile)}`)) continue;
       if (!this.determineSmartTool(tile)) continue;
@@ -427,11 +463,11 @@ export class FarmingSystem {
     // Server state must outlive mesh residency. A streamed-out tile still
     // receives updates and restores the latest state when its chunk returns.
     const storageKey = farmId === this.playerFarmId ? tileKey : `${farmId}:${tileKey}`;
-    if (action === 'steal') { this.state[storageKey] = tileData; this.notify?.('Một phần nông sản đã được lấy. Cây vẫn còn sản lượng cho chủ vườn.'); return; }
+    if (action === 'steal') this.notify?.('Nông sản đã được hái.');
     if (action === 'till') this.state[storageKey] = tileData || { state: 'tilled' };
     else if (action === 'plant') this.state[storageKey] = tileData || { state: 'planted', crop: crop || 'carrot', plantedAt: Date.now() };
     else if (action === 'water') this.state[storageKey] = tileData || { ...this.state[storageKey], state: 'watered', wateredAt: Date.now() };
-    else if (action === 'harvest') this.state[storageKey] = { state: 'tilled' };
+    else if (action === 'harvest' || action === 'steal') this.state[storageKey] = { state: 'tilled' };
     const tile = this.tiles.find(t => {
       const tFarmId = t.metadata?.farmId || this.playerFarmId;
       return tFarmId === farmId && `${t.metadata.column}:${t.metadata.row}` === tileKey;
@@ -449,7 +485,7 @@ export class FarmingSystem {
       this.state[storageKey] = tileData || { ...prev, state: 'watered', wateredAt: Date.now() };
       tile.material = this.materials.watered;
       this.renderCrop(tile, this.state[storageKey]);
-    } else if (action === 'harvest') {
+    } else if (action === 'harvest' || action === 'steal') {
       const cropEntry = this.crops.get(storageKey);
       if (cropEntry?.root) cropEntry.root.dispose();
       this.crops.delete(storageKey);

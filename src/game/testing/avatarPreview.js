@@ -36,8 +36,13 @@ const avatar = buildHumanMesh(scene, 'preview', {
 });
 if (params.get('outfit') === 'street') avatar.applyCustomization({topId:'top_bomber_varsity', bottomId:'bot_cargo_wide', shoeId:'shoe_vintage_boots'});
 if (params.get('gender') === 'female') avatar.applyCustomization({hairStyle:'hair_twintails', topId:'top_polo_preppy', bottomId:'bot_tennis_skirt', shoeId:'shoe_doll_flats'});
-if (params.get('hair')) avatar.setHair(params.get('hair'));
+if (params.get('hair') || params.get('color')) avatar.setHair(params.get('hair') || 'classic', params.get('color'));
+for (const select of document.querySelectorAll('#hair-controls select')) {
+  if (params.has(select.name)) select.value = params.get(select.name);
+}
 if (params.get('top')) avatar.setTop(params.get('top'));
+if (params.get('bottom')) avatar.setBottom(params.get('bottom'));
+if (params.get('shoes')) avatar.setShoes(params.get('shoes')); 
 if (params.get('mouth')) avatar.setFaceFeatures({mouthType:params.get('mouth')});
 if (params.get('lod')) avatar.setLOD(Number(params.get('lod')));
 if (params.get('action')) avatar.playAction(params.get('action'));

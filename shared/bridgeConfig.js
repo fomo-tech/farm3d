@@ -1,3 +1,4 @@
+import {networkBridgeAt} from './waterNetwork.js';
 /**
  * shared/bridgeConfig.js
  * Single Source of Truth for all bridges across the Farm3D universe.
@@ -101,6 +102,7 @@ export const ALL_BRIDGES = Object.freeze([
  * @returns {object|null}
  */
 export function getBridgeAt(x, z, margin = 0.5) {
+  const network=networkBridgeAt(x,z,margin);if(network)return network;
   for (let i = 0; i < ALL_BRIDGES.length; i++) {
     const b = ALL_BRIDGES[i];
     const halfSpan = b.spanX / 2 + b.rampLen + margin;
@@ -121,6 +123,7 @@ export function getBridgeAt(x, z, margin = 0.5) {
  * @returns {number|null} Cao độ Y trên mặt cầu, hoặc null nếu nằm ngoài cầu
  */
 export function getBridgeSurfaceHeight(x, z, groundY = 0.08) {
+  const network=networkBridgeAt(x,z);if(network)return network.deckY;
   for (let i = 0; i < ALL_BRIDGES.length; i++) {
     const b = ALL_BRIDGES[i];
     const halfSpan = b.spanX / 2;

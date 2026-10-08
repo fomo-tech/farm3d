@@ -1,5 +1,7 @@
+import { missionStats, preLandJourney } from '../../shared/preLandJourney.js';
+import { missionAvailability } from '../../shared/missionEligibility.js';
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { MAIN_MISSIONS, DAILY_MISSIONS, activeMainMission, missionProgress, normalizeMissions } from '../../shared/missions.js';
+import { MAIN_MISSIONS, MAIN_CHAPTERS, DAILY_MISSIONS, activeMainMission, missionProgress, normalizeMissions, dailyMissionList } from '../../shared/missions.js';
 import {
   Icon3dTrophyCup,
   Icon3dSun,
@@ -14,6 +16,8 @@ import {
 } from './icons3d/GameIcons3D.jsx';
 import { farmAudio } from '../game/audio/FarmAudioSystem.js';
 import './MissionBoard.css';
+import './MissionJournal.css';
+import {HudIcon} from './icons3d/HudIcon.jsx';
 
 const TABS = {
   main: {
@@ -35,16 +39,15 @@ const TABS = {
     hint: 'Những cột mốc đáng nhớ trong thị trấn.',
   },
 };
-const MAIN_CHAPTERS = ['Khởi đầu nông trại', 'Vườn cây xanh tốt', 'Gắn bó với thị trấn', 'Mùa mới bội thu'];
 
-export function MissionTracker({ progress, legacyQuests = [], trackedMission, onOpen }) {
+export function MissionTracker({ missionContext = {}, progress, legacyQuests = [], trackedMission, onOpen }) {
   if (!progress?.onboarding?.completed) return null;
-  const missions = normalizeMissions(progress.missions, progress.stats);
-  const pinnedList = trackedMission?.kind === 'daily' ? DAILY_MISSIONS : trackedMission?.kind === 'legacy' ? legacyQuests : MAIN_MISSIONS;
+  const missions = normalizeMissions(progress.missions, missionStats(progress), Date.now(), {...missionContext,hasLand:progress.unlockedPlots > 0, progress});
+  const pinnedList = trackedMission?.kind === 'daily' ? dailyMissionList(missions) : trackedMission?.kind === 'legacy' ? legacyQuests : MAIN_MISSIONS;
   const pinned = pinnedList?.find(mission => mission.id === trackedMission?.id);
   const pinnedClaimed = pinned && (trackedMission.kind === 'legacy' ? progress.claimedQuests?.includes(pinned.id) : missions[trackedMission.kind]?.claimed?.includes(pinned.id));
   const active = pinned && !pinnedClaimed && (trackedMission.kind !== 'main' || activeMainMission(missions)?.id === pinned.id)
-    ? pinned : activeMainMission(missions) || DAILY_MISSIONS.find(mission => !missions.daily.claimed.includes(mission.id));
+    ? pinned : activeMainMission(missions) || dailyMissionList(missions).find(mission => !missions.daily.claimed.includes(mission.id));
   if (!active) return <button type="button" className="mission-tracker pt-candy-mission-pill" onClick={() => onOpen('main')} aria-label="Mở sổ nhiệm vụ, đã hoàn thành nhiệm vụ hiện có">
     <div className="pt-tracker-avatar-circle tag-main"><Icon3dTrophyCup size={24} /></div>
     <div className="pt-tracker-body"><div className="pt-tracker-badge-row"><span className="pt-tracker-tag tag-main">NHIỆM VỤ</span><span className="pt-tracker-count">HOÀN TẤT</span></div><strong className="pt-tracker-title">Đã xong nhiệm vụ hiện có</strong></div>
@@ -52,8 +55,8 @@ export function MissionTracker({ progress, legacyQuests = [], trackedMission, on
   </button>;
 
   const kind = pinned && active === pinned ? trackedMission.kind : MAIN_MISSIONS.includes(active) ? 'main' : 'daily';
-  const count = kind === 'legacy' ? Math.min(active.goal, progress.stats?.[active.stat] || 0) : missionProgress(active, progress.stats, missions, kind);
-  const ready = count >= active.goal;
+  const count = kind === 'legacy' ? Math.min(active.goal, progress.stats?.[active.stat] || 0) : missionProgress(active, missionStats(progress), missions, kind);
+  const ready = count >= active.goal && (kind === 'legacy' || !missionAvailability(active, progress, missionContext));
 
   const TrackerIcon = kind === 'daily' ? Icon3dSun : kind === 'legacy' ? Icon3dCrownRibbon : Icon3dTrophyCup;
   const kindLabel = kind === 'daily' ? 'HẰNG NGÀY' : kind === 'legacy' ? 'THÀNH TÍCH' : 'CHÍNH TUYẾN';
@@ -93,8 +96,10 @@ export function MissionTracker({ progress, legacyQuests = [], trackedMission, on
   );
 }
 
-export function MissionBoard({ progress, legacyQuests, onClaim, onClaimLegacy, onNavigate, onTrack, onClose, trackedMission, connected, rewardEvent, initialTab = 'main' }) {
-  const [tab, setTab] = useState(initialTab);
+export function MissionBoard({ missionContext = {}, progress, legacyQuests = [], onClaim, onClaimLegacy, onNavigate, onTrack, onClose, trackedMission, connected, rewardEvent, initialTab = 'main' }) {
+  const [tab, setTab] = useState(TABS[initialTab]?initialTab:'main');
+  const panel=useRef(null),close=useRef(onClose);close.current=onClose;
+  useEffect(()=>{const previous=document.activeElement;panel.current?.querySelector('button')?.focus();const keys=e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close.current?.();}if(e.key==='Tab'){const buttons=[...panel.current.querySelectorAll('button:not(:disabled)')].filter(b=>b.getClientRects().length);const first=buttons[0],last=buttons.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}};document.addEventListener('keydown',keys,true);return()=>{document.removeEventListener('keydown',keys,true);if(previous?.isConnected)previous.focus();};},[]);
   const [chapter, setChapter] = useState(() => {
     const next = MAIN_MISSIONS.findIndex(mission => !progress.missions?.main?.claimed?.includes(mission.id));
     return next < 0 ? MAIN_CHAPTERS.length - 1 : Math.floor(next / 3);
@@ -118,9 +123,9 @@ export function MissionBoard({ progress, legacyQuests, onClaim, onClaimLegacy, o
     return () => window.clearTimeout(timer);
   }, [rewardEvent]);
 
-  const missions = normalizeMissions(progress.missions, progress.stats);
-  const locked = !progress.onboarding?.completed;
-  const list = tab === 'main' ? MAIN_MISSIONS : tab === 'daily' ? DAILY_MISSIONS : legacyQuests;
+  const missions = normalizeMissions(progress.missions, missionStats(progress), Date.now(), {...missionContext,hasLand:progress.unlockedPlots > 0, progress});
+  const locked = tab === 'main' && !progress.onboarding?.completed;
+  const list = tab === 'main' ? MAIN_MISSIONS : tab === 'daily' ? dailyMissionList(missions) : legacyQuests;
   const claimedCount = tab === 'legacy' ? legacyQuests.filter(mission => progress.claimedQuests?.includes(mission.id)).length : missions[tab].claimed.length;
   const nextReset = Date.parse(`${missions.daily.dayKey}T17:00:00Z`);
   const remainingMinutes = Math.max(0, Math.ceil((nextReset - clock) / 60_000));
@@ -134,10 +139,14 @@ export function MissionBoard({ progress, legacyQuests, onClaim, onClaimLegacy, o
 
   const readyCount = list.filter(mission => {
     const claimed = tab === 'legacy' ? progress.claimedQuests?.includes(mission.id) : missions[tab].claimed.includes(mission.id);
-    return !claimed && (tab !== 'main' || activeId === mission.id) &&
-      (tab === 'legacy' ? (progress.stats?.[mission.stat] || 0) >= mission.goal : missionProgress(mission, progress.stats, missions, tab) >= mission.goal);
+    return !claimed && (tab === 'legacy' || !missionAvailability(mission, progress, missionContext)) && (tab !== 'main' || activeId === mission.id) &&
+      (tab === 'legacy' ? (progress.stats?.[mission.stat] || 0) >= mission.goal : missionProgress(mission, missionStats(progress), missions, tab) >= mission.goal);
   }).length;
 
+  const rewardCounts = Object.fromEntries(Object.keys(TABS).map(kind=>[kind,(kind==='main'?MAIN_MISSIONS:kind==='daily'?dailyMissionList(missions):legacyQuests).filter(m=>{
+    const claimed=kind==='legacy'?progress.claimedQuests?.includes(m.id):missions[kind].claimed.includes(m.id);
+    return !claimed && (kind!=='main'||(progress.onboarding?.completed&&activeId===m.id)) && (kind==='legacy'||!missionAvailability(m,progress,missionContext)) && (kind==='legacy'?(progress.stats?.[m.stat]||0):missionProgress(m,missionStats(progress),missions,kind))>=m.goal;
+  }).length]));
   const info = TABS[tab];
   const CurrentTabIcon = info.Icon;
 
@@ -172,7 +181,8 @@ export function MissionBoard({ progress, legacyQuests, onClaim, onClaimLegacy, o
   };
 
   return (
-    <div className={`mission-board mission-board--${tab}`}>
+    <div className="mission-journal-overlay" onClick={e=>{if(e.target===e.currentTarget)onClose?.();}}><section ref={panel} className="mission-journal" role="dialog" aria-modal="true" aria-labelledby="mission-journal-title"><header className="mission-journal-header"><span className="mission-journal-logo"><HudIcon asset="quest" size={52}/></span><div><small>HÀNH TRÌNH NÔNG DÂN BÌNH MINH</small><h2 id="mission-journal-title">Sổ nhiệm vụ</h2></div><div className="mission-journal-wallet"><HudIcon asset="coin" size={27}/><b>{(progress.coins||0).toLocaleString('vi-VN')}</b></div><button aria-label="Đóng sổ nhiệm vụ" onClick={onClose}>×</button></header><div className={`mission-board mission-board--${tab}`}>
+
       {/* Interactive Floating Reward Particles */}
       {flyingParticles.map(p => (
         <div
@@ -205,18 +215,19 @@ export function MissionBoard({ progress, legacyQuests, onClaim, onClaimLegacy, o
                 setTab(id);
               }}
             >
-              <TabIcon size={22} className="mission-tab-icon" />
-              <span>{item.label}</span>
+              <HudIcon asset={id==='main'?'quest':id==='daily'?'basket':'quest'} size={26} className="mission-tab-icon" />
+              <span>{item.label}</span>{rewardCounts[id]>0&&<b className="mission-tab-ready" aria-label={`${rewardCounts[id]} phần thưởng có thể nhận`}>{rewardCounts[id]}</b>}
             </button>
           );
         })}
       </nav>
 
       <div className="mission-board-body">
+        {!connected&&<p className="mission-journal-offline" role="status">Chưa có kết nối. Bạn vẫn có thể xem tiến độ nhiệm vụ.</p>}
         <div className="mission-summary" key={tab}>
             <div className="mission-summary-top">
               <span className="mission-summary-emblem" aria-hidden="true">
-                <CurrentTabIcon size={26} />
+                <HudIcon asset="quest" size={37}/>
               </span>
               <div className="mission-summary-copy">
                 <strong>{info.title}</strong>
@@ -236,10 +247,11 @@ export function MissionBoard({ progress, legacyQuests, onClaim, onClaimLegacy, o
             </div>
         </div>
 
+        {tab === 'main' && !(progress.unlockedPlots > 0) && <div className="mission-onboarding-gate"><div><strong>{preLandJourney(progress).title}</strong><p>{preLandJourney(progress).description}</p><p>Chuẩn bị cần → câu cá → bán cá → chọn lô đất. Các mốc hướng dẫn không cộng thêm xu.</p><button type="button" onClick={onClose}>Tiếp tục hướng dẫn →</button></div></div>}
         {locked && tab !== 'legacy' && (
           <div className="mission-onboarding-gate">
             <span className="mission-onboarding-gate-mark" aria-hidden="true">
-              <Icon3dNoticeBoard size={40} />
+              <HudIcon asset="quest" size={48}/>
             </span>
             <div>
               <span className="mission-onboarding-gate-status">CHƯA MỞ NHIỆM VỤ</span>
@@ -267,8 +279,8 @@ export function MissionBoard({ progress, legacyQuests, onClaim, onClaimLegacy, o
                   {chapterIsAllClaimed ? <Icon3dCrown size={22} /> : <Icon3dGiftBoxRibbon size={24} />}
                 </div>
                 <div className="pt-chest-info">
-                  <b>{chapterIsAllClaimed ? 'Đã hoàn tất chương!' : `Rương Chương (${chapterClaimedCount}/3)`}</b>
-                  <small>{chapterIsAllClaimed ? 'Mở khóa vinh danh nông dân' : 'Làm xong 3 nhiệm vụ để mở rương'}</small>
+                  <b>{chapterIsAllClaimed ? 'Đã hoàn tất chương!' : `Tiến độ chương (${chapterClaimedCount}/3)`}</b>
+                  <small>{chapterIsAllClaimed ? 'Đã nhận thưởng từng nhiệm vụ' : 'Nhận thưởng của 3 nhiệm vụ trong chương'}</small>
                 </div>
               </div>
             </div>
@@ -309,14 +321,15 @@ export function MissionBoard({ progress, legacyQuests, onClaim, onClaimLegacy, o
             {list.map((mission, index) => {
               if (tab === 'main' && Math.floor(index / 3) !== chapter) return null;
               const legacy = tab === 'legacy';
-              const current = legacy ? Math.min(mission.goal, progress.stats?.[mission.stat] || 0) : missionProgress(mission, progress.stats, missions, tab);
+              const current = legacy ? Math.min(mission.goal, progress.stats?.[mission.stat] || 0) : missionProgress(mission, missionStats(progress), missions, tab);
               const claimed = legacy ? progress.claimedQuests?.includes(mission.id) : missions[tab].claimed.includes(mission.id);
               const gated = tab === 'main' && activeId !== mission.id && !claimed;
               const onboardingGated = locked && !legacy && !claimed;
-              const ready = !claimed && !gated && current >= mission.goal && (!locked || legacy);
-              const disabled = !connected || onboardingGated || claimed || gated || (!ready && !onNavigate);
-              const state = claimed ? 'ĐÃ NHẬN' : onboardingGated ? 'CHƯA MỞ' : gated ? 'CHẶNG TIẾP' : ready ? 'HOÀN THÀNH' : 'ĐANG LÀM';
-              const actionLabel = ['planted', 'watered', 'harvested'].includes(mission.stat) ? 'Đến ruộng' : mission.stat === 'orders' ? 'Đến đơn hàng' : mission.stat === 'animalsFed' ? 'Đến vật nuôi' : mission.stat === 'crafted' ? 'Đến xưởng' : 'Đi làm';
+              const unavailable = legacy ? null : missionAvailability(mission, progress, missionContext);
+              const ready = !claimed && !gated && !unavailable && current >= mission.goal && (!locked || legacy);
+              const disabled = !connected || Boolean(unavailable) || onboardingGated || claimed || gated || (!ready && !onNavigate);
+              const state = claimed ? 'ĐÃ NHẬN' : unavailable ? 'CHƯA MỞ' : onboardingGated ? 'CHƯA MỞ' : gated ? 'CHẶNG TIẾP' : ready ? 'HOÀN THÀNH' : 'ĐANG LÀM';
+              const actionLabel = ['planted', 'watered', 'harvested'].includes(mission.stat) ? 'Đến ruộng' : mission.stat === 'landTiles' ? 'Khai hoang đất' : mission.stat === 'fishCaught' ? 'Đến hồ câu' : mission.stat === 'fishSold' ? 'Đến tiệm cá' : mission.stat === 'orders' ? 'Đến đơn hàng' : mission.stat === 'animalsFed' ? 'Đến vật nuôi' : mission.stat === 'crafted' ? 'Đến xưởng' : 'Đi làm';
 
               return (
                 <Fragment key={mission.id}>
@@ -355,11 +368,11 @@ export function MissionBoard({ progress, legacyQuests, onClaim, onClaimLegacy, o
                             }}
                             title="Theo dõi trên HUD"
                           >
-                            <Icon3dCompass size={16} />
+                            <HudIcon asset="map" size={20}/>
                           </button>
                         )}
                       </div>
-                      <small>{mission.description || 'Hoàn thành mục tiêu để nhận thưởng.'}</small>
+                      <small>{unavailable || mission.description || 'Hoàn thành mục tiêu để nhận thưởng.'}</small>
                       <div className="mission-progress-line">
                         <div className="mission-progress" role="progressbar" aria-label={mission.title} aria-valuemin={0} aria-valuemax={mission.goal} aria-valuenow={current}>
                           <span style={{ width: `${mission.goal ? Math.min(100, (current / mission.goal) * 100) : 0}%` }} />
@@ -369,7 +382,7 @@ export function MissionBoard({ progress, legacyQuests, onClaim, onClaimLegacy, o
                     </div>
                     <div className="mission-card-reward">
                       <span className="mission-coin-badge" title={`${mission.coins} xu vàng`}>
-                        <Icon3dGoldCoin size={18} />
+                        <HudIcon asset="coin" size={22}/>
                         <b>{mission.coins}</b>
                       </span>
                       <span className="mission-xp-badge" title={`${mission.xp} điểm kinh nghiệm`}>
@@ -395,7 +408,7 @@ export function MissionBoard({ progress, legacyQuests, onClaim, onClaimLegacy, o
                       ) : onboardingGated || gated ? (
                         'Chưa mở'
                       ) : ready ? (
-                        <><Icon3dGiftBoxRibbon size={17} /> Nhận thưởng</>
+                        <><HudIcon asset="basket" size={23}/> Nhận thưởng</>
                       ) : (
                         `${actionLabel} →`
                       )}
@@ -428,6 +441,6 @@ export function MissionBoard({ progress, legacyQuests, onClaim, onClaimLegacy, o
           </div>
         </div>
       )}
-    </div>
+    </div><footer className="mission-journal-footer"><span>{readyCount>0?`${readyCount} phần thưởng đang chờ nhận`:'Theo dõi nhiệm vụ để xem tiến độ trên HUD'}</span><button onClick={onClose}>Tiếp tục khám phá</button></footer></section></div>
   );
 }

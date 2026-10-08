@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import {NullEngine} from '@babylonjs/core/Engines/nullEngine.js';
+import {Scene} from '@babylonjs/core/scene.js';
+import {Vector3} from '@babylonjs/core/Maths/math.vector.js';
+import {StandardMaterial} from '@babylonjs/core/Materials/standardMaterial.js';
+import {FarmChunk} from '../src/game/farming/FarmChunk.js';
+import {createFarmPlot} from '../src/game/farming/createFarmPlot.js';
+import {stabilizeSunShadow} from '../src/game/rendering/stabilizeSunShadow.js';
+const engine=new NullEngine(),scene=new Scene(engine);
+new StandardMaterial('mat-soil-base-rich',scene);new StandardMaterial('mat-estate-meadow-grass',scene);
+const chunk=new FarmChunk(scene,{id:'stability',x:0,z:0});
+const generator=chunk.buildDetailIncrementalGenerator();generator.next();
+const surfaceTop=name=>{const mesh=scene.getMeshByName(name);assert.ok(mesh,name);mesh.computeWorldMatrix(true);return mesh.getBoundingInfo().boundingBox.maximumWorld.y;};
+assert.ok(surfaceTop('detail-driveway-stability')-surfaceTop('detail-base-stability')>.015);
+assert.ok(surfaceTop('detail-midwalk-stability')-surfaceTop('detail-entry-stability')>.015);
+assert.ok(surfaceTop('detail-homepath-stability')-surfaceTop('detail-midwalk-stability')>.015);
+assert.ok(surfaceTop('detail-corralpath-stability')-surfaceTop('detail-midwalk-stability')>.015);
+createFarmPlot(scene,{farmId:'legacy',x:100,z:0});
+assert.ok(surfaceTop('estate-mid-walkway-legacy')-surfaceTop('estate-entry-path-legacy')>.015);
+const light={direction:new Vector3(-.4,-.8,.3),position:new Vector3(),shadowFrustumSize:56};
+const right=Vector3.Cross(Vector3.Up(),light.direction).normalize();
+const up=Vector3.Cross(light.direction.normalizeToNew(),right).normalize();
+for(const size of [512,1024,2048]){
+ const texel=56/size;
+ stabilizeSunShadow(light,Vector3.Zero(),size);
+ const before=light.position.clone();
+ stabilizeSunShadow(light,right.scale(texel*.2).add(up.scale(texel*.2)),size);
+ assert.ok(Math.abs(Vector3.Dot(light.position.subtract(before),right))<1e-10,'Sub-texel motion must not move shadow X');
+ assert.ok(Math.abs(Vector3.Dot(light.position.subtract(before),up))<1e-10,'Sub-texel motion must not move shadow Y');
+ stabilizeSunShadow(light,right.scale(texel*.8),size);
+ assert.ok(Math.abs(Vector3.Dot(light.position.subtract(before),right)-texel)<1e-10,'Larger motion advances exactly one texel');
+}
+scene.dispose();engine.dispose();
+console.log('PASS farm lighting: real path junctions separated, shadow texel stability at 512/1024/2048');

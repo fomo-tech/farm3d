@@ -1,3 +1,5 @@
+import {stealLivestock,recoverLivestockClaim} from './LivestockTheft.js';
+import { unlockedFarmTiles } from '../shared/landExpansionConfig.js';
 import { randomUUID } from 'node:crypto';
 import { FARM_CONFIG, farmBarnCapacity } from '../shared/farmConfig.js';
 import { farmGatePosition, insideFarm, theftPolicy, farmBoundaryBlocked, farmGateOpen, cropYield } from '../shared/farmSecurity.js';
@@ -23,8 +25,11 @@ export class FarmSecurity {
   }
   async init() {
     for (const farm of await this.assignments.find({ status: { $ne: 'pending' } }).toArray()) this.gates.set(`${farm.villageId}:${farm.lot}`, farmGateOpen(farm));
+    for (const owner of await this.players.find({livestockTheftClaim:{$exists:true}}).toArray()) await this.recoverLivestock(owner);
     for (const row of await this.crops.find({ theftClaim: { $exists: true } }).toArray()) await this.recover(row);
   }
+  async stealLivestock(args) {return withFarmLock(args.farmId,()=>stealLivestock(this,args));}
+  async recoverLivestock(owner) {return recoverLivestockClaim(this,owner);}
   gateOpen(assignment) { return Boolean(assignment) && farmGateOpen(assignment); }
   blocksMovement(from, to) {
     for (const [key, open] of this.gates) {
@@ -41,7 +46,7 @@ export class FarmSecurity {
         $set: { theftDay: claim.day }, $inc: { [claim.counterPath]: 1 }, $addToSet: { theftReceipts: claim.id },
         $push: { theftLog: { $each: [{ id: claim.id, playerId: claim.playerId, crop: claim.crop, amount: claim.amount, at: claim.at }], $slice: -50 } },
       });
-      await this.crops.updateOne({ _id: row._id, 'theftClaim.id': claim.id }, { $set: { stolenAmount: claim.amount, stolenBy: claim.playerId }, $unset: { theftClaim: '' } });
+      await this.crops.updateOne({ _id: row._id, 'theftClaim.id': claim.id }, { $set: { state: 'tilled', yield: 0, stolenAmount: claim.amount, stolenBy: claim.playerId }, $unset: { theftClaim: '' } });
     } else await this.crops.updateOne({ _id: row._id, 'theftClaim.id': claim.id }, { $unset: { theftClaim: '' } });
   }
   async toggle(assignment, farmId, playerId, open, position, occupants = []) {
@@ -62,9 +67,12 @@ export class FarmSecurity {
       const now = this.now(), day = new Date(now).toISOString().slice(0, 10);
       const farm = await this.assignments.findOne({ _id: assignment._id });
       const player = await this.players.findOne({ playerId });
+      if (!farm) return { error: 'Nông trại không tồn tại.' };
+      const owner = await this.players.findOne({ playerId: farm.playerId });
+      if (!unlockedFarmTiles(owner?.progress).includes(tileKey)) return { error: 'Ô đất chưa được khai hoang.' };
       const row = await this.crops.findOne({ villageId: farm.villageId, farmId: storageFarmId, tileKey });
       if (!player || !row || position.venue || !insideFarm(farmId, position) || Math.hypot(position.x - tilePosition.x, position.z - tilePosition.z) > FARM_CONFIG.security.theft.interactionDistance) return { error: 'Hãy đứng trong vườn, sát cây chín.' };
-      if (row.theftClaim) { await this.recover(row); return { error: 'Cây đang đồng bộ. Hãy thử lại.' }; }
+      if (row.theftClaim) { await this.recover(row); return { error: 'Cây đang được chăm sóc. Hãy thử lại sau nhé.' }; }
       const policy = theftPolicy({ owner: farm.playerId === playerId, gateOpen: this.gateOpen(farm), row, now,
         claimedAt: farm.claimedAt || 0, playerCount: player.farmTheftCounts?.[day] || 0, farmCount: farm.theftCounts?.[day] || 0 });
       if (policy.error) return policy;
@@ -91,13 +99,13 @@ export class FarmSecurity {
       });
       await this.recover(row);
       if (!paid.modifiedCount) return { error: 'Dữ liệu vừa thay đổi, lượt lấy chưa được tính.' };
-      return { tileData: { ...row, theftClaim: undefined, stolenAmount: policy.amount, stolenBy: playerId }, amount: policy.amount };
+      return { tileData: { ...row, state: 'tilled', yield: 0, theftClaim: undefined, stolenAmount: policy.amount, stolenBy: playerId }, amount: policy.amount };
     });
   }
   observeMovement(playerId, position, getTilePosition) {
     const pending = this.pending.get(playerId);
     if (!pending) return;
-    const tile = getTilePosition(pending.farmId, pending.tileKey);
+    const tile = pending.kind==='livestock' ? pending.targetPosition : getTilePosition(pending.farmId, pending.tileKey);
     if (this.now() > pending.expiresAt || position.venue || !tile || Math.hypot(position.x - pending.x, position.z - pending.z) > .2 || Math.hypot(position.x - tile.x, position.z - tile.z) > FARM_CONFIG.security.theft.interactionDistance) this.pending.delete(playerId);
   }
 }

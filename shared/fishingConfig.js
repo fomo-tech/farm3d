@@ -20,8 +20,8 @@ export const FISHING_CONFIG = deepFreeze({
   timePreferences: { carp:['dawn','day'], perch:['day','dusk'], golden_carp:['dawn','dusk'], river_catfish:['night'], river_barb:['day'], sea_mackerel:['dawn'], sea_snapper:['dusk'] },
   defaults: {
     coolerCapacity: 10,
-    biteMinMs: 2500,
-    biteMaxMs: 6500,
+    biteMinMs: 8000,
+    biteMaxMs: 15000,
     pendingTimeoutMs: 10000,
     maxCatchLog: 40,
   },
@@ -112,13 +112,27 @@ export const FISHING_CONFIG = deepFreeze({
     river_barb: { id: 'river_barb', name: 'Cá mè sông', rarity: 'common', price: 21, xp: 6, weight: [0.7, 2.8], zones: ['river'], color: '#38bdf8' },
     sea_mackerel: { id: 'sea_mackerel', name: 'Cá thu biển', rarity: 'uncommon', price: 38, xp: 10, weight: [1.3, 5.2], zones: ['sea'], color: '#0ea5e9' },
     sea_snapper: { id: 'sea_snapper', name: 'Cá hồng biển', rarity: 'rare', price: 52, xp: 15, weight: [1.1, 4.6], zones: ['sea'], color: '#fb7185' },
+    tilapia: { id: 'tilapia', name: 'Cá rô phi', rarity: 'common', price: 20, xp: 5, weight: [0.3, 1.8], zones: ['lake', 'pond'], color: '#80a7a0', form: 'deep' },
+    gourami: { id: 'gourami', name: 'Cá sặc', rarity: 'common', price: 16, xp: 4, weight: [0.08, 0.45], zones: ['pond', 'lake'], color: '#d8b26f', form: 'deep' },
+    koi: { id: 'koi', name: 'Cá koi', rarity: 'rare', price: 55, xp: 15, weight: [0.4, 2.5], zones: ['lake', 'pond'], color: '#f5ede0', form: 'oval' },
+    grass_carp: { id: 'grass_carp', name: 'Cá trắm', rarity: 'uncommon', price: 34, xp: 9, weight: [2, 7], zones: ['lake', 'river'], color: '#719864', form: 'long' },
+    eel: { id: 'eel', name: 'Lươn', rarity: 'uncommon', price: 30, xp: 8, weight: [0.2, 1.5], zones: ['pond', 'river'], color: '#b39959', form: 'eel' },
+    snakehead: { id: 'snakehead', name: 'Cá lóc', rarity: 'uncommon', price: 32, xp: 9, weight: [0.6, 3.5], zones: ['river', 'pond'], color: '#5e786a', form: 'long' },
+    pangasius: { id: 'pangasius', name: 'Cá tra', rarity: 'rare', price: 58, xp: 16, weight: [3, 12], zones: ['river'], color: '#8cacc0', form: 'catfish' },
+    goby: { id: 'goby', name: 'Cá bống', rarity: 'common', price: 14, xp: 4, weight: [0.05, 0.3], zones: ['river', 'pond'], color: '#caad82', form: 'oval' },
+    sardine: { id: 'sardine', name: 'Cá mòi', rarity: 'common', price: 18, xp: 5, weight: [0.08, 0.5], zones: ['sea'], color: '#91d8e8', form: 'slender' },
+    puffer: { id: 'puffer', name: 'Cá nóc', rarity: 'rare', price: 48, xp: 13, weight: [0.3, 1.5], zones: ['sea'], color: '#f4ce6e', form: 'round' },
+    tuna: { id: 'tuna', name: 'Cá ngừ', rarity: 'rare', price: 72, xp: 20, weight: [4, 16], zones: ['sea'], color: '#508ac7', form: 'long' },
+    stingray: { id: 'stingray', name: 'Cá đuối', rarity: 'epic', price: 80, xp: 24, weight: [2, 10], zones: ['sea'], color: '#839aac', form: 'flat' },
+    clownfish: { id: 'clownfish', name: 'Cá hề', rarity: 'uncommon', price: 28, xp: 8, weight: [0.04, 0.2], zones: ['sea'], color: '#fb9146', form: 'deep' },
+    sea_bass: { id: 'sea_bass', name: 'Cá vược', rarity: 'common', price: 29, xp: 7, weight: [0.8, 4], zones: ['sea', 'river'], color: '#aac5bc', form: 'oval' },
   },
 
   zones: {
-    lake: { id: 'lake', name: 'Hồ Pha Lê', fish: ['carp', 'perch', 'golden_carp'], rareChance: 0.06, castDistance: 8 },
-    pond: { id: 'pond', name: 'Ao công viên', fish: ['perch', 'carp', 'golden_carp'], rareChance: 0.045, castDistance: 7 },
-    river: { id: 'river', name: 'Ven sông', fish: ['river_catfish', 'river_barb', 'golden_carp'], rareChance: 0.05, castDistance: 10 },
-    sea: { id: 'sea', name: 'Bờ biển', fish: ['sea_mackerel', 'sea_snapper', 'golden_carp'], rareChance: 0.08, castDistance: 12 },
+    lake: { id: 'lake', name: 'Hồ Pha Lê', fish: ['carp', 'perch', 'golden_carp', 'tilapia', 'gourami', 'koi', 'grass_carp'], rareChance: 0.06, castDistance: 8 },
+    pond: { id: 'pond', name: 'Ao công viên', fish: ['perch', 'carp', 'golden_carp', 'tilapia', 'gourami', 'koi', 'eel', 'snakehead', 'goby'], rareChance: 0.045, castDistance: 7 },
+    river: { id: 'river', name: 'Ven sông', fish: ['river_catfish', 'river_barb', 'golden_carp', 'grass_carp', 'eel', 'snakehead', 'pangasius', 'goby', 'sea_bass'], rareChance: 0.05, castDistance: 10 },
+    sea: { id: 'sea', name: 'Bờ biển', fish: ['sea_mackerel', 'sea_snapper', 'golden_carp', 'sardine', 'puffer', 'tuna', 'stingray', 'clownfish', 'sea_bass'], rareChance: 0.08, castDistance: 12 },
   },
 
   animations: {
@@ -178,7 +192,7 @@ export function normalizeFishingState(fishing = {}) {
     collection: { ...(fishing.collection || {}) },
     claimedMissions: Array.isArray(fishing.claimedMissions) ? [...new Set(fishing.claimedMissions)] : [],
     pending: fishing.pending?.id ? fishing.pending : null,
-    stats: { totalCaught: 0, rareCaught: 0, largestFish: 0, ...(fishing.stats || {}) },
+    stats: { totalCaught: 0, totalSold: 0, rareCaught: 0, largestFish: 0, ...(fishing.stats || {}) },
     lastSale: fishing.lastSale || null,
   };
 }

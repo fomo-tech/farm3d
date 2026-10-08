@@ -1,6 +1,8 @@
 import { MongoClient } from 'mongodb';
-import { calculateLandPrice, firstLandPurchasePrice, landPricingRadius } from '../shared/landConfig.js';
+import {APPLE_ORCHARD} from '../shared/appleOrchard.js';
+import { LAND_CONFIG, calculateLandPrice, firstLandPurchasePrice, landPricingRadius } from '../shared/landConfig.js';
 import { FARM_CONFIG } from '../shared/farmConfig.js';
+import { LAND_EXPANSION_CONFIG } from '../shared/landExpansionConfig.js';
 import { farmGateOpen } from '../shared/farmSecurity.js';
 import { decodeFarmId, worldFarmId, worldFarmNumber } from '../shared/villageLayout.js';
 import { FARM_ACTIVE_PLOTS, FARM_LOT_SPEC, farmLotPosition, validateFarmLayout } from '../shared/farmLayout.js';
@@ -88,7 +90,7 @@ export async function initVillageRegistry() {
   await assignments.updateMany({}, [
     { $set: {
       layoutVersion: FARM_LAYOUT_VERSION,
-      activePlots: { $ifNull: ['$activePlots', FARM_ACTIVE_PLOTS] },
+      activePlots: FARM_ACTIVE_PLOTS,
       houseType: { $ifNull: ['$houseType', 'starter-house'] },
       houseTier: { $ifNull: ['$houseTier', 1] },
       barnType: { $ifNull: ['$barnType', 'starter-barn'] },
@@ -143,7 +145,7 @@ export async function listLandMarket() {
     const lot = i + 1;
     const position = positionForLot(worldFarmNumber(v.order, lot));
     const owner = occupied.find(a => a.villageId === v.villageId && a.lot === lot);
-    return { farmId: worldFarmId(v.order, lot), villageId: v.villageId, villageName: v.name, lot, ...position, distance: Math.round(Math.hypot(position.x, position.z)), ownerId: owner?.status !== 'pending' ? owner?.playerId || null : null, available: !owner, gateOpen: owner ? farmGateOpen(owner) : true, gateUpdatedAt: owner?.gateUpdatedAt || 0 };
+    return { farmId: worldFarmId(v.order, lot), villageId: v.villageId, villageName: v.name, lot, ...position, distance: Math.round(Math.hypot(position.x-LAND_CONFIG.center.x, position.z-LAND_CONFIG.center.z)), ownerId: owner?.status !== 'pending' ? owner?.playerId || null : null, available: !owner, gateOpen: owner ? farmGateOpen(owner) : true, gateUpdatedAt: owner?.gateUpdatedAt || 0 };
   }));
   const farthest = landPricingRadius(lots);
   const names = await players.find({ playerId: { $in: occupied.map(a => a.playerId) } }, { projection: { playerId: 1, name: 1 } }).toArray();
@@ -174,7 +176,7 @@ export async function purchaseFarm(playerId, farmId) {
   // Unique reservations protect both parcel and buyer. Revision blocks stale economy writes.
   const paid = await players.updateOne({ playerId, 'progress.onboarding.characterCreated': true, 'progress.coins': { $gte: purchasePrice }, landPurchase: { $exists: false } }, {
     $inc: { 'progress.coins': -purchasePrice, revision: 1 },
-    $set: { landPurchase: { purchaseId, farmId, price: purchasePrice, listPrice: listing.price, purchasedAt: Date.now() }, 'progress.unlockedPlots': 12, 'progress.homeTier': 1, 'progress.barnLevel': 1, 'progress.ownedHomes': ['starter-cabin'], updatedAt: Date.now() },
+    $set: { landPurchase: { purchaseId, farmId, price: purchasePrice, listPrice: listing.price, purchasedAt: Date.now() }, 'progress.appleReadyAt': Date.now()+APPLE_ORCHARD.cycleMs, 'progress.unlockedPlots': LAND_EXPANSION_CONFIG.initialTiles.length, 'progress.unlockedTileKeys': [...LAND_EXPANSION_CONFIG.initialTiles], 'progress.landExpansionVersion': LAND_EXPANSION_CONFIG.version, 'progress.homeTier': 1, 'progress.barnLevel': 1, 'progress.ownedHomes': ['starter-cabin'], updatedAt: Date.now() },
   });
   if (!paid.modifiedCount) {
     await assignments.deleteOne({ playerId, purchaseId, status: 'pending' });

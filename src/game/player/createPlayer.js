@@ -1,3 +1,6 @@
+import { fishForm, FISH_FORMS, FISH_SIZE_SCALE, caughtFishScale } from '../../../shared/fishAppearance.js';
+import {fishingNibbleState} from '../../../shared/fishingConditions.js';
+import {fishingFightState} from '../../../shared/fishingSession.js';
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
@@ -18,9 +21,58 @@ export function createFishingRig(scene, root, human) {
   bobberMaterial.diffuseColor = Color3.FromHexString('#ef4444');
   bobberMaterial.emissiveColor = Color3.FromHexString('#fb7185').scale(0.22);
   bobberMaterial.specularColor = Color3.White();
-  const bobber = MeshBuilder.CreateSphere('local-fishing-bobber', { diameter: 0.18, segments: 8 }, scene);
+  const bobber = MeshBuilder.CreateSphere('local-fishing-bobber', { diameter: 0.28, segments: 12 }, scene);
   bobber.material = bobberMaterial;
   bobber.setEnabled(false);
+
+  const floatWhite = new StandardMaterial('fishing-float-white', scene);
+  floatWhite.diffuseColor = Color3.FromHexString('#fff9e8');
+  floatWhite.emissiveColor = Color3.FromHexString('#fff9e8').scale(.25);
+  const floatBand = MeshBuilder.CreateTorus('fishing-float-band', {diameter:.27, thickness:.065, tessellation:16}, scene);
+  floatBand.parent=bobber; floatBand.material=floatWhite;
+  const floatStem = MeshBuilder.CreateCylinder('fishing-float-stem', {height:.32, diameter:.045, tessellation:8}, scene);
+  floatStem.parent=bobber; floatStem.position.y=.23; floatStem.material=floatWhite;
+  const floatTip = MeshBuilder.CreateSphere('fishing-float-tip', {diameter:.085, segments:8}, scene);
+  floatTip.parent=bobber; floatTip.position.y=.40; floatTip.material=bobberMaterial;
+  const ripples = Array.from({length:3}, (_,i)=>{
+    const material=new StandardMaterial(`fishing-ripple-material-${i}`,scene);
+    material.diffuseColor=Color3.FromHexString('#d6faff');
+    material.emissiveColor=Color3.FromHexString('#a9e9ef').scale(.35);
+    material.disableLighting=true; material.alpha=.5;
+    const mesh=MeshBuilder.CreateTorus(`fishing-water-ripple-${i}`,{diameter:.48,thickness:.018,tessellation:24},scene);
+    mesh.material=material;mesh.isPickable=false;mesh.setEnabled(false);
+    return mesh;
+  });
+  const drops=Array.from({length:6},(_,i)=>{
+    const mesh=MeshBuilder.CreateSphere(`fishing-water-drop-${i}`,{diameter:.065,segments:6},scene);
+    mesh.material=floatWhite;mesh.isPickable=false;mesh.setEnabled(false);return mesh;
+  });
+  let landingTime=0;
+  const hideWaterEffects=()=>{ripples.forEach(mesh=>mesh.setEnabled(false));drops.forEach(mesh=>mesh.setEnabled(false));};
+  const updateWaterEffects=delta=>{
+    landingTime=Math.max(0,landingTime-delta);
+    const active=['waiting','bite','reel'].includes(phase);
+    if(!active){hideWaterEffects();return;}
+    const nibbling=phase==='waiting'&&fishingNibbleState(timeUntilBiteMs);
+    const strong=phase==='bite'||landingTime>0;
+    const speed=strong?1.5:nibbling?1:.45;
+    ripples.forEach((mesh,i)=>{
+      const age=(elapsed*speed+i/3)%1;
+      const radius=(strong?1.3:nibbling?.85:.55)*age+.35;
+      mesh.position.set(bobber.position.x,target.y+.10+i*.003,bobber.position.z);
+      mesh.scaling.set(radius,1,radius);
+      mesh.material.alpha=(1-age)*(strong?.75:nibbling?.55:.3);
+      mesh.setEnabled(true);
+    });
+    drops.forEach((mesh,i)=>{
+      mesh.setEnabled(strong);
+      if(!strong)return;
+      const age=(elapsed*1.8+i*.13)%1,angle=i*Math.PI/3;
+      const radius=.12+age*.5;
+      mesh.position.set(bobber.position.x+Math.cos(angle)*radius,target.y+.12+Math.sin(age*Math.PI)*.38,bobber.position.z+Math.sin(angle)*radius);
+      mesh.scaling.set(.7,1.4*(1-age)+.4,.7);
+    });
+  };
 
   const silhouetteMaterial = new StandardMaterial('fishing-shadow-material', scene);
   silhouetteMaterial.diffuseColor = Color3.FromHexString('#082e51');
@@ -41,7 +93,7 @@ export function createFishingRig(scene, root, human) {
   splash.material=splashMaterial;splash.setEnabled(false);
   const alertMaterial=new StandardMaterial('fishing-bite-alert-material',scene);
   alertMaterial.diffuseColor=Color3.White();alertMaterial.emissiveColor=Color3.White();alertMaterial.disableLighting=true;
-  const biteAlert=MeshBuilder.CreatePlane('fishing-bite-alert',{width:.13,height:.39},scene);
+  const biteAlert=MeshBuilder.CreatePlane('fishing-bite-alert',{width:.10,height:.30},scene);
   biteAlert.billboardMode=Mesh.BILLBOARDMODE_ALL;biteAlert.material=alertMaterial;biteAlert.setEnabled(false);
   const biteAlertDot=MeshBuilder.CreateSphere('fishing-bite-alert-dot',{diameter:.12,segments:8},scene);
   biteAlertDot.material=alertMaterial;biteAlertDot.setEnabled(false);
@@ -87,6 +139,12 @@ export function createFishingRig(scene, root, human) {
     tailLobes.push(lobe);
   }
 
+  const rayDisc=MeshBuilder.CreateCylinder('caught-fish-ray-disc',{height:.07,diameterTop:.75,diameterBottom:.70,tessellation:4},scene);
+  rayDisc.parent=caughtRoot;rayDisc.material=caughtMaterial;rayDisc.rotation.y=Math.PI/4;rayDisc.scaling.set(.9,1,1.15);rayDisc.setEnabled(false);
+  const pufferSpikes=Array.from({length:10},(_,i)=>{
+    const mesh=MeshBuilder.CreateCylinder(`caught-fish-puffer-spike-${i}`,{height:.11,diameterTop:0,diameterBottom:.05,tessellation:5},scene);
+    const angle=i*Math.PI/5;mesh.position.set(Math.cos(angle)*.17,Math.sin(angle)*.16,(i%2?1:-1)*.12);mesh.rotation.z=angle-Math.PI/2;mesh.parent=caughtRoot;mesh.material=floatWhite;mesh.setEnabled(false);return mesh;
+  });
   // Mắt Anime tròn xoe long lanh chuẩn Play Together (Cute Glossy Anime Eyes)
   const eyeWhiteMat = new StandardMaterial('caught-fish-eye-white-mat', scene);
   eyeWhiteMat.diffuseColor = Color3.White();
@@ -289,11 +347,15 @@ export function createFishingRig(scene, root, human) {
   const target = new Vector3();
   const baseTarget = new Vector3();
   let phase = 'idle';
+  let fight = null;
+  let displayedPull = 0;
   let elapsed = 0;
   let castDistance = 8;
   let animationId = 'basic_cast';
   let timeUntilBiteMs = null;
   let shadowSize = 'medium';
+  let shadowShape='oval';
+  const shadowDimensions=()=>{const size=FISH_SIZE_SCALE[shadowSize]||1;const shape=FISH_FORMS[shadowShape]||FISH_FORMS.oval;return {width:.18*size*shape[2]/.18,length:.52*size*shape[0]/.54,size};};
   const catchStart = new Vector3();
   let catchAttached = false;
 
@@ -307,6 +369,7 @@ export function createFishingRig(scene, root, human) {
     phase = 'idle';
     elapsed = 0;
     bobber.setEnabled(false);
+    hideWaterEffects();
     line.setEnabled(false);
     human.clearFishingPose?.();
     caughtRoot.setEnabled(false);
@@ -338,7 +401,7 @@ export function createFishingRig(scene, root, human) {
     linePoints[0].copyFrom(hand);
     linePoints[1].set(
       (hand.x + bobber.position.x) * 0.5,
-      Math.max(hand.y, bobber.position.y) + 0.22,
+      Math.max(hand.y, bobber.position.y) + 0.22 + (phase==='reel'&&fight ? (1-(fight.tension||0)/100)*.45 : 0),
       (hand.z + bobber.position.z) * 0.5,
     );
     linePoints[2].copyFrom(bobber.position);
@@ -357,11 +420,15 @@ export function createFishingRig(scene, root, human) {
       bobber.position.copyFrom(target);
       bobber.position.y += Math.sin(elapsed * (phase === 'bite' ? 16 : 3.4)) * (phase === 'bite' ? 0.075 : 0.025);
       if (phase === 'bite') bobber.position.x += Math.sin(elapsed * 20) * 0.045;
-      if (phase === 'bite') bobber.position.y -= .12;
+      if (phase === 'bite') { bobber.position.y -= .07; bobber.rotation.z=Math.sin(elapsed*18)*.32; }
+      else bobber.rotation.z=Math.sin(elapsed*3.4)*.08;
       if (phase === 'reel') {
-        const progress=Math.min(.75,elapsed/12);
+        const motion=fight?fishingFightState(fight,Date.now()+(fight.serverOffset||0)):null;
+        if(fight)displayedPull+=(Math.min(.85,(fight.pull||0)/100*.85)-displayedPull)*(1-Math.exp(-delta*10));
+        const progress=fight?displayedPull:Math.min(.75,elapsed/12);
         Vector3.LerpToRef(target,hand,progress,bobber.position);
         bobber.position.y=target.y+Math.sin(elapsed*12)*.035;
+        if(motion){const lateral=(motion.phase==='rush'?.32:motion.phase==='warning'?.10:.035)*(1-motion.fatigue*.5);bobber.position.x+=Math.cos(root.rotation.y)*motion.direction*lateral*Math.sin(elapsed*8);bobber.position.z-=Math.sin(root.rotation.y)*motion.direction*lateral*Math.sin(elapsed*8);}
       }
     }
     if(phase==='waiting'||phase==='bite'){
@@ -369,26 +436,29 @@ export function createFishingRig(scene, root, human) {
       const approach=phase==='bite'?1:timeUntilBiteMs===null?0:Math.max(0,Math.min(1,(3400-timeUntilBiteMs)/3000));
       const distance=2.1*(1-approach);
       const direction=root.rotation.y+.55;
-      const shadowScale={small:.72,medium:1,large:1.38}[shadowSize] || 1;
-      silhouette.scaling.set(.18*shadowScale,.016,.52*shadowScale);
+      const dims=shadowDimensions(),shadowScale=dims.size;
+      silhouette.scaling.set(dims.width,.016,dims.length);
       shadowTail.scaling.set(.16*shadowScale,.012,.13*shadowScale);
-      silhouette.position.set(target.x+Math.sin(direction)*distance+Math.sin(elapsed*2)*.035,target.y+.09,target.z+Math.cos(direction)*distance+Math.cos(elapsed*2)*.04);
+      silhouette.position.set(target.x+Math.sin(direction)*distance+Math.sin(elapsed*2)*.035,target.y-.035,target.z+Math.cos(direction)*distance+Math.cos(elapsed*2)*.04);
       silhouette.rotation.y=direction+Math.PI;
-      shadowTail.position.set(silhouette.position.x+Math.sin(direction)*.23*shadowScale,silhouette.position.y,silhouette.position.z+Math.cos(direction)*.23*shadowScale);
+      shadowTail.position.set(silhouette.position.x+Math.sin(direction)*dims.length*.48,silhouette.position.y,silhouette.position.z+Math.cos(direction)*dims.length*.48);
       shadowTail.rotation.y=silhouette.rotation.y;
       silhouetteMaterial.alpha=phase==='bite'?.92:.76;
-      silhouette.setEnabled(true);
-      shadowTail.setEnabled(true);
+      silhouette.setEnabled(approach>0);
+      shadowTail.setEnabled(approach>0);
+      if(phase==='waiting'&&fishingNibbleState(timeUntilBiteMs))bobber.position.y-=.04+Math.abs(Math.sin(elapsed*20))*.025;
       if(phase==='bite'){
         splash.position.set(target.x,target.y+.1,target.z);
         splash.scaling.setAll(.8+Math.abs(Math.sin(elapsed*10))*.6);
         splash.setEnabled(true);
         const alertY=target.y+.7+Math.sin(elapsed*8)*.05;
-        biteAlert.position.set(target.x,alertY,target.z);
-        biteAlertDot.position.set(target.x,alertY-.29,target.z);
+        biteAlert.position.set(target.x+.45,alertY,target.z);
+        biteAlertDot.position.set(target.x+.45,alertY-.23,target.z);
         biteAlert.setEnabled(true);biteAlertDot.setEnabled(true);
       }else{ splash.setEnabled(false);biteAlert.setEnabled(false);biteAlertDot.setEnabled(false); }
+    }else if(phase==='reel'&&fight){const motion=fishingFightState(fight,Date.now()+(fight.serverOffset||0));const dims=shadowDimensions();silhouette.scaling.set(dims.width,.016,dims.length);silhouette.position.set(bobber.position.x,target.y-.035,bobber.position.z);silhouette.rotation.y=root.rotation.y+motion.direction*.6;silhouette.setEnabled(true);shadowTail.setEnabled(false);splash.position.set(bobber.position.x,target.y+.1,bobber.position.z);splash.scaling.setAll(.65+Math.abs(Math.sin(elapsed*12))*.5);splash.setEnabled(motion.phase==='rush'||motion.phase==='warning');biteAlert.setEnabled(false);biteAlertDot.setEnabled(false);
     }else{silhouette.setEnabled(false);shadowTail.setEnabled(false);splash.setEnabled(false);biteAlert.setEnabled(false);biteAlertDot.setEnabled(false);}
+    updateWaterEffects(delta);
     updateLine();
   };
 
@@ -407,10 +477,11 @@ export function createFishingRig(scene, root, human) {
         root.rotation.y=Math.atan2(baseTarget.x-position.x,baseTarget.z-position.z);
       }
       target.copyFrom(baseTarget);
+      fight = null;displayedPull=0;landingTime=0;hideWaterEffects();bobber.rotation.set(0,0,0);
       phase = 'cast';
       elapsed = 0;
       timeUntilBiteMs = null;
-      shadowSize = nextShadowSize;
+      shadowSize = nextShadowSize;shadowShape='oval';
       caughtRoot.parent=null;
       bobber.position.copyFrom(position);
       bobber.position.y += 0.9;
@@ -419,12 +490,16 @@ export function createFishingRig(scene, root, human) {
       caughtRoot.setEnabled(false);
       human.playFishingAction?.('cast', () => {
         phase = 'waiting';
+        landingTime=.85;
         elapsed = 0;
         human.setFishingPose?.(true);
       }, animationDuration('cast'));
     },
-    setPhase(nextPhase, nextTimeUntilBiteMs = null) {
+    setPhase(nextPhase, nextTimeUntilBiteMs = null, nextFight = null) {
       if (phase === 'idle') return;
+      fight = nextFight;
+      if(nextFight?.shadowShape)shadowShape=nextFight.shadowShape;
+      if(nextFight?.shadowSize)shadowSize=nextFight.shadowSize;
       if(Number.isFinite(nextTimeUntilBiteMs))timeUntilBiteMs=Math.max(0,nextTimeUntilBiteMs);
       if (phase === 'cast') return;
       if(nextPhase==='reel' && phase!=='reel') human.playFishingAction?.('reel',()=>human.setFishingPose?.(true),animationDuration('reel'));
@@ -449,15 +524,15 @@ export function createFishingRig(scene, root, human) {
         caughtMaterial.ambientColor = c.scale(0.42);
         caughtMaterial.emissiveColor = c.scale(0.18);
       }
-      const shape = {
-        carp: [.54, .24, .18],
-        perch: [.48, .20, .16],
-        golden_carp: [.58, .25, .21],
-        river_catfish: [.62, .16, .17],
-        river_barb: [.55, .18, .15],
-        sea_mackerel: [.68, .15, .15],
-        sea_snapper: [.54, .22, .19],
-      }[fish?.id] || [.53, .2, .17];
+      const form=fishForm(fish);
+      const shape=FISH_FORMS[form]||FISH_FORMS.oval;
+      rayDisc.setEnabled(form==='flat');body.setEnabled(form!=='flat');belly.setEnabled(form!=='flat');
+      pufferSpikes.forEach(mesh=>mesh.setEnabled(form==='round'));
+      tail.scaling.set(form==='eel'?.45:form==='flat'?.4:.19,form==='flat'?.025:form==='eel'?.06:.11,form==='flat'?.035:.07);
+      tailLobes.forEach(mesh=>mesh.setEnabled(!['eel','flat','round'].includes(form)));
+      fin.setEnabled(!['eel','flat','round'].includes(form));lowerFin.setEnabled(!['eel','flat'].includes(form));
+      fin.scaling.y=form==='deep'?1.5:1;
+      snout.scaling.set(form==='round'?.06:.11,form==='flat'?.04:.075,form==='flat'?.16:.105);
 
       body.scaling.set(...shape);
       belly.scaling.set(shape[0] * .82, shape[1] * .46, shape[2] * .85);
@@ -491,10 +566,10 @@ export function createFishingRig(scene, root, human) {
 
       spots.forEach((spot, index) => {
         spot.position.z = (index < 3 ? -1 : 1) * (shape[2] + .004);
-        spot.setEnabled(['carp', 'golden_carp', 'sea_snapper'].includes(fish?.id));
+        spot.setEnabled(['carp', 'golden_carp', 'sea_snapper','koi','puffer'].includes(fish?.id));
       });
-      for (const stripe of stripes) stripe.setEnabled(['perch', 'river_barb', 'sea_mackerel'].includes(fish?.id));
-      for (const whisker of whiskers) whisker.setEnabled(fish?.id === 'river_catfish');
+      for (const stripe of stripes) stripe.setEnabled(['perch', 'river_barb', 'sea_mackerel','tilapia','clownfish'].includes(fish?.id));
+      for (const whisker of whiskers) whisker.setEnabled(form === 'catfish');
 
       // Vương miện hoàng gia Play Together cho cá Huyền thoại (Golden Crown)
       const isCrowned = fish?.rarity === 'legendary' || fish?.id === 'golden_carp';
@@ -504,12 +579,12 @@ export function createFishingRig(scene, root, human) {
         crownRoot.scaling.setAll(1.2);
       }
 
-      stripeMaterial.diffuseColor = fish?.id === 'perch' ? Color3.FromHexString('#164e32') : Color3.FromHexString('#1e3a5f');
-      spotMaterial.diffuseColor = fish?.id === 'sea_snapper' ? Color3.FromHexString('#fef08a') : Color3.FromHexString('#fde047');
+      stripeMaterial.diffuseColor = fish?.id === 'clownfish' ? Color3.White() : fish?.id === 'perch' ? Color3.FromHexString('#164e32') : Color3.FromHexString('#1e3a5f');
+      spotMaterial.diffuseColor = fish?.id === 'koi' ? Color3.FromHexString('#ec6237') : fish?.id === 'sea_snapper' ? Color3.FromHexString('#fef08a') : Color3.FromHexString('#fde047');
       bellyMaterial.diffuseColor = fish?.id === 'golden_carp' ? Color3.FromHexString('#fef9c3') : fish?.id === 'sea_snapper' ? Color3.FromHexString('#ffe4e6') : Color3.FromHexString('#f1f5f9');
-      caughtRoot.scaling.setAll(fish?.rarity === 'legendary' ? 1.25 : 1);
+      caughtRoot.scaling.setAll(caughtFishScale(fish));
       caughtRoot.setEnabled(true);
-      bobber.setEnabled(false);line.setEnabled(false);
+      bobber.setEnabled(false);line.setEnabled(false);hideWaterEffects();splash.setEnabled(false);
       silhouette.setEnabled(false);
       biteAlert.setEnabled(false);biteAlertDot.setEnabled(false);
       human.playFishingAction?.('catch', () => human.setFishingCatchPose?.(), animationDuration('catch'));
@@ -518,7 +593,8 @@ export function createFishingRig(scene, root, human) {
     dispose() {
       hide();
       bobberMaterial.dispose();
-      bobber.dispose();
+      bobber.dispose();floatWhite.dispose();
+      ripples.forEach(mesh=>{mesh.material.dispose();mesh.dispose();});drops.forEach(mesh=>mesh.dispose());
       silhouette.dispose();silhouetteMaterial.dispose();
       shadowTail.dispose();splash.dispose();splashMaterial.dispose();biteAlert.dispose();biteAlertDot.dispose();alertMaterial.dispose();
       line.dispose();
@@ -711,6 +787,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
                 autoTarget = null;
                 onArrive = null;
                 autoTargetStuckFrames = 0;
+                controls.onAutoMoveBlocked?.();
               }
             } else {
               autoTargetStuckFrames = 0;
@@ -827,8 +904,8 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       onArrive = null;
       fishingRig.startCast(options.distance || 8, options.animation || 'basic_cast', options.target, options.shadowSize);
     },
-    setFishingPhase(phase, timeUntilBiteMs = null) {
-      fishingRig.setPhase(phase, timeUntilBiteMs);
+    setFishingPhase(phase, timeUntilBiteMs = null, fight = null) {
+      fishingRig.setPhase(phase, timeUntilBiteMs, fight);
     },
     playFishingReel() {
       fishingRig.playReel();

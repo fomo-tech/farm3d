@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {claimLegacyQuest} from '../shared/questRewards.js';
+import {simulateCombinedFarm} from './economy/combinedFarmSimulation.js';
+import {ATTENDANCE_REWARDS} from '../shared/dailyAttendance.js';
+import {MAIN_MISSIONS,DAILY_MISSIONS} from '../shared/missions.js';
+import {ECONOMY_REWARD_CONFIG} from '../shared/economyRewardConfig.js';
+const p={coins:0,xp:0,stats:{planted:3},claimedQuests:[]};
+for(const id of ['toString','__proto__','constructor','missing']){const before=JSON.stringify(p);assert(claimLegacyQuest(p,id));assert.equal(JSON.stringify(p),before);}
+assert(claimLegacyQuest({...p,stats:{}},'plant-3'));assert.equal(claimLegacyQuest(p,'plant-3'),null);assert.equal(p.coins,35);assert(claimLegacyQuest(p,'plant-3'));assert.equal(p.coins,35);
+const r=simulateCombinedFarm({includeRewards:true,sessions:3});
+const income=['cropSales','animalSales','craftedSales','orders','attendance','legacyRewards','mainRewards','dailyRewards'],expense=['seeds','pens','animals','feed','reset','expansion'];
+assert.equal(r.ledger.attendance,ATTENDANCE_REWARDS.slice(0,3).reduce((a,b)=>a+b,0));
+assert(r.ledger.mainRewards>0);assert(r.ledger.dailyRewards>0);assert(r.ledger.legacyRewards>0);
+assert(r.ledger.legacyRewards<=Object.values(ECONOMY_REWARD_CONFIG.quests).reduce((n,q)=>n+q.coins,0));
+assert(r.ledger.mainRewards<=MAIN_MISSIONS.reduce((n,m)=>n+m.coins,0));assert(r.ledger.dailyRewards<=3*DAILY_MISSIONS.reduce((n,m)=>n+m.coins,0));
+assert.equal(new Set(r.progress.claimedQuests).size,r.progress.claimedQuests.length);
+for(const row of r.rows)assert.equal(row.coins,250+income.reduce((n,k)=>n+row.ledger[k],0)-expense.reduce((n,k)=>n+row.ledger[k],0));
+assert(r.actions*2500<=3*30*60000);assert(r.rows.every(row=>row.inventoryCount<=r.capacity));
+assert.deepEqual(r,simulateCombinedFarm({includeRewards:true,sessions:3}));
+assert.equal(simulateCombinedFarm({includeRewards:false,sessions:1}).ledger.attendance,0);
+console.log('PASS rewards: invalid quest IDs/stats, one-time rewards, UTC attendance, bounded main/daily payout and shared simulation cash/time/storage.');

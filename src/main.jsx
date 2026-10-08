@@ -5,6 +5,7 @@ import App from './App.jsx';
 import './styles.css';
 import './game-ui.css';
 import './components/CompactGameHud.css';
+import './components/MobileViewport.css';
 import './game/rendering/RuntimeAudit.js';
 
 window.__farmDebug?.mark('React entry executing');

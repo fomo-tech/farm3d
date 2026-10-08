@@ -5,7 +5,7 @@ let queue = Promise.resolve();
 
 // One queued capture per browser task, using the already mounted preview engine.
 export function FashionMeshThumbnail({ item, field, capture }) {
-  const key = `v3_pt:${field}:${item.id}`;
+  const key = `farm_fit_v4:${field}:${item.id}`;
   const [src, setSrc] = useState(() => cache.get(key));
   useEffect(() => {
     let cancelled = false;

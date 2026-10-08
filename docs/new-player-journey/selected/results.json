@@ -1,0 +1,7238 @@
+{
+  "generatedAt": "2026-10-07T01:03:23.639Z",
+  "samples": 32,
+  "land": {
+    "minPrice": 6000,
+    "maxPrice": 12000,
+    "starterDiscount": 0,
+    "roundingStep": 50,
+    "center": {
+      "x": 0,
+      "z": 0
+    },
+    "villageMultipliers": {},
+    "overrides": {}
+  },
+  "expansion": {
+    "version": 3,
+    "columns": 6,
+    "rows": 4,
+    "initialTiles": [
+      "0:0",
+      "1:0",
+      "2:0",
+      "3:0"
+    ],
+    "requireAdjacent": true,
+    "reserveCoins": 0,
+    "tiers": [
+      {
+        "through": 5,
+        "cost": 2500,
+        "level": 1
+      },
+      {
+        "through": 6,
+        "cost": 6500,
+        "level": 1
+      },
+      {
+        "through": 7,
+        "cost": 7000,
+        "level": 1
+      },
+      {
+        "through": 8,
+        "cost": 8000,
+        "level": 1
+      },
+      {
+        "through": 12,
+        "cost": 20000,
+        "level": 2
+      },
+      {
+        "through": 18,
+        "cost": 60000,
+        "level": 4
+      },
+      {
+        "through": 24,
+        "cost": 120000,
+        "level": 6
+      }
+    ],
+    "legacy": {
+      "columns": 4,
+      "rows": 3
+    },
+    "visuals": {
+      "spacingX": 2.1,
+      "spacingZ": 1.5,
+      "centerZ": -2.8,
+      "lockedColor": "#76bd37"
+    }
+  },
+  "rows": [
+    {
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "samples": 32,
+      "purchased": 32,
+      "withinTwoDays": 0,
+      "purchaseDay": {
+        "p10": 3,
+        "p50": 3,
+        "p90": 3
+      },
+      "purchaseMinutes": {
+        "p10": 77.13,
+        "p50": 81.42,
+        "p90": 84.39
+      },
+      "walletAfterPurchase": {
+        "p10": 24,
+        "p50": 130,
+        "p90": 226
+      },
+      "walletAfterTutorial": {
+        "p10": 339,
+        "p50": 445,
+        "p90": 541
+      },
+      "milestones": {
+        "5": {
+          "reached": 32,
+          "day": {
+            "p10": 4,
+            "p50": 4,
+            "p90": 4
+          },
+          "minutes": {
+            "p10": 20.96,
+            "p50": 24.16,
+            "p90": 25.58
+          }
+        },
+        "6": {
+          "reached": 32,
+          "day": {
+            "p10": 4,
+            "p50": 5,
+            "p90": 5
+          },
+          "minutes": {
+            "p10": 35.83,
+            "p50": 39.27,
+            "p90": 43.01
+          }
+        },
+        "7": {
+          "reached": 32,
+          "day": {
+            "p10": 5,
+            "p50": 5,
+            "p90": 5
+          },
+          "minutes": {
+            "p10": 51.37,
+            "p50": 54.29,
+            "p90": 58.66
+          }
+        },
+        "8": {
+          "reached": 32,
+          "day": {
+            "p10": 6,
+            "p50": 6,
+            "p90": 6
+          },
+          "minutes": {
+            "p10": 73.79,
+            "p50": 82.16,
+            "p90": 83.54
+          }
+        }
+      }
+    },
+    {
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "samples": 32,
+      "purchased": 32,
+      "withinTwoDays": 32,
+      "purchaseDay": {
+        "p10": 2,
+        "p50": 2,
+        "p90": 2
+      },
+      "purchaseMinutes": {
+        "p10": 80.81,
+        "p50": 84.41,
+        "p90": 87.43
+      },
+      "walletAfterPurchase": {
+        "p10": 42,
+        "p50": 159,
+        "p90": 255
+      },
+      "walletAfterTutorial": {
+        "p10": 357,
+        "p50": 474,
+        "p90": 570
+      },
+      "milestones": {
+        "5": {
+          "reached": 32,
+          "day": {
+            "p10": 2,
+            "p50": 2,
+            "p90": 2
+          },
+          "minutes": {
+            "p10": 26.75,
+            "p50": 28.38,
+            "p90": 30.46
+          }
+        },
+        "6": {
+          "reached": 32,
+          "day": {
+            "p10": 3,
+            "p50": 3,
+            "p90": 3
+          },
+          "minutes": {
+            "p10": 46.03,
+            "p50": 49.92,
+            "p90": 51.1
+          }
+        },
+        "7": {
+          "reached": 32,
+          "day": {
+            "p10": 3,
+            "p50": 3,
+            "p90": 3
+          },
+          "minutes": {
+            "p10": 60.24,
+            "p50": 65.37,
+            "p90": 68.18
+          }
+        },
+        "8": {
+          "reached": 32,
+          "day": {
+            "p10": 3,
+            "p50": 3,
+            "p90": 4
+          },
+          "minutes": {
+            "p10": 83.59,
+            "p50": 88.75,
+            "p90": 93.17
+          }
+        }
+      }
+    },
+    {
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "samples": 32,
+      "purchased": 32,
+      "withinTwoDays": 32,
+      "purchaseDay": {
+        "p10": 1,
+        "p50": 1,
+        "p90": 1
+      },
+      "purchaseMinutes": {
+        "p10": 83.99,
+        "p50": 86.94,
+        "p90": 91.36
+      },
+      "walletAfterPurchase": {
+        "p10": 17,
+        "p50": 128,
+        "p90": 188
+      },
+      "walletAfterTutorial": {
+        "p10": 332,
+        "p50": 443,
+        "p90": 503
+      },
+      "milestones": {
+        "5": {
+          "reached": 32,
+          "day": {
+            "p10": 1,
+            "p50": 1,
+            "p90": 2
+          },
+          "minutes": {
+            "p10": 27.71,
+            "p50": 28.62,
+            "p90": 30.54
+          }
+        },
+        "6": {
+          "reached": 32,
+          "day": {
+            "p10": 2,
+            "p50": 2,
+            "p90": 2
+          },
+          "minutes": {
+            "p10": 47.41,
+            "p50": 49.81,
+            "p90": 52.01
+          }
+        },
+        "7": {
+          "reached": 32,
+          "day": {
+            "p10": 2,
+            "p50": 2,
+            "p90": 2
+          },
+          "minutes": {
+            "p10": 64.27,
+            "p50": 67.23,
+            "p90": 72.99
+          }
+        },
+        "8": {
+          "reached": 32,
+          "day": {
+            "p10": 2,
+            "p50": 2,
+            "p90": 2
+          },
+          "minutes": {
+            "p10": 87.65,
+            "p50": 92.93,
+            "p90": 95.48
+          }
+        }
+      }
+    }
+  ],
+  "details": [
+    {
+      "seed": 1,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 78.237,
+        "calendarHours": 58.054,
+        "session": 6,
+        "coins": 6179,
+        "walletAfterLand": 179,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547394239
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791547994239,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 494,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 102.4,
+          "calendarDay": 4,
+          "coinsAfter": 453
+        },
+        "6": {
+          "activeMinutes": 120.74,
+          "calendarDay": 5,
+          "coinsAfter": 3783
+        },
+        "7": {
+          "activeMinutes": 135.78,
+          "calendarDay": 5,
+          "coinsAfter": 2095
+        },
+        "8": {
+          "activeMinutes": 157.7,
+          "calendarDay": 6,
+          "coinsAfter": 618
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5314,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 151748,
+        "animalSales": 15078,
+        "craftedSales": 10368,
+        "orders": 14190,
+        "seeds": 16026,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7920,
+        "reset": 825,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 7507,
+      "minCoins": 196
+    },
+    {
+      "seed": 2,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 77.412,
+        "calendarHours": 58.04,
+        "session": 6,
+        "coins": 6115,
+        "walletAfterLand": 115,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547344706
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791547944706,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 430,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 102.5,
+          "calendarDay": 4,
+          "coinsAfter": 428
+        },
+        "6": {
+          "activeMinutes": 120.75,
+          "calendarDay": 5,
+          "coinsAfter": 3758
+        },
+        "7": {
+          "activeMinutes": 135.79,
+          "calendarDay": 5,
+          "coinsAfter": 2070
+        },
+        "8": {
+          "activeMinutes": 159.38,
+          "calendarDay": 6,
+          "coinsAfter": 620
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5250,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 151748,
+        "animalSales": 15132,
+        "craftedSales": 10368,
+        "orders": 14190,
+        "seeds": 16026,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7935,
+        "reset": 825,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 7482,
+      "minCoins": 132
+    },
+    {
+      "seed": 3,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 82.169,
+        "calendarHours": 58.119,
+        "session": 6,
+        "coins": 6226,
+        "walletAfterLand": 226,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547630169
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597730169,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 541,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.83,
+          "calendarDay": 4,
+          "coinsAfter": 2339
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3300
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 1595
+        },
+        "8": {
+          "activeMinutes": 164.33,
+          "calendarDay": 6,
+          "coinsAfter": 690
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5361,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 150840,
+        "animalSales": 14984,
+        "craftedSales": 10080,
+        "orders": 13905,
+        "seeds": 15933,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7800,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 6217,
+      "minCoins": 232
+    },
+    {
+      "seed": 4,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 83.673,
+        "calendarHours": 58.145,
+        "session": 6,
+        "coins": 6226,
+        "walletAfterLand": 226,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547720399
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597820399,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 541,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.87,
+          "calendarDay": 4,
+          "coinsAfter": 2142
+        },
+        "6": {
+          "activeMinutes": 120.75,
+          "calendarDay": 5,
+          "coinsAfter": 3009
+        },
+        "7": {
+          "activeMinutes": 135.79,
+          "calendarDay": 5,
+          "coinsAfter": 1302
+        },
+        "8": {
+          "activeMinutes": 165.87,
+          "calendarDay": 6,
+          "coinsAfter": 5592
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5361,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 149176,
+        "animalSales": 14890,
+        "craftedSales": 10080,
+        "orders": 13760,
+        "seeds": 15756,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7770,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 4521,
+      "minCoins": 232
+    },
+    {
+      "seed": 5,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 85.426,
+        "calendarHours": 58.174,
+        "session": 6,
+        "coins": 6147,
+        "walletAfterLand": 147,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547825552
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597925552,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 462,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.92,
+          "calendarDay": 4,
+          "coinsAfter": 1873
+        },
+        "6": {
+          "activeMinutes": 120.75,
+          "calendarDay": 5,
+          "coinsAfter": 2822
+        },
+        "7": {
+          "activeMinutes": 135.79,
+          "calendarDay": 5,
+          "coinsAfter": 1134
+        },
+        "8": {
+          "activeMinutes": 165.88,
+          "calendarDay": 6,
+          "coinsAfter": 5424
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5282,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 149176,
+        "animalSales": 14756,
+        "craftedSales": 10080,
+        "orders": 13760,
+        "seeds": 15756,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7725,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 4353,
+      "minCoins": 217
+    },
+    {
+      "seed": 6,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 80.99,
+        "calendarHours": 58.1,
+        "session": 6,
+        "coins": 6130,
+        "walletAfterLand": 130,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547559413
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597659413,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 445,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.83,
+          "calendarDay": 4,
+          "coinsAfter": 2307
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3268
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 1563
+        },
+        "8": {
+          "activeMinutes": 164.33,
+          "calendarDay": 6,
+          "coinsAfter": 658
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5265,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 150840,
+        "animalSales": 15078,
+        "craftedSales": 10080,
+        "orders": 13905,
+        "seeds": 15933,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7830,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 6185,
+      "minCoins": 200
+    },
+    {
+      "seed": 7,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 74.082,
+        "calendarHours": 48.235,
+        "session": 5,
+        "coins": 6046,
+        "walletAfterLand": 46,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791512044899
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791547744899,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 361,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 101.17,
+          "calendarDay": 4,
+          "coinsAfter": 378
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3974
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 2269
+        },
+        "8": {
+          "activeMinutes": 157.67,
+          "calendarDay": 6,
+          "coinsAfter": 695
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5181,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 151772,
+        "animalSales": 15240,
+        "craftedSales": 10368,
+        "orders": 14335,
+        "seeds": 16051,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7965,
+        "reset": 825,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 7635,
+      "minCoins": 63
+    },
+    {
+      "seed": 8,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 86.682,
+        "calendarHours": 58.195,
+        "session": 6,
+        "coins": 6116,
+        "walletAfterLand": 116,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547900905
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791598000905,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 431,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.81,
+          "calendarDay": 4,
+          "coinsAfter": 416
+        },
+        "6": {
+          "activeMinutes": 120.72,
+          "calendarDay": 5,
+          "coinsAfter": 1603
+        },
+        "7": {
+          "activeMinutes": 147.56,
+          "calendarDay": 5,
+          "coinsAfter": 652
+        },
+        "8": {
+          "activeMinutes": 165.85,
+          "calendarDay": 6,
+          "coinsAfter": 4205
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5251,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 147936,
+        "animalSales": 14662,
+        "craftedSales": 10080,
+        "orders": 13760,
+        "seeds": 15640,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7695,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 3134,
+      "minCoins": 186
+    },
+    {
+      "seed": 9,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 77.126,
+        "calendarHours": 58.035,
+        "session": 6,
+        "coins": 6012,
+        "walletAfterLand": 12,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547327564
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791547927564,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 327,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 103.25,
+          "calendarDay": 4,
+          "coinsAfter": 292
+        },
+        "6": {
+          "activeMinutes": 118.21,
+          "calendarDay": 4,
+          "coinsAfter": 2250
+        },
+        "7": {
+          "activeMinutes": 135.79,
+          "calendarDay": 5,
+          "coinsAfter": 4907
+        },
+        "8": {
+          "activeMinutes": 150.92,
+          "calendarDay": 6,
+          "coinsAfter": 3176
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5147,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 156688,
+        "animalSales": 14522,
+        "craftedSales": 9984,
+        "orders": 14190,
+        "seeds": 16486,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7630,
+        "reset": 825,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 11170,
+      "minCoins": 109
+    },
+    {
+      "seed": 10,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 84.901,
+        "calendarHours": 58.165,
+        "session": 6,
+        "coins": 6227,
+        "walletAfterLand": 227,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547794032
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597894032,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 542,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.86,
+          "calendarDay": 4,
+          "coinsAfter": 1953
+        },
+        "6": {
+          "activeMinutes": 120.73,
+          "calendarDay": 5,
+          "coinsAfter": 2902
+        },
+        "7": {
+          "activeMinutes": 135.78,
+          "calendarDay": 5,
+          "coinsAfter": 1214
+        },
+        "8": {
+          "activeMinutes": 165.86,
+          "calendarDay": 6,
+          "coinsAfter": 5504
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5362,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 149176,
+        "animalSales": 14756,
+        "craftedSales": 10080,
+        "orders": 13760,
+        "seeds": 15756,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7725,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 4433,
+      "minCoins": 233
+    },
+    {
+      "seed": 11,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 81.565,
+        "calendarHours": 58.109,
+        "session": 6,
+        "coins": 6241,
+        "walletAfterLand": 241,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547593888
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597693888,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 556,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.67,
+          "calendarDay": 4,
+          "coinsAfter": 2420
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3381
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 1676
+        },
+        "8": {
+          "activeMinutes": 162.79,
+          "calendarDay": 6,
+          "coinsAfter": 653
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5376,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 150840,
+        "animalSales": 14634,
+        "craftedSales": 9984,
+        "orders": 13905,
+        "seeds": 15933,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7665,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 5921,
+      "minCoins": 109
+    },
+    {
+      "seed": 12,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 82.836,
+        "calendarHours": 58.131,
+        "session": 6,
+        "coins": 6059,
+        "walletAfterLand": 59,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547670163
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597770163,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 374,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.75,
+          "calendarDay": 4,
+          "coinsAfter": 2027
+        },
+        "6": {
+          "activeMinutes": 120.71,
+          "calendarDay": 5,
+          "coinsAfter": 2906
+        },
+        "7": {
+          "activeMinutes": 135.75,
+          "calendarDay": 5,
+          "coinsAfter": 1199
+        },
+        "8": {
+          "activeMinutes": 165.84,
+          "calendarDay": 6,
+          "coinsAfter": 5489
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5194,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 149176,
+        "animalSales": 14984,
+        "craftedSales": 10080,
+        "orders": 13760,
+        "seeds": 15756,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7800,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 4418,
+      "minCoins": 129
+    },
+    {
+      "seed": 13,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 81.735,
+        "calendarHours": 58.112,
+        "session": 6,
+        "coins": 6152,
+        "walletAfterLand": 152,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547604080
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597704080,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 467,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.83,
+          "calendarDay": 4,
+          "coinsAfter": 2290
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3251
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 1546
+        },
+        "8": {
+          "activeMinutes": 164.33,
+          "calendarDay": 6,
+          "coinsAfter": 641
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5287,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 150840,
+        "animalSales": 15024,
+        "craftedSales": 10080,
+        "orders": 13905,
+        "seeds": 15933,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7815,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 6168,
+      "minCoins": 222
+    },
+    {
+      "seed": 14,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 82.14,
+        "calendarHours": 58.119,
+        "session": 6,
+        "coins": 6107,
+        "walletAfterLand": 107,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547628373
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597728373,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 422,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.83,
+          "calendarDay": 4,
+          "coinsAfter": 2220
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3181
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 1476
+        },
+        "8": {
+          "activeMinutes": 165.79,
+          "calendarDay": 6,
+          "coinsAfter": 5766
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5242,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 149200,
+        "animalSales": 14984,
+        "craftedSales": 10080,
+        "orders": 13905,
+        "seeds": 15781,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7800,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 4610,
+      "minCoins": 177
+    },
+    {
+      "seed": 15,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 81.419,
+        "calendarHours": 58.107,
+        "session": 6,
+        "coins": 6310,
+        "walletAfterLand": 310,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547585111
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597685111,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 625,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.67,
+          "calendarDay": 4,
+          "coinsAfter": 2514
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3475
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 1770
+        },
+        "8": {
+          "activeMinutes": 161.63,
+          "calendarDay": 6,
+          "coinsAfter": 612
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5445,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 150840,
+        "animalSales": 14674,
+        "craftedSales": 9984,
+        "orders": 13905,
+        "seeds": 15933,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7680,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 6015,
+      "minCoins": 117
+    },
+    {
+      "seed": 16,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 77.741,
+        "calendarHours": 58.046,
+        "session": 6,
+        "coins": 6145,
+        "walletAfterLand": 145,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547364453
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791547964453,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 460,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 102.5,
+          "calendarDay": 4,
+          "coinsAfter": 458
+        },
+        "6": {
+          "activeMinutes": 120.75,
+          "calendarDay": 5,
+          "coinsAfter": 3788
+        },
+        "7": {
+          "activeMinutes": 135.79,
+          "calendarDay": 5,
+          "coinsAfter": 2100
+        },
+        "8": {
+          "activeMinutes": 157.71,
+          "calendarDay": 6,
+          "coinsAfter": 623
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5280,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 151748,
+        "animalSales": 15132,
+        "craftedSales": 10368,
+        "orders": 14190,
+        "seeds": 16026,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7935,
+        "reset": 825,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 7512,
+      "minCoins": 162
+    },
+    {
+      "seed": 17,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 80.501,
+        "calendarHours": 58.092,
+        "session": 6,
+        "coins": 6194,
+        "walletAfterLand": 194,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547530068
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597630068,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 509,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.83,
+          "calendarDay": 4,
+          "coinsAfter": 2396
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3357
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 1652
+        },
+        "8": {
+          "activeMinutes": 162.79,
+          "calendarDay": 6,
+          "coinsAfter": 629
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5329,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 150840,
+        "animalSales": 14768,
+        "craftedSales": 9888,
+        "orders": 13905,
+        "seeds": 15933,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7680,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 5897,
+      "minCoins": 85
+    },
+    {
+      "seed": 18,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 86.22,
+        "calendarHours": 58.187,
+        "session": 6,
+        "coins": 6160,
+        "walletAfterLand": 160,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547873221
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597973221,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 475,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.84,
+          "calendarDay": 4,
+          "coinsAfter": 1086
+        },
+        "6": {
+          "activeMinutes": 120.72,
+          "calendarDay": 5,
+          "coinsAfter": 2273
+        },
+        "7": {
+          "activeMinutes": 135.76,
+          "calendarDay": 5,
+          "coinsAfter": 585
+        },
+        "8": {
+          "activeMinutes": 165.84,
+          "calendarDay": 6,
+          "coinsAfter": 4498
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5295,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 148556,
+        "animalSales": 14406,
+        "craftedSales": 9888,
+        "orders": 13760,
+        "seeds": 15698,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7560,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 3427,
+      "minCoins": 124
+    },
+    {
+      "seed": 19,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 77.452,
+        "calendarHours": 58.041,
+        "session": 6,
+        "coins": 6076,
+        "walletAfterLand": 76,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547347096
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791547947096,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 391,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 102.5,
+          "calendarDay": 4,
+          "coinsAfter": 389
+        },
+        "6": {
+          "activeMinutes": 118.21,
+          "calendarDay": 4,
+          "coinsAfter": 2366
+        },
+        "7": {
+          "activeMinutes": 134.33,
+          "calendarDay": 5,
+          "coinsAfter": 546
+        },
+        "8": {
+          "activeMinutes": 150.92,
+          "calendarDay": 6,
+          "coinsAfter": 4036
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5211,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 157508,
+        "animalSales": 15186,
+        "craftedSales": 10368,
+        "orders": 14190,
+        "seeds": 16562,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7950,
+        "reset": 825,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 12706,
+      "minCoins": 93
+    },
+    {
+      "seed": 20,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 80.365,
+        "calendarHours": 58.089,
+        "session": 6,
+        "coins": 6185,
+        "walletAfterLand": 185,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547521884
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597621884,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 500,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.78,
+          "calendarDay": 4,
+          "coinsAfter": 2387
+        },
+        "6": {
+          "activeMinutes": 120.82,
+          "calendarDay": 5,
+          "coinsAfter": 3348
+        },
+        "7": {
+          "activeMinutes": 135.7,
+          "calendarDay": 5,
+          "coinsAfter": 1643
+        },
+        "8": {
+          "activeMinutes": 162.78,
+          "calendarDay": 6,
+          "coinsAfter": 620
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5320,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 150840,
+        "animalSales": 14768,
+        "craftedSales": 9888,
+        "orders": 13905,
+        "seeds": 15933,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7680,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 5888,
+      "minCoins": 76
+    },
+    {
+      "seed": 21,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 81.95,
+        "calendarHours": 58.116,
+        "session": 6,
+        "coins": 6119,
+        "walletAfterLand": 119,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547616990
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597716990,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 434,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.83,
+          "calendarDay": 4,
+          "coinsAfter": 2232
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3193
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 1488
+        },
+        "8": {
+          "activeMinutes": 165.79,
+          "calendarDay": 6,
+          "coinsAfter": 5778
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5254,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 149200,
+        "animalSales": 14984,
+        "craftedSales": 10080,
+        "orders": 13905,
+        "seeds": 15781,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7800,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 4622,
+      "minCoins": 189
+    },
+    {
+      "seed": 22,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 74.697,
+        "calendarHours": 48.245,
+        "session": 5,
+        "coins": 6273,
+        "walletAfterLand": 273,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791512081791
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791547781791,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 588,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 100.91,
+          "calendarDay": 4,
+          "coinsAfter": 506
+        },
+        "6": {
+          "activeMinutes": 120.74,
+          "calendarDay": 5,
+          "coinsAfter": 4035
+        },
+        "7": {
+          "activeMinutes": 135.78,
+          "calendarDay": 5,
+          "coinsAfter": 2347
+        },
+        "8": {
+          "activeMinutes": 150.91,
+          "calendarDay": 6,
+          "coinsAfter": 616
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5408,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 151748,
+        "animalSales": 15106,
+        "craftedSales": 10368,
+        "orders": 14190,
+        "seeds": 16026,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7920,
+        "reset": 825,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 7629,
+      "minCoins": 251
+    },
+    {
+      "seed": 23,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 82.246,
+        "calendarHours": 58.121,
+        "session": 6,
+        "coins": 6024,
+        "walletAfterLand": 24,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547634782
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597734782,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 339,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.67,
+          "calendarDay": 4,
+          "coinsAfter": 2153
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3114
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 1409
+        },
+        "8": {
+          "activeMinutes": 165.79,
+          "calendarDay": 6,
+          "coinsAfter": 5699
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5159,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 149200,
+        "animalSales": 14904,
+        "craftedSales": 10176,
+        "orders": 13905,
+        "seeds": 15781,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7800,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 4543,
+      "minCoins": 230
+    },
+    {
+      "seed": 24,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 75.165,
+        "calendarHours": 58.003,
+        "session": 6,
+        "coins": 6109,
+        "walletAfterLand": 109,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547209896
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791547809896,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 424,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 102.33,
+          "calendarDay": 4,
+          "coinsAfter": 667
+        },
+        "6": {
+          "activeMinutes": 120.75,
+          "calendarDay": 5,
+          "coinsAfter": 3807
+        },
+        "7": {
+          "activeMinutes": 135.79,
+          "calendarDay": 5,
+          "coinsAfter": 2119
+        },
+        "8": {
+          "activeMinutes": 157.71,
+          "calendarDay": 6,
+          "coinsAfter": 642
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5244,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 151748,
+        "animalSales": 15106,
+        "craftedSales": 10464,
+        "orders": 14190,
+        "seeds": 16026,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7950,
+        "reset": 825,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 7531,
+      "minCoins": 126
+    },
+    {
+      "seed": 25,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 81.054,
+        "calendarHours": 58.101,
+        "session": 6,
+        "coins": 6180,
+        "walletAfterLand": 180,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547563212
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597663212,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 495,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.83,
+          "calendarDay": 4,
+          "coinsAfter": 2357
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3318
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 1613
+        },
+        "8": {
+          "activeMinutes": 164.33,
+          "calendarDay": 6,
+          "coinsAfter": 708
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5315,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 150840,
+        "animalSales": 15078,
+        "craftedSales": 10080,
+        "orders": 13905,
+        "seeds": 15933,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7830,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 6235,
+      "minCoins": 186
+    },
+    {
+      "seed": 26,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 78.522,
+        "calendarHours": 58.059,
+        "session": 6,
+        "coins": 6017,
+        "walletAfterLand": 17,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547411339
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791548011339,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 332,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 103.33,
+          "calendarDay": 4,
+          "coinsAfter": 297
+        },
+        "6": {
+          "activeMinutes": 118.04,
+          "calendarDay": 4,
+          "coinsAfter": 979
+        },
+        "7": {
+          "activeMinutes": 135.79,
+          "calendarDay": 5,
+          "coinsAfter": 3788
+        },
+        "8": {
+          "activeMinutes": 150.92,
+          "calendarDay": 6,
+          "coinsAfter": 2057
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5152,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 153808,
+        "animalSales": 15114,
+        "craftedSales": 10368,
+        "orders": 14190,
+        "seeds": 16218,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7930,
+        "reset": 825,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 9239,
+      "minCoins": 114
+    },
+    {
+      "seed": 27,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 77.337,
+        "calendarHours": 58.039,
+        "session": 6,
+        "coins": 6028,
+        "walletAfterLand": 28,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547340199
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791547940199,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 343,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 102.54,
+          "calendarDay": 4,
+          "coinsAfter": 315
+        },
+        "6": {
+          "activeMinutes": 118.21,
+          "calendarDay": 4,
+          "coinsAfter": 2253
+        },
+        "7": {
+          "activeMinutes": 135.79,
+          "calendarDay": 5,
+          "coinsAfter": 4910
+        },
+        "8": {
+          "activeMinutes": 150.92,
+          "calendarDay": 6,
+          "coinsAfter": 3179
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5163,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 156688,
+        "animalSales": 14504,
+        "craftedSales": 9984,
+        "orders": 14190,
+        "seeds": 16486,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7625,
+        "reset": 825,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 11173,
+      "minCoins": 110
+    },
+    {
+      "seed": 28,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 84.385,
+        "calendarHours": 58.156,
+        "session": 6,
+        "coins": 6118,
+        "walletAfterLand": 118,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547763091
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597863091,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 433,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.76,
+          "calendarDay": 4,
+          "coinsAfter": 1908
+        },
+        "6": {
+          "activeMinutes": 120.72,
+          "calendarDay": 5,
+          "coinsAfter": 2857
+        },
+        "7": {
+          "activeMinutes": 135.76,
+          "calendarDay": 5,
+          "coinsAfter": 1169
+        },
+        "8": {
+          "activeMinutes": 165.84,
+          "calendarDay": 6,
+          "coinsAfter": 5459
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5253,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 149176,
+        "animalSales": 14850,
+        "craftedSales": 10080,
+        "orders": 13760,
+        "seeds": 15756,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7755,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 4388,
+      "minCoins": 188
+    },
+    {
+      "seed": 29,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 81.763,
+        "calendarHours": 58.113,
+        "session": 6,
+        "coins": 6204,
+        "walletAfterLand": 204,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547605793
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597705793,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 519,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.83,
+          "calendarDay": 4,
+          "coinsAfter": 2317
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3278
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 1573
+        },
+        "8": {
+          "activeMinutes": 164.33,
+          "calendarDay": 6,
+          "coinsAfter": 668
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5339,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 150840,
+        "animalSales": 14984,
+        "craftedSales": 10080,
+        "orders": 13905,
+        "seeds": 15933,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7800,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 6195,
+      "minCoins": 210
+    },
+    {
+      "seed": 30,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 81.655,
+        "calendarHours": 58.111,
+        "session": 6,
+        "coins": 6128,
+        "walletAfterLand": 128,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547599279
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597699279,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 443,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.83,
+          "calendarDay": 4,
+          "coinsAfter": 2266
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3227
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 1522
+        },
+        "8": {
+          "activeMinutes": 164.33,
+          "calendarDay": 6,
+          "coinsAfter": 617
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5263,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 150840,
+        "animalSales": 14970,
+        "craftedSales": 10080,
+        "orders": 13905,
+        "seeds": 15933,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7800,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 6105,
+      "minCoins": 198
+    },
+    {
+      "seed": 31,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 80.252,
+        "calendarHours": 58.088,
+        "session": 6,
+        "coins": 6138,
+        "walletAfterLand": 138,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547515131
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597615131,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 453,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.83,
+          "calendarDay": 4,
+          "coinsAfter": 2340
+        },
+        "6": {
+          "activeMinutes": 120.83,
+          "calendarDay": 5,
+          "coinsAfter": 3301
+        },
+        "7": {
+          "activeMinutes": 135.71,
+          "calendarDay": 5,
+          "coinsAfter": 1596
+        },
+        "8": {
+          "activeMinutes": 164.33,
+          "calendarDay": 6,
+          "coinsAfter": 691
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5273,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 150840,
+        "animalSales": 15118,
+        "craftedSales": 10080,
+        "orders": 13905,
+        "seeds": 15933,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7845,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 6218,
+      "minCoins": 208
+    },
+    {
+      "seed": 32,
+      "minutesPerDay": 30,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 83.004,
+        "calendarHours": 58.133,
+        "session": 6,
+        "coins": 6020,
+        "walletAfterLand": 20,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791547680225
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791597780225,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 335,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 105.59,
+          "calendarDay": 4,
+          "coinsAfter": 1911
+        },
+        "6": {
+          "activeMinutes": 120.71,
+          "calendarDay": 5,
+          "coinsAfter": 2778
+        },
+        "7": {
+          "activeMinutes": 135.75,
+          "calendarDay": 5,
+          "coinsAfter": 1071
+        },
+        "8": {
+          "activeMinutes": 165.84,
+          "calendarDay": 6,
+          "coinsAfter": 5361
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 360,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5155,
+        "daily-mission": 315
+      },
+      "farmLedger": {
+        "cropSales": 149176,
+        "animalSales": 14850,
+        "craftedSales": 10080,
+        "orders": 13760,
+        "seeds": 15756,
+        "pens": 280,
+        "animals": 840,
+        "feed": 7755,
+        "reset": 800,
+        "expansion": 164000,
+        "attendance": 2080,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1155
+      },
+      "coins": 4290,
+      "minCoins": 226
+    },
+    {
+      "seed": 1,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 82.409,
+        "calendarHours": 24.373,
+        "session": 3,
+        "coins": 6099,
+        "walletAfterLand": 99,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426144563
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791460944563,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 414,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 112.7,
+          "calendarDay": 2,
+          "coinsAfter": 308
+        },
+        "6": {
+          "activeMinutes": 131.49,
+          "calendarDay": 3,
+          "coinsAfter": 610
+        },
+        "7": {
+          "activeMinutes": 150.7,
+          "calendarDay": 3,
+          "coinsAfter": 3318
+        },
+        "8": {
+          "activeMinutes": 166.41,
+          "calendarDay": 3,
+          "coinsAfter": 1196
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5479,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 468784,
+        "animalSales": 33146,
+        "craftedSales": 21408,
+        "orders": 31965,
+        "seeds": 47109,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16830,
+        "reset": 1850,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 30573,
+      "minCoins": 116
+    },
+    {
+      "seed": 2,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 84.281,
+        "calendarHours": 24.405,
+        "session": 3,
+        "coins": 6278,
+        "walletAfterLand": 278,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426256840
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461056840,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 593,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 111.03,
+          "calendarDay": 2,
+          "coinsAfter": 340
+        },
+        "6": {
+          "activeMinutes": 134.2,
+          "calendarDay": 3,
+          "coinsAfter": 583
+        },
+        "7": {
+          "activeMinutes": 150.7,
+          "calendarDay": 3,
+          "coinsAfter": 3123
+        },
+        "8": {
+          "activeMinutes": 167.66,
+          "calendarDay": 3,
+          "coinsAfter": 697
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5658,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 468672,
+        "animalSales": 32564,
+        "craftedSales": 21024,
+        "orders": 31535,
+        "seeds": 47067,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16530,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 29611,
+      "minCoins": 221
+    },
+    {
+      "seed": 3,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 82.069,
+        "calendarHours": 24.368,
+        "session": 3,
+        "coins": 6029,
+        "walletAfterLand": 29,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426124169
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791460924169,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 344,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 112.4,
+          "calendarDay": 2,
+          "coinsAfter": 807
+        },
+        "6": {
+          "activeMinutes": 131.5,
+          "calendarDay": 3,
+          "coinsAfter": 489
+        },
+        "7": {
+          "activeMinutes": 150.83,
+          "calendarDay": 3,
+          "coinsAfter": 3288
+        },
+        "8": {
+          "activeMinutes": 166.54,
+          "calendarDay": 3,
+          "coinsAfter": 1166
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5409,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 468784,
+        "animalSales": 33092,
+        "craftedSales": 21504,
+        "orders": 31965,
+        "seeds": 47109,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16850,
+        "reset": 1850,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 30525,
+      "minCoins": 111
+    },
+    {
+      "seed": 4,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 83.343,
+        "calendarHours": 24.389,
+        "session": 3,
+        "coins": 6042,
+        "walletAfterLand": 42,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426200599
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461000599,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 357,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 114.01,
+          "calendarDay": 2,
+          "coinsAfter": 1994
+        },
+        "6": {
+          "activeMinutes": 136.25,
+          "calendarDay": 3,
+          "coinsAfter": 3547
+        },
+        "7": {
+          "activeMinutes": 150.71,
+          "calendarDay": 3,
+          "coinsAfter": 2024
+        },
+        "8": {
+          "activeMinutes": 179.46,
+          "calendarDay": 3,
+          "coinsAfter": 715
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5422,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 466212,
+        "animalSales": 32774,
+        "craftedSales": 21120,
+        "orders": 31535,
+        "seeds": 46839,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16635,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 27344,
+      "minCoins": 59
+    },
+    {
+      "seed": 5,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 89.205,
+        "calendarHours": 24.487,
+        "session": 3,
+        "coins": 6178,
+        "walletAfterLand": 178,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426552276
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461352276,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 493,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 117.58,
+          "calendarDay": 2,
+          "coinsAfter": 309
+        },
+        "6": {
+          "activeMinutes": 136.29,
+          "calendarDay": 3,
+          "coinsAfter": 1553
+        },
+        "7": {
+          "activeMinutes": 150.79,
+          "calendarDay": 3,
+          "coinsAfter": 716
+        },
+        "8": {
+          "activeMinutes": 181,
+          "calendarDay": 4,
+          "coinsAfter": 4747
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5558,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 460872,
+        "animalSales": 32128,
+        "craftedSales": 20736,
+        "orders": 31535,
+        "seeds": 46343,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16320,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 21921,
+      "minCoins": 189
+    },
+    {
+      "seed": 6,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 84.82,
+        "calendarHours": 24.414,
+        "session": 3,
+        "coins": 6056,
+        "walletAfterLand": 56,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426289199
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461089199,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 371,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 115.44,
+          "calendarDay": 2,
+          "coinsAfter": 2086
+        },
+        "6": {
+          "activeMinutes": 136.29,
+          "calendarDay": 3,
+          "coinsAfter": 2755
+        },
+        "7": {
+          "activeMinutes": 150.71,
+          "calendarDay": 3,
+          "coinsAfter": 2052
+        },
+        "8": {
+          "activeMinutes": 178.29,
+          "calendarDay": 3,
+          "coinsAfter": 608
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5436,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 466212,
+        "animalSales": 32788,
+        "craftedSales": 21120,
+        "orders": 31535,
+        "seeds": 46839,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16635,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 27372,
+      "minCoins": 73
+    },
+    {
+      "seed": 7,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 77.665,
+        "calendarHours": 24.294,
+        "session": 3,
+        "coins": 6039,
+        "walletAfterLand": 39,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791425859878
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791426459878,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 354,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 103.17,
+          "calendarDay": 2,
+          "coinsAfter": 1307
+        },
+        "6": {
+          "activeMinutes": 120.79,
+          "calendarDay": 3,
+          "coinsAfter": 3282
+        },
+        "7": {
+          "activeMinutes": 137.67,
+          "calendarDay": 3,
+          "coinsAfter": 1294
+        },
+        "8": {
+          "activeMinutes": 166.42,
+          "calendarDay": 3,
+          "coinsAfter": 4275
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5419,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 476984,
+        "animalSales": 32976,
+        "craftedSales": 21312,
+        "orders": 31965,
+        "seeds": 47869,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16755,
+        "reset": 1850,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 37762,
+      "minCoins": 56
+    },
+    {
+      "seed": 8,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 90.473,
+        "calendarHours": 34.008,
+        "session": 4,
+        "coins": 6164,
+        "walletAfterLand": 164,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791460828387
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461428387,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 479,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 118.85,
+          "calendarDay": 2,
+          "coinsAfter": 295
+        },
+        "6": {
+          "activeMinutes": 136.5,
+          "calendarDay": 3,
+          "coinsAfter": 1500
+        },
+        "7": {
+          "activeMinutes": 150.71,
+          "calendarDay": 3,
+          "coinsAfter": 572
+        },
+        "8": {
+          "activeMinutes": 181,
+          "calendarDay": 4,
+          "coinsAfter": 4304
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5544,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 459232,
+        "animalSales": 32236,
+        "craftedSales": 20736,
+        "orders": 31535,
+        "seeds": 46191,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16350,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 20497,
+      "minCoins": 111
+    },
+    {
+      "seed": 9,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 84.042,
+        "calendarHours": 24.401,
+        "session": 3,
+        "coins": 6168,
+        "walletAfterLand": 168,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426242542
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461042542,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 483,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 112.42,
+          "calendarDay": 2,
+          "coinsAfter": 299
+        },
+        "6": {
+          "activeMinutes": 134.13,
+          "calendarDay": 3,
+          "coinsAfter": 471
+        },
+        "7": {
+          "activeMinutes": 150.67,
+          "calendarDay": 3,
+          "coinsAfter": 3102
+        },
+        "8": {
+          "activeMinutes": 167.63,
+          "calendarDay": 3,
+          "coinsAfter": 676
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5548,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 468672,
+        "animalSales": 32586,
+        "craftedSales": 20928,
+        "orders": 31535,
+        "seeds": 47067,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16515,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 29442,
+      "minCoins": 185
+    },
+    {
+      "seed": 10,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 88.275,
+        "calendarHours": 24.471,
+        "session": 3,
+        "coins": 6174,
+        "walletAfterLand": 174,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426496481
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461296481,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 489,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 116.65,
+          "calendarDay": 2,
+          "coinsAfter": 305
+        },
+        "6": {
+          "activeMinutes": 136.4,
+          "calendarDay": 3,
+          "coinsAfter": 3608
+        },
+        "7": {
+          "activeMinutes": 150.78,
+          "calendarDay": 3,
+          "coinsAfter": 1836
+        },
+        "8": {
+          "activeMinutes": 180.98,
+          "calendarDay": 4,
+          "coinsAfter": 6036
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5554,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 463752,
+        "animalSales": 32222,
+        "craftedSales": 20832,
+        "orders": 31535,
+        "seeds": 46611,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16380,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 24659,
+      "minCoins": 191
+    },
+    {
+      "seed": 11,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 84.648,
+        "calendarHours": 24.411,
+        "session": 3,
+        "coins": 6181,
+        "walletAfterLand": 181,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426278897
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461078897,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 496,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 113.02,
+          "calendarDay": 2,
+          "coinsAfter": 312
+        },
+        "6": {
+          "activeMinutes": 134.29,
+          "calendarDay": 3,
+          "coinsAfter": 484
+        },
+        "7": {
+          "activeMinutes": 150.67,
+          "calendarDay": 3,
+          "coinsAfter": 3024
+        },
+        "8": {
+          "activeMinutes": 168.79,
+          "calendarDay": 3,
+          "coinsAfter": 694
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5561,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 468672,
+        "animalSales": 32546,
+        "craftedSales": 20832,
+        "orders": 31535,
+        "seeds": 47067,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16470,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 29364,
+      "minCoins": 198
+    },
+    {
+      "seed": 12,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 86.793,
+        "calendarHours": 24.447,
+        "session": 3,
+        "coins": 6278,
+        "walletAfterLand": 278,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426407571
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461207571,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 593,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 113.54,
+          "calendarDay": 2,
+          "coinsAfter": 340
+        },
+        "6": {
+          "activeMinutes": 135.92,
+          "calendarDay": 3,
+          "coinsAfter": 488
+        },
+        "7": {
+          "activeMinutes": 150.79,
+          "calendarDay": 3,
+          "coinsAfter": 2020
+        },
+        "8": {
+          "activeMinutes": 179.96,
+          "calendarDay": 3,
+          "coinsAfter": 688
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5658,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 464572,
+        "animalSales": 32384,
+        "craftedSales": 21024,
+        "orders": 31535,
+        "seeds": 46687,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16485,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 25756,
+      "minCoins": 221
+    },
+    {
+      "seed": 13,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 85.441,
+        "calendarHours": 24.424,
+        "session": 3,
+        "coins": 6255,
+        "walletAfterLand": 255,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426326446
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461126446,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 570,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 115.9,
+          "calendarDay": 2,
+          "coinsAfter": 312
+        },
+        "6": {
+          "activeMinutes": 136.54,
+          "calendarDay": 3,
+          "coinsAfter": 2954
+        },
+        "7": {
+          "activeMinutes": 150.71,
+          "calendarDay": 3,
+          "coinsAfter": 2251
+        },
+        "8": {
+          "activeMinutes": 178.29,
+          "calendarDay": 3,
+          "coinsAfter": 807
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5635,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 466212,
+        "animalSales": 33202,
+        "craftedSales": 20736,
+        "orders": 31535,
+        "seeds": 46839,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16665,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 27571,
+      "minCoins": 237
+    },
+    {
+      "seed": 14,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 85.73,
+        "calendarHours": 24.429,
+        "session": 3,
+        "coins": 6102,
+        "walletAfterLand": 102,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426343773
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461143773,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 417,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 116.02,
+          "calendarDay": 2,
+          "coinsAfter": 311
+        },
+        "6": {
+          "activeMinutes": 136.29,
+          "calendarDay": 3,
+          "coinsAfter": 2840
+        },
+        "7": {
+          "activeMinutes": 150.71,
+          "calendarDay": 3,
+          "coinsAfter": 2137
+        },
+        "8": {
+          "activeMinutes": 178.29,
+          "calendarDay": 3,
+          "coinsAfter": 693
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5482,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 466212,
+        "animalSales": 32842,
+        "craftedSales": 21120,
+        "orders": 31535,
+        "seeds": 46839,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16650,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 27457,
+      "minCoins": 119
+    },
+    {
+      "seed": 15,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 84.381,
+        "calendarHours": 24.406,
+        "session": 3,
+        "coins": 6307,
+        "walletAfterLand": 307,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426262858
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461062858,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 622,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 111.13,
+          "calendarDay": 2,
+          "coinsAfter": 369
+        },
+        "6": {
+          "activeMinutes": 132.05,
+          "calendarDay": 3,
+          "coinsAfter": 463
+        },
+        "7": {
+          "activeMinutes": 150.67,
+          "calendarDay": 3,
+          "coinsAfter": 3113
+        },
+        "8": {
+          "activeMinutes": 167.63,
+          "calendarDay": 3,
+          "coinsAfter": 687
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5687,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 468672,
+        "animalSales": 32398,
+        "craftedSales": 20928,
+        "orders": 31535,
+        "seeds": 47067,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16455,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 29453,
+      "minCoins": 250
+    },
+    {
+      "seed": 16,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 80.808,
+        "calendarHours": 24.347,
+        "session": 3,
+        "coins": 6081,
+        "walletAfterLand": 81,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426048469
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791460848469,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 396,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 108.77,
+          "calendarDay": 2,
+          "coinsAfter": 418
+        },
+        "6": {
+          "activeMinutes": 131.47,
+          "calendarDay": 3,
+          "coinsAfter": 608
+        },
+        "7": {
+          "activeMinutes": 150.68,
+          "calendarDay": 3,
+          "coinsAfter": 3316
+        },
+        "8": {
+          "activeMinutes": 166.39,
+          "calendarDay": 3,
+          "coinsAfter": 1194
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5461,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 468784,
+        "animalSales": 33066,
+        "craftedSales": 21504,
+        "orders": 31965,
+        "seeds": 47109,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16830,
+        "reset": 1850,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 30571,
+      "minCoins": 98
+    },
+    {
+      "seed": 17,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 83.796,
+        "calendarHours": 24.397,
+        "session": 3,
+        "coins": 6176,
+        "walletAfterLand": 176,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426227754
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461027754,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 491,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 112.17,
+          "calendarDay": 2,
+          "coinsAfter": 307
+        },
+        "6": {
+          "activeMinutes": 134.25,
+          "calendarDay": 3,
+          "coinsAfter": 479
+        },
+        "7": {
+          "activeMinutes": 150.63,
+          "calendarDay": 3,
+          "coinsAfter": 3019
+        },
+        "8": {
+          "activeMinutes": 168.75,
+          "calendarDay": 3,
+          "coinsAfter": 689
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5556,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 468672,
+        "animalSales": 32546,
+        "craftedSales": 20832,
+        "orders": 31535,
+        "seeds": 47067,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16470,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 29359,
+      "minCoins": 193
+    },
+    {
+      "seed": 18,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 89.476,
+        "calendarHours": 24.491,
+        "session": 3,
+        "coins": 6069,
+        "walletAfterLand": 69,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426568533
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461368533,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 384,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 120.6,
+          "calendarDay": 3,
+          "coinsAfter": 2842
+        },
+        "6": {
+          "activeMinutes": 142.43,
+          "calendarDay": 3,
+          "coinsAfter": 619
+        },
+        "7": {
+          "activeMinutes": 150.77,
+          "calendarDay": 3,
+          "coinsAfter": 1562
+        },
+        "8": {
+          "activeMinutes": 180.98,
+          "calendarDay": 4,
+          "coinsAfter": 5762
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5449,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 463752,
+        "animalSales": 32410,
+        "craftedSales": 21024,
+        "orders": 31535,
+        "seeds": 46611,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16500,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 24814,
+      "minCoins": 86
+    },
+    {
+      "seed": 19,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 84.415,
+        "calendarHours": 24.407,
+        "session": 3,
+        "coins": 6191,
+        "walletAfterLand": 191,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426264929
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461064929,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 506,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 112.12,
+          "calendarDay": 2,
+          "coinsAfter": 297
+        },
+        "6": {
+          "activeMinutes": 134.29,
+          "calendarDay": 3,
+          "coinsAfter": 494
+        },
+        "7": {
+          "activeMinutes": 150.71,
+          "calendarDay": 3,
+          "coinsAfter": 3034
+        },
+        "8": {
+          "activeMinutes": 167.67,
+          "calendarDay": 3,
+          "coinsAfter": 608
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5571,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 468672,
+        "animalSales": 32546,
+        "craftedSales": 20832,
+        "orders": 31535,
+        "seeds": 47067,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16470,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 29374,
+      "minCoins": 208
+    },
+    {
+      "seed": 20,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 83.323,
+        "calendarHours": 24.389,
+        "session": 3,
+        "coins": 6082,
+        "walletAfterLand": 82,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426199396
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791460999396,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 397,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 111.28,
+          "calendarDay": 2,
+          "coinsAfter": 419
+        },
+        "6": {
+          "activeMinutes": 134.29,
+          "calendarDay": 3,
+          "coinsAfter": 583
+        },
+        "7": {
+          "activeMinutes": 150.71,
+          "calendarDay": 3,
+          "coinsAfter": 3123
+        },
+        "8": {
+          "activeMinutes": 167.67,
+          "calendarDay": 3,
+          "coinsAfter": 697
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5462,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 468872,
+        "animalSales": 32578,
+        "craftedSales": 21024,
+        "orders": 31535,
+        "seeds": 47085,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16530,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 29611,
+      "minCoins": 99
+    },
+    {
+      "seed": 21,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 85.344,
+        "calendarHours": 24.422,
+        "session": 3,
+        "coins": 6191,
+        "walletAfterLand": 191,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426320614
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461120614,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 506,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 113.05,
+          "calendarDay": 2,
+          "coinsAfter": 297
+        },
+        "6": {
+          "activeMinutes": 135.96,
+          "calendarDay": 3,
+          "coinsAfter": 469
+        },
+        "7": {
+          "activeMinutes": 150.71,
+          "calendarDay": 3,
+          "coinsAfter": 2226
+        },
+        "8": {
+          "activeMinutes": 178.29,
+          "calendarDay": 3,
+          "coinsAfter": 782
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5571,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 466212,
+        "animalSales": 32842,
+        "craftedSales": 21120,
+        "orders": 31535,
+        "seeds": 46839,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16650,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 27546,
+      "minCoins": 208
+    },
+    {
+      "seed": 22,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 78.822,
+        "calendarHours": 24.314,
+        "session": 3,
+        "coins": 6338,
+        "walletAfterLand": 338,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791425929349
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791426529349,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 653,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 102.33,
+          "calendarDay": 2,
+          "coinsAfter": 347
+        },
+        "6": {
+          "activeMinutes": 120.79,
+          "calendarDay": 3,
+          "coinsAfter": 3581
+        },
+        "7": {
+          "activeMinutes": 136.46,
+          "calendarDay": 3,
+          "coinsAfter": 700
+        },
+        "8": {
+          "activeMinutes": 166.42,
+          "calendarDay": 3,
+          "coinsAfter": 4574
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5718,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 476984,
+        "animalSales": 32976,
+        "craftedSales": 21312,
+        "orders": 31965,
+        "seeds": 47869,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16755,
+        "reset": 1850,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 38061,
+      "minCoins": 155
+    },
+    {
+      "seed": 23,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 85.708,
+        "calendarHours": 24.428,
+        "session": 3,
+        "coins": 6095,
+        "walletAfterLand": 95,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426342476
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461142476,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 410,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 116,
+          "calendarDay": 2,
+          "coinsAfter": 304
+        },
+        "6": {
+          "activeMinutes": 136.29,
+          "calendarDay": 3,
+          "coinsAfter": 2833
+        },
+        "7": {
+          "activeMinutes": 150.71,
+          "calendarDay": 3,
+          "coinsAfter": 2130
+        },
+        "8": {
+          "activeMinutes": 178.29,
+          "calendarDay": 3,
+          "coinsAfter": 686
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5475,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 466212,
+        "animalSales": 32842,
+        "craftedSales": 21120,
+        "orders": 31535,
+        "seeds": 46839,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16650,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 27450,
+      "minCoins": 112
+    },
+    {
+      "seed": 24,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 78.95,
+        "calendarHours": 24.316,
+        "session": 3,
+        "coins": 6167,
+        "walletAfterLand": 167,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791425936995
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791426536995,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 482,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 103.33,
+          "calendarDay": 2,
+          "coinsAfter": 1435
+        },
+        "6": {
+          "activeMinutes": 120.79,
+          "calendarDay": 3,
+          "coinsAfter": 3410
+        },
+        "7": {
+          "activeMinutes": 137.67,
+          "calendarDay": 3,
+          "coinsAfter": 1422
+        },
+        "8": {
+          "activeMinutes": 166.42,
+          "calendarDay": 3,
+          "coinsAfter": 4403
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5547,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 476984,
+        "animalSales": 32976,
+        "craftedSales": 21312,
+        "orders": 31965,
+        "seeds": 47869,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16755,
+        "reset": 1850,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 37890,
+      "minCoins": 184
+    },
+    {
+      "seed": 25,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 84.407,
+        "calendarHours": 24.407,
+        "session": 3,
+        "coins": 6159,
+        "walletAfterLand": 159,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426264429
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461064429,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 474,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 112.78,
+          "calendarDay": 2,
+          "coinsAfter": 290
+        },
+        "6": {
+          "activeMinutes": 134.29,
+          "calendarDay": 3,
+          "coinsAfter": 462
+        },
+        "7": {
+          "activeMinutes": 150.67,
+          "calendarDay": 3,
+          "coinsAfter": 3002
+        },
+        "8": {
+          "activeMinutes": 168.79,
+          "calendarDay": 3,
+          "coinsAfter": 672
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5539,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 467032,
+        "animalSales": 32936,
+        "craftedSales": 21120,
+        "orders": 31535,
+        "seeds": 46915,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16680,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 28322,
+      "minCoins": 176
+    },
+    {
+      "seed": 26,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 82.527,
+        "calendarHours": 24.375,
+        "session": 3,
+        "coins": 6058,
+        "walletAfterLand": 58,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426151643
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791460951643,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 373,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 113.15,
+          "calendarDay": 2,
+          "coinsAfter": 2088
+        },
+        "6": {
+          "activeMinutes": 131.5,
+          "calendarDay": 3,
+          "coinsAfter": 505
+        },
+        "7": {
+          "activeMinutes": 150.71,
+          "calendarDay": 3,
+          "coinsAfter": 3213
+        },
+        "8": {
+          "activeMinutes": 166.42,
+          "calendarDay": 3,
+          "coinsAfter": 1091
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5438,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 468784,
+        "animalSales": 33034,
+        "craftedSales": 21408,
+        "orders": 31965,
+        "seeds": 47109,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16800,
+        "reset": 1850,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 30450,
+      "minCoins": 75
+    },
+    {
+      "seed": 27,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 81.017,
+        "calendarHours": 24.35,
+        "session": 3,
+        "coins": 6098,
+        "walletAfterLand": 98,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426061026
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791460861026,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 413,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 111.31,
+          "calendarDay": 2,
+          "coinsAfter": 307
+        },
+        "6": {
+          "activeMinutes": 131.5,
+          "calendarDay": 3,
+          "coinsAfter": 648
+        },
+        "7": {
+          "activeMinutes": 150.71,
+          "calendarDay": 3,
+          "coinsAfter": 3356
+        },
+        "8": {
+          "activeMinutes": 166.42,
+          "calendarDay": 3,
+          "coinsAfter": 1234
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5478,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 468784,
+        "animalSales": 33146,
+        "craftedSales": 21408,
+        "orders": 31965,
+        "seeds": 47109,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16830,
+        "reset": 1850,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 30572,
+      "minCoins": 115
+    },
+    {
+      "seed": 28,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 87.426,
+        "calendarHours": 24.457,
+        "session": 3,
+        "coins": 6210,
+        "walletAfterLand": 210,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426445572
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461245572,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 525,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 115.13,
+          "calendarDay": 2,
+          "coinsAfter": 316
+        },
+        "6": {
+          "activeMinutes": 136.42,
+          "calendarDay": 3,
+          "coinsAfter": 3683
+        },
+        "7": {
+          "activeMinutes": 150.79,
+          "calendarDay": 3,
+          "coinsAfter": 1911
+        },
+        "8": {
+          "activeMinutes": 181,
+          "calendarDay": 4,
+          "coinsAfter": 6111
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5590,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 463752,
+        "animalSales": 32276,
+        "craftedSales": 20832,
+        "orders": 31535,
+        "seeds": 46611,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16395,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 24734,
+      "minCoins": 227
+    },
+    {
+      "seed": 29,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 85.493,
+        "calendarHours": 24.425,
+        "session": 3,
+        "coins": 6161,
+        "walletAfterLand": 161,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426329578
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461129578,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 476,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 113.87,
+          "calendarDay": 2,
+          "coinsAfter": 292
+        },
+        "6": {
+          "activeMinutes": 135.95,
+          "calendarDay": 3,
+          "coinsAfter": 464
+        },
+        "7": {
+          "activeMinutes": 150.7,
+          "calendarDay": 3,
+          "coinsAfter": 2221
+        },
+        "8": {
+          "activeMinutes": 178.28,
+          "calendarDay": 3,
+          "coinsAfter": 777
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5541,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 466212,
+        "animalSales": 32882,
+        "craftedSales": 21120,
+        "orders": 31535,
+        "seeds": 46839,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16665,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 27541,
+      "minCoins": 178
+    },
+    {
+      "seed": 30,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 85.505,
+        "calendarHours": 24.425,
+        "session": 3,
+        "coins": 6120,
+        "walletAfterLand": 120,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426330284
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461130284,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 435,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 114.13,
+          "calendarDay": 2,
+          "coinsAfter": 290
+        },
+        "6": {
+          "activeMinutes": 136.21,
+          "calendarDay": 3,
+          "coinsAfter": 2858
+        },
+        "7": {
+          "activeMinutes": 150.67,
+          "calendarDay": 3,
+          "coinsAfter": 2155
+        },
+        "8": {
+          "activeMinutes": 178.25,
+          "calendarDay": 3,
+          "coinsAfter": 711
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5500,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 466212,
+        "animalSales": 32788,
+        "craftedSales": 21120,
+        "orders": 31535,
+        "seeds": 46839,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16635,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 27436,
+      "minCoins": 137
+    },
+    {
+      "seed": 31,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 83.415,
+        "calendarHours": 24.39,
+        "session": 3,
+        "coins": 6138,
+        "walletAfterLand": 138,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426204912
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461004912,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 453,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 112.04,
+          "calendarDay": 2,
+          "coinsAfter": 308
+        },
+        "6": {
+          "activeMinutes": 136.25,
+          "calendarDay": 3,
+          "coinsAfter": 3760
+        },
+        "7": {
+          "activeMinutes": 150.71,
+          "calendarDay": 3,
+          "coinsAfter": 2237
+        },
+        "8": {
+          "activeMinutes": 178.29,
+          "calendarDay": 3,
+          "coinsAfter": 793
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5518,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 466212,
+        "animalSales": 32936,
+        "craftedSales": 21120,
+        "orders": 31535,
+        "seeds": 46839,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16680,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 27557,
+      "minCoins": 155
+    },
+    {
+      "seed": 32,
+      "minutesPerDay": 60,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 86.361,
+        "calendarHours": 24.439,
+        "session": 3,
+        "coins": 6034,
+        "walletAfterLand": 34,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791426381678
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791461181678,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 349,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 116.69,
+          "calendarDay": 2,
+          "coinsAfter": 812
+        },
+        "6": {
+          "activeMinutes": 136.29,
+          "calendarDay": 3,
+          "coinsAfter": 2655
+        },
+        "7": {
+          "activeMinutes": 150.71,
+          "calendarDay": 3,
+          "coinsAfter": 1952
+        },
+        "8": {
+          "activeMinutes": 179.46,
+          "calendarDay": 3,
+          "coinsAfter": 643
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 220,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5414,
+        "daily-mission": 210
+      },
+      "farmLedger": {
+        "cropSales": 466212,
+        "animalSales": 32766,
+        "craftedSales": 21024,
+        "orders": 31535,
+        "seeds": 46839,
+        "pens": 280,
+        "animals": 840,
+        "feed": 16595,
+        "reset": 1825,
+        "expansion": 464000,
+        "attendance": 2220,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1260
+      },
+      "coins": 27272,
+      "minCoins": 116
+    },
+    {
+      "seed": 1,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 85.843,
+        "calendarHours": 10.431,
+        "session": 2,
+        "coins": 6147,
+        "walletAfterLand": 147,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375950570
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376550570,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 462,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 114.47,
+          "calendarDay": 1,
+          "coinsAfter": 317
+        },
+        "6": {
+          "activeMinutes": 136.22,
+          "calendarDay": 2,
+          "coinsAfter": 2799
+        },
+        "7": {
+          "activeMinutes": 151.68,
+          "calendarDay": 2,
+          "coinsAfter": 1131
+        },
+        "8": {
+          "activeMinutes": 180.84,
+          "calendarDay": 2,
+          "coinsAfter": 5832
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5752,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67856,
+        "craftedSales": 45312,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34920,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216762,
+      "minCoins": 164
+    },
+    {
+      "seed": 2,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 83.988,
+        "calendarHours": 10.4,
+        "session": 2,
+        "coins": 6044,
+        "walletAfterLand": 44,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375839301
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376439301,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 359,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 114.53,
+          "calendarDay": 1,
+          "coinsAfter": 1429
+        },
+        "6": {
+          "activeMinutes": 136,
+          "calendarDay": 2,
+          "coinsAfter": 1122
+        },
+        "7": {
+          "activeMinutes": 151.79,
+          "calendarDay": 2,
+          "coinsAfter": 1914
+        },
+        "8": {
+          "activeMinutes": 180.87,
+          "calendarDay": 2,
+          "coinsAfter": 5795
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5649,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67856,
+        "craftedSales": 45408,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34950,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216725,
+      "minCoins": 61
+    },
+    {
+      "seed": 3,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 85.365,
+        "calendarHours": 10.423,
+        "session": 2,
+        "coins": 6012,
+        "walletAfterLand": 12,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375921923
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376521923,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 327,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 115.7,
+          "calendarDay": 1,
+          "coinsAfter": 1977
+        },
+        "6": {
+          "activeMinutes": 136.29,
+          "calendarDay": 2,
+          "coinsAfter": 2560
+        },
+        "7": {
+          "activeMinutes": 151.75,
+          "calendarDay": 2,
+          "coinsAfter": 892
+        },
+        "8": {
+          "activeMinutes": 180.87,
+          "calendarDay": 2,
+          "coinsAfter": 5593
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5617,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393496,
+        "animalSales": 67994,
+        "craftedSales": 45600,
+        "orders": 62495,
+        "seeds": 135515,
+        "pens": 280,
+        "animals": 840,
+        "feed": 35060,
+        "reset": 3625,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216582,
+      "minCoins": 109
+    },
+    {
+      "seed": 4,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 86.585,
+        "calendarHours": 10.443,
+        "session": 2,
+        "coins": 6036,
+        "walletAfterLand": 36,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375995077
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376595077,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 351,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 116.92,
+          "calendarDay": 1,
+          "coinsAfter": 814
+        },
+        "6": {
+          "activeMinutes": 136.17,
+          "calendarDay": 2,
+          "coinsAfter": 2598
+        },
+        "7": {
+          "activeMinutes": 151.63,
+          "calendarDay": 2,
+          "coinsAfter": 930
+        },
+        "8": {
+          "activeMinutes": 180.83,
+          "calendarDay": 2,
+          "coinsAfter": 5631
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5641,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67632,
+        "craftedSales": 45216,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34820,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216431,
+      "minCoins": 118
+    },
+    {
+      "seed": 5,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 92.865,
+        "calendarHours": 10.548,
+        "session": 2,
+        "coins": 6161,
+        "walletAfterLand": 161,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376371901
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376971901,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 476,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 120.79,
+          "calendarDay": 2,
+          "coinsAfter": 2598
+        },
+        "6": {
+          "activeMinutes": 142.75,
+          "calendarDay": 2,
+          "coinsAfter": 600
+        },
+        "7": {
+          "activeMinutes": 164.12,
+          "calendarDay": 2,
+          "coinsAfter": 2574
+        },
+        "8": {
+          "activeMinutes": 180.17,
+          "calendarDay": 2,
+          "coinsAfter": 1431
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5766,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1382836,
+        "animalSales": 66416,
+        "craftedSales": 44448,
+        "orders": 62495,
+        "seeds": 134527,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34215,
+        "reset": 3625,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 205174,
+      "minCoins": 178
+    },
+    {
+      "seed": 6,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 88.258,
+        "calendarHours": 10.471,
+        "session": 2,
+        "coins": 6158,
+        "walletAfterLand": 158,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376095464
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376695464,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 473,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 116.88,
+          "calendarDay": 1,
+          "coinsAfter": 328
+        },
+        "6": {
+          "activeMinutes": 136.01,
+          "calendarDay": 2,
+          "coinsAfter": 1088
+        },
+        "7": {
+          "activeMinutes": 151.97,
+          "calendarDay": 2,
+          "coinsAfter": 1553
+        },
+        "8": {
+          "activeMinutes": 180.59,
+          "calendarDay": 2,
+          "coinsAfter": 5635
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5763,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67560,
+        "craftedSales": 45120,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34770,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216435,
+      "minCoins": 175
+    },
+    {
+      "seed": 7,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 80.941,
+        "calendarHours": 10.349,
+        "session": 2,
+        "coins": 6023,
+        "walletAfterLand": 23,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375656433
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376256433,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 338,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 111.48,
+          "calendarDay": 1,
+          "coinsAfter": 801
+        },
+        "6": {
+          "activeMinutes": 131.46,
+          "calendarDay": 2,
+          "coinsAfter": 502
+        },
+        "7": {
+          "activeMinutes": 151.71,
+          "calendarDay": 2,
+          "coinsAfter": 1323
+        },
+        "8": {
+          "activeMinutes": 174.29,
+          "calendarDay": 2,
+          "coinsAfter": 664
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5628,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1403536,
+        "animalSales": 67878,
+        "craftedSales": 45504,
+        "orders": 63210,
+        "seeds": 136486,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34985,
+        "reset": 3675,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 226190,
+      "minCoins": 105
+    },
+    {
+      "seed": 8,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 93.914,
+        "calendarHours": 10.565,
+        "session": 2,
+        "coins": 6064,
+        "walletAfterLand": 64,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376434833
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791377034833,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 379,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 120.79,
+          "calendarDay": 2,
+          "coinsAfter": 2398
+        },
+        "6": {
+          "activeMinutes": 143.67,
+          "calendarDay": 2,
+          "coinsAfter": 486
+        },
+        "7": {
+          "activeMinutes": 164.29,
+          "calendarDay": 2,
+          "coinsAfter": 2379
+        },
+        "8": {
+          "activeMinutes": 180.38,
+          "calendarDay": 2,
+          "coinsAfter": 1303
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5669,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1382836,
+        "animalSales": 66214,
+        "craftedSales": 44448,
+        "orders": 62495,
+        "seeds": 134527,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34155,
+        "reset": 3625,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 204935,
+      "minCoins": 81
+    },
+    {
+      "seed": 9,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 87.417,
+        "calendarHours": 10.457,
+        "session": 2,
+        "coins": 6103,
+        "walletAfterLand": 103,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376045047
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376645047,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 418,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 117.71,
+          "calendarDay": 1,
+          "coinsAfter": 312
+        },
+        "6": {
+          "activeMinutes": 136.04,
+          "calendarDay": 2,
+          "coinsAfter": 1072
+        },
+        "7": {
+          "activeMinutes": 152,
+          "calendarDay": 2,
+          "coinsAfter": 1537
+        },
+        "8": {
+          "activeMinutes": 180.62,
+          "calendarDay": 2,
+          "coinsAfter": 5619
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5708,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67506,
+        "craftedSales": 45120,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34755,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216341,
+      "minCoins": 120
+    },
+    {
+      "seed": 10,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 92.517,
+        "calendarHours": 10.542,
+        "session": 2,
+        "coins": 6123,
+        "walletAfterLand": 123,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376351016
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376951016,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 438,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 120.79,
+          "calendarDay": 2,
+          "coinsAfter": 2560
+        },
+        "6": {
+          "activeMinutes": 142.75,
+          "calendarDay": 2,
+          "coinsAfter": 562
+        },
+        "7": {
+          "activeMinutes": 164.13,
+          "calendarDay": 2,
+          "coinsAfter": 2536
+        },
+        "8": {
+          "activeMinutes": 180.17,
+          "calendarDay": 2,
+          "coinsAfter": 1393
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5728,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1382836,
+        "animalSales": 66322,
+        "craftedSales": 44352,
+        "orders": 62495,
+        "seeds": 134527,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34155,
+        "reset": 3625,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 205006,
+      "minCoins": 140
+    },
+    {
+      "seed": 11,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 88.124,
+        "calendarHours": 10.469,
+        "session": 2,
+        "coins": 6186,
+        "walletAfterLand": 186,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376087410
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376687410,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 501,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 115.83,
+          "calendarDay": 1,
+          "coinsAfter": 292
+        },
+        "6": {
+          "activeMinutes": 135.75,
+          "calendarDay": 2,
+          "coinsAfter": 1091
+        },
+        "7": {
+          "activeMinutes": 151.54,
+          "calendarDay": 2,
+          "coinsAfter": 736
+        },
+        "8": {
+          "activeMinutes": 180.87,
+          "calendarDay": 2,
+          "coinsAfter": 5768
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5791,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67708,
+        "craftedSales": 45312,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34875,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216698,
+      "minCoins": 203
+    },
+    {
+      "seed": 12,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 86.481,
+        "calendarHours": 10.441,
+        "session": 2,
+        "coins": 6071,
+        "walletAfterLand": 71,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375988888
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376588888,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 386,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 117.11,
+          "calendarDay": 1,
+          "coinsAfter": 2101
+        },
+        "6": {
+          "activeMinutes": 136.29,
+          "calendarDay": 2,
+          "coinsAfter": 2645
+        },
+        "7": {
+          "activeMinutes": 151.75,
+          "calendarDay": 2,
+          "coinsAfter": 977
+        },
+        "8": {
+          "activeMinutes": 180.87,
+          "calendarDay": 2,
+          "coinsAfter": 5678
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5676,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67654,
+        "craftedSales": 45216,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34830,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216478,
+      "minCoins": 88
+    },
+    {
+      "seed": 13,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 89.8,
+        "calendarHours": 10.497,
+        "session": 2,
+        "coins": 6197,
+        "walletAfterLand": 197,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376187987
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376787987,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 512,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 117.51,
+          "calendarDay": 1,
+          "coinsAfter": 303
+        },
+        "6": {
+          "activeMinutes": 136.43,
+          "calendarDay": 2,
+          "coinsAfter": 1751
+        },
+        "7": {
+          "activeMinutes": 163.01,
+          "calendarDay": 2,
+          "coinsAfter": 755
+        },
+        "8": {
+          "activeMinutes": 180.84,
+          "calendarDay": 2,
+          "coinsAfter": 3988
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5802,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1389176,
+        "animalSales": 67478,
+        "craftedSales": 45312,
+        "orders": 62495,
+        "seeds": 135113,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34815,
+        "reset": 3625,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 212290,
+      "minCoins": 214
+    },
+    {
+      "seed": 14,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 89.998,
+        "calendarHours": 10.5,
+        "session": 2,
+        "coins": 6092,
+        "walletAfterLand": 92,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376199885
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376799885,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 407,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 120.83,
+          "calendarDay": 2,
+          "coinsAfter": 2849
+        },
+        "6": {
+          "activeMinutes": 142.29,
+          "calendarDay": 2,
+          "coinsAfter": 622
+        },
+        "7": {
+          "activeMinutes": 164.08,
+          "calendarDay": 2,
+          "coinsAfter": 1815
+        },
+        "8": {
+          "activeMinutes": 180.37,
+          "calendarDay": 2,
+          "coinsAfter": 1719
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5697,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1384564,
+        "animalSales": 66954,
+        "craftedSales": 44832,
+        "orders": 62780,
+        "seeds": 134696,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34500,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 207561,
+      "minCoins": 109
+    },
+    {
+      "seed": 15,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 84.271,
+        "calendarHours": 10.405,
+        "session": 2,
+        "coins": 6128,
+        "walletAfterLand": 128,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375856254
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376456254,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 443,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 112.9,
+          "calendarDay": 1,
+          "coinsAfter": 298
+        },
+        "6": {
+          "activeMinutes": 136.29,
+          "calendarDay": 2,
+          "coinsAfter": 2910
+        },
+        "7": {
+          "activeMinutes": 151.75,
+          "calendarDay": 2,
+          "coinsAfter": 1242
+        },
+        "8": {
+          "activeMinutes": 179.79,
+          "calendarDay": 2,
+          "coinsAfter": 646
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5733,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1396864,
+        "animalSales": 67640,
+        "craftedSales": 45312,
+        "orders": 62780,
+        "seeds": 135836,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34860,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 219563,
+      "minCoins": 145
+    },
+    {
+      "seed": 16,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 84.476,
+        "calendarHours": 10.408,
+        "session": 2,
+        "coins": 6101,
+        "walletAfterLand": 101,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375868556
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376468556,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 416,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 114.77,
+          "calendarDay": 1,
+          "coinsAfter": 310
+        },
+        "6": {
+          "activeMinutes": 136.29,
+          "calendarDay": 2,
+          "coinsAfter": 2883
+        },
+        "7": {
+          "activeMinutes": 151.75,
+          "calendarDay": 2,
+          "coinsAfter": 1215
+        },
+        "8": {
+          "activeMinutes": 179.79,
+          "calendarDay": 2,
+          "coinsAfter": 619
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5706,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1396864,
+        "animalSales": 67492,
+        "craftedSales": 45216,
+        "orders": 62780,
+        "seeds": 135836,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34785,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 219367,
+      "minCoins": 118
+    },
+    {
+      "seed": 17,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 87.686,
+        "calendarHours": 10.461,
+        "session": 2,
+        "coins": 6193,
+        "walletAfterLand": 193,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376061187
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376661187,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 508,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 115.39,
+          "calendarDay": 1,
+          "coinsAfter": 299
+        },
+        "6": {
+          "activeMinutes": 136.04,
+          "calendarDay": 2,
+          "coinsAfter": 1162
+        },
+        "7": {
+          "activeMinutes": 152,
+          "calendarDay": 2,
+          "coinsAfter": 1627
+        },
+        "8": {
+          "activeMinutes": 180.62,
+          "calendarDay": 2,
+          "coinsAfter": 5709
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5798,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67614,
+        "craftedSales": 45120,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34785,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216509,
+      "minCoins": 210
+    },
+    {
+      "seed": 18,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 92.825,
+        "calendarHours": 10.547,
+        "session": 2,
+        "coins": 6059,
+        "walletAfterLand": 59,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376369529
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376969529,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 374,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 120.79,
+          "calendarDay": 2,
+          "coinsAfter": 2457
+        },
+        "6": {
+          "activeMinutes": 142.75,
+          "calendarDay": 2,
+          "coinsAfter": 459
+        },
+        "7": {
+          "activeMinutes": 164.12,
+          "calendarDay": 2,
+          "coinsAfter": 2433
+        },
+        "8": {
+          "activeMinutes": 180.17,
+          "calendarDay": 2,
+          "coinsAfter": 1290
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5664,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1382836,
+        "animalSales": 66268,
+        "craftedSales": 44352,
+        "orders": 62495,
+        "seeds": 134527,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34140,
+        "reset": 3625,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 204903,
+      "minCoins": 76
+    },
+    {
+      "seed": 19,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 87.729,
+        "calendarHours": 10.462,
+        "session": 2,
+        "coins": 6167,
+        "walletAfterLand": 167,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376063761
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376663761,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 482,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 116.1,
+          "calendarDay": 1,
+          "coinsAfter": 298
+        },
+        "6": {
+          "activeMinutes": 136.04,
+          "calendarDay": 2,
+          "coinsAfter": 1136
+        },
+        "7": {
+          "activeMinutes": 152,
+          "calendarDay": 2,
+          "coinsAfter": 1601
+        },
+        "8": {
+          "activeMinutes": 180.62,
+          "calendarDay": 2,
+          "coinsAfter": 5683
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5772,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67614,
+        "craftedSales": 45120,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34785,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216483,
+      "minCoins": 184
+    },
+    {
+      "seed": 20,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 86.8,
+        "calendarHours": 10.447,
+        "session": 2,
+        "coins": 6153,
+        "walletAfterLand": 153,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376008005
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376608005,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 468,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 115.42,
+          "calendarDay": 1,
+          "coinsAfter": 323
+        },
+        "6": {
+          "activeMinutes": 136.29,
+          "calendarDay": 2,
+          "coinsAfter": 2766
+        },
+        "7": {
+          "activeMinutes": 151.75,
+          "calendarDay": 2,
+          "coinsAfter": 1098
+        },
+        "8": {
+          "activeMinutes": 180.87,
+          "calendarDay": 2,
+          "coinsAfter": 5799
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5758,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67802,
+        "craftedSales": 45312,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34905,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216729,
+      "minCoins": 170
+    },
+    {
+      "seed": 21,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 88.674,
+        "calendarHours": 10.478,
+        "session": 2,
+        "coins": 6205,
+        "walletAfterLand": 205,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376120435
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376720435,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 520,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 116.38,
+          "calendarDay": 1,
+          "coinsAfter": 311
+        },
+        "6": {
+          "activeMinutes": 136.08,
+          "calendarDay": 2,
+          "coinsAfter": 1110
+        },
+        "7": {
+          "activeMinutes": 151.88,
+          "calendarDay": 2,
+          "coinsAfter": 755
+        },
+        "8": {
+          "activeMinutes": 180.88,
+          "calendarDay": 2,
+          "coinsAfter": 5787
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5810,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67708,
+        "craftedSales": 45312,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34875,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216717,
+      "minCoins": 222
+    },
+    {
+      "seed": 22,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 78.722,
+        "calendarHours": 10.312,
+        "session": 2,
+        "coins": 6094,
+        "walletAfterLand": 94,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375523349
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376123349,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 409,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 109.01,
+          "calendarDay": 1,
+          "coinsAfter": 303
+        },
+        "6": {
+          "activeMinutes": 130.83,
+          "calendarDay": 2,
+          "coinsAfter": 507
+        },
+        "7": {
+          "activeMinutes": 151.71,
+          "calendarDay": 2,
+          "coinsAfter": 1817
+        },
+        "8": {
+          "activeMinutes": 173,
+          "calendarDay": 2,
+          "coinsAfter": 820
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5699,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1401896,
+        "animalSales": 67442,
+        "craftedSales": 45312,
+        "orders": 63210,
+        "seeds": 136334,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34800,
+        "reset": 3675,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 224330,
+      "minCoins": 111
+    },
+    {
+      "seed": 23,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 89.218,
+        "calendarHours": 10.487,
+        "session": 2,
+        "coins": 6169,
+        "walletAfterLand": 169,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376153089
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376753089,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 484,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 117.59,
+          "calendarDay": 1,
+          "coinsAfter": 300
+        },
+        "6": {
+          "activeMinutes": 136.3,
+          "calendarDay": 2,
+          "coinsAfter": 1524
+        },
+        "7": {
+          "activeMinutes": 163.22,
+          "calendarDay": 2,
+          "coinsAfter": 1404
+        },
+        "8": {
+          "activeMinutes": 180.84,
+          "calendarDay": 2,
+          "coinsAfter": 4561
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5774,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1389796,
+        "animalSales": 68044,
+        "craftedSales": 45504,
+        "orders": 62495,
+        "seeds": 135171,
+        "pens": 280,
+        "animals": 840,
+        "feed": 35040,
+        "reset": 3625,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 213357,
+      "minCoins": 186
+    },
+    {
+      "seed": 24,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 82.742,
+        "calendarHours": 10.379,
+        "session": 2,
+        "coins": 6146,
+        "walletAfterLand": 146,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375764495
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376364495,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 461,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 111.37,
+          "calendarDay": 1,
+          "coinsAfter": 316
+        },
+        "6": {
+          "activeMinutes": 131.41,
+          "calendarDay": 2,
+          "coinsAfter": 546
+        },
+        "7": {
+          "activeMinutes": 151.66,
+          "calendarDay": 2,
+          "coinsAfter": 1367
+        },
+        "8": {
+          "activeMinutes": 173.08,
+          "calendarDay": 2,
+          "coinsAfter": 612
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5751,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1403536,
+        "animalSales": 67860,
+        "craftedSales": 45408,
+        "orders": 63210,
+        "seeds": 136486,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34950,
+        "reset": 3675,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 226234,
+      "minCoins": 163
+    },
+    {
+      "seed": 25,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 84.539,
+        "calendarHours": 10.409,
+        "session": 2,
+        "coins": 6017,
+        "walletAfterLand": 17,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375872347
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376472347,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 332,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 115,
+          "calendarDay": 1,
+          "coinsAfter": 1996
+        },
+        "6": {
+          "activeMinutes": 136.08,
+          "calendarDay": 2,
+          "coinsAfter": 2670
+        },
+        "7": {
+          "activeMinutes": 151.54,
+          "calendarDay": 2,
+          "coinsAfter": 1002
+        },
+        "8": {
+          "activeMinutes": 180.87,
+          "calendarDay": 2,
+          "coinsAfter": 5703
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5622,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67672,
+        "craftedSales": 45312,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34865,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216503,
+      "minCoins": 114
+    },
+    {
+      "seed": 26,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 86.213,
+        "calendarHours": 10.437,
+        "session": 2,
+        "coins": 6227,
+        "walletAfterLand": 227,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375972802
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376572802,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 542,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 113.92,
+          "calendarDay": 1,
+          "coinsAfter": 333
+        },
+        "6": {
+          "activeMinutes": 136.29,
+          "calendarDay": 2,
+          "coinsAfter": 2879
+        },
+        "7": {
+          "activeMinutes": 151.75,
+          "calendarDay": 2,
+          "coinsAfter": 1211
+        },
+        "8": {
+          "activeMinutes": 179.79,
+          "calendarDay": 2,
+          "coinsAfter": 615
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5832,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1396864,
+        "animalSales": 67398,
+        "craftedSales": 45120,
+        "orders": 62780,
+        "seeds": 135836,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34725,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 219363,
+      "minCoins": 244
+    },
+    {
+      "seed": 27,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 84.436,
+        "calendarHours": 10.407,
+        "session": 2,
+        "coins": 6141,
+        "walletAfterLand": 141,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375866161
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376466161,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 456,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 113.06,
+          "calendarDay": 1,
+          "coinsAfter": 311
+        },
+        "6": {
+          "activeMinutes": 135.96,
+          "calendarDay": 2,
+          "coinsAfter": 463
+        },
+        "7": {
+          "activeMinutes": 151.67,
+          "calendarDay": 2,
+          "coinsAfter": 1255
+        },
+        "8": {
+          "activeMinutes": 179.79,
+          "calendarDay": 2,
+          "coinsAfter": 659
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5746,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1396864,
+        "animalSales": 67640,
+        "craftedSales": 45312,
+        "orders": 62780,
+        "seeds": 135836,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34860,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 219576,
+      "minCoins": 158
+    },
+    {
+      "seed": 28,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 91.355,
+        "calendarHours": 10.523,
+        "session": 2,
+        "coins": 6188,
+        "walletAfterLand": 188,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376281300
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376881300,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 503,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 119.06,
+          "calendarDay": 1,
+          "coinsAfter": 294
+        },
+        "6": {
+          "activeMinutes": 133.54,
+          "calendarDay": 2,
+          "coinsAfter": 649
+        },
+        "7": {
+          "activeMinutes": 163.71,
+          "calendarDay": 2,
+          "coinsAfter": 591
+        },
+        "8": {
+          "activeMinutes": 180.67,
+          "calendarDay": 2,
+          "coinsAfter": 3956
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5793,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1389196,
+        "animalSales": 67424,
+        "craftedSales": 45312,
+        "orders": 62495,
+        "seeds": 135117,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34800,
+        "reset": 3625,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 212258,
+      "minCoins": 205
+    },
+    {
+      "seed": 29,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 85.401,
+        "calendarHours": 10.423,
+        "session": 2,
+        "coins": 6015,
+        "walletAfterLand": 15,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791375924044
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376524044,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 330,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 115.86,
+          "calendarDay": 1,
+          "coinsAfter": 1994
+        },
+        "6": {
+          "activeMinutes": 136.29,
+          "calendarDay": 2,
+          "coinsAfter": 2668
+        },
+        "7": {
+          "activeMinutes": 151.75,
+          "calendarDay": 2,
+          "coinsAfter": 1000
+        },
+        "8": {
+          "activeMinutes": 180.88,
+          "calendarDay": 2,
+          "coinsAfter": 5701
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5620,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67672,
+        "craftedSales": 45312,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34865,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216501,
+      "minCoins": 112
+    },
+    {
+      "seed": 30,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 88.826,
+        "calendarHours": 10.48,
+        "session": 2,
+        "coins": 6132,
+        "walletAfterLand": 132,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376129533
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376729533,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 447,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 117.45,
+          "calendarDay": 1,
+          "coinsAfter": 302
+        },
+        "6": {
+          "activeMinutes": 136.24,
+          "calendarDay": 2,
+          "coinsAfter": 2115
+        },
+        "7": {
+          "activeMinutes": 156.58,
+          "calendarDay": 2,
+          "coinsAfter": 591
+        },
+        "8": {
+          "activeMinutes": 180.87,
+          "calendarDay": 2,
+          "coinsAfter": 5152
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5737,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1392964,
+        "animalSales": 68098,
+        "craftedSales": 45600,
+        "orders": 62780,
+        "seeds": 135474,
+        "pens": 280,
+        "animals": 840,
+        "feed": 35085,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216550,
+      "minCoins": 149
+    },
+    {
+      "seed": 31,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 86.939,
+        "calendarHours": 10.449,
+        "session": 2,
+        "coins": 6157,
+        "walletAfterLand": 157,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376016322
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376616322,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 472,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 115.56,
+          "calendarDay": 1,
+          "coinsAfter": 327
+        },
+        "6": {
+          "activeMinutes": 136.29,
+          "calendarDay": 2,
+          "coinsAfter": 2770
+        },
+        "7": {
+          "activeMinutes": 151.75,
+          "calendarDay": 2,
+          "coinsAfter": 1102
+        },
+        "8": {
+          "activeMinutes": 180.88,
+          "calendarDay": 2,
+          "coinsAfter": 5803
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5762,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1393584,
+        "animalSales": 67802,
+        "craftedSales": 45312,
+        "orders": 62780,
+        "seeds": 135532,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34905,
+        "reset": 3650,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 216733,
+      "minCoins": 174
+    },
+    {
+      "seed": 32,
+      "minutesPerDay": 120,
+      "profile": "regular",
+      "mode": "combined",
+      "purchase": {
+        "activeMinutes": 90.042,
+        "calendarHours": 10.501,
+        "session": 2,
+        "coins": 6001,
+        "walletAfterLand": 1,
+        "nextTutorialCoins": 50,
+        "nextTutorialFreeSeeds": 3,
+        "at": 1791376202521
+      },
+      "tutorial": {
+        "minutes": 10,
+        "completedAt": 1791376802521,
+        "coins": 315,
+        "xp": 131,
+        "coinsAfter": 316,
+        "freeSeeds": 2
+      },
+      "milestones": {
+        "5": {
+          "activeMinutes": 120.83,
+          "calendarDay": 2,
+          "coinsAfter": 2668
+        },
+        "6": {
+          "activeMinutes": 142.62,
+          "calendarDay": 2,
+          "coinsAfter": 475
+        },
+        "7": {
+          "activeMinutes": 164.08,
+          "calendarDay": 2,
+          "coinsAfter": 1634
+        },
+        "8": {
+          "activeMinutes": 180.67,
+          "calendarDay": 2,
+          "coinsAfter": 3117
+        }
+      },
+      "preCashflow": {
+        "initial": 180,
+        "attendance": 100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 5606,
+        "daily-mission": 105
+      },
+      "farmLedger": {
+        "cropSales": 1386936,
+        "animalSales": 67550,
+        "craftedSales": 45408,
+        "orders": 62495,
+        "seeds": 134907,
+        "pens": 280,
+        "animals": 840,
+        "feed": 34865,
+        "reset": 3625,
+        "expansion": 1184000,
+        "attendance": 2340,
+        "legacyRewards": 145,
+        "mainRewards": 2140,
+        "dailyRewards": 1365
+      },
+      "coins": 210178,
+      "minCoins": 98
+    }
+  ]
+}

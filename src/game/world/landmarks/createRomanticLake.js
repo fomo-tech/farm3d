@@ -1,8 +1,11 @@
+import {clipShoreAtWaterways,otherWaterAt} from '../nature/clipShoreAtWaterways.js';
+import {WATER_PALETTE as WATER} from '../../../../shared/waterPalette.js';
 /**
  * Crystal Lake: one continuous lagoon, an unobstructed town entrance and a
  * single fishing pier. The east edge shares the river's bank coordinates.
  */
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData.js';
@@ -10,6 +13,13 @@ import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { LAKE_CENTER, LAKE_CONFIG, lakeEdge, lakeWaterAt } from '../../../../shared/lakeConfig.js';
 import { createLakeSceneScope } from '../../rendering/LakeSceneScope.js';
 import { mergeLakeStaticsSteps } from '../../rendering/mergeLakeStatics.js';
+import {
+  createVintageRowingBoat,
+  createWeepingWillow,
+  createRomanticTreeSwing,
+  createChibiDragonflies,
+} from '../nature/CinematicWaterfrontDecor.js';
+import { MODEL_PATHS, spawnModelSync } from '../../rendering/ModelAssetManager.js';
 
 export { LAKE_CENTER, lakeEdge } from '../../../../shared/lakeConfig.js';
 export { getRiverWestBankX } from '../../../../shared/riverBank.js';
@@ -33,6 +43,7 @@ function surface(scene, scope, name, rings, colors, material, {start=0,end=Math.
   const mesh=new Mesh(name,scene),data=new VertexData();
   data.positions=positions;data.indices=indices;data.normals=normals;data.colors=vertexColors;
   data.applyToMesh(mesh);
+  if(name==='lake-sandy-shore')clipShoreAtWaterways(mesh,'crystal-lake');
   scope.own(mesh,material,scope.root,{staticMesh:false});
   return mesh;
 }
@@ -43,7 +54,7 @@ function box(scene,scope,name,size,position,material,parent=scope.root,castShado
 }
 
 function tree(scene,scope,x,z,index,bark,leaves,lightLeaves) {
-  if(lakeWaterAt(x,z))return;
+  if(lakeWaterAt(x,z)||otherWaterAt(x,z,'crystal-lake'))return;
   const root=new TransformNode('lake-bank-tree-'+index,scene);
   root.position.set(x,0,z);root.parent=scope.root;
   const trunk=scope.own(MeshBuilder.CreateCylinder('lake-tree-trunk-'+index,{height:4.1,diameterTop:.3,diameterBottom:.65,tessellation:7},scene),bark,root,{castShadow:true});
@@ -85,7 +96,7 @@ export function* createRomanticLakeSteps(scene, shadows=null) {
   yield 'lake: materials';
 
   const water=surface(scene,scope,'crystal-lake',[0,.35,.72,.91,1],
-    ['#3e8eae','#499fb5','#63b6c3','#86ccd0','#b2dfe0'],waterMat,{y:.082});
+    [WATER.deep,WATER.body,WATER.mid,WATER.shallow,WATER.edge],waterMat,{y:.082});
   const shore=surface(scene,scope,'lake-sandy-shore',[1.002,1.055,1.16],
     ['#c6b99d','#dbcba9','#e8d8b6'],shoreMat,{start:.65,end:Math.PI*2-.70,closed:false,y:.096});
   yield 'lake: shoreline';
@@ -116,7 +127,81 @@ export function* createRomanticLakeSteps(scene, shadows=null) {
     }
   }
   for(const dz of [-4.8,4.8])box(scene,scope,'pier-head-bollard-'+dz,{width:.22,height:.9,depth:.22},[9,.45,dz],posts,pierRoot,true);
+
+  // Warm hurricane lanterns on the fishing pier
+  const lanternGlowMat = scope.material('lake-pier-lantern-glow', '#fef08a');
+  lanternGlowMat.emissiveColor = Color3.FromHexString('#f59e0b').scale(0.95);
+  const lanternWoodMat = scope.material('lake-pier-lantern-frame', '#451a03');
+  [-4.8, 4.8].forEach((dz, idx) => {
+    box(scene, scope, `pier-lamp-post-${idx}`, { width: 0.12, height: 1.1, depth: 0.12 }, [9, 1.25, dz], lanternWoodMat, pierRoot);
+    box(scene, scope, `pier-lamp-bulb-${idx}`, { width: 0.32, height: 0.38, depth: 0.32 }, [9, 1.85, dz], lanternGlowMat, pierRoot);
+    box(scene, scope, `pier-lamp-roof-${idx}`, { width: 0.44, height: 0.12, depth: 0.44 }, [9, 2.08, dz], lanternWoodMat, pierRoot);
+  });
   yield 'lake: dock';
+
+  // 1. Vintage Wooden Rowing Boats (Neo bến & Bồng bềnh theo sóng)
+  createVintageRowingBoat(scene, root, { x: p.x + 3.0, y: 0.082, z: p.z - 4.2, rotationY: 0.12 }, shadows);
+  createVintageRowingBoat(scene, root, { x: 145.5, y: 0.082, z: -17.5, rotationY: -0.38 }, shadows);
+  yield 'lake: vintage rowing boats';
+
+  // 2. Weeping Willows (Cây liễu rủ bóng nước) & Romantic Tree Swing (Xích đu ven hồ)
+  createWeepingWillow(scene, root, { x: 136.0, y: 0.09, z: -25.5, scale: 1.15, rotationY: 0.4 }, shadows);
+  createRomanticTreeSwing(scene, root, { x: 136.5, y: 0.09, z: -24.2, rotationY: 0.3 });
+  createWeepingWillow(scene, root, { x: 176.5, y: 0.09, z: 46.0, scale: 1.1, rotationY: -0.6 }, shadows);
+  yield 'lake: willows and swing';
+
+  // 3. Sunset Glamping & Lakeside Picnic Spot (Thảm picnic kẻ caro & Lều Bohemian)
+  const matPicnicMat = scope.material('lake-picnic-cloth', '#fed7aa');
+  const matPicnicTent = scope.material('lake-glamping-canvas', '#fdf4dc');
+  const matFruitRed = scope.material('lake-picnic-apple', '#ef4444');
+  const matFruitOrange = scope.material('lake-picnic-orange', '#f97316');
+
+  const picnicRoot = new TransformNode('lake-picnic-glamping-spot', scene);
+  picnicRoot.position.set(131.5, 0.098, 16.5);
+  picnicRoot.rotation.y = 0.25;
+  picnicRoot.parent = root;
+
+  // Thảm picnic kẻ dệt mềm mại
+  box(scene, scope, 'lake-picnic-rug', { width: 2.8, height: 0.025, depth: 2.4 }, [0, 0.015, 0], matPicnicMat, picnicRoot);
+
+  // Lều vải chữ A phong cách Bohemian Glamping
+  const tentFrameMat = scope.material('lake-tent-frame', '#78350f');
+  [-0.9, 0.9].forEach((tz, tIdx) => {
+    [-0.5, 0.5].forEach((tx, pIdx) => {
+      const pole = scope.own(MeshBuilder.CreateCylinder(`lake-tent-pole-${tIdx}-${pIdx}`, {
+        height: 2.3, diameter: 0.06, tessellation: 6,
+      }, scene), tentFrameMat, picnicRoot, { staticMesh: false });
+      pole.position.set(tx * 1.5, 1.05, tz);
+      pole.rotation.z = tx > 0 ? 0.36 : -0.36;
+    });
+  });
+  const ridgePole = scope.own(MeshBuilder.CreateCylinder('lake-tent-ridge', {
+    height: 2.0, diameter: 0.07, tessellation: 6,
+  }, scene), tentFrameMat, picnicRoot, { staticMesh: false });
+  ridgePole.position.set(0, 2.05, 0);
+  ridgePole.rotation.x = Math.PI / 2;
+
+  // Mái lều vải canvas tam giác
+  [-0.48, 0.48].forEach((sideX, sIdx) => {
+    const flap = scope.own(MeshBuilder.CreateBox(`lake-tent-flap-${sIdx}`, {
+      width: 1.25, height: 0.04, depth: 1.85,
+    }, scene), matPicnicTent, picnicRoot, { staticMesh: false, castShadow: true });
+    flap.position.set(sideX, 1.08, 0);
+    flap.rotation.z = sideX > 0 ? -0.72 : 0.72;
+  });
+
+  // Giỏ mây trái cây & ly nước
+  box(scene, scope, 'picnic-basket', { width: 0.55, height: 0.32, depth: 0.42 }, [0.65, 0.17, 0.4], posts, picnicRoot);
+  [-0.08, 0.08].forEach((fx, fIdx) => {
+    const apple = scope.own(MeshBuilder.CreateSphere(`picnic-apple-${fIdx}`, { diameter: 0.14, segments: 4 }, scene),
+      fIdx === 0 ? matFruitRed : matFruitOrange, picnicRoot, { staticMesh: false });
+    apple.position.set(0.65 + fx, 0.38, 0.4);
+  });
+  // Đèn bão picnic
+  box(scene, scope, 'picnic-lantern-body', { width: 0.18, height: 0.32, depth: 0.18 }, [-0.75, 0.17, 0.65], lanternWoodMat, picnicRoot);
+  box(scene, scope, 'picnic-lantern-glow', { width: 0.14, height: 0.20, depth: 0.14 }, [-0.75, 0.18, 0.65], lanternGlowMat, picnicRoot);
+
+  yield 'lake: glamping picnic spot';
 
   // Rest bank stays on land, with room between trees, benches and the path.
   bench(scene,scope,129,22,0,wood,posts);
@@ -131,6 +216,7 @@ export function* createRomanticLakeSteps(scene, shadows=null) {
     const angle=.78+i*(Math.PI*2-1.55)/17;
     if(Math.abs(angle-Math.PI)<.28)continue;
     const pt=lakeEdge(angle,1.05);
+    if(otherWaterAt(pt.x,pt.z,'crystal-lake'))continue;
     const rock=scope.own(MeshBuilder.CreateIcoSphere('lake-pebble-'+i,{radius:.35+(i%3)*.12,subdivisions:1,flat:true},scene),stone);
     rock.position.set(pt.x,.13,pt.z);rock.scaling.set(1.3,.55,1.0);
     if(i%6===5)yield 'lake: bank rocks';
@@ -152,6 +238,26 @@ export function* createRomanticLakeSteps(scene, shadows=null) {
       bloom.position.set(pt.x,.22,pt.z);bloom.scaling.y=.5;
     }
   }
+
+  // Chuồn chuồn ớt lượn lờ trên đầm sen
+  createChibiDragonflies(scene, detail, 4, { x: 162, z: 6 });
+
+  // Đàn vịt trời tung tăng bơi lội trên mặt hồ Pha Lê
+  const duckPositions = [
+    { x: 161.0, z: -12.0, rot: 0.6 },
+    { x: 158.5, z: -10.2, rot: 0.75 },
+    { x: 163.5, z: -14.0, rot: 0.5 },
+  ];
+  duckPositions.forEach((dp, dIdx) => {
+    spawnModelSync(scene, MODEL_PATHS.animals.duck, {
+      position: new Vector3(dp.x, 0.082, dp.z),
+      rotation: new Vector3(0, dp.rot, 0),
+      scaling: new Vector3(1.25, 1.25, 1.25),
+      parent: detail,
+      name: `lake-crystal-duck-${dIdx}`,
+    });
+  });
+
   yield 'lake: water detail';
   // One group of subtle wave ribbons, never a duplicate opaque water disk.
   const rippleMat=scope.material('lake-wave-mat','#cee8e7');rippleMat.alpha=.3;

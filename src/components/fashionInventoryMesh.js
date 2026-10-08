@@ -13,7 +13,7 @@ export function applyFashionInventoryItem(avatar, item) {
   }
   const spec = getFashionItem(id);
   if (!spec) return null;
-  const look = { ...defaults };
+  const look = { ...defaults, gender: item.previewGender || defaults.gender };
   let type;
   if (spec.customization) { Object.assign(look, spec.customization); type = 'outfit'; }
   else if (id.startsWith('top_')) { look.topId = id; look.topColor = spec.color; type = 'top'; }
@@ -34,9 +34,9 @@ export function applyFashionInventoryItem(avatar, item) {
 
 export function isFashionObjectMesh(name, type, itemId) {
   const n = name.toLowerCase();
-  const top = /shirt|hood|bomber|knit|vest|sailor|tech|prince|vamp|kimono|aodai|blazer|kpop|corset|sleeve|collar|polo|tuxedo|neckline/.test(n);
+  const top = /shirt|tank|hood|bomber|knit|vest|sailor|tech|prince|vamp|kimono|aodai|blazer|kpop|corset|sleeve|shoulder-bridge|collar|polo|tuxedo|neckline/.test(n);
   const bottom = /(?:^|-)shorts(?:-|$)|pant|skirt|denim|cargo|belt|buckle|waist|pleat|gown|overall/.test(n);
-  const shoes = /shoe|sneaker|boot|slide|loafer|sandal|sock|sole|skate|heel/.test(n);
+  const shoes = /shoe|sneaker|boot|slide|loafer|sandal|geta|sock|sole|skate|heel/.test(n);
   const hair = /hair|bang|pony|curl|bob|strand|fringe|headband/.test(n);
   if (type === 'top') return top;
   if (type === 'bottom') return bottom;
@@ -57,7 +57,16 @@ export function isFashionObjectMesh(name, type, itemId) {
 export function selectFashionObjectMeshes(avatar, type, itemId, baselineEnabledNames = new Set()) {
   return avatar.root.getChildMeshes().filter(mesh => {
     if (!mesh.isEnabled()) return false;
+    if (type === 'top' && mesh.name.includes('shoulder-bridge') && mesh.material?.name.includes('skin')) return false;
     if (type === 'accessory' && itemId !== 'human') return !baselineEnabledNames.has(mesh.name);
     return isFashionObjectMesh(mesh.name, type, itemId);
   });
+}
+
+// Capture local visibility, including meshes beneath currently hidden outfit nodes.
+export function snapshotFashionMeshVisibility(scene) {
+  return new Map(scene.meshes.map(mesh => [mesh, mesh.isEnabled(false)]));
+}
+export function restoreFashionMeshVisibility(snapshot) {
+  snapshot.forEach((enabled, mesh) => { if (!mesh.isDisposed()) mesh.setEnabled(enabled); });
 }

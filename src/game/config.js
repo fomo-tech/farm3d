@@ -1,7 +1,7 @@
 import { FARM_ACTIVE_PLOTS, FARM_LOT_SPEC } from '../../shared/farmLayout.js';
 
 export const FARM_CONFIG = Object.freeze({
-  // Nông trại starter luôn có đúng 12 ô, bố cục 4 x 3.
+  // Physical capacity; individual unlocked tiles live in account progress.
   plotColumns: FARM_LOT_SPEC.columns,
   plotRows: FARM_LOT_SPEC.rows,
   tileSize: FARM_LOT_SPEC.tileSize,

@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import {NullEngine} from '@babylonjs/core/Engines/nullEngine.js';
+import {Scene} from '@babylonjs/core/scene.js';
+import {TransformNode} from '@babylonjs/core/Meshes/transformNode.js';
+import {NETWORK_LAKES,NETWORK_STREAMS,networkLakeVisitPoint,networkWaterAt} from '../shared/waterNetwork.js';
+import {buildWaterfrontSceneryLayout,waterfrontPlacementClear} from '../src/game/world/nature/waterfrontSceneryLayout.js';
+import {getWorldChunkStreamer} from '../src/game/world/WorldChunkStreamer.js';
+import {createWaterfrontScenery} from '../src/game/world/nature/createWaterfrontScenery.js';
+const records=buildWaterfrontSceneryLayout();assert.deepEqual(records,buildWaterfrontSceneryLayout(),'stable placement across reloads');
+for(const lake of NETWORK_LAKES){
+ const rows=records.filter(p=>p.body===lake.id);
+ for(const side of ['east','west','north','south'])assert.ok(rows.some(p=>p.side===side),`${lake.id} has scenery on ${side} shore`);
+ assert.ok(rows.some(p=>p.kind==='rest'),`${lake.id} has a quiet rest corner`);
+ const arrival=networkLakeVisitPoint(lake);assert.ok(rows.every(p=>Math.hypot(p.x-arrival.x,p.z-arrival.z)>=6+p.radius));
+}
+for(const river of [...NETWORK_STREAMS,{id:'grand-river'}])for(const side of ['left','right'])assert.ok(records.some(p=>p.body===river.id&&p.side===side),`${river.id} scenery on both banks`);
+assert.ok(records.every(p=>waterfrontPlacementClear(p.x,p.z,p.radius)),'roads, farms, bridges, water and arrivals remain clear');
+const e=new NullEngine(),scene=new Scene(e),parent=new TransformNode('test-parent',scene),baselineMaterials=scene.materials.length;
+const root=createWaterfrontScenery(scene,parent,null,{stream:false});
+assert.equal(root.metadata.placements.length,records.length);
+assert.ok(root.metadata.waterAccents.every(p=>networkWaterAt(p.x,p.z)==='lake'),'lotus accents float inside water');
+assert.ok(root.metadata.batches<records.length,'merge props by cell/material');
+assert.ok(root.getChildMeshes().every(m=>m.getTotalVertices()>0&&m.material&&!m.isPickable));
+assert.ok(root.getChildMeshes().every(m=>m.getVerticesData('position').every(Number.isFinite)));
+const vertices=root.getChildMeshes().reduce((sum,m)=>sum+m.getTotalVertices(),0);
+console.log(`Scenery: ${records.length} clusters, ${root.metadata.cells} cells, ${root.metadata.batches} merged batches, ${vertices} vertices`);
+root.dispose();assert.equal(parent.getChildMeshes().length,0);assert.equal(scene.materials.length,baselineMaterials,'shared materials cleaned up');
+const streamed=createWaterfrontScenery(scene,parent,null);
+const streamer=getWorldChunkStreamer(scene);assert.equal(streamer.entries.size,streamed.metadata.cells);
+const first=records[0];streamer.update(first,{x:0,z:0},100000);await new Promise(resolve=>setTimeout(resolve,0));
+assert.ok(streamed.getChildMeshes().some(m=>m.isEnabled()),'nearby shore cells load');
+streamer.update({x:10000,z:10000},{x:0,z:0},101000);await new Promise(resolve=>setTimeout(resolve,0));
+assert.ok(streamed.getChildMeshes().every(m=>!m.isEnabled()),'far shore cells unload');
+streamed.dispose();assert.equal(streamer.entries.size,0,'scenery disposal removes streaming entries');
+scene.dispose();e.dispose();console.log('PASS waterfront: both shores/banks, safe access, deterministic placement, merged geometry and disposal');

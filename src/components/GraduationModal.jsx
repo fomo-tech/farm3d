@@ -105,10 +105,10 @@ export function GraduationModal({ onClose }) {
           <div className="pt-grad-reward-item full-width unlock">
             <span className="pt-reward-icon"><Icon3dCheck size={30} /></span>
             <div className="pt-reward-text">
-              <b>Mở Khóa Toàn Bộ Tiện Ích Vibe City</b>
-              <small>Xưởng Chế Biến · Nâng Cấp Đất & Nhà · Tuyến Xe Buýt Nhanh · Bến Cảng Câu Cá</small>
+              <b>Tiếp Tục Phát Triển Nông Trại</b>
+              <small>Làm nhiệm vụ chính tuyến, tích lũy xu và lên cấp để khai hoang, chế biến và nâng cấp nhà.</small>
             </div>
-            <span className="pt-status-pill unlocked">MỞ KHÓA</span>
+            <span className="pt-status-pill unlocked">SẴN SÀNG</span>
           </div>
         </div>
 
@@ -126,5 +126,4 @@ export function GraduationModal({ onClose }) {
     </div>
   );
 }
-
 

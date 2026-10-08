@@ -17,7 +17,7 @@ export function installWorldRenderIndex(scene) {
       // is changing; keeping the name-based tree/foliage fallback here makes
       // thousands of immutable scenery meshes dynamic forever and forces a
       // full dynamic-content scan every frame.
-      if (node.metadata?.playerId || /player|bus|vehicle|animal|cow|alpaca|npc|elder|cloud|marker|crop|boat|river|water|lake|ocean|bridge/i.test(node.name || '')) return true;
+      if (node.metadata?.dynamicLivestock || node.metadata?.playerId || /player|bus|vehicle|animal|cow|alpaca|npc|elder|cloud|marker|crop|boat|river|water|lake|ocean|bridge/i.test(node.name || '')) return true;
     }
     return false;
   };

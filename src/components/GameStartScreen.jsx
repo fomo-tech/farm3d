@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleSignInButton } from './GoogleSignInButton.jsx';
 import { StartAccountBadge } from './GameAccountUI.jsx';
+import './GameStartScreen.css';
 import {
   Icon3dCrystalDiamond,
   Icon3dHotAirBalloon,
@@ -55,10 +56,10 @@ const CUTECORE_GAME_TIPS = [
 ];
 
 function getLoadingStatus(percentage) {
-  if (percentage < 30) return 'Đang kết nối Vibe City Server...';
-  if (percentage < 65) return 'Đang tải cảnh quan thế giới 3D...';
-  if (percentage < 90) return 'Đang nạp dữ liệu nhân vật & nông trại...';
-  if (percentage < 99) return 'Đang hoàn tất chuẩn bị thế giới...';
+  if (percentage < 30) return 'Đang đến Vibe City…';
+  if (percentage < 65) return 'Đang mở cửa thị trấn…';
+  if (percentage < 90) return 'Đang chuẩn bị nông trại của bạn…';
+  if (percentage < 99) return 'Sắp sẵn sàng rồi…';
   return 'Thế giới Vibe City đã sẵn sàng!';
 }
 
@@ -157,8 +158,7 @@ export function GameStartScreen({
 
   return (
     <div
-      className={`pt-start-screen-backdrop cutecore-theme${isExiting ? ' pt-exiting' : ''}${isReady ? ' is-ready-state' : ''}`}
-      onClick={isReady ? handleStartGame : undefined}
+      className={`pt-start-screen-backdrop cutecore-theme farm-start-v2${isExiting ? ' pt-exiting' : ''}${isReady ? ' is-ready-state' : ''}`}
     >
       {/* Center Unified Presentation Block: Matches Reference 1:1 */}
       <main className="pt-start-center-content">
@@ -176,8 +176,8 @@ export function GameStartScreen({
         {/* Error State if WebGL / Asset Loading Failed */}
         {bootPhase === 'error' && (
           <div className="pt-error-card" onClick={e => e.stopPropagation()}>
-            <b>Không thể kết nối thế giới 3D</b>
-            <p>{bootError || 'Có sự cố khi khởi tạo đồ họa WebGL.'}</p>
+            <b>Chưa thể vào thị trấn</b>
+            <p>{bootError || 'Chưa thể mở trò chơi. Hãy tải lại để thử lần nữa.'}</p>
             <button
               type="button"
               className="pt-retry-btn"
@@ -191,9 +191,10 @@ export function GameStartScreen({
         {/* State A: Loading Game Console (Matching Reference Image) */}
         {bootPhase !== 'error' && bootPhase !== 'idle' && !isReady && (
           <div className="pt-loading-console">
+            <div className="start-loading-caption"><img src="/assets/hud/v3/seeds.png" alt="" draggable="false"/><span>Đang mở thế giới</span><b>{Math.round(displayProgress)}%</b></div>
             {/* Progress bar capsule with right percentage badge */}
             <div className="pt-jelly-track-wrapper">
-              <div className="pt-jelly-track">
+              <div className="pt-jelly-track" role="progressbar" aria-label="Tải thế giới" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(displayProgress)}>
                 {/* Golden candy fluid fill with animated stripes & sheen */}
                 <div
                   className="pt-jelly-fill"
@@ -203,7 +204,7 @@ export function GameStartScreen({
                   <div className="pt-candy-sheen" />
                 </div>
               </div>
-              <div className="pt-progress-pct-bubble">{Math.round(displayProgress)}%</div>
+
             </div>
 
             {/* Console Readout */}
@@ -234,15 +235,15 @@ export function GameStartScreen({
                     <path d="M8 5.14v13.72a1.2 1.2 0 0 0 1.83 1.02l11.14-6.86a1.2 1.2 0 0 0 0-2.04L9.83 4.12A1.2 1.2 0 0 0 8 5.14z" />
                   </svg>
                 </span>
-                <span className="pt-play-now-text">VÀO THẾ GIỚI</span>
+                <span className="pt-play-now-text">CHƠI NGAY</span>
               </button>
 
             </div>
 
             {/* Secondary Google Login Button: Đăng nhập Google */}
-            <div className="pt-google-login-btn" onClick={event => event.stopPropagation()}>
+            {!googleLinked && <div className="pt-google-login-btn" onClick={event => event.stopPropagation()}>
               <GoogleSignInButton onCredential={onGoogleCredential} />
-            </div>
+            </div>}
             {authError && <small role="alert" className="pt-google-config-note">{authError}</small>}
           </div>
         )}

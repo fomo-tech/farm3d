@@ -1,0 +1,102 @@
+.compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock .pt-quest-card{background:#fff9ed!important;
+  border:2px solid #fff!important;
+  border-radius:22px!important;
+  padding:13px!important;
+  gap:12px!important;
+  box-shadow:0 4px 0 #a7b99e88,0 8px 20px #27473c22!important}
+.compact-game-hud .pt-quest-card .pt-quest-avatar-inner{background:#f4e6c6!important;
+  border-radius:15px!important;
+  width:48px!important;
+  height:54px!important}
+.compact-game-hud .pt-quest-card .pt-quest-avatar-pod{flex:0 0 48px!important;
+  height:54px!important}
+.compact-game-hud .pt-quest-card .pt-quest-step-badge{background:#c39a5c!important;
+  border:2px solid #fff9ed!important;
+  color:#fff!important;
+  bottom:-6px!important;
+  font-size:9px!important}
+.quest-tracker-eyebrow{display:block;
+  margin-bottom:5px;
+  font-size:8px;
+  letter-spacing:1.2px;
+  color:#a2977d;
+  font-weight:800}
+.compact-game-hud .pt-quest-card .pt-quest-title{font-size:13px!important;
+  color:#486455!important;
+  line-height:1.4!important}
+.compact-game-hud .pt-quest-card .pt-quest-desc{font-size:10px!important;
+  color:#8b947f!important;
+  line-height:1.5!important;
+  margin-top:5px!important}
+.compact-game-hud .pt-quest-card .pt-quest-dist-badge{font-size:9px!important;
+  background:#e9efdf!important;
+  color:#7a9273!important;
+  border:0!important;
+  box-shadow:none!important;
+  padding:3px 6px!important}
+.compact-game-hud .pt-quest-card .pt-quest-action-btn{background:#79aaa0!important;
+  box-shadow:0 3px 0 #58897f!important;
+  border:2px solid #fff!important;
+  width:auto!important;
+  padding:0 8px!important;
+  min-width:46px!important;
+  height:49px!important;
+  border-radius:15px!important;
+  display:flex;
+  flex-direction:row;
+  white-space:nowrap;
+  flex-shrink:0;
+  align-items:center;
+  justify-content:center;
+  gap:0!important;
+  font-size:11px!important}
+.pt-quest-action-btn i{font-size:16px;
+  font-style:normal;
+  line-height:1}
+.compact-game-hud .mission-hud-links{top:calc(max(14px,env(safe-area-inset-top,0px)) + 158px);
+  width:340px;
+  gap:4px;
+  padding:5px;
+  box-sizing:border-box;
+  border:2px solid #fff;
+  border-radius:16px;
+  background:#fff9ed;
+  box-shadow:0 3px 0 #a7b99e77,0 5px 13px #27473c18}
+.compact-game-hud .mission-hud-links button{flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  min-height:33px;
+  padding:6px 4px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:#909780;
+  font-size:10px;
+  box-shadow:none}
+.compact-game-hud .mission-hud-links button[aria-current=step]{background:#e7eddc;
+  color:#6e8c65;
+  box-shadow:0 1px 0 #c9d5be}
+.mission-hud-links button:focus-visible{outline:2px solid #79aaa0;
+  outline-offset:2px}
+@media(max-width:600px){.compact-game-hud .mission-hud-links{top:calc(max(14px,env(safe-area-inset-top,0px)) + 204px);
+  width:calc(100vw - 145px);
+  max-width:280px}
+.compact-game-hud .pt-quest-card .pt-quest-desc{display:block!important}
+.quest-tracker-eyebrow{font-size:7px}
+.compact-game-hud .pt-quest-card .pt-quest-title{font-size:12px!important}
+.compact-game-hud .mission-hud-links button{font-size:9px}
+}
+
+
+/* Keep the tracker readable at game scale with only essential information. */
+.compact-game-hud .pt-quest-card .pt-quest-top-row{flex-direction:column!important;align-items:flex-start!important;gap:6px!important}
+.compact-game-hud .pt-quest-card .pt-quest-title{font-size:14px!important;line-height:1.25!important}
+.compact-game-hud .pt-quest-card .pt-quest-dist-badge{font-size:10px!important}
+.compact-game-hud .mission-hud-links button{white-space:nowrap;gap:4px;padding:4px 2px;min-width:0}
+@media(max-width:600px){
+.compact-game-hud .mission-hud-links{width:280px;max-width:calc(100vw - 28px)}
+.compact-game-hud .mission-hud-links button{font-size:10px}
+.compact-game-hud .mission-hud-links .hud-icon{flex-shrink:0}
+}

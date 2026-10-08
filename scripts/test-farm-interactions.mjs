@@ -21,7 +21,7 @@ hit();
 assert.equal(commits, 1, 'cancelled action cannot send late callback');
 
 const hidden = { ...tile, isEnabled: () => false };
-const locked = { ...tile, metadata: { ...tile.metadata, index: 12 } };
+const locked = { ...tile, metadata: { ...tile.metadata, column: 4, index: 4 } };
 farm.tiles = [hidden, locked, tile];
 farm.getUnlockedPlots = () => 1;
 farm.determineSmartTool = () => 'hoe';
@@ -31,3 +31,39 @@ farm.applyTool = value => { selected = value; };
 farm.interactNearest({ x: 0, z: 0 });
 assert.equal(selected, tile, 'E ignores hidden and locked plots');
 console.log('Farm interactions: reservation, cancellation, tools and nearest plot passed');
+
+let unlockKey;
+let approaches = 0;
+farm.controls.getUnlockedTileKeys = () => ['0:0', '2:1'];
+farm.controls.onUnlockPlot = key => { unlockKey = key; };
+farm.controls.interact = () => { approaches++; };
+farm.interactTile(locked);
+assert.equal(unlockKey, '4:0', 'locked own tile opens expansion immediately');
+assert.equal(approaches, 0, 'opening expansion does not depend on walking');
+farm.interactTile(tile);
+assert.equal(approaches, 1, 'opened tile keeps normal farming interaction');
+farm.interactTile({ metadata: { ...locked.metadata, farmId: 'neighbor' } });
+assert.equal(approaches, 2, 'neighbor tile cannot open own expansion');
+assert.equal(farm.isTileUnlocked({ metadata: { ...tile.metadata, column: 2, row: 1 } }), true, 'explicit nonsequential unlock keys are respected');
+console.log('PASS locked-tile expansion interaction and explicit unlock keys');
+
+// The selected crop clock is derived from authoritative tile timestamps.
+const {CROPS,FARM_CONFIG}=await import('../shared/farmConfig.js');
+farm.controls={};farm.state={};farm.selectedCropTile=tile;
+const clock=10000000;
+farm.state[farm.key(tile)]={crop:'carrot',state:'watered',wateredAt:clock};
+let info=farm.getSelectedCropInfo(clock+1000);
+assert.equal(info.readyAt,clock+CROPS.carrot.growMs);
+assert.equal(info.remainingMs,CROPS.carrot.growMs-1000);
+assert.equal(info.ready,false);
+info=farm.getSelectedCropInfo(clock+CROPS.carrot.growMs);
+assert.equal(info.ready,true);assert.equal(info.remainingMs,0);
+farm.state[farm.key(tile)].tutorialFastGrowth=true;
+assert.equal(farm.getSelectedCropInfo(clock+8000).ready,true);
+assert.equal(farm.getSelectedCropInfo(clock).remainingMs,FARM_CONFIG.care.tutorialGrowMs);
+farm.state[farm.key(tile)].state='planted';
+assert.equal(farm.getSelectedCropInfo(clock).needsWater,true);
+assert.equal(farm.getSelectedCropInfo(clock).readyAt,null);
+farm.state[farm.key(tile)].state='tilled';
+assert.equal(farm.getSelectedCropInfo(clock),null);
+console.log('PASS crop clock: countdown, harvest timestamp, maturity transition, tutorial and water-first state');

@@ -1,3 +1,4 @@
+import { stabilizeSunShadow } from '../rendering/stabilizeSunShadow.js';
 import { Color3, Color4 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3, Matrix, Quaternion } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
@@ -640,11 +641,7 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
 
         // Định vị nguồn sáng Directional Sun luôn bám sát theo vị trí mục tiêu/nhân vật (chuẩn Cozy Farmy 56m)
         const centerPos = cam.target || cam.position;
-        sunLight.position.set(
-          centerPos.x - _tmpNormDir.x * 65,
-          centerPos.y - _tmpNormDir.y * 65,
-          centerPos.z - _tmpNormDir.z * 65
-        );
+        stabilizeSunShadow(sunLight, centerPos, shadows?.getShadowMap()?.getSize().width || 1024);
 
         // Định vị Mặt Trăng ở hướng đối diện
         moonRoot.position.set(

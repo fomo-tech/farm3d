@@ -19,12 +19,12 @@ assert.equal(collision.resolveMovement(outside.x, outside.z, 0, 4).collided, tru
 collision.setFarmGate(farmId, true);
 assert.equal(collision.resolveMovement(outside.x, outside.z, 0, 4).collided, false);
 const nowBase = Date.now();
-const mature = { state: 'watered', crop: 'carrot', plantedAt: nowBase - 120000, wateredAt: nowBase - 100000, yield: 4, stolenAmount: 0 };
+const mature = { state: 'watered', crop: 'carrot', plantedAt: nowBase - FARM_CONFIG.crops.carrot.growMs - 20000, wateredAt: nowBase - FARM_CONFIG.crops.carrot.growMs - 1000, yield: 4, stolenAmount: 0 };
 assert.equal(theftPolicy({ gateOpen: false, row: mature, now: nowBase, claimedAt: 0 }).error.includes('đóng'), true);
-assert.equal(theftPolicy({ gateOpen: true, row: { ...mature, yield: 1 }, now: nowBase, claimedAt: 0 }).amount, 1);
-assert.equal(theftPolicy({ gateOpen: true, row: { ...mature, yield: undefined }, now: nowBase, claimedAt: 0 }).amount, 1);
+assert.equal(theftPolicy({ gateOpen: true, row: { ...mature, yield: 1 }, now: nowBase, claimedAt: 0 }).amount, 4);
+assert.equal(theftPolicy({ gateOpen: true, row: { ...mature, yield: undefined }, now: nowBase, claimedAt: 0 }).amount, 4);
 assert.ok(theftPolicy({ gateOpen: true, row: { ...mature, yield: 1, tutorialFastGrowth: true }, now: nowBase, claimedAt: 0 }).error);
-assert.ok(theftPolicy({ gateOpen: true, row: mature, now: nowBase, claimedAt: nowBase }).amount > 0, 'Opening a new farm permits ripe crop theft');
+assert.ok(theftPolicy({ gateOpen: true, row: mature, now: nowBase, claimedAt: nowBase }).error, 'New farm protected even with an open gate');
 
 // Live Mongo tests use ONLY a generated temporary database.
 const mongo = new MongoClient(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017', { serverSelectionTimeoutMS: 5000 });
@@ -43,12 +43,12 @@ async function start(id = 'thief') {
   assert.ok(result.pending, JSON.stringify(result)); return result.pending;
 }
 async function resetCrop(tileKey = '0:0') {
-  await stores.crops.replaceOne({ farmId, tileKey }, { ...row, tileKey, plantedAt: now - 120000, wateredAt: now - 100000 }, { upsert: true });
+  await stores.crops.replaceOne({ farmId, tileKey }, { ...row, tileKey, plantedAt: now - FARM_CONFIG.crops.carrot.growMs - 20000, wateredAt: now - FARM_CONFIG.crops.carrot.growMs - 1000 }, { upsert: true });
 }
 try {
   assignment._id = (await stores.assignments.insertOne(assignment)).insertedId;
   await stores.crops.insertOne(row);
-  for (const playerId of ['thief', 'second', 'owner']) await stores.players.insertOne({ playerId, revision: 0, progress: { inventory: { carrot: 0 }, barnLevel: 2 } });
+  for (const playerId of ['thief', 'second', 'owner']) await stores.players.insertOne({ playerId, revision: 0, progress: { inventory: { carrot: 0 }, barnLevel: 2, unlockedTileKeys: ['0:0'] } });
   await service.init();
   assert.equal(service.blocksMovement(outside, inside), true);
   assert.ok((await service.toggle(assignment, farmId, 'thief', true, outside)).error);
@@ -75,8 +75,9 @@ try {
   ]);
   assert.equal(winners.filter(result => !result.error).length, 1, 'one winner per crop');
   const crop = await stores.crops.findOne({ farmId, tileKey: '0:0' });
-  assert.equal(crop.yield - crop.stolenAmount, 3, 'owner keeps 75%');
-  assert.equal((await stores.players.findOne({ playerId: 'thief' })).progress.inventory.carrot, 1);
+  assert.equal(crop.state, 'tilled', 'stolen crop is harvested');
+  assert.equal(crop.yield, 0, 'owner cannot harvest stolen crop again');
+  assert.equal((await stores.players.findOne({ playerId: 'thief' })).progress.inventory.carrot, 4);
   assert.ok((await service.steal({ ...args('thief'), phase: 'finish', token: first.token })).error, 'replay denied');
   // No loss when receiver has insufficient inventory capacity.
   await resetCrop();
@@ -101,15 +102,16 @@ try {
   await resetCrop(); pending = await start(); now += 3100;
   assert.ok(!(await service.steal({ ...args('thief'), phase: 'finish', token: pending.token })).error);
   await resetCrop();
-  assert.ok((await service.steal({ ...args('second'), phase: 'start' })).pending, 'No aggregate daily cap when gate is open');
+  await stores.assignments.updateOne({_id:assignment._id},{$set:{[`theftCounts.${day}`]:FARM_CONFIG.security.theft.dailyFarmLimit}});
+  assert.ok((await service.steal({ ...args('second'), phase: 'start' })).error, 'Farm daily cap protects owner');
   now += 86400000;
   assert.ok((await service.steal({ ...args('second'), phase: 'start' })).pending, 'next UTC day resets limits');
   await stores.players.updateOne({ playerId: 'second' }, { $set: { [`farmTheftCounts.${new Date(now).toISOString().slice(0, 10)}`]: FARM_CONFIG.security.theft.dailyPlayerLimit } });
-  assert.ok((await service.steal({ ...args('second'), phase: 'start' })).pending, 'No account daily cap when gate is open');
+  assert.ok((await service.steal({ ...args('second'), phase: 'start' })).error, 'Account daily cap enforced');
   await service.toggle(assignment, farmId, 'owner', false, outside);
   recovered = new FarmSecurity(stores); await recovered.init();
   assert.equal(recovered.blocksMovement(outside, inside), true, 'closed state survives restart');
-  console.log('PASS: gate ownership/collision/exit, closed-gate theft denial, timed cancellation, concurrency, yield protection, full barn, replay, daily limits and crash recovery (isolated MongoDB).');
+  console.log('PASS: gate ownership/collision/exit, closed-gate theft denial, timed cancellation, concurrency, harvested crop removal, full barn, replay, daily limits and crash recovery (isolated MongoDB).');
 } finally {
   await db.dropDatabase(); await mongo.close();
 }

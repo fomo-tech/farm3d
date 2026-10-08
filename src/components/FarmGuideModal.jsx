@@ -1,433 +1,63 @@
-import React, { useState } from 'react';
-import { ONBOARDING_STEPS } from '../game/economy/GameProgress.js';
-import {
-  Icon3dStamp,
-  Icon3dManager,
-  Icon3dCarrot,
-  Icon3dBackpack,
-  Icon3dShopCart,
-  Icon3dOrdersBox,
-  Icon3dModernCity,
-  Icon3dBike,
-  Icon3dStar,
-  Icon3dSparkleStar,
-  Icon3dCheck,
-  Icon3dGoldCoin,
-  Icon3dSeeds,
-  Icon3dHoe,
-  Icon3dWateringCan,
-  Icon3dBasket,
-  Icon3dCompass,
-  Icon3dCub50,
-  Icon3dTractor,
-  Icon3dRiceSpike,
-  Icon3dTomato,
-  Icon3dStrawberry,
-  Icon3dWarningAlert,
-} from './icons3d/GameIcons3D.jsx';
-
-const GUIDE_TABS = [
-  { id: 'stamp-book', label: 'Con Dấu Tân Thủ', icon: <Icon3dStamp size={20} /> },
-  { id: 'barn', label: 'Kho & Sức Chứa', icon: <Icon3dBackpack size={20} /> },
-  { id: 'shop', label: 'Cây Trồng & Shop', icon: <Icon3dShopCart size={20} /> },
-  { id: 'orders', label: 'Đơn Hàng Xe Tải', icon: <Icon3dOrdersBox size={20} /> },
-  { id: 'bus', label: 'Tuyến Xe Buýt', icon: <Icon3dModernCity size={20} /> },
-  { id: 'vehicles', label: 'Bộ Sưu Tập Xe', icon: <Icon3dBike size={20} /> },
+import React, { useEffect, useRef, useState } from 'react';
+import { ONBOARDING_STEPS, CROPS, ORDERS, barnCapacity, inventoryCount } from '../game/economy/GameProgress.js';
+import { preLandJourney } from '../../shared/preLandJourney.js';
+import { VEHICLE_LIST } from '../../shared/vehicleConfig.js';
+import { FARM_CONFIG } from '../../shared/farmConfig.js';
+import { ECONOMY_REWARD_CONFIG } from '../../shared/economyRewardConfig.js';
+import { HudIcon } from './icons3d/HudIcon.jsx';
+import './FarmGuide.css';
+const TABS = [ ['journey','Bắt đầu','quest'], ['crops','Trồng trọt','seeds'], ['barn','Kho đồ','backpack'], ['orders','Đơn hàng','basket'], ['explore','Khám phá','map'], ['vehicles','Phương tiện','bike'] ];
+const FARM_STEPS = [
+  [ONBOARDING_STEPS.MEET_ELDER,'Gặp Quản Gia Oliver','Đến gặp Oliver để nhận hướng dẫn và hạt giống khởi nghiệp.','quest'],
+  [ONBOARDING_STEPS.FIRST_PLANT,'Vụ mùa đầu tiên','Xới đất, gieo hạt, tưới nước rồi thu hoạch khi cây chín. Báo cáo kết quả với Oliver.','seeds'],
+  [ONBOARDING_STEPS.EXPLAIN_SYSTEMS,'Học cách quản lý nông trại','Nghe Oliver hướng dẫn về kho, vật tư và các hoạt động trong thị trấn.','backpack'],
+  [ONBOARDING_STEPS.DELIVER_ORDER,'Giao đơn đầu tiên','Chuẩn bị nông sản theo yêu cầu và giao tại bảng Đơn hàng.','basket'],
+  [ONBOARDING_STEPS.CLAIM_REWARD,'Nhận quà tốt nghiệp','Gặp lại Oliver để hoàn tất hướng dẫn và nhận xe đạp.','bike'],
 ];
-
-export function FarmGuideModal({ progress, onClose, onResetTutorial, onNavigateStep }) {
-  const [activeTab, setActiveTab] = useState('stamp-book');
-
-  const onboarding = progress?.onboarding;
-  const currentStep = onboarding?.step ?? 0;
-  const isCompleted = onboarding?.completed;
-
-  // The 5 Onboarding Stamp Missions
-  const STAMP_MISSIONS = [
-    {
-      step: ONBOARDING_STEPS.MEET_ELDER,
-      stepNumber: 1,
-      title: 'Gặp Quản Gia Oliver',
-      desc: 'Đến đài phun nước trung tâm gặp Quản Gia để nhận gói quà khởi nghiệp tân thủ.',
-      icon: <Icon3dManager size={34} />,
-      reward: '+50 Xu · 3 Hạt Cà Rốt',
-    },
-    {
-      step: ONBOARDING_STEPS.FIRST_PLANT,
-      stepNumber: 2,
-      title: 'Vụ Mùa Cà Rốt Đầu Tiên',
-      desc: 'Thực hành 4 bước: Cuốc đất (2) ➔ Gieo hạt (3) ➔ Tưới nước (4) ➔ Thu hoạch sau 8s.',
-      icon: <Icon3dCarrot size={34} />,
-      reward: 'Nông Sản Tươi · +40 XP',
-    },
-    {
-      step: ONBOARDING_STEPS.EXPLAIN_SYSTEMS,
-      stepNumber: 3,
-      title: 'Học Kiến Thức Nông Trại',
-      desc: 'Nắm vững 4 cơ chế vận hành: Sức chứa kho, Cửa hàng vật tư, Tuyến xe buýt & Xe tải.',
-      icon: <Icon3dShopCart size={34} />,
-      reward: 'Kiến Thức Vàng · +30 XP',
-    },
-    {
-      step: ONBOARDING_STEPS.DELIVER_ORDER,
-      stepNumber: 4,
-      title: 'Giao Đơn Hàng Đầu Tiên',
-      desc: 'Mở Bảng Đơn Hàng và giao 1 củ cà rốt tươi ngon cho Nhà Hàng Green Valley.',
-      icon: <Icon3dOrdersBox size={34} />,
-      reward: '+65 Xu Thưởng · +40 XP',
-    },
-    {
-      step: ONBOARDING_STEPS.CLAIM_REWARD,
-      stepNumber: 5,
-      title: 'Tốt Nghiệp & Nhận Xe Đạp',
-      desc: 'Gặp Quản Gia Oliver nhận chứng nhận cư dân ưu tú cùng Xe Đạp Thể Thao cực ngầu!',
-      icon: <Icon3dBike size={34} />,
-      reward: 'Xe Đạp Thể Thao (10m/s) + 200 Xu',
-    },
-  ];
-
-  const completedCount = isCompleted
-    ? 5
-    : STAMP_MISSIONS.filter(m => currentStep > m.step).length;
-
-  const handleGoToMission = () => {
-    onClose?.();
-    onNavigateStep?.();
-  };
-
-  return (
-    <div className="pt-onboarding-backdrop" onClick={onClose}>
-      <section
-        className="pt-guide-book-panel"
-        onClick={e => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Sổ tay tân thủ Play Together"
-      >
-        {/* Book Header with Leather Accent & Gold Trim */}
-        <header className="pt-book-header">
-          <div className="pt-book-title-wrap">
-            <span className="pt-book-badge">
-              <Icon3dSparkleStar size={14} />
-              <span>HỘ CHIẾU & SỔ CON DẤU TÂN THỦ</span>
-              <Icon3dSparkleStar size={14} />
-            </span>
-            <h2>Hành Trình Khởi Nghiệp Thung Lũng Vibe City</h2>
-          </div>
-          <button
-            type="button"
-            className="pt-book-close-btn"
-            onClick={onClose}
-            aria-label="Đóng sổ tay"
-          >
-            ✕
-          </button>
-        </header>
-
-        {/* Tab Selection Bar */}
-        <div className="pt-book-tabs-bar">
-          {GUIDE_TABS.map(tab => (
-            <button
-              key={tab.id}
-              type="button"
-              className={`pt-book-tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <span className="pt-tab-icon">{tab.icon}</span>
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Body */}
-        <div className="pt-book-body">
-          {/* TAB 1: STAMP PASSPORT */}
-          {activeTab === 'stamp-book' && (
-            <div className="pt-stamp-book-view">
-              {/* Top Passport Tracker Banner */}
-              <div className="pt-stamp-tracker-banner">
-                <div className="pt-stamp-tracker-info">
-                  <strong>TIẾN ĐỘ THU THẬP CON DẤU TÂN THỦ</strong>
-                  <p>Hoàn thành đủ 5 con dấu để nhận Xe Đạp Thể Thao tốc độ 10m/s và tốt nghiệp cư dân!</p>
-                </div>
-                <div className="pt-stamp-progress-pill">
-                  <span className="pt-stamp-count">{completedCount}/5</span>
-                  <span className="pt-stamp-label">CON DẤU</span>
-                </div>
-              </div>
-
-              {/* Grid of 5 Stamp Cards */}
-              <div className="pt-stamps-grid">
-                {STAMP_MISSIONS.map(mission => {
-                  const stepDone = isCompleted || currentStep > mission.step;
-                  const stepActive = !isCompleted && currentStep === mission.step;
-                  const stepLocked = !isCompleted && currentStep < mission.step;
-
-                  return (
-                    <div
-                      key={mission.stepNumber}
-                      className={`pt-stamp-card ${stepDone ? 'is-done' : ''} ${stepActive ? 'is-active' : ''} ${stepLocked ? 'is-locked' : ''}`}
-                    >
-                      {/* Left: Mission 3D Icon */}
-                      <div className="pt-stamp-card-icon">
-                        {mission.icon}
-                        <span className="pt-stamp-step-num">{mission.stepNumber}</span>
-                      </div>
-
-                      {/* Middle: Mission Details */}
-                      <div className="pt-stamp-card-info">
-                        <div className="pt-stamp-title-row">
-                          <b>{mission.title}</b>
-                          {stepActive && <span className="pt-tag-active">ĐANG THỰC HIỆN</span>}
-                          {stepLocked && <span className="pt-tag-locked">CHƯA MỞ</span>}
-                          {stepDone && <span className="pt-tag-done">ĐÃ HOÀN THÀNH</span>}
-                        </div>
-                        <p>{mission.desc}</p>
-                        <small className="pt-stamp-reward">
-                          <Icon3dGoldCoin size={14} /> Phẩn thưởng: <b>{mission.reward}</b>
-                        </small>
-                      </div>
-
-                      {/* Right: The Iconic Play Together Rubber Stamp Seal */}
-                      <div className="pt-stamp-seal-wrap">
-                        {stepDone ? (
-                          <div className="pt-rubber-stamp is-stamped">
-                            <div className="pt-stamp-circle">
-                              <span>HOÀN THÀNH</span>
-                              <small>VIBE CITY</small>
-                              <div className="pt-stamp-star"><Icon3dStar size={14} /></div>
-                            </div>
-                          </div>
-                        ) : stepActive ? (
-                          <button
-                            type="button"
-                            className="pt-stamp-go-btn"
-                            onClick={handleGoToMission}
-                            title="Đến vị trí làm nhiệm vụ ngay"
-                          >
-                            <Icon3dCompass size={18} />
-                            <span>ĐI NGAY</span>
-                          </button>
-                        ) : (
-                          <div className="pt-stamp-slot locked-slot">
-                            <span>KHÓA</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Bottom Milestone Road Track */}
-              <div className="pt-milestone-banner">
-                <div className={`pt-milestone-item ${completedCount >= 1 ? 'is-reached' : ''}`}>
-                  <div className="pt-mile-icon"><Icon3dGoldCoin size={24} /></div>
-                  <div className="pt-mile-info">
-                    <b>Cột mốc 1 Dấu</b>
-                    <small>+50 Xu Khởi Nghiệp</small>
-                  </div>
-                  <span className={`pt-mile-status ${completedCount >= 1 ? 'done' : ''}`}>
-                    {completedCount >= 1 ? '✓ ĐÃ NHẬN' : 'CHƯA ĐẠT'}
-                  </span>
-                </div>
-
-                <div className="pt-milestone-arrow">➔</div>
-
-                <div className={`pt-milestone-item ${completedCount >= 3 ? 'is-reached' : ''}`}>
-                  <div className="pt-mile-icon"><Icon3dCarrot size={24} /></div>
-                  <div className="pt-mile-info">
-                    <b>Cột mốc 3 Dấu</b>
-                    <small>Thu hoạch Cà rốt & Xu</small>
-                  </div>
-                  <span className={`pt-mile-status ${completedCount >= 3 ? 'done' : ''}`}>
-                    {completedCount >= 3 ? '✓ ĐÃ NHẬN' : 'CHƯA ĐẠT'}
-                  </span>
-                </div>
-
-                <div className="pt-milestone-arrow">➔</div>
-
-                <div className={`pt-milestone-item grand ${isCompleted ? 'is-reached' : ''}`}>
-                  <div className="pt-mile-icon"><Icon3dBike size={28} /></div>
-                  <div className="pt-mile-info">
-                    <b>Cột mốc 5 Dấu (Tốt nghiệp)</b>
-                    <small>Xe Đạp Thể Thao (10m/s) + 200 Xu</small>
-                  </div>
-                  <span className={`pt-mile-status ${isCompleted ? 'done' : ''}`}>
-                    {isCompleted ? '✓ ĐÃ NHẬN' : 'CHƯA ĐẠT'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Footer Actions */}
-              <div className="pt-book-footer-actions">
-                <button
-                  type="button"
-                  className="pt-reset-tutorial-btn"
-                  onClick={onResetTutorial}
-                  title="Chơi lại chuỗi hướng dẫn tân thủ của Quản Gia Oliver"
-                >
-                  ↺ Chơi Lại Hướng Dẫn Tân Thủ
-                </button>
-                <button
-                  type="button"
-                  className="pt-book-confirm-btn"
-                  onClick={onClose}
-                >
-                  Tiếp Tục Chơi →
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 2: BARN */}
-          {activeTab === 'barn' && (
-            <div className="pt-guide-content-view">
-              <div className="pt-guide-callout warning">
-                <div className="pt-callout-icon"><Icon3dWarningAlert size={28} /></div>
-                <div>
-                  <strong>Chú ý quan trọng: Khi Kho Đầy!</strong>
-                  <p>
-                    Nếu tổng số lượng nông sản và sản phẩm vượt quá sức chứa, bạn <strong>sẽ không thể thu hoạch thêm bất kỳ cây trồng hay trứng/sữa nào</strong>.
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-guide-grid-details">
-                <div className="pt-detail-card">
-                  <b>Dung Lượng Ban Đầu</b>
-                  <p>Kho cấp 1 có sức chứa <strong>20 vị trí</strong> (áp dụng cho mọi nông sản và sản phẩm chế biến).</p>
-                </div>
-                <div className="pt-detail-card">
-                  <b>Cách Giải Quyết Kho Đầy</b>
-                  <p>1. Mở menu <strong>Kho Đồ</strong> và bấm vào các nông sản để bán bớt lấy Xu.</p>
-                  <p>2. Hoặc mở menu <strong>Đơn Hàng</strong> để đóng gói giao đơn cho dân làng.</p>
-                </div>
-                <div className="pt-detail-card">
-                  <b>Nâng Cấp Kho</b>
-                  <p>Mở menu <strong>Nâng Cấp</strong> ➔ Chọn “Nâng kho”. Mỗi cấp tăng thêm <strong>+20 vị trí chứa</strong>!</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: SHOP & CROPS */}
-          {activeTab === 'shop' && (
-            <div className="pt-guide-content-view">
-              <p className="pt-guide-intro-text">
-                Cửa hàng cung cấp các loại hạt giống chất lượng cao. Bạn có thể mở cửa hàng từ mục <strong>Thành Phố ➔ Vật Tư</strong> hoặc tại menu nông trại.
-              </p>
-
-              <div className="pt-crops-table">
-                <div className="pt-crop-row-header">
-                  <span>Cây Trồng</span>
-                  <span>Cấp Mở Khóa</span>
-                  <span>Giá Hạt</span>
-                  <span>Thời Gian</span>
-                  <span>Giá Bán Kho</span>
-                </div>
-                <div className="pt-crop-row">
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dCarrot size={18} /> Cà rốt</span>
-                  <span>Cấp 1</span>
-                  <span>5 xu</span>
-                  <span>1 phút (Vụ 1: 8s)</span>
-                  <span>12 xu</span>
-                </div>
-                <div className="pt-crop-row">
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dRiceSpike size={18} /> Lúa mì</span>
-                  <span>Cấp 2</span>
-                  <span>12 xu</span>
-                  <span>3 phút</span>
-                  <span>30 xu</span>
-                </div>
-                <div className="pt-crop-row">
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dTomato size={18} /> Cà chua</span>
-                  <span>Cấp 3</span>
-                  <span>20 xu</span>
-                  <span>5 phút</span>
-                  <span>52 xu</span>
-                </div>
-                <div className="pt-crop-row">
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dStrawberry size={18} /> Dâu tây</span>
-                  <span>Cấp 5</span>
-                  <span>45 xu</span>
-                  <span>10 phút</span>
-                  <span>120 xu</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: ORDERS */}
-          {activeTab === 'orders' && (
-            <div className="pt-guide-content-view">
-              <div className="pt-guide-callout success">
-                <div className="pt-callout-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon3dOrdersBox size={28} />
-                </div>
-                <div>
-                  <strong>Bí Kíp Làm Giàu: Xe Tải Đơn Hàng</strong>
-                  <p>Giao đơn hàng xe tải đem lại <strong>nhiều Xu và XP hơn gấp 3 lần</strong> so với việc bán lẻ từng món nông sản vào kho!</p>
-                </div>
-              </div>
-
-              <div className="pt-guide-grid-details">
-                <div className="pt-detail-card">
-                  <b>Đơn Hàng Nhà Hàng Green Valley</b>
-                  <p>Cần 1 Cà rốt · Thưởng 65 Xu & 40 XP. Đơn hàng tân thủ dễ nhất!</p>
-                </div>
-                <div className="pt-detail-card">
-                  <b>Tiệm Bánh Bình Minh</b>
-                  <p>Cần 4 Lúa mì · Thưởng 145 Xu & 70 XP. Phù hợp khi mở khóa lúa mì cấp 2.</p>
-                </div>
-                <div className="pt-detail-card">
-                  <b>Chợ Thị Trấn Vibe City</b>
-                  <p>Cần 2 Cà rốt + 3 Cà chua · Thưởng 220 Xu & 110 XP. Đơn hàng lợi nhuận cao nhất!</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 5: BUS TRANSIT */}
-          {activeTab === 'bus' && (
-            <div className="pt-guide-content-view">
-              <div className="pt-guide-grid-details">
-                <div className="pt-detail-card">
-                  <b>Tuyến Xe Buýt Nhanh 01</b>
-                  <p>Xe buýt chạy vòng tròn liên tục quanh thị trấn, hoàn toàn miễn phí cho mọi cư dân!</p>
-                </div>
-                <div className="pt-detail-card">
-                  <b>Các Điểm Dừng Chính</b>
-                  <p>• Trạm Nông Trại Bình Minh</p>
-                  <p>• Trạm Trung Tâm Thành Phố & Cửa Hàng</p>
-                  <p>• Trạm Hồ Pha Lê & Điểm Câu Cá</p>
-                  <p>• Trạm Bến Cảng Vibe Port</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 6: VEHICLES */}
-          {activeTab === 'vehicles' && (
-            <div className="pt-guide-content-view">
-              <div className="pt-guide-grid-details">
-                <div className="pt-detail-card highlight-vehicle">
-                  <b style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dBike size={18} /> Xe Đạp Thể Thao Play Together</b>
-                  <p>Tốc độ: <strong>10 m/s</strong> (Nhanh hơn 43% so với đi bộ!). Nhận miễn phí khi hoàn thành toàn bộ nhiệm vụ tân thủ!</p>
-                </div>
-                <div className="pt-detail-card">
-                  <b style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dCub50 size={18} /> Xe Máy Cub 50 Classic</b>
-                  <p>Tốc độ: <strong>14 m/s</strong>. Tiếng máy nổ hoài niệm, di chuyển siêu nhanh trên đường nhựa.</p>
-                </div>
-                <div className="pt-detail-card">
-                  <b style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Icon3dTractor size={18} /> Máy Cày FarmTrac 3000</b>
-                  <p>Tốc độ: <strong>8 m/s</strong>. Phương tiện chuyên dụng cho người làm nông chuyên nghiệp.</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-    </div>
-  );
+const START_STEPS = [ [1,'Chuẩn bị cần câu','Đến tiệm đồ câu, mua cần tre. Cần cơ bản dùng được không cần mồi.','fish'], [2,'Câu con cá đầu tiên','Đến hồ, thả câu và kéo khi cá cắn. Cá hiếm có thể cần kéo nhiều lần.','fish'], [3,'Bán cá lấy xu','Mang cá đến tiệm đồ câu hoặc Lão Ngư để bán.','coin'], [4,'Mua lô đất đầu tiên','Xem giá từng lô đất. Mua đất để bắt đầu trồng trọt.','land'] ];
+const money = value => value.toLocaleString('vi-VN');
+function Tip({ asset, title, children }) { return <article className="farm-guide-tip"><HudIcon asset={asset} size={40}/><div><h4>{title}</h4><p>{children}</p></div></article>; }
+export function FarmGuideModal({ progress = {}, hasFarm = false, onClose, onResetTutorial, onNavigateStep }) {
+  const [tab,setTab] = useState('journey');
+  const [confirmReset,setConfirmReset] = useState(false);
+  const panel = useRef(null), content = useRef(null), close = useRef(onClose); close.current = onClose;
+  const journey = preLandJourney(progress);
+  const completed = hasFarm && !!progress.onboarding?.completed;
+  const step = hasFarm ? (progress.onboarding?.step ?? 0) : journey.step;
+  const steps = hasFarm ? FARM_STEPS : START_STEPS;
+  const done = completed ? steps.length : steps.filter(([value]) => step > value).length;
+  useEffect(() => {
+    const previous = document.activeElement;
+    panel.current?.querySelector('button')?.focus();
+    const keys = event => {
+      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close.current?.(); }
+      if (event.key !== 'Tab') return;
+      const controls = [...panel.current.querySelectorAll('button:not(:disabled),a[href],input')].filter(el => el.getClientRects().length);
+      const first = controls[0], last = controls[controls.length-1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    document.addEventListener('keydown',keys,true);
+    return () => { document.removeEventListener('keydown',keys,true); if (previous?.isConnected) previous.focus(); };
+  },[]);
+  const navigate = () => { onClose?.(); onNavigateStep?.(); };
+  return <div className="farm-guide-overlay" onClick={event => { if (event.target === event.currentTarget) onClose?.(); }}>
+    <section className="farm-guide" ref={panel} role="dialog" aria-modal="true" aria-labelledby="farm-guide-title">
+      <header className="farm-guide-header"><span className="farm-guide-book-icon"><HudIcon asset="quest" size={49}/></span><div><small>HỌC CHƠI · KHÁM PHÁ · LẬP NGHIỆP</small><h2 id="farm-guide-title">Sổ tay nông dân</h2></div><button className="farm-guide-close" aria-label="Đóng sổ tay" onClick={onClose}>×</button></header>
+      <div className="farm-guide-layout"><nav className="farm-guide-nav" aria-label="Chủ đề sổ tay">{TABS.map(([id,label,asset]) => <button key={id} aria-pressed={tab===id} onClick={() => { setTab(id); setConfirmReset(false); if (content.current) content.current.scrollTop=0; }}><HudIcon asset={asset} size={30}/><span>{label}</span><i aria-hidden="true">›</i></button>)}<div className="farm-guide-nav-note">Một chút mỗi ngày,<br/>nông trại thêm lớn.</div></nav>
+      <div className="farm-guide-content" ref={content}>
+        {tab==='journey' && <><div className="farm-guide-banner"><HudIcon asset={hasFarm?'seeds':'fish'} size={68}/><div><small>HÀNH TRÌNH CỦA BẠN</small><h3>{completed?'Sẵn sàng làm chủ nông trại':hasFarm?'Từ hạt giống đầu tiên':'Từ cần câu đến nông trại'}</h3><p>{completed?'Bạn đã hoàn thành hướng dẫn. Khám phá các mục bên cạnh để tìm mẹo chơi.':hasFarm?'Hoàn thành từng bước cùng Oliver để làm quen với nông trại.':journey.description}</p></div><strong>{done}<span>/{steps.length}</span><small>ĐÃ XONG</small></strong></div>
+          <div className="farm-guide-progress" role="progressbar" aria-label="Tiến độ hướng dẫn" aria-valuemin={0} aria-valuemax={steps.length} aria-valuenow={done}><span style={{width:`${done/steps.length*100}%`}}/></div>
+          <ol className="farm-guide-steps">{steps.map(([value,title,desc,asset],index) => { const state=completed||step>value?'done':step===value?'current':'later';return <li key={value} className={state}><div className="farm-guide-step-art"><HudIcon asset={asset} size={36}/><span>{index+1}</span></div><div className="farm-guide-step-copy"><small>{state==='done'?'Đã hoàn thành':state==='current'?'Đang thực hiện':'Bước tiếp theo'}</small><h4>{title}</h4><p>{desc}</p></div>{state==='current'&&onNavigateStep?<button className="farm-guide-go" onClick={navigate}>Đi ngay <span aria-hidden="true">›</span></button>:<span className="farm-guide-step-state" aria-hidden="true">{state==='done'?'✓':String(index+1).padStart(2,'0')}</span>}</li>;})}</ol>
+          {hasFarm && <div className="farm-guide-reward"><HudIcon asset="bike" size={45}/><div><b>Quà hoàn thành hướng dẫn</b><p>Xe đạp · {money(ECONOMY_REWARD_CONFIG.onboarding.completion.coins)} xu · {ECONOMY_REWARD_CONFIG.onboarding.completion.xp} XP</p></div><span>{completed?'Đã hoàn thành':'Chờ bạn khám phá'}</span></div>}
+        </>}
+        {tab==='crops' && <><div className="farm-guide-heading"><small>GIEO HẠT HÔM NAY</small><h3>Chăm cây, đón vụ mùa</h3><p>Chọn hạt giống phù hợp với cấp nhân vật. Giá và thời gian dưới đây theo cấu hình game hiện tại.</p></div><div className="farm-guide-process">{['Xới đất','Gieo hạt','Tưới nước','Thu hoạch'].map((label,i)=><span key={label}><b>{i+1}</b>{label}</span>)}</div><div className="farm-guide-crops">{Object.values(CROPS).map(crop=><article key={crop.id}><header><span style={{background:crop.color}} aria-hidden="true"/><h4>{crop.name}</h4><small>Cấp {crop.level}</small></header><dl><div><dt>Hạt giống</dt><dd>{crop.seedCost} xu</dd></div><div><dt>Thời gian</dt><dd>{crop.growMs/60000} phút</dd></div><div><dt>Giá bán</dt><dd>{crop.sellPrice} xu</dd></div></dl></article>)}</div><Tip asset="seeds" title="Nhớ tưới nước">Cây lớn sau khi tưới, kể cả lúc bạn rời game. Vụ hướng dẫn chỉ mất 8 giây. Đóng cổng để bảo vệ mùa vụ: mỗi ô chỉ bị lấy 1/4 sản lượng, tối đa 6 lượt mỗi nông trại/ngày. Nông trại mới được bảo vệ 30 phút.</Tip></>}
+        {tab==='barn' && <><div className="farm-guide-heading"><small>GỌN GÀNG ĐỂ THU HOẠCH</small><h3>Kho đồ của bạn</h3><p>Nông sản và sản phẩm dùng chung sức chứa kho.</p></div><div className="farm-guide-storage"><HudIcon asset="backpack" size={72}/><div><strong>{inventoryCount(progress)}<span> / {barnCapacity(progress)}</span></strong><p>vật phẩm đang cất trong kho</p></div></div><Tip asset="basket" title="Kho đầy thì làm gì?">Bán bớt nông sản trong Túi đồ hoặc dùng chúng để giao đơn hàng. Dọn chỗ trước khi thu hoạch thêm.</Tip><Tip asset="land" title="Tăng sức chứa">Mở Nông trại → Nâng cấp để nâng kho. Mỗi cấp tăng {FARM_CONFIG.buildings.barn.capacityPerLevel} chỗ chứa; tính năng mở sau hướng dẫn tân thủ.</Tip><Tip asset="wardrobe" title="Trang phục và dụng cụ">Túi đồ có các nhóm riêng để tìm đồ nhanh. Mở Thời trang để phối và mặc trang phục đã sở hữu.</Tip></>}
+        {tab==='orders' && <><div className="farm-guide-heading"><small>NÔNG SẢN ĐẾN TAY DÂN LÀNG</small><h3>Giao đơn, nhận xu & XP</h3><p>Mở Nông trại → Đơn hàng. Kiểm tra đủ nguyên liệu rồi chọn giao đơn.</p></div><div className="farm-guide-orders">{ORDERS.map(order=><article key={order.id}><HudIcon asset="basket" size={43}/><div><h4>{order.title}</h4><p>{Object.entries(order.items).map(([id,count])=>`${count} ${CROPS[id]?.name||id}`).join(' · ')}</p><small>{order.coins} xu <span>·</span> {order.xp} XP</small></div></article>)}</div><Tip asset="coin" title="Xem phần thưởng trước khi giao">Mỗi đơn có yêu cầu và phần thưởng riêng. Nông sản được lấy từ kho khi giao đơn.</Tip></>}
+        {tab==='explore' && <><div className="farm-guide-heading"><small>BÌNH MINH CHỜ BẠN</small><h3>Ra ngoài khám phá</h3><p>Mở bản đồ nhỏ để xem vị trí và các điểm đến trong thế giới.</p></div><Tip asset="fish" title="Hồ câu & tiệm đồ câu">Mua cần tại tiệm, ra hồ thả câu rồi mang cá đi bán để kiếm xu cho lô đất đầu tiên.</Tip><Tip asset="land" title="Chọn đất lập nghiệp">Xem giá lô bạn muốn mua, vị trí và số xu hiện có. Sau khi mua, bắt đầu với các ô trồng được mở.</Tip><Tip asset="shop" title="Cửa hàng vật tư">Mua hạt giống và vật tư phù hợp với cấp nhân vật. Kiểm tra giá trước khi mua.</Tip><Tip asset="quest" title="Điểm danh mỗi ngày">Mở Menu → Điểm danh để nhận quà. Badge trên menu báo khi còn quà; ngày mới bắt đầu lúc 07:00 giờ Việt Nam.</Tip><Tip asset="camera" title="Hai góc nhìn">Chọn Khám phá để nhìn về phía chân trời, Canh tác để quan sát ô đất từ trên cao trong Thiết lập.</Tip></>}
+        {tab==='vehicles' && <><div className="farm-guide-heading"><small>ĐI XA HƠN MỖI NGÀY</small><h3>Chọn bạn đồng hành</h3><p>Mở Gọi xe để chọn phương tiện đã sở hữu. Giá dưới đây là giá trong danh mục game.</p></div><div className="farm-guide-vehicles">{VEHICLE_LIST.map(vehicle=><article key={vehicle.id}><span className="farm-guide-vehicle-art"><HudIcon asset={vehicle.id==='walk'?'sprint':'bike'} size={36}/></span><div><h4>{vehicle.name}</h4><p>{vehicle.category} · {vehicle.speed} m/s</p></div><small>{vehicle.id==='walk'?'Có sẵn':`${money(vehicle.cost)} xu`}</small></article>)}</div><Tip asset="bike" title="Xe đạp từ hành trình tân thủ">Hoàn thành hướng dẫn cùng Oliver để nhận xe đạp. Phương tiện chỉ dùng được khi đã sở hữu.</Tip></>}
+      </div></div>
+      <footer className="farm-guide-footer">{hasFarm&&onResetTutorial?<div>{confirmReset?<><span>Chơi lại chuỗi hướng dẫn?</span><button className="farm-guide-reset" onClick={onResetTutorial}>Chơi lại</button><button className="farm-guide-reset" onClick={()=>setConfirmReset(false)}>Hủy</button></>:<button className="farm-guide-reset" onClick={()=>setConfirmReset(true)}>Chơi lại hướng dẫn</button>}</div>:<span>Mở sổ tay bất cứ lúc nào từ Thiết lập</span>}<button className="farm-guide-primary" onClick={onClose}>Tiếp tục chơi</button></footer>
+    </section>
+  </div>;
 }

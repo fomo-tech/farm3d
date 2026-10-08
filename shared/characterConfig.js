@@ -40,20 +40,20 @@ export const CHARACTER_RENDER_CONFIG = Object.freeze({
   style: 'stylized-social-avatar',
   target: 'play-together-inspired',
   proportions: Object.freeze({
-    headToBody: 0.92,
-    shoulderWidth: 0.31,
-    hipWidth: 0.30,
-    eyeScale: 1.0,
-    headScale: 0.74,
-    torsoHeightScale: 1.24,
-    hipHeight: 1.0,
-    headAnchor: 0.59,
-    shoulderHeight: 0.50,
-    upperArmLength: 0.32,
-    forearmLength: 0.30,
-    thighLength: 0.40,
-    shinLength: 0.36,
-    shoeScale: 0.80,
+    headToBody: 0.85,
+    shoulderWidth: 0.28,
+    hipWidth: 0.28,
+    eyeScale: 1.15,
+    headScale: 1.22,
+    torsoHeightScale: 0.82,
+    hipHeight: 0.68,
+    headAnchor: 0.44,
+    shoulderHeight: 0.36,
+    upperArmLength: 0.22,
+    forearmLength: 0.20,
+    thighLength: 0.25,
+    shinLength: 0.23,
+    shoeScale: 1.28,
   }),
   material: Object.freeze({
     skinAmbient: 0.42,
@@ -79,6 +79,7 @@ export const CHARACTER_ANIMATION_CONFIG = Object.freeze({
   facialBlinkMinSeconds: 2.5,
   facialBlinkMaxSeconds: 5.5,
   actionDurations: Object.freeze({
+    feed: 1.1, collect: 1.0,
     till: 0.82,
     hoe: 0.82,
     water: 0.8,
@@ -118,7 +119,7 @@ export function getSkinTone(id) {
 export function normalizeCharacterAppearance(value = {}) {
   const gender = CHARACTER_GENDERS.some(item => item.id === value.gender)
     ? value.gender
-    : 'female';
+    : 'male';
   const toneId = value.skinTone || value.skin || value.skinToneId || DEFAULT_SKIN_TONE.id;
   const skinTone = getSkinTone(toneId);
   return {

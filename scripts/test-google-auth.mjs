@@ -1,23 +1,24 @@
 import assert from 'node:assert/strict';
 import { generateKeyPairSync, sign } from 'node:crypto';
 import { verifyGoogleCredential } from '../server/GoogleIdentity.js';
-import { loadWorldSession, saveWorldSession, switchWorldIdentity, restoreGuestIdentity } from '../src/game/network/WorldSession.js';
+import { loadWorldSession, saveWorldSession, switchWorldIdentity, restoreGuestIdentity, leaveWorldSession } from '../src/game/network/WorldSession.js';
 
 function storage() {
   const data = new Map();
-  return { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, String(value)) };
+  return { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, String(value)), removeItem: key => data.delete(key) };
 }
 globalThis.localStorage = storage();
 globalThis.sessionStorage = storage();
 
 const guest = loadWorldSession();
 assert.match(guest.playerId, /^player_/);
-saveWorldSession({ ...guest, sessionToken: 'guest-secret', farmId: 'farm_000003', name: 'Khách cũ' });
+saveWorldSession({ ...guest, sessionToken: 'guest-secret', hasEnteredWorld: true, farmId: 'farm_000003', name: 'Khách cũ' });
 const googleId = 'player_0123456789abcdef01234567';
 switchWorldIdentity({ playerId: googleId, sessionToken: 'google-secret', name: 'Nhân vật Google', googleLinked: true });
 assert.equal(loadWorldSession().playerId, googleId);
 assert.equal(loadWorldSession().sessionToken, 'google-secret');
 assert.equal(restoreGuestIdentity(), true);
+assert.equal(loadWorldSession().hasEnteredWorld, true, 'Returning guest keeps the play preference after switching accounts');
 assert.equal(loadWorldSession().playerId, guest.playerId);
 assert.equal(loadWorldSession().farmId, 'farm_000003');
 assert.equal(loadWorldSession().sessionToken, 'guest-secret');
@@ -26,6 +27,7 @@ assert.equal(loadWorldSession().sessionToken, 'guest-secret');
 // same Google-protected character without signing in again.
 saveWorldSession({ ...loadWorldSession(), googleLinked: true });
 assert.equal(restoreGuestIdentity(), true);
+assert.equal(loadWorldSession().hasEnteredWorld, undefined, 'A new guest does not inherit the previous play preference');
 assert.notEqual(loadWorldSession().playerId, guest.playerId);
 assert.equal(loadWorldSession().googleLinked, undefined);
 
@@ -50,3 +52,11 @@ const altered = makeCredential(claims).split('.');
 altered[1] = Buffer.from(JSON.stringify({ ...claims, sub: '999999999999' })).toString('base64url');
 await assert.rejects(verifyGoogleCredential(altered.join('.'), 'game-client'), /chữ ký/);
 console.log('Google auth identity flow OK');
+
+const beforeLeave = loadWorldSession();
+leaveWorldSession();
+assert.equal(loadWorldSession().playerId, beforeLeave.playerId);
+assert.equal(loadWorldSession().signedOut, true);
+leaveWorldSession({ deleted: true });
+assert.notEqual(loadWorldSession().playerId, beforeLeave.playerId);
+assert.equal(loadWorldSession().signedOut, undefined);

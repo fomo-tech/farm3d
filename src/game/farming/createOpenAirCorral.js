@@ -35,17 +35,17 @@ export function createOpenAirCorral(scene, shadows, position = { x: 0, y: 0, z: 
 
   // 1. Materials phong cách Play Together / Chibi tươi sáng
   const mats = {
-    timberPost: createToyMaterial(scene, 'mat-corral-post-chunky', '#92400e', { specularPower: 28, ambientScale: 0.6 }),
-    timberRail: createToyMaterial(scene, 'mat-corral-rail-honey', '#b45309', { specularPower: 24, ambientScale: 0.62 }),
-    groundEarth: createToyMaterial(scene, 'mat-corral-earth-soft', '#78350f', { specularPower: 16, ambientScale: 0.52 }),
-    paddockGrass: createToyMaterial(scene, 'mat-corral-grass-lush', '#84cc16', { specularPower: 18, ambientScale: 0.72 }),
-    strawBedding: createToyMaterial(scene, 'mat-corral-straw-soft', '#fde047', { specularPower: 20, ambientScale: 0.68, zOffset: -2 }),
+    timberPost: createToyMaterial(scene, 'mat-corral-post-chunky', '#a27a50', { specularPower: 28, ambientScale: 0.6 }),
+    timberRail: createToyMaterial(scene, 'mat-corral-rail-honey', '#c39965', { specularPower: 24, ambientScale: 0.62 }),
+    groundEarth: createToyMaterial(scene, 'mat-corral-earth-soft', '#937652', { specularPower: 16, ambientScale: 0.52 }),
+    paddockGrass: createToyMaterial(scene, 'mat-corral-grass-lush', '#91b56d', { specularPower: 18, ambientScale: 0.72 }),
+    strawBedding: createToyMaterial(scene, 'mat-corral-straw-soft', '#e3c778', { specularPower: 20, ambientScale: 0.68, zOffset: -2 }),
     troughWood: createToyMaterial(scene, 'mat-corral-trough-wood', '#57300a', { specularPower: 26, ambientScale: 0.5 }),
     feedGrain: createToyMaterial(scene, 'mat-corral-grain-rich', '#f59e0b', { specularPower: 16, ambientScale: 0.65 }),
-    waterPool: createToyMaterial(scene, 'mat-corral-water-azure', '#38bdf8', {
+    waterPool: createToyMaterial(scene, 'mat-corral-water-azure', '#76bfc3', {
       specularPower: 96,
       specularLevel: 0.85,
-      emissiveHex: '#0284c7',
+      emissiveHex: '#143638',
       ambientScale: 0.75,
       zOffset: -1,
     }),
@@ -58,7 +58,7 @@ export function createOpenAirCorral(scene, shadows, position = { x: 0, y: 0, z: 
 
     // Pet materials (cho decorative pet nếu bật)
     cowBody: createToyMaterial(scene, 'mat-cow-body-cream', '#fffdf2', { specularPower: 38, ambientScale: 0.7 }),
-    cowSpot: createToyMaterial(scene, 'mat-cow-spot-caramel', '#78350f', { specularPower: 32, ambientScale: 0.55 }),
+    cowSpot: createToyMaterial(scene, 'mat-cow-spot-caramel', '#937652', { specularPower: 32, ambientScale: 0.55 }),
     cowNose: createToyMaterial(scene, 'mat-cow-nose-pink', '#fbcfe8', { emissiveHex: '#f472b6', specularPower: 45 }),
     cowHorn: createToyMaterial(scene, 'mat-cow-horn-ivory', '#fef3c7', { specularPower: 50, ambientScale: 0.6 }),
     cowBell: createToyMaterial(scene, 'mat-cow-bell-gold', '#facc15', { emissiveHex: '#eab308', specularPower: 96 }),
@@ -261,7 +261,7 @@ export function createOpenAirCorral(scene, shadows, position = { x: 0, y: 0, z: 
   // Cổng gỗ mộc có bản lề mở hờ -35 độ chào đón (Rustic Welcoming Swing Gate)
   const gateSwingRoot = new TransformNode(`corral-gate-swing-${farmId}`, scene);
   gateSwingRoot.position.set(-gateW / 2, floorLevel, -halfD);
-  gateSwingRoot.rotation.y = -0.42;
+  gateSwingRoot.rotation.y = -Math.PI / 2;
   gateSwingRoot.parent = root;
 
   const gateBarTop = MeshBuilder.CreateCylinder('gate-bar-top', { height: gateW * 0.95, diameter: railRadius * 2 }, scene);
@@ -330,6 +330,11 @@ export function createOpenAirCorral(scene, shadows, position = { x: 0, y: 0, z: 
   hayMangerFill.position.set(0, 0.26, 0);
   hayMangerFill.material = mats.feedGrain;
   hayMangerFill.parent = hayMangerRoot;
+
+  root.getChildMeshes().forEach(mesh => {
+    mesh.isPickable = true;
+    mesh.metadata = { ...(mesh.metadata || {}), type: 'livestock-interact', farmId };
+  });
 
   if (options.showDecorativeAnimal === false) {
     return {

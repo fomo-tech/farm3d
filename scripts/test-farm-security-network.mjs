@@ -37,7 +37,7 @@ try {
       progress: { barnLevel: 2, homeTier: 1, unlockedPlots: 12, inventory: { carrot: 0 }, onboarding: { characterCreated: true, completed: true, step: 6 } } });
     await db.collection('farm_assignments').insertOne({ playerId, villageId: 'binh-minh', lot, status: 'owned', claimedAt: 1, gateOpen: false });
   }
-  await db.collection('crops').insertOne({ villageId: 'binh-minh', farmId: 'farm_000001', tileKey: '0:0', state: 'watered', crop: 'carrot', plantedAt: now - 120000, wateredAt: now - 100000, yield: 4, stolenAmount: 0 });
+  await db.collection('crops').insertOne({ villageId: 'binh-minh', farmId: 'farm_000001', tileKey: '0:0', state: 'watered', crop: 'carrot', plantedAt: now - 1820000, wateredAt: now - 1801000, yield: 4, stolenAmount: 0 });
   server = spawn(process.execPath, ['server/index.js'], { env: { ...process.env, MONGODB_DB: databaseName, MULTIPLAYER_PORT: String(port) }, stdio: ['ignore', 'pipe', 'pipe'] });
   await new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error('Test server startup timeout')), 15000);

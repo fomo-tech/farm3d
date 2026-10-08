@@ -1,3 +1,4 @@
+import {networkWaterAt} from './waterNetwork.js';
 import { beachFishingAt } from './beachConfig.js';
 import { LAKE_CONFIG, lakeFishingAt, lakeWaterAt, lakeDeepWaterAt } from './lakeConfig.js';
 export {
@@ -26,6 +27,9 @@ const RIVER = [
 
 export function fishingWaterAt(x, z) {
   if (!Number.isFinite(x) || !Number.isFinite(z)) return null;
+  if (networkWaterAt(x,z)) return null;
+  const networkShore=networkWaterAt(x,z,6);
+  if (networkShore) return networkShore;
   if (lakeFishingAt(x, z)) return 'lake';
   if (lakeWaterAt(x, z)) return null;
   const pondDistance = Math.hypot(x - 84, z - 68);
@@ -49,7 +53,15 @@ export function fishingWaterAt(x, z) {
 
 export const FISHING_WATER_NAMES = Object.freeze({ lake: 'Hồ Pha Lê', river: 'Ven sông', sea: 'Bờ biển', pond: 'Ao công viên' });
 
-export function fishingCastTarget(x,z,zone,distance) {
+export function fishingCastTarget(x,z,zone,distance,aimDirection=0) {
+  if(networkWaterAt(x,z,6)){
+    for(let radius=distance;radius>=2;radius-=1)for(let step=0;step<48;step++){
+      const a=aimDirection*.3+step*Math.PI/24;
+      const point={x:x+Math.sin(a)*radius,y:.13,z:z+Math.cos(a)*radius};
+      if(networkWaterAt(point.x,point.z))return point;
+    }
+    return null;
+  }
   let aim;
   if(zone==='lake')aim={x:167,z:2};
   else if(zone==='pond')aim={x:84,z:68};
@@ -66,7 +78,7 @@ export function fishingCastTarget(x,z,zone,distance) {
   const length=Math.hypot(aim.x-x,aim.z-z)||1;
   const reach=Math.min(distance,length);
   if(zone==='lake'){
-    const angle=Math.atan2(aim.x-x,aim.z-z);
+    const angle=Math.atan2(aim.x-x,aim.z-z)+aimDirection*.3;
     for(let radius=distance;radius>=2;radius-=1){
       for(let step=0;step<=18;step++)for(const sign of [1,-1]){
         const a=angle+sign*step*Math.PI/18;
@@ -76,5 +88,6 @@ export function fishingCastTarget(x,z,zone,distance) {
     }
     return null;
   }
-  return {x:x+(aim.x-x)/length*reach,y:.13,z:z+(aim.z-z)/length*reach};
+  const angle=Math.atan2(aim.x-x,aim.z-z)+aimDirection*.2;
+  return {x:x+Math.sin(angle)*reach,y:.13,z:z+Math.cos(angle)*reach};
 }

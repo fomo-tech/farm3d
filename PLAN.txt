@@ -1,3 +1,8 @@
+Kết quả mô phỏng trước mua đất: docs/economy-simulation/report.md
+Kế hoạch kinh tế chi tiết: docs/game-economy-implementation-plan.md
+PLAN nông trại: docs/farm-land-progression-plan.md
+Phương án đã chọn: mua lô → nhà nhỏ + 4 ô → khai hoang liền kề trong lô 24 ô → công trình/nghề nghiệp/trang trí. Giá và nhịp 1–2 ngày cần được xác nhận bằng mô phỏng.
+
 Mình đề xuất xây casino thành một khu giải trí multiplayer trong game, có sảnh chung và từng bàn chơi riêng. Kế hoạch dưới đây giả định **dùng xu giải trí không quy đổi tiền thật, không nạp/rút để cá cược**. Nên tách xu casino khỏi xu mua trang phục để tránh ảnh hưởng kinh tế nông trại.
 
 ## 1. Sảnh casino và phòng chơi

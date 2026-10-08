@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import {normalizeFishingState} from '../shared/fishingConfig.js';
-import {advanceFishingSession,publicFishingProgress,fishResistance,claimFishingMission,fishingTimePhase} from '../shared/fishingSession.js';
+import {advanceFishingSession,publicFishingProgress,fishResistance,claimFishingMission,fishingTimePhase,fishingFightState,normalizeCastInput,FISHING_GAME} from '../shared/fishingSession.js';
 import {lakeDeepWaterAt} from '../shared/lakeConfig.js';
 import {fishingCastTarget} from '../shared/fishing.js';
 const context={x:162,z:2};
-const fresh=()=>normalizeFishingState({pending:{id:'test',x:162,z:2,zone:'lake',rodId:'rod_bamboo',phase:'waiting',biteAt:1000,expiresAt:3400,fishId:'carp',weight:1.2}});
+const fresh=()=>normalizeFishingState({pending:{id:'test',x:162,z:2,zone:'lake',rodId:'rod_bamboo',phase:'waiting',biteAt:1000,expiresAt:1000+FISHING_GAME.hookWindowMs,fishId:'carp',weight:1.2}});
 const call=(f,action,time,payload={})=>advanceFishingSession(f,action,{sessionId:'test',...payload},context,time);
 const f=fresh();
 f.pending.fishId='golden_carp';
@@ -24,20 +24,41 @@ for(let now=1400;now<35000&&f.pending;now+=400){
 }
 assert.equal(result.fishCaught,'golden_carp');assert.equal(f.stats.totalCaught,1);assert.equal(f.fish.golden_carp.count,1);assert.equal(f.collection.golden_carp.count,1);
 const normal=fresh();assert.throws(()=>call(normal,'fishing_reel',999));
-assert.equal(call(normal,'fishing_reel',1000).fishCaught,'carp');
+assert.equal(call(normal,'fishing_reel',1000).fishCaught,undefined);
+assert.equal(normal.pending.phase,'fighting');
+for(let now=1400;now<35000&&normal.pending;now+=400){const holding=(!fishResistance(normal.pending,now)&&normal.pending.tension<73)||normal.pending.tension<23;result=call(normal,'fishing_pull',now,{sequence:normal.pending.sequence+1,holding});}
+assert.equal(result.fishCaught,'carp');
 assert.equal(normal.pending,null);assert.equal(normal.stats.totalCaught,1);
 assert.throws(()=>call(normal,'fishing_reel',1001));
 assert.throws(()=>call(f,'fishing_pull',36000,{sequence:99,holding:true}));
-const late=fresh();assert.ok(call(late,'fishing_reel',3401).fishEscaped);assert.equal(late.pending,null);
+const late=fresh();assert.ok(call(late,'fishing_reel',6001).fishEscaped);assert.equal(late.pending,null);
 const moved=fresh();assert.ok(advanceFishingSession(moved,'fishing_reel',{sessionId:'test'},{x:153,z:2},1000).fishEscaped);
 for(const holding of [true,false]){
  const fail=fresh();fail.pending.fishId='golden_carp';call(fail,'fishing_reel',1000);
  for(let now=1400;now<10000&&fail.pending;now+=400)result=call(fail,'fishing_pull',now,{sequence:fail.pending.sequence+1,holding});
  assert.ok(result.fishEscaped);assert.equal(fail.stats.totalCaught,0);
 }
+const delayedHook=fresh();call(delayedHook,'fishing_reel',5500);assert.equal(delayedHook.pending.phase,'fighting');
 const disconnect=fresh();disconnect.pending.fishId='golden_carp';call(disconnect,'fishing_reel',1000);assert.ok(call(disconnect,'fishing_pull',3100,{sequence:1,holding:true}).fishEscaped);
 const reload=normalizeFishingState(JSON.parse(JSON.stringify(f)));assert.equal(reload.collection.golden_carp.count,1);
 for(const x of [142,153,162]){const target=fishingCastTarget(x,2,'lake',8);assert.ok(lakeDeepWaterAt(target.x,target.z,.5));assert.ok(Math.hypot(target.x-x,target.z-2)<=8.001);}
 assert.equal(claimFishingMission(f,'first_fish').coins,20);assert.throws(()=>claimFishingMission(f,'first_fish'));assert.throws(()=>claimFishingMission(f,'collector'));
 assert.equal(fishingTimePhase(180000),'night');
+for(const input of [{power:NaN},{power:Infinity},{power:0},{power:1.1},{power:'1'},{aim:2},{aim:'0'}])assert.throws(()=>normalizeCastInput(input));
+assert.deepEqual(normalizeCastInput({}),{power:.75,aim:0});
+for(const aim of [-1,0,1])for(const power of [.25,.75,1]){const target=fishingCastTarget(162,2,'lake',8*(.7+.3*power),aim);assert.ok(target&&lakeDeepWaterAt(target.x,target.z,.5));assert.ok(Math.hypot(target.x-162,target.z-2)<=8.001);}
+for(const [reaction,quality,bonus] of [[100,'perfect',12],[1000,'perfect',12],[2000,'good',6],[4000,'late',0]]){const sample=fresh();call(sample,'fishing_reel',1000+reaction);assert.equal(sample.pending.hookQuality,quality);assert.equal(sample.pending.pull,bonus);}
+const speciesTimes={};
+for(const species of ['carp','perch','river_barb','river_catfish','sea_mackerel','sea_snapper','golden_carp']){
+ const sample=fresh();sample.pending.fishId=species;call(sample,'fishing_reel',1200);let elapsed;
+ for(let now=1600;now<36200&&sample.pending;now+=400){const hold=(!fishResistance(sample.pending,now)&&sample.pending.tension<73)||sample.pending.tension<23;result=call(sample,'fishing_pull',now,{sequence:sample.pending.sequence+1,holding:hold});elapsed=now-1200;}
+ assert.equal(result.fishCaught,species,`${species} remains catchable with bamboo`);speciesTimes[species]=elapsed;
+}
+assert.ok(speciesTimes.carp>=2400&&speciesTimes.carp<=7000);
+assert.ok(speciesTimes.golden_carp>speciesTimes.carp);
+const cue=fresh();call(cue,'fishing_reel',1000);const profile=cue.pending.fightProfile;
+assert.equal(fishingFightState(cue.pending,1000+profile.restMs+10).phase,'warning');
+assert.equal(fishingFightState(cue.pending,1000+profile.restMs+profile.warningMs+10).phase,'rush');
+assert.ok(fishingFightState(cue.pending,23000).fatigue>fishingFightState(cue.pending,1100).fatigue);
+console.log('Fight durations ms',speciesTimes);
 console.log('PASS fishing: timed hook, server tension, successful full fight, slack/snap, moved/expired/disconnected, replay rejection, secret filtering, durable collection');

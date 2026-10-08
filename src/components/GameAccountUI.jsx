@@ -1,6 +1,7 @@
 import React from 'react';
 import { GoogleSignInButton } from './GoogleSignInButton.jsx';
 import './GameAccountUI.css';
+import {HudIcon} from './icons3d/HudIcon.jsx';
 
 function CharacterPortrait({ name, variant = 'guest' }) {
   return <span className={`game-auth-portrait ${variant}`} aria-hidden="true">
@@ -15,7 +16,7 @@ export function StartAccountBadge({ name, level, googleLinked }) {
   </div>;
 }
 
-export function GameAccountSettings({ name, level, googleLinked, onCredential, onLogout, error }) {
+export function GameAccountSettings({ name, level, googleLinked, onCredential, onLogout, onDelete, error }) {
   return <section className="game-auth-settings" aria-label="Tài khoản nhân vật">
     <div className="game-auth-settings-heading"><span>NHÂN VẬT</span><b>{googleLinked ? 'ĐÃ LIÊN KẾT' : 'TRÊN MÁY NÀY'}</b></div>
     <div className="game-auth-settings-player"><CharacterPortrait name={name} variant={googleLinked ? 'google' : 'guest'} />
@@ -23,11 +24,11 @@ export function GameAccountSettings({ name, level, googleLinked, onCredential, o
     </div>
     {googleLinked ? <>
       <p>Nhân vật được lưu cùng tài khoản Google. Bạn có thể chơi trên thiết bị khác.</p>
-      <button type="button" className="game-auth-logout" onClick={onLogout}>Đổi sang chơi khách</button>
     </> : <>
       <p>Đang lưu trên thiết bị này. Liên kết Google để chơi tiếp khi đổi máy.</p>
       <div className="game-auth-settings-google"><GoogleSignInButton text="continue_with" fallbackLabel="Liên kết Google" onCredential={onCredential} /></div>
     </>}
+    <div className="game-auth-account-actions"><button type="button" className="game-auth-logout" onClick={onLogout}><HudIcon asset="logout" size={26}/><span>Đăng xuất</span></button><button type="button" className="game-auth-delete" onClick={onDelete}>Xoá tài khoản</button></div>
     {error && <small className="game-auth-inline-error" role="alert">{error}</small>}
   </section>;
 }
@@ -39,7 +40,7 @@ export function GoogleAccountConflictDialog({ current, saved, onSwitch, onStay }
         <small>ĐÃ CÓ NHÂN VẬT</small><h2 id="game-auth-conflict-title">Chọn nhân vật để tiếp tục</h2>
       </div></header>
       <div className="game-auth-conflict-body">
-        <p>Google này đã lưu một nhân vật khác. Hai nhân vật <strong>không gộp dữ liệu</strong>.</p>
+        <p>Google này đã lưu một nhân vật khác. Hai nhân vật <strong>không thể gộp thành một</strong>.</p>
         <div className="game-auth-character-pair">
           <div className="game-auth-character-option"><CharacterPortrait name={current.name} /><small>ĐANG CHƠI</small><b>{current.name}</b><span>Cấp {current.level || 1}</span></div>
           <div className="game-auth-character-option saved"><CharacterPortrait name={saved.name} variant="google" /><small>TRÊN GOOGLE</small><b>{saved.name}</b><span>Cấp {saved.level || 1}</span></div>

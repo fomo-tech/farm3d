@@ -1,11 +1,23 @@
+import {APPLE_ORCHARD,appleTreePosition,harvestApples} from '../shared/appleOrchard.js';
+import { isValidProfileAvatar } from '../shared/profileAvatar.js';
+import {applyLotteryAction} from './LotteryStore.js';
+import {fishingBiteBounds} from '../shared/fishingConditions.js';
+import { missionStats, PRE_LAND_JOURNEY_VERSION } from '../shared/preLandJourney.js';
+import { claimLegacyQuest } from '../shared/questRewards.js';
+import { FishingTelemetry, TELEMETRY_OUTBOX_LIMIT } from './FishingTelemetry.js';
+import { ECONOMY_REWARD_CONFIG } from '../shared/economyRewardConfig.js';
+import { pickFishingCatch } from '../shared/fishingCatch.js';
+import { NPC_TRADING_CONFIG, quoteRoadsidePurchase } from '../shared/npcTradingConfig.js';
+import { sellFishingCatch } from '../shared/fishingSales.js';
 import { MongoClient } from 'mongodb';
 import { VEHICLES as VEHICLE_CATALOG } from '../shared/vehicleConfig.js';
 import { BEACH_CONFIG } from '../shared/beachConfig.js';
-import { advanceFishingSession, FISHING_GAME, fishingTimePhase, claimFishingMission } from '../shared/fishingSession.js';
+import { advanceFishingSession, normalizeCastInput, FISHING_GAME, fishingTimePhase, claimFishingMission } from '../shared/fishingSession.js';
 import { applyLivestockAction } from '../shared/livestockActions.js';
 import { CROPS, FARM_CONFIG, farmBarnCapacity, farmBarnUpgradeCost } from '../shared/farmConfig.js';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { FARM_TILE_KEY_PATTERN } from '../shared/farmLayout.js';
+import { normalizeLandProgress, unlockedFarmTiles, unlockFarmTile } from '../shared/landExpansionConfig.js';
 import { decodeFarmId } from '../shared/villageLayout.js';
 import { FarmSecurity, withFarmLock } from './FarmSecurity.js';
 import { cropYield } from '../shared/farmSecurity.js';
@@ -17,9 +29,8 @@ import {
   normalizeFishingState,
   fishingInventoryCount,
   fishingCapacity,
-  calculateFishSaleValue,
 } from '../shared/fishing.js';
-import { calculateVerifiedCustomizationCost, normalizeCustomization } from '../shared/fashionConfig.js';
+import { calculateVerifiedCustomizationCost, normalizeCustomization, getDefaultCustomization } from '../shared/fashionConfig.js';
 import { validateEquippedCustomization } from '../shared/fashionValidation.js';
 import { applyCommunityReward } from './CommunityRewards.js';
 import { claimMission, freshDailyMissions, normalizeMissions } from '../shared/missions.js';
@@ -31,6 +42,7 @@ const SESSION_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 let collections;
 export function getGameStoreDatabase() { return mongo.db(process.env.MONGODB_DB || 'farm_online_3d'); }
 export let farmSecurity;
+export let fishingTelemetry;
 export async function initFarmSecurity() { await farmSecurity.init(); }
 export async function loadFarmAssignment(villageId, farmId) {
   const decoded = decodeFarmId(farmId);
@@ -42,6 +54,9 @@ export async function initGameStore() {
   collections = { players: database.collection('players'), crops: database.collection('crops'), likes: database.collection('farm_likes'), friendships: database.collection('friendships') };
   collections.assignments = database.collection('farm_assignments');
   farmSecurity = new FarmSecurity(collections);
+  fishingTelemetry = new FishingTelemetry(database);
+  try { await fishingTelemetry.init(); await fishingTelemetry.flush(); }
+  catch (error) { console.error('Fishing telemetry initialization deferred:', error.message); }
   await recoverFarmWrites();
   await Promise.all([
     collections.players.createIndex({ playerId: 1 }, { unique: true }),
@@ -73,33 +88,22 @@ export async function initGameStore() {
 
 const VEHICLES = Object.fromEntries(Object.values(VEHICLE_CATALOG).map(vehicle => [vehicle.id, vehicle.cost]));
 const OUTFITS = { starter: 0, farmer: 100, rose: 180, lake: 260, royal: 420 };
-const ORDERS = {
-  starter: { items: { carrot: 1 }, coins: 65, xp: 40 },
-  bakery: { items: { wheat: 4 }, coins: 145, xp: 70 },
-  market: { items: { carrot: 2, tomato: 3 }, coins: 220, xp: 110 },
-};
-const RECIPES = {
-  flour: { inputs: { wheat: 2 }, xp: 12, sell: 18 },
-  cheese: { inputs: { milk: 2 }, xp: 20, sell: 35 },
-  jam: { inputs: { strawberry: 2 }, xp: 30, sell: 55 },
-};
-const QUESTS = {
-  'plant-3': { stat: 'planted', goal: 3, coins: 35, xp: 20 },
-  'harvest-3': { stat: 'harvested', goal: 3, coins: 60, xp: 35 },
-  'feed-2': { stat: 'animalsFed', goal: 2, coins: 50, xp: 30 },
-};
+const ORDERS = NPC_TRADING_CONFIG.orders;
+const RECIPES = NPC_TRADING_CONFIG.recipes;
+const QUESTS = ECONOMY_REWARD_CONFIG.quests;
 const EXPANSIONS = FARM_CONFIG.expansions;
 
 const initialProgress = () => ({
-  version: 3, coins: 180, gems: 15, xp: 0, level: 1, selectedCrop: 'carrot', freeSeeds: 0,
+  version: 3, coins: ECONOMY_REWARD_CONFIG.initial.coins, gems: ECONOMY_REWARD_CONFIG.initial.gems, xp: 0, level: 1, selectedCrop: 'carrot', freeSeeds: 0,
   fishing: normalizeFishingState(),
   inventory: {
     carrot: 0, wheat: 0, tomato: 0, strawberry: 0, pumpkin: 0, melon: 0, turnip: 0,
-    egg: 0, duckEgg: 0, milk: 0, wool: 0, flour: 0, cheese: 0, jam: 0,
+    apple: 0, egg: 0, duckEgg: 0, milk: 0, wool: 0, flour: 0, cheese: 0, jam: 0,
   },
   stats: { planted: 0, watered: 0, harvested: 0, orders: 0, animalsFed: 0, crafted: 0 },
   claimedQuests: [], completedOrders: [], unlockedPlots: 0, barnLevel: 0, toolLevel: 1,
   missions: { main: { claimed: [] }, daily: null },
+  customization: getDefaultCustomization(),
   outfit: 'starter', ownedOutfits: ['starter'], vehicle: 'walk', ownedVehicles: ['walk'],
   homeTier: 0, ownedHomes: [], casinoPlays: 0,
   onboarding: { characterCreated: false, step: 0, freeSeedsReceived: false, completed: false, bicycleAwarded: false },
@@ -125,17 +129,20 @@ function sanitizeName(name) {
 }
 
 function docToPlayer(doc, sessionToken = null) {
-  if (!doc) return null;
+  if (!doc || doc.deletedAt) return null;
   const progress = { ...initialProgress(), ...(doc.progress || {}) };
   // Merge newly introduced crop/animal product slots into existing saves
   // without overwriting the player's current inventory.
   progress.inventory = { ...initialProgress().inventory, ...(doc.progress?.inventory || {}) };
+  progress.appleReadyAt = Number.isFinite(doc.progress?.appleReadyAt) ? doc.progress.appleReadyAt : (doc.landPurchase?.purchasedAt || doc.createdAt || Date.now()) + APPLE_ORCHARD.cycleMs;
   progress.stats = { ...initialProgress().stats, ...(doc.progress?.stats || {}) };
-  progress.missions = normalizeMissions(doc.progress?.missions, progress.stats);
+  progress.onboarding = { version: 1, preLandVersion: PRE_LAND_JOURNEY_VERSION, ...initialProgress().onboarding, ...(doc.progress?.onboarding || {}) };
   progress.fishing = normalizeFishingState(progress.fishing);
   progress.level = levelFromXp(progress.xp);
+  normalizeLandProgress(progress);
   const livestock = (doc.livestock || initialLivestock()).map((a, index) => ({ ...a, id: a.id || `legacy-${a.species}-${index}` }));
-  return { playerId: doc.playerId, token: sessionToken, name: doc.name, googleLinked: Boolean(doc.googleSub), progress, position: doc.position || null, livestock, revision: doc.revision || 0 };
+  progress.missions = normalizeMissions(doc.progress?.missions, missionStats(progress), Date.now(), {hasLand: progress.unlockedPlots > 0, progress, livestock, seed:doc.playerId});
+  return { playerId: doc.playerId, token: sessionToken, name: doc.name, googleLinked: Boolean(doc.googleSub), progress, position: doc.position || null, livestock, revision: doc.revision || 0, fishingTelemetryQueued: doc.fishingTelemetryOutbox?.length || 0 };
 }
 
 export async function authenticate(playerId, token, name = 'Nông dân') {
@@ -148,6 +155,7 @@ export async function authenticate(playerId, token, name = 'Nông dân') {
     return docToPlayer(doc, sessionToken);
   }
 
+  if (doc.deletedAt) return { error: 'Tài khoản đã được xoá.' };
   let valid = tokensMatch(token, doc.sessionTokenHash)
     || (doc.sessions || []).some(session => Date.now() - session.issuedAt < SESSION_TTL_MS && tokensMatch(token, session.hash));
   // One-time migration for accounts created before Phase 5 stored plaintext tokens.
@@ -207,16 +215,21 @@ export async function revokeGameSession(playerId, token) {
 }
 
 export async function savePosition(playerId, position) {
-  await collections.players.updateOne({ playerId }, { $set: { position, updatedAt: Date.now() } });
+  await collections.players.updateOne({ playerId, deletedAt: { $exists: false } }, { $set: { position, updatedAt: Date.now() } });
 }
 
 export async function loadPlayer(playerId) {
   return docToPlayer(await collections.players.findOne({ playerId }));
 }
 
-async function savePlayer(player) {
+async function savePlayer(player, telemetryEvents = []) {
   player.progress.level = levelFromXp(player.progress.xp);
-  const result = await collections.players.updateOne({ playerId: player.playerId, revision: player.revision }, { $set: { name: player.name, progress: player.progress, livestock: player.livestock, updatedAt: Date.now() }, $inc: { revision: 1 } });
+  const update = { $set: { name: player.name, progress: player.progress, livestock: player.livestock, updatedAt: Date.now() }, $inc: { revision: 1 } };
+  if (telemetryEvents.length) {
+    if ((player.fishingTelemetryQueued || 0) + telemetryEvents.length <= TELEMETRY_OUTBOX_LIMIT) update.$push = { fishingTelemetryOutbox: { $each: telemetryEvents } };
+    else { update.$inc.fishingTelemetryDropped = telemetryEvents.length; update.$set.fishingTelemetryLossAt = Date.now(); }
+  }
+  const result = await collections.players.updateOne({ playerId: player.playerId, revision: player.revision }, update);
   if (!result.modifiedCount) return null;
   player.revision += 1;
   return player;
@@ -284,43 +297,30 @@ export async function casinoRefundStale(playerId, activeRoundIds = []) {
 function requireItems(progress, items) { return Object.entries(items).every(([id, count]) => (progress.inventory[id] || 0) >= count); }
 function consume(progress, items) { Object.entries(items).forEach(([id, count]) => { progress.inventory[id] -= count; }); }
 
-function pickFishingCatch(zoneId, baitId = null) {
-  const zone = FISHING_CONFIG.zones[zoneId];
-  if (!zone) return null;
-  const pool = zone.fish.map(id => FISHING_CONFIG.fish[id]).filter(Boolean);
-  if (!pool.length) return null;
-  const bait = baitId ? FISHING_CONFIG.baits[baitId] : null;
-  const rareChance = Math.min(0.85, Math.max(0, zone.rareChance + (bait?.rareBonus || 0)));
-  const rarePool = pool.filter(fish => fish.rarity !== 'common');
-  const normalPool = pool.filter(fish => fish.rarity === 'common');
-  const selectedPool = Math.random() < rareChance && rarePool.length ? rarePool : (normalPool.length ? normalPool : pool);
-  const preferred = new Set(bait?.preferredFish || []);
-  const phase=fishingTimePhase();
-  const weighted = selectedPool.flatMap(fish => [fish, ...(preferred.has(fish.id) ? [fish] : []), ...(FISHING_CONFIG.timePreferences[fish.id]?.includes(phase)?[fish]:[])]);
-  const fish = weighted[Math.floor(Math.random() * weighted.length)] || selectedPool[0];
-  const [minWeight, maxWeight] = fish.weight;
-  const weight = Math.round((minWeight + Math.random() * (maxWeight - minWeight)) * 100) / 100;
-  return { fishId: fish.id, weight };
-}
-
-function fishingEntry(fishing, fishId) {
-  const current = fishing.fish[fishId];
-  if (current && typeof current === 'object') return current;
-  const entry = { count: Math.max(0, Number(current) || 0), totalWeight: Math.max(0, Number(current) || 0), maxWeight: 0 };
-  fishing.fish[fishId] = entry;
-  return entry;
-}
-
 export async function performAction(playerId, action, payload = {}, context = {}) {
-  const player = docToPlayer(await collections.players.findOne({ playerId }));
+  context = { ...context, telemetrySession: fishingTelemetry?.sessions.get(context.telemetrySessionId) };
+  const rawPlayer=await collections.players.findOne({playerId});
+  if(rawPlayer?.livestockTheftClaim){await farmSecurity.recoverLivestock(rawPlayer);return {error:'Chuồng đang được chăm sóc. Hãy thử lại.'};}
+  const player = docToPlayer(rawPlayer);
   if (!player) return { error: 'Không tìm thấy người chơi.' };
   const p = player.progress;
   p.fishing = normalizeFishingState(p.fishing);
+  const telemetryBefore = action.startsWith('fishing_') ? { coins: p.coins, pending: p.fishing.pending ? {...p.fishing.pending} : null } : null;
   const fail = error => ({ error, player });
+  if (['claim_seeds', 'advance_onboarding', 'complete_onboarding'].includes(action) && !await collections.assignments.findOne({ playerId, status: { $ne: 'pending' } })) return fail('Bạn cần sở hữu đất trước.');
   let actionResult = null;
   const fishingZone = () => context.venue ? null : fishingWaterAt(context.x, context.z);
   const atFishingShop = () => context.venue === 'fishing' || (!context.venue && Math.hypot(context.x-BEACH_CONFIG.vendor.x,context.z-BEACH_CONFIG.vendor.z)<=BEACH_CONFIG.vendor.interactionDistance);
-  if (action === 'character_create') {
+  if (action === 'harvest_apples') {
+    const decoded=typeof context.farmId==='string'?decodeFarmId(context.farmId):null;
+    const assignment=decoded&&context.villageId?await collections.assignments.findOne({playerId,villageId:context.villageId,lot:decoded.lot,status:{$ne:'pending'}}):null;
+    const point=appleTreePosition(context.farmId);
+    if(!assignment||context.venue||!point||!Number.isFinite(context.x)||!Number.isFinite(context.z)||Math.hypot(context.x-point.x,context.z-point.z)>APPLE_ORCHARD.interactionDistance)return fail('Hãy đứng gần cây táo trong nông trại của bạn.');
+    const result=harvestApples(p,Date.now());
+    if(result.error)return fail(result.error);
+    actionResult={appleHarvest:result};
+  }
+  else if (action === 'character_create') {
     if (p.onboarding.characterCreated) return fail('Nhân vật đã được tạo.');
     if (typeof payload.name !== 'string' || !payload.name.trim() || payload.name.trim().length > 18) return fail('Tên nhân vật cần từ 3 đến 18 ký tự.');
     const name = sanitizeName(String(payload.name || '').normalize('NFC')).replace(/\s+/g, ' ').trim();
@@ -330,6 +330,8 @@ export async function performAction(playerId, action, payload = {}, context = {}
       $or: [{ 'progress.nameKey': nameKey }, { name }] }, { collation: { locale: 'vi', strength: 2 } });
     if (existing) return fail('Tên nhân vật đã được sử dụng. Hãy chọn tên khác.');
     player.name = name; p.nameKey = nameKey;
+    p.customization = normalizeCustomization(p.customization || {});
+    player.customization = p.customization;
     p.outfit = 'starter'; p.onboarding.characterCreated = true; p.onboarding.step = 1;
   }
   else if (action === 'profile_update') {
@@ -341,6 +343,7 @@ export async function performAction(playerId, action, payload = {}, context = {}
     const bio = rawBio.normalize('NFC').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
     if (name.length < 3 || name.length > 18) return fail('Tên nhân vật cần từ 3 đến 18 ký tự.');
     if (bio.length > 80) return fail('Giới thiệu tối đa 80 ký tự.');
+    if (payload.avatar !== undefined && !isValidProfileAvatar(payload.avatar)) return fail('Ảnh đại diện không hợp lệ hoặc quá lớn.');
     if (name !== player.name) {
       const nameKey = name.toLocaleLowerCase('vi');
       const existing = await collections.players.findOne({ playerId: { $ne: playerId }, 'progress.onboarding.characterCreated': true,
@@ -350,16 +353,22 @@ export async function performAction(playerId, action, payload = {}, context = {}
       p.nameKey = nameKey;
     }
     p.profileBio = bio;
+    if (payload.avatar !== undefined) p.profileAvatar = payload.avatar;
     actionResult = { profileUpdated: { name, bio } };
   }
   else if (action === 'select_crop') { if (!CROPS[payload.crop] || p.level < CROPS[payload.crop].level) return fail('Hạt giống chưa mở khóa.'); p.selectedCrop = payload.crop; }
-  else if (action === 'sell_item') { const crop = CROPS[payload.id]; const amount = Number(payload.amount ?? 1); if (!Number.isSafeInteger(amount) || amount < 1 || amount > 99) return fail('Số lượng bán phải là số nguyên từ 1 đến 99.'); if (!crop || (p.inventory[payload.id] || 0) < amount) return fail('Không đủ nông sản.'); p.inventory[payload.id] -= amount; p.coins += crop.sellPrice * amount; }
-  else if (action === 'deliver_order') { const order = ORDERS[payload.id]; if (!order || p.completedOrders.includes(payload.id) || !requireItems(p, order.items)) return fail('Không thể giao đơn hàng.'); consume(p, order.items); p.coins += order.coins; p.xp += order.xp; p.stats.orders += 1; p.completedOrders.push(payload.id); if (p.onboarding.step === 4) p.onboarding.step = 5; }
-  else if (action === 'claim_quest') { const quest = QUESTS[payload.id]; if (!quest || p.claimedQuests.includes(payload.id) || p.stats[quest.stat] < quest.goal) return fail('Nhiệm vụ chưa hoàn thành.'); p.coins += quest.coins; p.xp += quest.xp; p.claimedQuests.push(payload.id); actionResult = { questClaimed: { id: payload.id } }; }
-  else if (action === 'claim_mission') { const error = claimMission(p, payload.kind, payload.id); if (error) return fail(error); actionResult = { missionClaimed: { kind: payload.kind, id: payload.id } }; }
-  else if (action === 'craft') { const recipe = RECIPES[payload.id]; if (!recipe || !requireItems(p, recipe.inputs)) return fail('Không đủ nguyên liệu.'); consume(p, recipe.inputs); p.inventory[payload.id] += 1; p.xp += recipe.xp; p.stats.crafted += 1; }
-  else if (action === 'sell_product') { const recipe = RECIPES[payload.id]; if (!recipe || !p.inventory[payload.id]) return fail('Không có sản phẩm.'); p.inventory[payload.id] -= 1; p.coins += recipe.sell; }
-  else if (action === 'upgrade_land') { const item = EXPANSIONS.find(v => v.plots > p.unlockedPlots); if (!item || p.level < item.level || p.coins < item.cost) return fail('Chưa đủ điều kiện mở rộng đất.'); p.coins -= item.cost; p.unlockedPlots = item.plots; }
+  else if (action === 'sell_item') { const crop = Object.hasOwn(CROPS, payload.id) ? CROPS[payload.id] : null; const amount = payload.amount ?? 1; if (!Number.isSafeInteger(amount) || amount < 1 || amount > 99) return fail('Số lượng bán phải là số nguyên từ 1 đến 99.'); if (!crop || (p.inventory[payload.id] || 0) < amount) return fail('Không đủ nông sản.'); p.inventory[payload.id] -= amount; p.coins += crop.sellPrice * amount; }
+  else if (action === 'deliver_order') { const order = Object.hasOwn(ORDERS, payload.id) ? ORDERS[payload.id] : null; if (!order || p.completedOrders.includes(payload.id) || !requireItems(p, order.items)) return fail('Không thể giao đơn hàng.'); consume(p, order.items); p.coins += order.coins; p.xp += order.xp; p.stats.orders += 1; p.completedOrders.push(payload.id); if (p.onboarding.step === 4) p.onboarding.step = 5; }
+  else if (action === 'claim_quest') { const error = claimLegacyQuest(p, payload.id); if (error) return fail(error); actionResult = { questClaimed: { id: payload.id } }; }
+  else if (action === 'claim_mission') { const hasLand = Boolean(await collections.assignments.findOne({ playerId, status: { $ne: 'pending' } })); const error = claimMission(p, payload.kind, payload.id, Date.now(), { hasLand, hasLivestock: player.livestock.length > 0, progress:p, livestock:player.livestock, seed:playerId }); if (error) return fail(error); actionResult = { missionClaimed: { kind: payload.kind, id: payload.id } }; }
+  else if (action === 'craft') { const recipe = Object.hasOwn(RECIPES, payload.id) ? RECIPES[payload.id] : null; if (!recipe || !requireItems(p, recipe.inputs)) return fail('Không đủ nguyên liệu.'); consume(p, recipe.inputs); p.inventory[payload.id] += 1; p.xp += recipe.xp; p.stats.crafted += 1; }
+  else if (action === 'sell_product') { const recipe = Object.hasOwn(RECIPES, payload.id) ? RECIPES[payload.id] : null; if (!recipe || !p.inventory[payload.id]) return fail('Không có sản phẩm.'); p.inventory[payload.id] -= 1; p.coins += recipe.sell; }
+  else if (action === 'unlock_plot' || action === 'upgrade_land') {
+    const assignment = context.farmId && await loadFarmAssignment(context.villageId, context.farmId);
+    if (!assignment || assignment.playerId !== playerId) return fail('Bạn cần sở hữu lô đất để khai hoang.');
+    try { actionResult = { plotUnlocked: unlockFarmTile(p, payload.tileKey) }; }
+    catch (error) { return fail(error.message); }
+  }
   else if (action === 'upgrade_barn') { const cost = farmBarnUpgradeCost(p.barnLevel); if (p.coins < cost) return fail('Không đủ xu nâng kho.'); p.coins -= cost; p.barnLevel += 1; }
   else if (action === 'upgrade_home') { if (p.homeTier >= 2 || p.level < 4 || p.coins < 1800) return fail('Chưa đủ điều kiện nâng nhà.'); p.coins -= 1800; p.homeTier = 2; if (!p.ownedHomes.includes('cozy-manor')) p.ownedHomes.push('cozy-manor'); }
   else if (action === 'buy_vehicle') { if (!Object.hasOwn(VEHICLES, payload.id)) return fail('Xe không hợp lệ.'); const cost = VEHICLES[payload.id]; if (!p.ownedVehicles.includes(payload.id)) { if (p.coins < cost) return fail('Không đủ xu mua xe.'); p.coins -= cost; p.ownedVehicles.push(payload.id); } p.vehicle = payload.id; }
@@ -428,7 +437,9 @@ export async function performAction(playerId, action, payload = {}, context = {}
     const baitId = p.fishing.equippedBait;
     const rod = FISHING_CONFIG.rods[p.fishing.equippedRod];
     if(!rod)return fail('Cần câu không hợp lệ.');
-    const target = fishingCastTarget(context.x,context.z,zone,Math.min(rod.castDistance,FISHING_CONFIG.zones[zone].castDistance));
+    let castInput;try{castInput=normalizeCastInput(payload);}catch(error){return fail(error.message);}
+    const reach=Math.min(rod.castDistance,FISHING_CONFIG.zones[zone].castDistance)*(.7+.3*castInput.power);
+    const target = fishingCastTarget(context.x,context.z,zone,reach,castInput.aim);
     if(!target)return fail('Không tìm thấy mặt nước trong tầm cần câu.');
     const bait = baitId ? FISHING_CONFIG.baits[baitId] : null;
     if (baitId) {
@@ -438,22 +449,25 @@ export async function performAction(playerId, action, payload = {}, context = {}
     const catchData = pickFishingCatch(zone, baitId);
     if (!catchData) return fail('Vùng nước này chưa có dữ liệu cá.');
     const now = Date.now();
-    const minBite = FISHING_CONFIG.defaults.biteMinMs / Math.max(1, bait?.biteSpeed || 1);
-    const maxBite = FISHING_CONFIG.defaults.biteMaxMs / Math.max(1, bait?.biteSpeed || 1);
+    const bounds=fishingBiteBounds(zone,baitId,rod.id,now);
+    const minBite=bounds.minMs,maxBite=bounds.maxMs;
     const biteAt = now + Math.floor(minBite + Math.random() * Math.max(1, maxBite - minBite));
     p.fishing.pending = {
       id: randomBytes(16).toString('hex'), phase: 'waiting', x: context.x, z: context.z,
-      timePhase: fishingTimePhase(),
+      timePhase: fishingTimePhase(now),
+      conditionDay:bounds.dayKey,density:bounds.condition,
       target,
       zone,
       rodId: p.fishing.equippedRod,
       baitId,
       castAt: now,
+      castPower:castInput.power,aim:castInput.aim,
+      castQuality:castInput.power>=.65&&castInput.power<=.85?'accurate':'normal',
       biteAt,
       expiresAt: biteAt + FISHING_GAME.hookWindowMs,
       fishId: catchData.fishId,
       weight: catchData.weight,
-      castDistance: Math.min(rod.castDistance, FISHING_CONFIG.zones[zone]?.castDistance || rod.castDistance),
+      castDistance: Math.hypot(target.x-context.x,target.z-context.z),
     };
   }
   else if (['fishing_reel', 'fishing_pull', 'fishing_cancel'].includes(action)) {
@@ -463,57 +477,52 @@ export async function performAction(playerId, action, payload = {}, context = {}
   }
   else if (action === 'fishing_sell' || action === 'fishing_sell_all') {
     if(!atFishingShop())return fail('Hãy mang cá tới tiệm đồ câu hoặc quầy Lão Ngư để bán.');
-    const requestedId = action === 'fishing_sell_all' ? null : payload.id;
-    const entries = requestedId ? [[requestedId, p.fishing.fish[requestedId]]] : Object.entries(p.fishing.fish);
-    let soldCount = 0;
-    let saleTotal = 0;
-    for (const [fishId, rawEntry] of entries) {
-      const fish = FISHING_CONFIG.fish[fishId];
-      if (!fish || !rawEntry) continue;
-      const entry = fishingEntry(p.fishing, fishId);
-      const amount = action === 'fishing_sell_all' ? entry.count : Math.max(1, Math.min(entry.count, Number(payload.amount) || 1));
-      if (!amount) continue;
-      const averageWeight = entry.totalWeight / entry.count || fish.weight[0];
-      saleTotal += calculateFishSaleValue(fishId, averageWeight) * amount;
-      soldCount += amount;
-      entry.count -= amount;
-      entry.totalWeight = Math.max(0, entry.totalWeight - averageWeight * amount);
-      if (entry.count <= 0) delete p.fishing.fish[fishId];
-      if (action !== 'fishing_sell_all') break;
-    }
-    if (!soldCount) return fail('Bạn không có cá để bán.');
-    p.coins += saleTotal;
-    p.fishing.lastSale = { count: soldCount, coins: saleTotal, at: Date.now() };
-    actionResult = { fishSold: { count: soldCount, coins: saleTotal } };
+    try {
+      const sale = sellFishingCatch(p.fishing, action, payload);
+      p.coins += sale.coins;
+      actionResult = { fishSold: sale };
+    } catch (error) { return fail(error.message); }
   }
   else if(action==='fishing_claim_mission') {
     try{const reward=claimFishingMission(p.fishing,payload.id);p.coins+=reward.coins;p.xp+=reward.xp;actionResult={fishingMission:payload.id};}
     catch(error){return fail(error.message);}
   }
   else if (action === 'casino') return fail('Hãy tham gia bàn Tài Xỉu hoặc Bầu Cua online.');
-  else if (['build_pen', 'buy_animal', 'feed_animals', 'collect_animals', 'sell_animal'].includes(action)) {
+  else if (['build_pen', 'buy_animal', 'retire_animal', 'feed_animals', 'collect_animals', 'sell_animal'].includes(action)) {
     if (!context.farmId || (await loadFarmAssignment(context.villageId, context.farmId))?.playerId !== playerId) return fail('Bạn cần sở hữu nông trại trước.');
-    try { applyLivestockAction(player, action, payload); } catch (error) { return fail(error.message); }
+    try { applyLivestockAction(player, action, payload); actionResult = {livestockAction: action}; } catch (error) { return fail(error.message); }
   }
   else if (action === 'sell_livestock_product') {
-    const product = FARM_CONFIG.products[payload.id];
+    const product = Object.hasOwn(FARM_CONFIG.products, payload.id) ? FARM_CONFIG.products[payload.id] : null;
     if (!product || !(p.inventory[payload.id] > 0)) return fail('Không có sản phẩm để bán.');
     p.inventory[payload.id] -= 1; p.coins += product.sellPrice;
+    actionResult = {livestockAction: action};
   }
-  else if (action === 'claim_seeds') { if (p.onboarding.step !== 1) return fail('Chưa đến bước nhận hạt giống.'); if (!p.onboarding.freeSeedsReceived) { p.freeSeeds += 3; p.coins += 50; p.onboarding.freeSeedsReceived = true; } p.onboarding.step = 2; }
+  else if (action === 'claim_seeds') { if (p.onboarding.step !== 1) return fail('Chưa đến bước nhận hạt giống.'); if (!p.onboarding.freeSeedsReceived) { p.freeSeeds += ECONOMY_REWARD_CONFIG.onboarding.seeds.seeds; p.coins += ECONOMY_REWARD_CONFIG.onboarding.seeds.coins; p.onboarding.freeSeedsReceived = true; } p.onboarding.step = 2; }
   else if (action === 'advance_onboarding') { const step = Number(payload.step); if (step !== 4 || p.onboarding.step !== 3) return fail('Không thể bỏ qua bước hướng dẫn.'); p.onboarding.step = 4; }
-  else if (action === 'complete_onboarding') { if (p.onboarding.step !== 5) return fail('Bạn chưa hoàn thành chuỗi hướng dẫn.'); p.onboarding.completed = true; p.onboarding.step = 6; p.missions.daily = freshDailyMissions(p.stats); if (!p.onboarding.bicycleAwarded) { p.coins += 200; p.xp += 80; if (!p.ownedVehicles.includes('bike')) p.ownedVehicles.push('bike'); p.onboarding.bicycleAwarded = true; } p.vehicle = 'bike'; }
+  else if (action === 'complete_onboarding') { if (p.onboarding.step !== 5) return fail('Bạn chưa hoàn thành chuỗi hướng dẫn.'); p.onboarding.completed = true; p.onboarding.step = 6; /* Keep today's assignment and claims when the farm tutorial completes. */ if (!p.onboarding.bicycleAwarded) { p.coins += ECONOMY_REWARD_CONFIG.onboarding.completion.coins; p.xp += ECONOMY_REWARD_CONFIG.onboarding.completion.xp; if (!p.ownedVehicles.includes(ECONOMY_REWARD_CONFIG.onboarding.completion.vehicle)) p.ownedVehicles.push(ECONOMY_REWARD_CONFIG.onboarding.completion.vehicle); p.onboarding.bicycleAwarded = true; } p.vehicle = 'bike'; }
   else if (action === 'reset_onboarding') { p.onboarding = { ...p.onboarding, characterCreated: true, step: 1, completed: false }; }
   else if (action === 'help_friend') return fail('Hãy tưới cây trong nông trại bạn bè để nhận thưởng qua hành động đã xác thực.');
   else if (['claim_daily_reward','redeem_giftcode'].includes(action)) {
     try { actionResult=applyCommunityReward(p,action,payload); } catch(error) { return fail(error.message); }
   }
-  else if (action === 'roadside_buy') { const offers = { carrot: { amount: 5, price: 50 }, wheat: { amount: 4, price: 100 }, tomato: { amount: 3, price: 135 }, strawberry: { amount: 2, price: 210 } }; const offer = offers[payload.crop]; if (!offer || Number(payload.amount) !== offer.amount || Number(payload.price) !== offer.price || p.coins < offer.price || inventoryCount(p) + offer.amount > barnCapacity(p)) return fail('Giao dịch ven đường không hợp lệ.'); p.coins -= offer.price; p.inventory[payload.crop] += offer.amount; }
-  else if (action === 'reset_orders') { if (p.completedOrders.length < Object.keys(ORDERS).length || p.coins < 25) return fail('Chưa thể làm mới đơn hàng.'); p.coins -= 25; p.completedOrders = []; }
+  else if (['lottery_buy','lottery_claim'].includes(action)) {
+    try { actionResult=await applyLotteryAction(getGameStoreDatabase(),p,action,payload,context); } catch(error) { return fail(error.message); }
+  }
+  else if (action === 'roadside_buy') {
+    try {
+      const offer = quoteRoadsidePurchase(p, payload, context);
+      p.coins -= offer.price;
+      p.inventory[offer.crop] = (p.inventory[offer.crop] || 0) + offer.amount;
+      actionResult = { roadsidePurchase: { crop: offer.crop, amount: offer.amount, price: offer.price, version: NPC_TRADING_CONFIG.version } };
+    } catch (error) { return fail(error.message); }
+  }
+  else if (action === 'reset_orders') { if (p.completedOrders.length < Object.keys(ORDERS).length || p.coins < NPC_TRADING_CONFIG.orderResetCost) return fail('Chưa thể làm mới đơn hàng.'); p.coins -= NPC_TRADING_CONFIG.orderResetCost; p.completedOrders = []; }
   else return fail('Hành động không được hỗ trợ.');
   if(action.startsWith('fishing_'))actionResult={...actionResult,fishingUpdated:true};
   try {
-    if (!(await savePlayer(player))) return fail('Xung đột giao dịch, vui lòng thử lại.');
+    const telemetryEvents = telemetryBefore ? fishingTelemetry.committedEvents(player, telemetryBefore, action, payload, actionResult, context) : [];
+    if (!(await savePlayer(player, telemetryEvents))) return fail('Xung đột giao dịch, vui lòng thử lại.');
   } catch (error) {
     if (['character_create', 'profile_update'].includes(action) && error.code === 11000) return fail('Tên nhân vật đã được sử dụng. Hãy chọn tên khác.');
     throw error;
@@ -544,17 +553,18 @@ async function applyFarmAction(playerId, villageId, ownedFarmId, payload) {
   if (!player) return { error: 'Người chơi không tồn tại.' };
   const { farmId, tileKey, action } = payload;
   if (!/^farm_\d{6}$/.test(farmId) || !FARM_TILE_KEY_PATTERN.test(tileKey)) return { error: 'Ô đất không hợp lệ.' };
-  const [column, rowIndex] = tileKey.split(':').map(Number);
-  if (farmId === ownedFarmId && rowIndex * 4 + column >= player.progress.unlockedPlots) return { error: 'Ô đất này chưa được mở khóa.' };
+  if (farmId === ownedFarmId && !unlockedFarmTiles(player.progress).includes(tileKey)) return { error: 'Ô đất này chưa được khai hoang.' };
   const ownerAction = ['till', 'plant', 'harvest'].includes(action);
   if (ownerAction && farmId !== ownedFarmId) return { error: 'Bạn không sở hữu nông trại này.' };
   const storageFarmId = `farm_${String(decodeFarmId(farmId).lot).padStart(6, '0')}`;
   const row = await collections.crops.findOne({ villageId, farmId: storageFarmId, tileKey });
   const current = row || { state: 'empty' };
-  if (current.theftClaim) { await farmSecurity.recover(current); return { error: 'Cây đang đồng bộ, hãy thử lại.' }; }
+  if (current.theftClaim) { await farmSecurity.recover(current); return { error: 'Cây đang được chăm sóc. Hãy thử lại sau nhé.' }; }
   if (farmId !== ownedFarmId) {
     const assignment = await loadFarmAssignment(villageId, farmId);
     if (!farmSecurity.gateOpen(assignment)) return { error: 'Cổng nông trại đã đóng.' };
+    const owner = await collections.players.findOne({ playerId: assignment.playerId });
+    if (!unlockedFarmTiles(owner?.progress).includes(tileKey)) return { error: 'Ô đất này chưa được khai hoang.' };
   }
   const now = Date.now(); let next;
   if (action === 'till') { if (current.state !== 'empty') return { error: 'Ô đất không thể cuốc.' }; next = { state: 'tilled' }; }
@@ -596,8 +606,8 @@ export async function loadPublicFarmProfiles(playerIds) {
     { projection: {
       _id: 0, playerId: 1, name: 1,
       'progress.level': 1, 'progress.homeTier': 1, 'progress.barnLevel': 1,
-      'progress.outfit': 1, livestock: 1,
-      'progress.animalPens': 1,
+      'progress.outfit': 1, livestock: 1, createdAt:1, 'landPurchase.purchasedAt':1, 'progress.appleReadyAt':1,
+      'progress.animalPens': 1, 'progress.unlockedPlots': 1, 'progress.unlockedTileKeys': 1,
     } },
   ).toArray();
   return docs.map(doc => ({
@@ -607,9 +617,11 @@ export async function loadPublicFarmProfiles(playerIds) {
     level: doc.progress?.level || 1,
     homeTier: doc.progress?.homeTier || 1,
     barnLevel: doc.progress?.barnLevel || 1,
+    appleReadyAt: Number.isFinite(doc.progress?.appleReadyAt)?doc.progress.appleReadyAt:(doc.landPurchase?.purchasedAt||doc.createdAt||Date.now())+APPLE_ORCHARD.cycleMs,
     outfit: doc.progress?.outfit || 'starter',
+    unlockedTileKeys: unlockedFarmTiles(doc.progress),
     animalPens: doc.progress?.animalPens || {},
-    livestock: (doc.livestock || []).map(a => ({ id: a.id, species: a.species, fedAt: a.fedAt, productReadyAt: a.productReadyAt })),
+    livestock: (doc.livestock || []).map(a => ({ id: a.id, species: a.species, createdAt:a.createdAt, lifeVersion:a.lifeVersion, matureAt:a.matureAt, productYield:a.productYield, stolenAmount:a.stolenAmount, fedAt: a.fedAt, productReadyAt: a.productReadyAt })),
     animals: (doc.livestock || []).reduce((counts, animal) => {
       counts[animal.species] = (counts[animal.species] || 0) + 1;
       return counts;
@@ -621,7 +633,7 @@ export async function loadPublicPlayerProfile(playerId) {
   if (typeof playerId !== 'string' || !/^[\w:-]{1,64}$/.test(playerId)) return null;
   const doc = await collections.players.findOne({ playerId }, { projection: {
     _id: 0, playerId: 1, name: 1, createdAt: 1,
-    'progress.onboarding.characterCreated': 1, 'progress.profileBio': 1,
+    'progress.onboarding.characterCreated': 1, 'progress.profileBio': 1, 'progress.profileAvatar': 1,
     'progress.xp': 1, 'progress.level': 1, 'progress.outfit': 1,
     'progress.homeTier': 1, 'progress.stats.planted': 1,
     'progress.stats.harvested': 1, 'progress.stats.orders': 1,
@@ -630,7 +642,7 @@ export async function loadPublicPlayerProfile(playerId) {
   if (!doc?.progress?.onboarding?.characterCreated) return null;
   const p = doc.progress;
   return {
-    playerId: doc.playerId, name: doc.name, bio: p.profileBio || '',
+    playerId: doc.playerId, name: doc.name, bio: p.profileBio || '', avatar: p.profileAvatar || '',
     level: levelFromXp(p.xp || 0), xp: p.xp || 0,
     outfit: p.outfit || 'starter', homeTier: p.homeTier || 0,
     joinedAt: doc.createdAt || null,
@@ -657,9 +669,55 @@ export async function updateFriend(playerId, friendId, add = true) {
 export async function loadSocialState(playerId) {
   const relations = await collections.friendships.find({ playerId }).toArray();
   const friendIds = relations.map(item => item.friendId);
-  const [friends, leaderboard] = await Promise.all([
-    collections.players.find({ playerId: { $in: friendIds } }, { projection: { _id: 0, playerId: 1, name: 1, 'progress.level': 1, 'progress.outfit': 1 } }).toArray(),
-    collections.players.find({}, { projection: { _id: 0, playerId: 1, name: 1, 'progress.level': 1, 'progress.xp': 1, 'progress.homeTier': 1 } }).sort({ 'progress.xp': -1 }).limit(20).toArray(),
+  const active = { deletedAt: { $exists: false }, name: { $type: 'string' } };
+  const projection = { _id: 0, playerId: 1, name: 1, 'progress.level': 1, 'progress.xp': 1, 'progress.homeTier': 1, 'progress.profileAvatar': 1, 'progress.coins': 1 };
+  const [friends, me] = await Promise.all([
+    collections.players.find({ ...active, playerId: { $in: friendIds } }, { projection: { _id: 0, playerId: 1, name: 1, 'progress.level': 1, 'progress.outfit': 1 } }).toArray(),
+    collections.players.findOne({ ...active, playerId }, { projection }),
   ]);
-  return { friends, leaderboard };
+  const leaderboards = {}, myRanks = {};
+  await Promise.all(['xp','level','home','wealth'].map(async kind => {
+    const field = kind === 'home' ? 'homeTier' : kind === 'wealth' ? 'coins' : kind;
+    const fallback = kind === 'xp' || kind === 'wealth' ? 0 : 1;
+    leaderboards[kind] = await collections.players.aggregate([
+      { $match: active }, { $project: projection },
+      { $set: { [`progress.${field}`]: { $ifNull: [`$progress.${field}`, fallback] } } },
+      { $sort: { [`progress.${field}`]: -1, playerId: 1 } }, { $limit: 20 },
+    ]).toArray();
+    if (me) {
+      const value = me.progress?.[field] ?? fallback;
+      const stat = { $ifNull: [`$progress.${field}`, fallback] };
+      myRanks[kind] = 1 + await collections.players.countDocuments({ ...active, $expr: { $or: [
+        { $gt: [stat, value] }, { $and: [{ $eq: [stat, value] }, { $lt: ['$playerId', playerId] }] },
+      ] } });
+    }
+  }));
+  return { friends, leaderboard: leaderboards.xp, leaderboards, myRanks };
+}
+
+// Keep an identifier tombstone so a revoked guest token cannot recreate the account.
+export async function deleteGameAccount(playerId, token) {
+  const existing = await collections.players.findOne({ playerId });
+  const retrying = existing?.deletedAt && tokensMatch(token, existing.deletionTokenHash);
+  const verified = retrying ? { progress: {} } : await authenticate(playerId, token);
+  if (verified.error) return { error: verified.error };
+  if (Object.keys(verified.progress.casinoPending || {}).length) return { error: 'Hãy chờ ván chơi kết thúc trước khi xoá tài khoản.' };
+  const assignment = await collections.assignments.findOne({ playerId });
+  const deletedAt = Date.now();
+  await collections.players.replaceOne({ playerId }, { playerId, deletedAt, deletionTokenHash: hashSessionToken(token), revision: -1 });
+  if (assignment) {
+    const farm = { villageId: assignment.villageId, farmId: `farm_${String(assignment.lot).padStart(6, '0')}` };
+    await collections.crops.deleteMany(farm);
+    await collections.likes.deleteMany(farm);
+  }
+  await collections.likes.deleteMany({ playerId });
+  await collections.friendships.deleteMany({ $or: [{ playerId }, { friendId: playerId }] });
+  const playerKey = createHash('sha256').update(playerId).digest('hex');
+  fishingTelemetry.buffer = fishingTelemetry.buffer.filter(event => event.playerKey !== playerKey);
+  for (const [id, session] of fishingTelemetry.sessions) if (session.playerKey === playerKey) fishingTelemetry.sessions.delete(id);
+  await getGameStoreDatabase().collection('fishing_telemetry').deleteMany({ playerKey });
+  await getGameStoreDatabase().collection('casino_ledger').updateMany({ playerId }, { $unset: { playerId: '' } });
+  await collections.assignments.deleteMany({ playerId });
+  await collections.players.updateOne({ playerId, deletedAt }, { $unset: { deletionTokenHash: '' } });
+  return { deleted: true };
 }

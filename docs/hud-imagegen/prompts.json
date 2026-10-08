@@ -1,0 +1,5 @@
+{
+  "tool": "Built-in image_gen",
+  "transparent_background": true,
+  "basePrompt": "Use case: stylized-concept. Asset type: single transparent game HUD icon. Premium polished casual 3D social mobile game art, cute chunky proportions, confident handcrafted silhouette, smooth molded surfaces, soft bevels, restrained details readable at 40px. Palette ivory, coral orange, turquoise, navy, gold. Three quarter front view, object fills 80% of square frame, centered, complete object visible. Bright soft studio light from upper left, gentle ambient occlusion confined to object, crisp edges. Transparent background. One isolated object; no button surround, ground plane, external cast shadow, letters, watermark, extra objects. Avoid generic emoji styling, thin wire shapes, busy texture, dark muddy shading."
+}

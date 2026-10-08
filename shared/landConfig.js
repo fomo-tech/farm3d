@@ -3,6 +3,7 @@ export function validateLandConfig(config) {
   for (const key of ['minPrice', 'maxPrice', 'roundingStep']) {
     if (!Number.isSafeInteger(config[key]) || config[key] <= 0) throw new Error(`Land config: invalid ${key}`);
   }
+  if (!Number.isSafeInteger(config.starterDiscount) || config.starterDiscount < 0) throw new Error('Land config: invalid starterDiscount');
   if (config.maxPrice < config.minPrice) throw new Error('Land config: maxPrice must be >= minPrice');
   if (![config.center?.x, config.center?.z].every(Number.isFinite)) throw new Error('Land config: invalid center');
   for (const [id, factor] of Object.entries(config.villageMultipliers)) {
@@ -15,8 +16,9 @@ export function validateLandConfig(config) {
 }
 
 export const LAND_CONFIG = Object.freeze(validateLandConfig({
-  minPrice: 150,
-  maxPrice: 2000,
+  minPrice: 6000,
+  maxPrice: 12000,
+  starterDiscount: 0,
   roundingStep: 50,
   center: Object.freeze({ x: 0, z: 0 }),
   // Village IDs, for example: 'binh-minh': 1.2. Applied after distance pricing.
@@ -28,10 +30,10 @@ export const LAND_CONFIG = Object.freeze(validateLandConfig({
 
 // One-time help is applied only to the first parcel purchase, never credited
 // to the wallet. Keep a real entry price so the starter choice still matters.
-export const STARTER_LAND_DISCOUNT = 350;
+export const STARTER_LAND_DISCOUNT = LAND_CONFIG.starterDiscount;
 export function firstLandPurchasePrice(listPrice) {
-  if (!Number.isSafeInteger(listPrice) || listPrice < LAND_CONFIG.minPrice) throw new Error('Land pricing: invalid list price');
-  return Math.max(LAND_CONFIG.minPrice, listPrice - STARTER_LAND_DISCOUNT);
+  if (!Number.isSafeInteger(listPrice) || listPrice <= 0) throw new Error('Land pricing: invalid list price');
+  return Math.max(Math.min(listPrice, LAND_CONFIG.minPrice), listPrice - STARTER_LAND_DISCOUNT);
 }
 
 export function landPricingRadius(lots, config = LAND_CONFIG) {

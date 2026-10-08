@@ -9,8 +9,8 @@ function loadGoogleIdentity() {
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
-    script.onload = () => window.google?.accounts?.id ? resolve(window.google) : reject(new Error('Google Sign-In chưa sẵn sàng.'));
-    script.onerror = () => reject(new Error('Không tải được Google Sign-In.'));
+    script.onload = () => window.google?.accounts?.id ? resolve(window.google) : reject(new Error('Đăng nhập Google chưa sẵn sàng.'));
+    script.onerror = () => reject(new Error('Chưa thể đăng nhập Google. Hãy thử lại sau.'));
     document.head.appendChild(script);
   }).catch(error => { scriptPromise = null; throw error; });
   return scriptPromise;
@@ -38,7 +38,7 @@ export function GoogleSignInButton({ onCredential, onError, text = 'signin_with'
   }, [text]);
   if (!CLIENT_ID) return <span className="game-auth-google-unavailable">
     <button type="button" className="game-auth-google-disabled" disabled><span className="google-g" aria-hidden="true">G</span>{fallbackLabel}</button>
-    <small>Chưa cấu hình Google cho game</small>
+    <small>Đăng nhập Google tạm chưa khả dụng</small>
   </span>;
   return <span className="pt-google-signin-host" ref={host} aria-label="Đăng nhập bằng Google">{error && <small>{error}</small>}</span>;
 }

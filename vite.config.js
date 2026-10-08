@@ -23,6 +23,8 @@ export default defineConfig({
         main: fileURLToPath(new URL('./index.html', import.meta.url)).replace(/\\/g, '/'),
         performance: fileURLToPath(new URL('./performance.html', import.meta.url)).replace(/\\/g, '/'),
         beachPreview: fileURLToPath(new URL('./beach-preview.html', import.meta.url)).replace(/\\/g, '/'),
+        hudPreview: fileURLToPath(new URL('./hud-preview.html', import.meta.url)).replace(/\\/g, '/'),
+        hudIconPreview: fileURLToPath(new URL('./hud-icon-preview.html', import.meta.url)).replace(/\\/g, '/'),
         avatarPreview: fileURLToPath(new URL('./avatar-preview.html', import.meta.url)).replace(/\\/g, '/'),
         artPreview: fileURLToPath(new URL('./art-preview.html', import.meta.url)).replace(/\\/g, '/'),
         fashionPreview: fileURLToPath(new URL('./fashion-preview.html', import.meta.url)).replace(/\\/g, '/'),

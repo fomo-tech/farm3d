@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {landExpansionBudget} from '../shared/landExpansionBudget.js';
+const progress={coins:2500,level:1,selectedCrop:'carrot',freeSeeds:3,unlockedTileKeys:['0:0','1:0','2:0','3:0']};
+const original=JSON.stringify(progress);
+const result=landExpansionBudget(progress,2500,[{species:'chicken'},{species:'cow'}]);
+assert.equal(result.remainingCoins,0);assert.equal(result.seedCoins,10);assert.equal(result.feedCoins,20);assert.equal(result.recommendedCoins,30);assert.equal(result.shortfall,30);assert(result.needsWarning);
+assert.equal(JSON.stringify(progress),original);
+assert(!landExpansionBudget({...progress,coins:2530},2500,[{species:'chicken'},{species:'cow'}]).needsWarning);
+assert(landExpansionBudget({...progress,coins:2529},2500,[{species:'chicken'},{species:'cow'}]).needsWarning);
+const wheat=landExpansionBudget({...progress,level:2,selectedCrop:'wheat',freeSeeds:100},2500);
+assert.equal(wheat.seedCoins,60);assert.equal(wheat.cropId,'wheat');
+assert.equal(landExpansionBudget({...progress,selectedCrop:'wheat'},2500).cropId,'carrot');
+assert.equal(landExpansionBudget({...progress,selectedCrop:'__proto__'},2500).cropId,'carrot');
+assert.equal(landExpansionBudget(progress,2500,[{species:'missing'}]).feedCoins,0);
+assert.equal(landExpansionBudget({...progress,freeSeeds:100},2500).seedCoins,0);
+assert.throws(()=>landExpansionBudget(progress,1.5));assert.throws(()=>landExpansionBudget({...progress,coins:NaN},2500));
+console.log('PASS budget warning: after-purchase cash, free seed rules, selected crop/level, herd feed, exact threshold and no mutation.');

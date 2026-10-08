@@ -1,393 +1,59 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { CASINO_CONFIG, CASINO_GAMES } from '../../../shared/casino/casinoConfig.js';
 import { Die, PlayingCard, SymbolArt } from './CasinoArt.jsx';
-import { casinoAudio } from '../../game/casino/casinoAudio.js';
-import {
-  Icon3dDice,
-  Icon3dGoldCoin,
-  Icon3dCrownRibbon,
-  Icon3dAudioOn,
-  Icon3dAudioOff,
-} from '../icons3d/GameIcons3D.jsx';
-
-const GAME_META = {
-  'tai-xiu': {
-    name: 'TÀI XỈU',
-    icon: <Icon3dDice size={32} />,
-    badge: 'HOT NHẤT · 3 XÚC XẮC',
-    colorGrad: 'linear-gradient(135deg, rgba(220, 38, 38, 0.85) 0%, rgba(234, 88, 12, 0.85) 100%)',
-    borderCol: '#fca5a5',
-    subDesc: 'Ba xúc xắc · Chọn Tài hoặc Xỉu · Mở kết quả cùng bạn',
-    typeTag: 'Xúc xắc Sic Bo 3D',
-  },
-  'bau-cua': {
-    name: 'BẦU CUA TÔM CÁ',
-    icon: <SymbolArt symbol="cua" size={32} />,
-    badge: 'DÂN GIAN · 6 LINH VẬT',
-    colorGrad: 'linear-gradient(135deg, rgba(5, 150, 105, 0.85) 0%, rgba(13, 148, 136, 0.85) 100%)',
-    borderCol: '#6ee7b7',
-    subDesc: 'Bầu, Cua, Tôm, Cá, Gà, Nai · Thưởng đậm tới 3x tiền cược',
-    typeTag: 'Lễ hội dân gian 3D',
-  },
-  'bai-cao': {
-    name: 'BÀI CÀO 3 LÁ',
-    icon: <PlayingCard rank="A" suit="♠" small />,
-    badge: 'BÀI TÂY · ĐỐI KHÁNG',
-    colorGrad: 'linear-gradient(135deg, rgba(37, 99, 235, 0.85) 0%, rgba(79, 70, 229, 0.85) 100%)',
-    borderCol: '#93c5fd',
-    subDesc: 'Ba lá so nút với nhà cái · Ba lá hình cao nhất',
-    typeTag: 'Bài Tây 3 lá 3D',
-  },
-  'tien-len': {
-    name: 'TIẾN LÊN MIỀN NAM',
-    icon: <Icon3dCrownRibbon size={32} />,
-    badge: 'CHIẾN THUẬT · 4 NGƯỜI',
-    colorGrad: 'linear-gradient(135deg, rgba(124, 45, 18, 0.85) 0%, rgba(153, 27, 27, 0.85) 100%)',
-    borderCol: '#fbcfe8',
-    subDesc: '13 lá · Chơi tính điểm · Xếp bài và gợi ý nước đánh',
-    typeTag: 'Tiến Lên đếm lá 3D',
-  },
+import { HudIcon } from '../icons3d/HudIcon.jsx';
+import './FarmLounge.css';
+const META = {
+  'tai-xiu':{name:'Tài Xỉu',tag:'Ba xúc xắc',description:'Chọn Tài hoặc Xỉu, theo dõi tổng điểm khi mở kết quả.',theme:'coral'},
+  'bau-cua':{name:'Bầu Cua',tag:'Sáu linh vật',description:'Bầu, cua, tôm, cá, gà, nai — chọn cửa trước khi mở kết quả.',theme:'sage'},
+  'bai-cao':{name:'Bài Cào',tag:'So nút ba lá',description:'Ba lá so nút với nhà cái hệ thống.',theme:'sand'},
+  'tien-len':{name:'Tiến Lên',tag:'Miền Nam · 4 người',description:'Xếp 13 lá, tìm nước đánh và thi đấu tính điểm.',theme:'teal'},
 };
-
-export function CasinoLobby({
-  coins = 0,
-  rooms = [],
-  connected = true,
-  inside = true,
-  sound = false,
-  onToggleSound,
-  onExit,
-  onJoin,
-  onCreateRoom,
-  onQuickPlay,
-  onSelectGame,
-  defaultGame = null,
-  quickPlaying = false,
-}) {
-  const [selectedGame, setSelectedGame] = useState(defaultGame || 'tai-xiu');
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [joinModalRoom, setJoinModalRoom] = useState(null);
-
-  // Form tạo phòng mới
-  const [createName, setCreateName] = useState('');
-  const [createStake, setCreateStake] = useState(10);
-  const [createPassword, setCreatePassword] = useState('');
-  const [joinPassword, setJoinPassword] = useState('');
-
-  // Lọc danh sách phòng theo game đã chọn
-  const filteredRooms = useMemo(() => {
-    return rooms.filter(room => room.game === selectedGame);
-  }, [rooms, selectedGame]);
-
-  const handleGameSelect = gameKey => {
-    casinoAudio.playChip();
-    setSelectedGame(gameKey);
-    onSelectGame?.(gameKey);
-  };
-
-  const handleQuickPlayClick = () => {
-    casinoAudio.playChip();
-    onQuickPlay(selectedGame);
-  };
-
-  const handleCreateSubmit = e => {
-    e.preventDefault();
-    casinoAudio.playChip();
-    onCreateRoom({
-      game: selectedGame,
-      name: createName.trim() || CASINO_GAMES[selectedGame]?.name || 'Bàn giải trí',
-      stake: Number(createStake) || 10,
-      password: createPassword.trim(),
-    });
-    setCreateModalOpen(false);
-    setCreatePassword('');
-    setCreateName('');
-  };
-
-  const handleJoinClick = room => {
-    casinoAudio.playChip();
-    if (room.private) {
-      setJoinModalRoom(room);
-      setJoinPassword('');
-    } else {
-      onJoin(room.id);
-    }
-  };
-
-  const handleJoinSubmit = e => {
-    e.preventDefault();
-    if (!joinModalRoom) return;
-    casinoAudio.playChip();
-    onJoin(joinModalRoom.id, joinPassword.trim());
-    setJoinModalRoom(null);
-    setJoinPassword('');
-  };
-
-  const curMeta = GAME_META[selectedGame] || GAME_META['tai-xiu'];
-
-  return (
-    <div className="pt-casino-lobby-hud">
-      {/* 1. PLAY TOGETHER TOP HUD BAR */}
-      <header className="pt-ingame-top-hud">
-        <div className="pt-top-left-actions">
-          <button
-            type="button"
-            className="pt-candy-pill-btn btn-leave-table"
-            onClick={() => {
-              casinoAudio.playChip();
-              onExit?.();
-            }}
-            title="Thoát giao diện sảnh để dạo chơi tự do"
-          >
-            <span className="btn-icon">⤺</span>
-            <span>DẠO CHƠI 3D</span>
-          </button>
-
-          <div className="pt-table-info-pill">
-            <span className="pill-badge-game">HỘI QUÁN VUI VẺ</span>
-            <span className="pill-table-name">Chọn trò chơi hoặc tiến lại gần 4 bàn 3D</span>
-          </div>
-        </div>
-
-        <div className="pt-top-right-wallet">
-          <div className="pt-candy-wallet-pill">
-            <span className="pt-coin-icon"><Icon3dGoldCoin size={20} /></span>
-            <strong>{Number(coins || 0).toLocaleString('vi-VN')}</strong>
-            <small>Xu</small>
-          </div>
-
-          <button
-            type="button"
-            className="pt-candy-action-circle-btn"
-            onClick={() => {
-              casinoAudio.playChip();
-              onToggleSound?.();
-            }}
-            title={sound ? 'Tắt âm' : 'Bật âm'}
-          >
-            {sound ? <Icon3dAudioOn size={20} /> : <Icon3dAudioOff size={20} />}
-          </button>
-        </div>
-      </header>
-
-      {/* 2. KHU VỰC KHÔNG GIAN 3D TRUNG TÂM (HOÀN TOÀN NHÌN THẤY PHÒNG 3D) */}
-      <div className="pt-lobby-center-hint">
-        <div className="pt-game-spotlight-pill" style={{ borderColor: curMeta.borderCol }}>
-          <span className="spotlight-icon">{curMeta.icon}</span>
-          <div className="spotlight-text">
-            <strong>{curMeta.name}</strong>
-            <p>{curMeta.subDesc}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. DOCK CHỌN TRÒ CHƠI ARCADE DƯỚI ĐÁY MÀN HÌNH */}
-      <footer className="pt-lobby-bottom-kiosk">
-        <div className="pt-game-cards-carousel">
-          {Object.entries(GAME_META).map(([key, meta]) => {
-            const isSelected = selectedGame === key;
-            const count = rooms.filter(r => r.game === key).length;
-
-            return (
-              <button
-                type="button"
-                aria-pressed={isSelected}
-                key={key}
-                className={`pt-arcade-game-card ${isSelected ? 'is-selected' : ''}`}
-                style={{
-                  background: isSelected ? meta.colorGrad : 'rgba(15, 23, 42, 0.75)',
-                  borderColor: isSelected ? meta.borderCol : 'rgba(255, 255, 255, 0.15)',
-                }}
-                onClick={() => handleGameSelect(key)}
-              >
-                <div className="card-top-row">
-                  <span className="card-badge">{meta.badge}</span>
-                  <span className="card-rooms-count">{count} bàn</span>
-                </div>
-                <div className="card-center-icon">{meta.icon}</div>
-                <h3 className="card-game-title">{meta.name}</h3>
-                <small className="card-type-tag">{meta.typeTag}</small>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Nút hành động chính chuẩn Play Together */}
-        <div className="pt-kiosk-action-bar">
-          <button
-            type="button"
-            className="pt-candy-cta-btn btn-quick-play"
-            onClick={handleQuickPlayClick}
-            disabled={!connected || !inside || quickPlaying}
-          >
-            {quickPlaying ? 'Đang vào bàn…' : 'CHƠI NGAY'}
-          </button>
-
-          <button
-            type="button"
-            className="pt-candy-pill-btn btn-view-rooms"
-            onClick={() => {
-              casinoAudio.playChip();
-              setDrawerOpen(v => !v);
-            }}
-          >
-            Danh Sách Bàn ({filteredRooms.length})
-          </button>
-
-          <button
-            type="button"
-            className="pt-candy-pill-btn btn-create-room"
-            onClick={() => {
-              casinoAudio.playChip();
-              setCreateModalOpen(true);
-            }}
-          >
-            Tạo Bàn Riêng
-          </button>
-        </div>
-      </footer>
-
-      {/* 4. DRAWER DANH SÁCH BÀN SLIDE-IN TỪ BÊN PHẢI (KHÔNG CHE MÀN HÌNH 3D) */}
-      {drawerOpen && (
-        <aside className="pt-lobby-side-drawer">
-          <div className="drawer-header">
-            <div className="drawer-title-group">
-              <span className="drawer-icon">{curMeta.icon}</span>
-              <h3>DANH SÁCH BÀN: {curMeta.name}</h3>
-            </div>
-            <button
-              type="button"
-              className="drawer-close-btn"
-              onClick={() => setDrawerOpen(false)}
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="drawer-rooms-list">
-            {filteredRooms.length === 0 ? (
-              <div className="drawer-empty-state">
-                <p>Chưa có bàn chơi nào đang mở cho trò này.</p>
-                <button
-                  type="button"
-                  className="pt-candy-cta-btn"
-                  onClick={handleQuickPlayClick}
-                >
-                  Tạo & Vào Bàn Mới Ngay
-                </button>
-              </div>
-            ) : (
-              filteredRooms.map(r => (
-                <div key={r.id} className="drawer-room-row">
-                  <div className="room-row-info">
-                    <strong>{r.name}</strong>
-                    <div className="room-row-meta">
-                      <span>Cược: {r.stake} xu</span>
-                      <span>{r.occupied || 1}/{r.seats || 4} người</span>
-                      {r.private && <span className="room-private-lock">Có mật khẩu</span>}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="pt-candy-sit-btn"
-                    onClick={() => handleJoinClick(r)}
-                  >
-                    VÀO BÀN
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </aside>
-      )}
-
-      {/* 5. FORM TẠO BÀN NHỎ (GỌN GÀNG, KHÔNG PHẢI FULLSCREEN MODAL) */}
-      {createModalOpen && (
-        <div className="pt-sub-modal-backdrop" onClick={() => setCreateModalOpen(false)}>
-          <div className="pt-sub-modal-dialog" onClick={e => e.stopPropagation()}>
-            <header className="pt-sub-modal-header">
-              <h3>TẠO BÀN CHƠI: {curMeta.name}</h3>
-              <button type="button" onClick={() => setCreateModalOpen(false)}>✕</button>
-            </header>
-            <form onSubmit={handleCreateSubmit} className="pt-create-room-form">
-              <label>
-                <span>Tên bàn:</span>
-                <input
-                  type="text"
-                  value={createName}
-                  onChange={e => setCreateName(e.target.value)}
-                  placeholder={`Bàn ${curMeta.name} VIP`}
-                  maxLength={30}
-                />
-              </label>
-
-              <label>
-                <span>Mức cược tối thiểu:</span>
-                <select value={createStake} onChange={e => setCreateStake(Number(e.target.value))}>
-                  <option value={10}>10 xu (Tập sự)</option>
-                  <option value={20}>20 xu (Tiêu chuẩn)</option>
-                  <option value={50}>50 xu (Cao cấp)</option>
-                  <option value={100}>100 xu (Đại gia)</option>
-                  <option value={500}>500 xu (VIP)</option>
-                </select>
-              </label>
-
-              <label>
-                <span>Mật khẩu phòng (Để trống nếu mở công khai):</span>
-                <input
-                  type="password"
-                  value={createPassword}
-                  onChange={e => setCreatePassword(e.target.value)}
-                  placeholder="Mật khẩu riêng tư (tùy chọn)"
-                />
-              </label>
-
-              <div className="pt-form-submit-row">
-                <button type="button" className="btn-cancel" onClick={() => setCreateModalOpen(false)}>
-                  Hủy
-                </button>
-                <button type="submit" className="pt-candy-cta-btn">
-                  TẠO & VÀO BÀN NGAY
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* 6. MODAL NHẬP PASSWORD CHO BÀN PRIVATE */}
-      {joinModalRoom && (
-        <div className="pt-sub-modal-backdrop" onClick={() => setJoinModalRoom(null)}>
-          <div className="pt-sub-modal-dialog" onClick={e => e.stopPropagation()}>
-            <header className="pt-sub-modal-header">
-              <h3>NHẬP MẬT KHẨU PHÒNG</h3>
-              <button type="button" onClick={() => setJoinModalRoom(null)}>✕</button>
-            </header>
-            <form onSubmit={handleJoinSubmit} className="pt-create-room-form">
-              <p>Bàn <strong>{joinModalRoom.name}</strong> yêu cầu mật khẩu để tham gia.</p>
-              <label>
-                <span>Mật khẩu:</span>
-                <input
-                  type="password"
-                  value={joinPassword}
-                  onChange={e => setJoinPassword(e.target.value)}
-                  placeholder="Nhập mã PIN hoặc mật khẩu..."
-                  autoFocus
-                />
-              </label>
-              <div className="pt-form-submit-row">
-                <button type="button" className="btn-cancel" onClick={() => setJoinModalRoom(null)}>
-                  Hủy
-                </button>
-                <button type="submit" className="pt-candy-cta-btn">
-                  XÁC NHẬN VÀO BÀN
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+function GameArt({ game }) {
+  return <div className={`farm-lounge-art ${game}`} aria-hidden="true">{game==='tai-xiu'?<><Die value={5}/><Die value={2}/></>:game==='bau-cua'?<><SymbolArt symbol="bau"/><SymbolArt symbol="cua"/></>:<><PlayingCard id={game==='bai-cao'?44:0} small/><PlayingCard id={47} small/><PlayingCard id={game==='bai-cao'?43:51} small/></>}</div>;
+}
+export function CasinoLobby({coins=0,rooms=[],connected=true,inside=true,sound=false,onToggleSound,onExit,onJoin,onCreateRoom,onQuickPlay,onSelectGame,defaultGame=null,quickPlaying=false,message=''}) {
+  const [selected,setSelected]=useState(META[defaultGame]?defaultGame:'tai-xiu');
+  const [view,setView]=useState('intro');
+  const [createOpen,setCreateOpen]=useState(false),[joinRoom,setJoinRoom]=useState(null);
+  const [name,setName]=useState(''),[stake,setStake]=useState(CASINO_CONFIG.chips[0]),[password,setPassword]=useState(''),[joinPassword,setJoinPassword]=useState('');
+  const panel=useRef(null),sub=useRef(null),exit=useRef(onExit);exit.current=onExit;
+  const enabled=connected&&inside&&!quickPlaying;
+  const filtered=useMemo(()=>rooms.filter(room=>room.game===selected),[rooms,selected]);
+  const meta=META[selected], definition=CASINO_GAMES[selected];
+  useEffect(()=>{if(META[defaultGame])setSelected(defaultGame);},[defaultGame]);
+  useEffect(()=>{
+    const previous=document.activeElement;
+    panel.current?.querySelector('button')?.focus();
+    return ()=>{if(previous?.isConnected)previous.focus();};
+  },[]);
+  useEffect(()=>{
+    if(createOpen||joinRoom)sub.current?.querySelector('input,button')?.focus();
+    const keys=event=>{
+      if(event.key==='Escape'){event.preventDefault();event.stopPropagation();if(joinRoom)setJoinRoom(null);else if(createOpen)setCreateOpen(false);else exit.current?.();}
+      if(event.key!=='Tab')return;
+      const root=(createOpen||joinRoom)?sub.current:panel.current;
+      const controls=[...root.querySelectorAll('button:not(:disabled),input,select')].filter(el=>el.getClientRects().length);
+      const first=controls[0],last=controls[controls.length-1];
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+    };
+    document.addEventListener('keydown',keys,true);
+    return ()=>document.removeEventListener('keydown',keys,true);
+  },[createOpen,joinRoom]);
+  const select=key=>{setSelected(key);setView('intro');onSelectGame?.(key);};
+  const join=room=>{if(!enabled||!onJoin)return;if(room.private){setJoinRoom(room);setJoinPassword('');}else onJoin(room.id);};
+  const create=event=>{event.preventDefault();if(!enabled||!onCreateRoom||!CASINO_CONFIG.chips.includes(Number(stake)))return;onCreateRoom({game:selected,name:name.trim()||definition.name,stake:Number(stake),password:password.trim()});setCreateOpen(false);setPassword('');setName('');};
+  return <div className="farm-lounge-overlay"><section className="farm-lounge" ref={panel} role="dialog" aria-modal="true" aria-labelledby="farm-lounge-title">
+    <header className="farm-lounge-header"><span className="farm-lounge-emblem"><HudIcon asset="basket" size={45}/></span><div><small>GẶP GỠ · GIAO LƯU · GIẢI TRÍ</small><h2 id="farm-lounge-title">Hội quán dân gian</h2></div><div className="farm-lounge-wallet"><HudIcon asset="coin" size={28}/><span><small>Xu của bạn</small><b>{Number(coins).toLocaleString('vi-VN')}</b></span></div><button className="farm-lounge-audio" role="switch" aria-checked={sound} aria-label="Âm thanh hội quán" onClick={onToggleSound}>{sound?'Âm bật':'Âm tắt'}</button><button className="farm-lounge-close" aria-label="Đóng hội quán" onClick={onExit}>×</button></header>
+    <div className="farm-lounge-body"><div className="farm-lounge-games"><div className="farm-lounge-section-title"><h3>Chọn trò chơi</h3><span>4 trò chơi</span></div><div className="farm-lounge-game-grid">{Object.entries(META).map(([key,item])=><button key={key} className={item.theme} aria-pressed={selected===key} onClick={()=>select(key)}><span className="farm-lounge-game-count">{rooms.filter(room=>room.game===key).length} bàn</span><GameArt game={key}/><b>{item.name}</b><small>{item.tag}</small><span className="farm-lounge-selected" aria-hidden="true">{selected===key?'✓':''}</span></button>)}</div><div className="farm-lounge-tip"><HudIcon asset="quest" size={32}/><p>Chọn một trò chơi để xem luật và tìm bàn. Tiến Lên tính điểm, không cược xu.</p></div></div>
+    <div className="farm-lounge-detail"><div className={`farm-lounge-spotlight ${meta.theme}`}><GameArt game={selected}/><div><small>{meta.tag}</small><h3>{meta.name}</h3><p>{meta.description}</p></div></div>
+      <nav className="farm-lounge-tabs" aria-label="Thông tin trò chơi"><button aria-pressed={view==='intro'} onClick={()=>setView('intro')}>Cách chơi</button><button aria-pressed={view==='rooms'} onClick={()=>setView('rooms')}>Danh sách bàn <small>{filtered.length}</small></button></nav>
+      {view==='intro'?<div className="farm-lounge-rules"><small>LUẬT TRÒ CHƠI</small><p>{definition.rules}</p><div><span>Tối đa <b>{definition.seats}</b> người</span><span>Tối thiểu <b>{definition.minPlayers}</b> người</span></div></div>:<div className="farm-lounge-rooms">{filtered.length?filtered.map(room=><article key={room.id}><span className="farm-lounge-room-art"><HudIcon asset="chat" size={29}/></span><div><h4>{room.name}</h4><p>{room.occupied??0}/{room.seats??definition.seats} người · {selected==='tien-len'?'Tính điểm':`${room.stake} xu`}</p><small>{room.private?'Có mật khẩu':'Bàn công khai'}</small></div><button disabled={!enabled||!onJoin} onClick={()=>join(room)}>{(room.occupied??0)>=(room.seats??definition.seats)?'Xem bàn':'Vào bàn'}</button></article>):<div className="farm-lounge-empty"><HudIcon asset="chat" size={52}/><h4>Chưa có bàn cho trò này</h4><p>Tạo bàn riêng hoặc chọn Vào bàn nhanh để bắt đầu.</p></div>}</div>}
+      <div className="farm-lounge-actions"><button className="farm-lounge-primary" disabled={!enabled||!onQuickPlay} onClick={()=>onQuickPlay(selected)}>{quickPlaying?'Đang vào bàn…':'Vào bàn nhanh'}</button><button className="farm-lounge-secondary" disabled={!enabled||!onCreateRoom} onClick={()=>{setCreateOpen(true);setPassword('');}}>Tạo bàn riêng</button></div><p className="farm-lounge-status" role="status">{message||(!connected?'Đang kết nối lại…':!inside?'Vào bên trong hội quán để tham gia bàn.':quickPlaying?'Đang tìm chỗ cho bạn…':'Chọn bàn để chơi cùng cư dân thị trấn.')}</p>
+    </div></div><footer className="farm-lounge-footer"><span><HudIcon asset="map" size={22}/> Có thể dạo chơi và ghé các bàn trong sảnh 3D</span><button onClick={onExit}>Dạo chơi trong sảnh</button></footer>
+    {(createOpen||joinRoom)&&<div className="farm-lounge-sub-overlay" onClick={event=>{if(event.target===event.currentTarget){setCreateOpen(false);setJoinRoom(null);}}}><section className="farm-lounge-sub" ref={sub} role="dialog" aria-modal="true" aria-labelledby="farm-lounge-sub-title"><header><h3 id="farm-lounge-sub-title">{createOpen?'Tạo bàn riêng':'Vào bàn riêng'}</h3><button aria-label="Đóng hộp thoại bàn" onClick={()=>{setCreateOpen(false);setJoinRoom(null);}}>×</button></header>
+      {createOpen?<form onSubmit={create}><p>{meta.name} · {selected==='tien-len'?'Chơi tính điểm':'Chọn mức cược được hỗ trợ'}</p><label>Tên bàn<input value={name} onChange={event=>setName(event.target.value)} placeholder={`Bàn ${meta.name}`} maxLength={30}/></label>{selected!=='tien-len'&&<label>Mức cược bàn<select value={stake} onChange={event=>setStake(Number(event.target.value))}>{CASINO_CONFIG.chips.map(value=><option key={value} value={value}>{value} xu</option>)}</select></label>}<label>Mật khẩu (không bắt buộc)<input type="password" value={password} onChange={event=>setPassword(event.target.value)} placeholder="Để trống cho bàn công khai" maxLength={64} autoComplete="new-password"/></label><button className="farm-lounge-primary" disabled={!enabled}>Tạo & vào bàn</button></form>:<form onSubmit={event=>{event.preventDefault();if(!enabled||!joinPassword.trim())return;onJoin?.(joinRoom.id,joinPassword.trim());setJoinRoom(null);setJoinPassword('');}}><p>Bàn “{joinRoom.name}” yêu cầu mật khẩu.</p><label>Mật khẩu bàn<input type="password" value={joinPassword} onChange={event=>setJoinPassword(event.target.value)} maxLength={64} autoComplete="off"/></label><button className="farm-lounge-primary" disabled={!enabled||!joinPassword.trim()}>Vào bàn</button></form>}
+    </section></div>}
+  </section></div>;
 }

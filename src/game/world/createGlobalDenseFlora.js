@@ -149,7 +149,7 @@ export function* createGlobalDenseFloraSteps(scene, foliage, shadows, foliageIns
     }
   }
 
-  console.log(`[GlobalDenseFlora] Deployed: ${treeCount} trees, ${flowerCount} flowerbeds/bushes.`);
+  globalThis.window?.__farmDebug?.log(`[GlobalDenseFlora] Deployed: ${treeCount} trees, ${flowerCount} flowerbeds/bushes.`);
   return root;
 }
 

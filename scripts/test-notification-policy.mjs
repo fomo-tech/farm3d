@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import { notificationKind, createNotificationGate } from '../src/hooks/notificationPolicy.js';
+for (const message of ['Đang gieo cà rốt…', 'Đang mở cửa thị trấn…', 'Đã đến Làng Bình Minh', 'Đã giăng câu · chờ phao rung…', 'An vừa gửi một biểu cảm!', 'Câu được Cá chép · 1 kg']) assert.equal(notificationKind(message), null, message);
+assert.equal(notificationKind('Kho đã đầy · hãy bán hàng hoặc nâng cấp kho'), 'warning');
+assert.equal(notificationKind('Công cụ này chưa phù hợp với trạng thái ô đất'), 'warning');
+const gate = createNotificationGate();
+assert.equal(gate('Đã mua xe đạp.', {}, 0), 'success');
+assert.equal(gate('Đang mở cửa thị trấn…', {}, 100), null);
+assert.equal(gate('Đã mua xe đạp.', {}, 4000), null, 'Repeated reward does not reopen toast');
+assert.equal(gate('Đã bán cá.', {}, 1000), null, 'Success bursts are not queued');
+assert.equal(gate('Đã bán cá.', {}, 4000), 'success');
+assert.equal(gate('Lỗi: Không đủ xu.', {}, 4100), 'warning', 'Action errors remain visible during reward cooldown');
+assert.equal(gate('Lỗi: Không đủ xu.', {}, 5000), null);
+assert.equal(gate('Lỗi: Không đủ xu.', {}, 14100), 'warning');
+assert.equal(gate('An: “không thể”', { silent: true }, 20000), null, 'Chat cannot produce warning toasts');
+assert.equal(gate('Đã nhận thưởng nhiệm vụ.', { silent: true }, 21000), null, 'Reward panel does not also need a toast');
+assert.equal(gate('Đã mua xe đạp.', {}, 31000), 'success');
+console.log('PASS notification policy: quiet routine events, no duplicate or queued burst, errors preserved.');

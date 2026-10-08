@@ -3,14 +3,15 @@
 // gives us a deterministic footprint to validate before a map is rendered.
 
 import { villageGeometry } from './villageLayout.js';
+import { LAND_EXPANSION_CONFIG, isFarmTileKey } from './landExpansionConfig.js';
 
 export const FARM_LOT_SPEC = Object.freeze({
-  version: 7,
-  columns: 4,
-  rows: 3,
+  version: 8,
+  columns: LAND_EXPANSION_CONFIG.columns,
+  rows: LAND_EXPANSION_CONFIG.rows,
   tileSize: 2.1,
-  tileSpacingX: 2.1,
-  tileSpacingZ: 1.8,
+  tileSpacingX: LAND_EXPANSION_CONFIG.visuals.spacingX,
+  tileSpacingZ: LAND_EXPANSION_CONFIG.visuals.spacingZ,
   lotSpacingX: 30,
   lotSpacingZ: 28,
   firstLot: { x: -45, z: 112 },
@@ -23,7 +24,7 @@ export const FARM_LOT_SPEC = Object.freeze({
     home: Object.freeze({ x: -4.8, z: 5.2, width: 5.8, depth: 5.2 }),
     corral: Object.freeze({ x: 4.8, z: 5.2, width: 6.4, depth: 5.6 }),
     barn: Object.freeze({ x: 4.8, z: 5.2, width: 6.4, depth: 5.6 }),
-    crops: Object.freeze({ x: 0.0, z: -3.0, width: 8.4, depth: 5.4 }),
+    crops: Object.freeze({ x: 0.0, z: LAND_EXPANSION_CONFIG.visuals.centerZ, width: LAND_EXPANSION_CONFIG.columns * LAND_EXPANSION_CONFIG.visuals.spacingX, depth: LAND_EXPANSION_CONFIG.rows * LAND_EXPANSION_CONFIG.visuals.spacingZ }),
     gate: Object.freeze({ x: 0, z: -9.0, width: 5.5, depth: 1.8 }),
     nameBoard: Object.freeze({ x: 0, z: -9.8, width: 5.0, depth: 0.5 }),
     path: Object.freeze({ x: 0, z: 0.5, width: 8.0, depth: 2.2 }),
@@ -31,7 +32,8 @@ export const FARM_LOT_SPEC = Object.freeze({
 });
 
 export const FARM_ACTIVE_PLOTS = FARM_LOT_SPEC.columns * FARM_LOT_SPEC.rows;
-export const FARM_TILE_KEY_PATTERN = /^[0-3]:[0-2]$/;
+// Compatibility interface; bounds come from the configurable grid.
+export const FARM_TILE_KEY_PATTERN = Object.freeze({ test: isFarmTileKey });
 
 export function farmLotPosition(lot) {
   const globalIndex = Math.max(0, Number(lot) - 1);

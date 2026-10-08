@@ -1,3 +1,6 @@
+import {createFortuneNPC} from '../npc/FortuneNPC.js';
+import {LOTTERY_CONFIG} from '../../../shared/lotteryConfig.js';
+import { findWalkingPath } from '../physics/findWalkingPath.js';
 import { FrameSafeResize } from '../rendering/FrameSafeResize.js';
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera.js';
 import { sampleMovement } from '../network/sampleMovement.js';
@@ -13,7 +16,7 @@ import { Engine } from '@babylonjs/core/Engines/engine.js';
 import { installWorldRenderIndex } from '../rendering/WorldRenderIndex.js';
 import { installMaterialDirtyIndex } from '../rendering/MaterialDirtyIndex.js';
 import { installNearbyShadows } from '../rendering/NearbyShadowCasters.js';
-import { GRAPHICS_PRESETS, readGraphicsQuality, saveGraphicsQuality, calculateRenderDpr, RenderResolutionController, AutoGraphicsController } from '../rendering/GraphicsSettings.js';
+import { applyWorldPowerPolicy, GRAPHICS_PRESETS, readGraphicsQuality, saveGraphicsQuality, calculateRenderDpr, RenderResolutionController, AutoGraphicsController } from '../rendering/GraphicsSettings.js';
 import { getModelWorkStats } from '../rendering/ModelAssetManager.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
@@ -88,6 +91,7 @@ import { BEACH_CONFIG, beachRoadSegments } from '../../../shared/beachConfig.js'
 import { FogStreamingController } from './FogStreamingController.js';
 import { createGrandWindingRiverSteps, createGrandWindingRiver, RIVER_CONTROL_POINTS } from './nature/GrandWindingRiver.js';
 import { CHARACTER_LOD_CONFIG } from '../../../shared/characterConfig.js';
+import { farmAudio } from '../audio/FarmAudioSystem.js';
 
 // Reusable static vector pool to eliminate GC allocations in 60 FPS render loop
 const _TMP_VIEW_FORWARD = new Vector3();
@@ -488,8 +492,10 @@ export class FarmWorld {
       // default framebuffer MSAA enabled as well duplicates raster/resolve
       // work on the full-size canvas.
       antialias: false,
-      powerPreference: 'high-performance',
+      powerPreference: this.isMobile ? 'low-power' : 'high-performance',
     });
+
+    applyWorldPowerPolicy(this.engine, this.isMobile);
 
     this.getQualityDpr = () => {
       return calculateRenderDpr({ quality: this.graphicsQuality,
@@ -497,11 +503,11 @@ export class FarmWorld {
         width: this.canvas.clientWidth || window.innerWidth,
         height: this.canvas.clientHeight || window.innerHeight,
         mobile: this.isMobile,
-        scale: this.isMobile ? this.autoGraphics.scale : 1,
+        scale: this.graphicsQuality === 'eco' ? this.resolutionController.scale : this.autoGraphics.scale,
         allowBelowNative: false });
     };
 
-    // Bật độ phân giải sắc nét Native Retina 1:1 trên màn hình High-DPI
+    // Start at preset density; Auto can adapt after sustained frame pressure.
     const dpr = this.getQualityDpr();
     this.engine.setHardwareScalingLevel(1 / dpr);
     this.remotePlayers = new Map();
@@ -523,7 +529,7 @@ export class FarmWorld {
     const construction = this.createSceneSteps();
     construction.next();
     this.worldBuilt = this.scheduleConstruction(construction, 'initial world construction', 100);
-    if (new URLSearchParams(window.location.search).has('debug')) window.__farmDebugScene = this.scene;
+    if (window.__farmDebug?.enabled) window.__farmDebugScene = this.scene;
     window.__farmDebug?.mark('Babylon scene created');
     this.keydown = event => {
       if (!this.player || !this.bootReady) return;
@@ -560,11 +566,12 @@ export class FarmWorld {
             this.callbacks.onLeaderboard?.();
             return;
           }
+          const fortune = LOTTERY_CONFIG.npc;
+          if (Math.hypot(p.x-fortune.x,p.z-fortune.z)<=fortune.radius) { this.callbacks.onNpcInteract?.('fortune_god'); return; }
           const v = BEACH_CONFIG.vendor;
           if (Math.hypot(p.x - v.x, p.z - v.z) <= v.interactionDistance) { this.callbacks.onNpcInteract?.('beach_fisher'); return; }
         }
         if (event.code === 'KeyE' && this.interactFarmGate()) return;
-        if (event.code === 'KeyE' && this.openNearbyLand()) return;
         if (this.villageElder && this.player) {
           const elderPos = this.villageElder.position;
           const playerPos = this.player.root.position;
@@ -594,7 +601,7 @@ export class FarmWorld {
         // at the close shadow distance, but avoids the high-quality kernel's
         // extra shadow-map samples when the world is busy.
         this.shadows.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
-        const targetMapSize = preset === 'ultra' && !this.isMobile ? 2048 : (preset === 'eco' ? 512 : 1024);
+        const targetMapSize = preset === 'ultra' && !this.isMobile ? 2048 : (this.isMobile || preset === 'eco' ? 512 : 1024);
         if (this.shadows.mapSize !== targetMapSize) {
           this.shadows.mapSize = targetMapSize;
         }
@@ -675,6 +682,13 @@ export class FarmWorld {
     // Xử lý chạm/click trực tiếp vào Bảng Xếp Hạng, Cửa tiệm 3D, Bàn chơi Casino, Cửa thoát
     if (this.scene?.onPointerObservable) {
       this.pointerObserver = this.scene.onPointerObservable.add((pointerInfo) => {
+        if (pointerInfo.type === 32 /* POINTERTAP */ && pointerInfo.pickInfo?.hit) {
+          const sponsor = pointerInfo.pickInfo.pickedMesh?.metadata;
+          if (sponsor?.interactive === 'sponsor') {
+            this.callbacks.onSponsor?.(sponsor.destinationUrl);
+            return;
+          }
+        }
         if (pointerInfo.type === 1 /* POINTERDOWN */ && pointerInfo.pickInfo?.hit) {
           let node = pointerInfo.pickInfo.pickedMesh;
           while (node) {
@@ -734,7 +748,7 @@ export class FarmWorld {
         this.scene.render();
         if (this.bootReady && (this.graphicsQuality === 'auto' || this.graphicsQuality === 'ultra' || (this.isMobile && this.graphicsQuality !== 'eco')) &&
           !document.hidden && this.autoGraphics.sample(this.engine.getDeltaTime())) {
-          if (this.graphicsQuality === 'auto') this.cinematic?.setQuality(this.autoGraphics.effects, true);
+          if (this.graphicsQuality === 'auto') this.cinematic?.setQuality(this.autoGraphics.effects, false);
           if (this.graphicsQuality === 'ultra' && !this.isMobile && this.cinematic?.pipeline) {
             // Preserve native pixels. Under sustained load, reduce full-screen
             // multisampling before compromising image resolution.
@@ -742,13 +756,12 @@ export class FarmWorld {
             const samples = Math.min(this.autoGraphics.level > 0 ? 2 : 4, supported);
             if (this.cinematic.pipeline.samples !== samples) this.cinematic.pipeline.samples = samples;
           }
-          // Apply the mobile safety scale even for a manually selected preset;
-          // sustained low frame rate on iOS must lower GPU memory pressure.
-          if (this.isMobile) this.resize();
-          if (this.shadows && (this.isMobile || this.graphicsQuality === 'ultra')) {
+          // Apply Auto scale on desktop too; mobile also adapts manual presets.
+          if (this.isMobile || this.graphicsQuality === 'auto') this.resize();
+          if (this.shadows && (this.isMobile || this.graphicsQuality === 'ultra' || this.graphicsQuality === 'auto')) {
             const targetSize = this.isMobile
-              ? (this.autoGraphics.level > 0 ? 512 : 1024)
-              : (this.autoGraphics.level > 0 ? 1024 : 2048);
+              ? 512
+              : (this.graphicsQuality === 'auto' ? (this.autoGraphics.level > 0 ? 512 : 1024) : (this.autoGraphics.level > 0 ? 1024 : 2048));
             if (this.shadows.mapSize !== targetSize) this.shadows.mapSize = targetSize;
             if (this.shadows.filteringQuality !== ShadowGenerator.QUALITY_MEDIUM) this.shadows.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
           }
@@ -767,7 +780,7 @@ export class FarmWorld {
         this.rejectPendingRender = null;
         console.error('World render failed', error);
         window.__farmDebug?.report(error, 'WORLD RENDER');
-        this.callbacks.onFatalError?.(`Lỗi dựng cảnh 3D: ${error?.message || 'WebGL không phản hồi'}`);
+        this.callbacks.onFatalError?.('Trò chơi bị gián đoạn. Hãy tải lại để tiếp tục.');
       }
     });
     this.engine.onContextLostObservable.add(() => {
@@ -775,16 +788,16 @@ export class FarmWorld {
       window.__farmRuntimeAudit?.record('context-lost');
       window.__farmDebug?.stopFrames();
       window.__farmDebug?.report(new Error('WebGL context lost'), 'WEBGL');
-      this.callbacks.onFatalError?.('WebGL đã mất kết nối đồ họa. Hãy đóng các tab nặng rồi tải lại game.');
+      this.callbacks.onFatalError?.('Trò chơi bị gián đoạn. Hãy đóng bớt ứng dụng rồi tải lại nhé.');
     });
     this.engine.onContextRestoredObservable.add(() => {
       this.contextLost = false;
       window.__farmRuntimeAudit?.record('context-restored');
-      this.callbacks.onFatalError?.('Đồ họa đã phục hồi. Hãy tải lại game để đồng bộ cảnh; vị trí được server lưu giữ.');
+      this.callbacks.onFatalError?.('Bạn có thể tải lại để tiếp tục chơi. Vị trí của bạn đã được lưu.');
     });
     this.startWorldBootPipeline();
     window.__farmRuntimeAudit?.record('world-created');
-    onStatus('Kênh công cộng #01 · 24 online');
+    onStatus('Chào mừng bạn đến thị trấn!');
   }
 
   async startWorldBootPipeline() {
@@ -810,10 +823,10 @@ export class FarmWorld {
           reject(new Error('WebGL không vẽ được khung hình đầu tiên sau 45 giây.'));
         }, 45000);
       });
-      report('terrain', 18, 'Đang dựng khu vực xuất phát…', 0);
+      report('terrain', 18, 'Đang mở cửa thị trấn…', 0);
       await this.worldBuilt;
       if (this.scene.isDisposed) return;
-      report('index', 70, 'Đang chuẩn bị vùng hiển thị…', 2);
+      report('index', 70, 'Đang chuẩn bị nơi bạn đến…', 2);
       if (this.currentVenue) {
         await this.ensureVenueBuilt(this.currentVenue);
         this.setVenueView(this.currentVenue);
@@ -822,7 +835,7 @@ export class FarmWorld {
       this.renderIndex = installWorldRenderIndex(this.scene);
       await this.renderIndex.ready;
       if (this.scene.isDisposed) return;
-      report('first-frame', 90, 'Đang xác nhận khung hình đầu tiên…', 3);
+      report('first-frame', 90, 'Sắp sẵn sàng rồi…', 3);
       this.resize();
       await waitForRenderedFrame();
       if (this.scene.isDisposed) return;
@@ -842,7 +855,7 @@ export class FarmWorld {
       console.error('[FarmWorld] Lỗi trong pipeline khởi động thế giới:', err);
       if (!this.renderFailure && !this.scene.isDisposed) {
         if (this.bootReady) window.__farmDebug?.report(err, 'BACKGROUND SCENERY');
-        else this.callbacks.onFatalError?.(`Lỗi khởi động thế giới: ${err?.message || err}`);
+        else this.callbacks.onFatalError?.('Chưa thể mở thị trấn. Hãy tải lại để thử lần nữa.');
       }
     }
   }
@@ -1008,7 +1021,7 @@ export class FarmWorld {
     // 4. Tầng 4: Shadow Generator mờ 30% mềm mại (PCF High/Medium)
     const shadowMapResolution = this.graphicsQuality === 'ultra' && !this.isMobile
       ? 2048
-      : (this.graphicsQuality === 'eco' ? 512 : 1024);
+      : (this.isMobile || this.graphicsQuality === 'eco' ? 512 : 1024);
     yield;
     const shadows = new ShadowGenerator(shadowMapResolution, sun);
     yield;
@@ -1024,11 +1037,13 @@ export class FarmWorld {
     yield; // Frustum đã cố định theo shadowFrustumSize
     shadows.darkness = 0.30;
     yield; // Khớp preset ban ngày tươi sáng
+    // Moving sun matrices and their depth texture must update in the same frame.
+    shadows.getShadowMap().refreshRate = 1;
     this.shadows = shadows;
     // Limit shadow draw calls during construction too, not only after boot.
     this.getNearbyShadowCount = installNearbyShadows(shadows, () => this.player?.root.position, {
       radius: this.isMobile ? 24 : 36,
-      maxCasters: this.isMobile ? 24 : 48,
+      maxCasters: this.isMobile ? 16 : 48,
     });
     yield;
     this.rimLight = rimLight;
@@ -1054,10 +1069,10 @@ export class FarmWorld {
       getStreamingStats: () => this.chunkStreamer?.getStats?.(),
       getFps: () => this.engine.getFps(),
       presets: {
-        performance: { start: this.isMobile ? 120 : 180, end: this.isMobile ? 320 : 480, clip: this.isMobile ? 360 : 520 },
-        streaming: { start: this.isMobile ? 140 : 220, end: this.isMobile ? 380 : 560, clip: this.isMobile ? 420 : 600 },
-        recovering: { start: this.isMobile ? 160 : 250, end: this.isMobile ? 420 : 620, clip: this.isMobile ? 460 : 660 },
-        clear: { start: this.isMobile ? 180 : 280, end: this.isMobile ? 480 : 720, clip: this.isMobile ? 520 : 760 },
+        performance: { start: this.isMobile ? 65 : 100, end: this.isMobile ? 150 : 220, clip: this.isMobile ? 180 : 260 },
+        streaming: { start: this.isMobile ? 80 : 220, end: this.isMobile ? 180 : 560, clip: this.isMobile ? 210 : 600 },
+        recovering: { start: this.isMobile ? 95 : 250, end: this.isMobile ? 210 : 620, clip: this.isMobile ? 240 : 660 },
+        clear: { start: this.isMobile ? 110 : 280, end: this.isMobile ? 240 : 720, clip: this.isMobile ? 270 : 760 },
       },
     });
     yield;
@@ -1111,6 +1126,11 @@ export class FarmWorld {
         const vehicle = this.player?.getVehicleId?.() || 'walk';
         this.collisionSystem.playerRadius = vehicleCollisionRadius(vehicle);
         return this.collisionSystem.resolveMovement(cx, cz, dx, dz, this.currentVenue);
+      },
+      onAutoMoveBlocked: () => {
+        const route = this.walkingRoute;
+        if (route && route.retries < 3) this.moveToTarget(route.target, route.callback, route.retries + 1);
+        else this.onStatus?.('Đường đi đang bị chắn. Hãy mở cổng hoặc chọn điểm gần lối vào.');
       },
       getCameraBasis: () => cameraMovementBasis(camera.alpha),
     });
@@ -1255,11 +1275,17 @@ export class FarmWorld {
         },
         getCrop: () => this.callbacks.getCrop?.() || 'carrot',
         getUnlockedPlots: () => this.callbacks.getUnlockedPlots?.() ?? 0,
+        getUnlockedTileKeys: () => this.callbacks.getUnlockedTileKeys?.(),
+        onUnlockPlot: tileKey => this.callbacks.onUnlockPlot?.(tileKey),
         onAction: action => this.callbacks.onFarmAction?.(action) ?? true,
         openVenue: venue => this.callbacks.onVenue?.(venue),
         enterVenue: venue => this.enterVenue(venue),
         exitVenue: () => this.exitVenue(),
         onNpcInteract: npcId => this.callbacks.onNpcInteract?.(npcId),
+        onAppleInteract: target=>this.callbacks.onAppleInteract?.(target),
+        onLivestockInteract: target => {
+          this.selectLivestock(target);
+        },
         onLandInteract: farmId => this.callbacks.onLandInteract?.(farmId),
         isTutorialCrop: () => this.callbacks.isTutorialCrop?.() ?? false,
         getFreeSeeds: () => this.callbacks.getFreeSeeds?.() || 0,
@@ -1291,6 +1317,7 @@ export class FarmWorld {
       yield 'boot: bus route';
       this.busRoute = yield* createBusRouteSteps(scene, shadows);
     yield;
+      this.fortuneNPC = createFortuneNPC(scene,shadows);
       this.villageElder = createVillageElderNPC(scene, shadows, WORLD_LAYOUT.villageElder, () => this.callbacks.onNpcInteract?.('village_elder'));
     yield;
       yield 'boot: foliage prototypes';
@@ -1726,6 +1753,7 @@ export class FarmWorld {
       if (!this.currentVenue) this.fogStreaming?.update(dt);
       this.livingMeadow?.update(dt, player.root.position);
       this.grandRiver?.update(dt);
+      farmAudio.updateWaterfrontPosition(player.root.position.x, player.root.position.z);
 
       const isRiding = this.busRoute?.isPlayerRiding();
       const busTransitStatus = this.busRoute?.update(dt, player.root.position);
@@ -1802,15 +1830,7 @@ export class FarmWorld {
         }
       }
 
-      // Khóa vị trí nguồn sáng Directional Sun bám sát theo vị trí mục tiêu (chuẩn Cozy Farmy 56m)
-      if (this.sun) {
-        const dir = this.sun.direction;
-        this.sun.position.set(
-          targetPos.x - dir.x * 60,
-          targetPos.y - dir.y * 60,
-          targetPos.z - dir.z * 60
-        );
-      }
+      // createAtmosphere owns the sun's texel-stabilized shadow position.
 
       if (this.cinematic && player.mesh) {
         this.cinematic.updateFocus(Vector3.Distance(camera.position, player.mesh.position));
@@ -1862,6 +1882,7 @@ export class FarmWorld {
       this.animalPen?.update(performance.now());
       this.farming?.update();
       this.villageElder?.update(performance.now());
+      this.fortuneNPC?.update(performance.now());
       this.objectiveMarker?.update(performance.now());
       this.updateVenueProximity();
       this.updateFarmZoneProximity();
@@ -1920,6 +1941,7 @@ export class FarmWorld {
   }
 
   dispose() {
+    this.cancelLivestockInteraction();
     if (this.disposed) return;
     this.disposed = true;
     this.engine.stopRenderLoop();
@@ -1946,12 +1968,14 @@ export class FarmWorld {
     this.stylizedGrass?.dispose();
     this.farmAnimals?.dispose();
     this.vietnameseCountryside?.dispose();
+    this.cinematic?.fxaa?.dispose();
     this.cinematic?.pipeline?.dispose();
     this.cinematic?.ssao?.dispose();
     this.farming?.dispose();
     this.farmBuildings.forEach(buildings => buildings.dispose?.());
     this.farmBuildings.clear();
     this.villageElder?.dispose();
+    this.fortuneNPC?.dispose();
     this.villageGates?.forEach(gate => gate.dispose());
     this.objectiveMarker?.dispose();
     this.proceduralWorld?.dispose();
@@ -2012,9 +2036,123 @@ export class FarmWorld {
     this.objectiveMarker?.setVisible(true);
   }
 
-  moveToTarget(target, callback) {
+  harvestAppleTree(farmId,send) {
+    const tree=this.farmChunks.get(farmId)?.appleTree;
+    if(!tree||!this.player||farmId!==this.playerFarmId)return false;
+    tree.computeWorldMatrix(true);
+    const destination=tree.getAbsolutePosition().clone();destination.z-=1.5;destination.y=0;
+    const token=this.appleInteractionToken=(this.appleInteractionToken||0)+1;
+    let sent=false;
+    return this.moveToTarget(destination,()=>{
+      if(token!==this.appleInteractionToken)return;
+      this.player.lookAt(tree.getAbsolutePosition());
+      this.player.playAction('collect',()=>{
+        if(sent||token!==this.appleInteractionToken||this.playerFarmId!==farmId||Math.hypot(this.player.root.position.x-destination.x,this.player.root.position.z-destination.z)>1.5)return;
+        sent=true;send();
+      });
+    });
+  }
+
+  openLivestockControls() {
+    if (!this.playerFarmId || this.currentVenue) return;
+    this.selectLivestock({farmId:this.playerFarmId});
+  }
+
+  selectLivestock(target) {
+    this.cancelLivestockInteraction();
+    const member=this.farmBuildings?.get(target.farmId)?.herd?.members.get(target.id);
+    target={...target,isOwner:target.farmId===this.playerFarmId,animal:member?.animal};
+    this.livestockTarget=target;
+    if(member){
+      member.interacting=true;
+      const ring=MeshBuilder.CreateTorus('livestock-selected',{diameter:1.35,thickness:.045,tessellation:32},this.scene);
+      ring.parent=member.root;ring.position.y=.035;ring.isPickable=false;
+      const mat=new StandardMaterial('livestock-selection',this.scene);
+      mat.diffuseColor=Color3.FromHexString('#ffe780');mat.emissiveColor=mat.diffuseColor.scale(.6);ring.material=mat;
+      this.livestockSelection={member,ring,mat};
+    }
+    this.callbacks.onLivestockInteract?.(target);
+  }
+
+  cancelLivestockInteraction() {
+    if(this.livestockWorking && this.livestockTarget?.isOwner===false)this.callbacks.onLivestockTheftCancelled?.();
+    clearTimeout(this.livestockTimeout);
+    clearTimeout(this.livestockTheftTimer);
+    this.livestockToken=(this.livestockToken||0)+1;
+    if(this.livestockWorking)this.player?.stop();
+    this.livestockWorking=false;
+    if(this.livestockSelection){const {member,ring,mat}=this.livestockSelection;member.interacting=false;ring.dispose();mat.dispose();this.livestockSelection=null;}
+  }
+
+  performLivestockInteraction(target,action,payload,send) {
+    if(this.livestockWorking||!this.player)return;
+    const building=this.farmBuildings?.get(target.farmId);
+    const member=building?.herd?.members.get(payload.id);
+    const root=member?.root||building?.barn?.root;
+    if(!root)return;
+    root.computeWorldMatrix(true);
+    const destination=root.getAbsolutePosition().clone();
+    destination.z-=member?.species==='cow'?1.2:.9;
+    if(member&&building.barn?.root){
+      building.barn.root.computeWorldMatrix(true);
+      destination.z=Math.max(destination.z,building.barn.root.getAbsolutePosition().z-2.1);
+    }
+    if(!member)destination.z-=3.5;
+    const token=this.livestockToken=(this.livestockToken||0)+1;
+    this.livestockWorking=true;
+    this.callbacks.onLivestockInteract?.({...target,phase:'approach'});
+    this.livestockTimeout=setTimeout(()=>{if(this.livestockToken===token)this.finishLivestockInteraction(false);},20000);
+    let dispatched=false;
+    const arrived=()=>{
+      if(token!==this.livestockToken)return;
+      this.callbacks.onLivestockInteract?.({...target,phase:'working'});
+      this.player.lookAt(root.getAbsolutePosition());
+      this.player.playAction(action==='feed_animals'?'feed':'collect',async()=>{
+        if(token!==this.livestockToken||dispatched)return;
+        dispatched=true;
+        if(Math.hypot(this.player.root.position.x-destination.x,this.player.root.position.z-destination.z)>1.5){this.finishLivestockInteraction(false);return;}
+        const sent=await send();
+        if(!sent)this.finishLivestockInteraction(false);
+      });
+    };
+    if(this.moveToTarget(destination,arrived)===false)this.finishLivestockInteraction(false);
+  }
+
+  beginLivestockTheft(pending) {
+    if(!this.livestockWorking){this.callbacks.onLivestockTheftCancelled?.();return;}
+    clearTimeout(this.livestockTheftTimer);
+    const token=this.livestockToken;
+    this.callbacks.onLivestockInteract?.({...this.livestockTarget,phase:'theft',theftEndsAt:Date.now()+pending.durationMs});
+    this.livestockTheftTimer=setTimeout(()=>{
+      if(token!==this.livestockToken)return;
+      this.callbacks.onLivestockTheftFinish?.({farmId:pending.farmId,animalId:pending.animalId,token:pending.token});
+    },Math.max(0,pending.durationMs)+100);
+  }
+
+  finishLivestockInteraction(success) {
+    clearTimeout(this.livestockTimeout);
+    clearTimeout(this.livestockTheftTimer);
+    if(success&&this.livestockWorking&&this.livestockSelection){
+      const center=this.livestockSelection.member.root.getAbsolutePosition().clone();
+      const mat=new StandardMaterial('livestock-reward-spark',this.scene);mat.emissiveColor=Color3.FromHexString('#ffdf70');
+      const particles=Array.from({length:9},(_,i)=>{const mesh=MeshBuilder.CreateSphere('livestock-reward',{diameter:.075,segments:4},this.scene);mesh.position.copyFrom(center);mesh.position.y+=.4;mesh.material=mat;mesh.isPickable=false;return mesh;});
+      let age=0;const observer=this.scene.onBeforeRenderObservable.add(()=>{age+=Math.min(.05,this.engine.getDeltaTime()/1000);particles.forEach((mesh,i)=>{mesh.position.x=center.x+Math.cos(i*2.4)*age*.6;mesh.position.z=center.z+Math.sin(i*2.4)*age*.6;mesh.position.y=center.y+.4+age*1.5;mesh.scaling.setAll(Math.max(0,1-age));});if(age>=1){this.scene.onBeforeRenderObservable.remove(observer);particles.forEach(m=>m.dispose());mat.dispose();}});
+    }
+    this.livestockWorking=false;
+    if(this.livestockTarget)this.callbacks.onLivestockInteract?.({...this.livestockTarget,phase:null});
+    this.livestockToken=(this.livestockToken||0)+1;
+  }
+
+  moveToTarget(target, callback, retries = 0) {
     if (!this.player || !target) return;
-    this.player.moveTo(target, callback);
+    this.walkingRoute = { target, callback, retries };
+    this.collisionSystem.flushSceneObstacles?.();
+    const start = this.player.root.position;
+    const path = findWalkingPath(start, target, (x,z) => this.collisionSystem.isColliding(x,z,this.collisionSystem.playerRadius,this.currentVenue));
+    if (!path) { this.player.stop(); this.onStatus?.('Chưa tìm được đường tới điểm này. Hãy chọn vị trí gần lối vào.'); return false; }
+    const follow = index => this.player.moveTo(path[index], index + 1 < path.length ? () => follow(index + 1) : callback);
+    follow(0);
+    return true;
   }
 
   getDistanceTo(x, z) {
@@ -2036,8 +2174,8 @@ export class FarmWorld {
     this.player?.startFishingCast?.(options);
   }
 
-  setFishingPhase(phase, timeUntilBiteMs = null) {
-    this.player?.setFishingPhase?.(phase, timeUntilBiteMs);
+  setFishingPhase(phase, timeUntilBiteMs = null, fight = null) {
+    this.player?.setFishingPhase?.(phase, timeUntilBiteMs, fight);
   }
 
   playFishingReel() {
@@ -2116,7 +2254,7 @@ export class FarmWorld {
         remote.metadata.fishingId=player.fishing.id;
         remote.metadata.fishingRig.startCast(player.fishing.castDistance,'basic_cast',player.fishing.target);
       }
-      if(player.fishing) remote.metadata.fishingRig.setPhase(player.fishing.phase==='fighting'?'reel':serverTime>=player.fishing.biteAt?'bite':'waiting');
+      if(player.fishing) remote.metadata.fishingRig.setPhase(player.fishing.phase==='fighting'?'reel':serverTime>=player.fishing.biteAt?'bite':'waiting',player.fishing.biteAt-serverTime,{...player.fishing,serverOffset:serverTime-Date.now()});
       else if(remote.metadata.fishingId){remote.metadata.fishingId=null;remote.metadata.fishingRig.dispose();remote.metadata.fishingRig=null;}
       remote.setEnabled(this.currentVenue ? remote.metadata.venue === this.currentVenue : !remote.metadata.venue);
       remote.metadata.target.set(player.x, effectiveY, player.z);
@@ -2214,10 +2352,10 @@ export class FarmWorld {
     const venue = VENUES[kind];
     if (!venue || !this.player || this.currentVenue) return;
     if (!this.venueMeshesMap.has(kind)) {
-      this.onStatus?.(`Đang dựng nội thất ${venue.label}…`);
+      this.onStatus?.(`Đang mở cửa ${venue.label}…`);
       this.ensureVenueBuilt(kind).then(() => {
         if (!this.scene.isDisposed) this.completeVenueEntry(kind);
-      }).catch(error => this.callbacks.onFatalError?.(`Không thể dựng cửa hàng: ${error.message}`));
+      }).catch(error => this.callbacks.onFatalError?.('Chưa thể mở cửa hàng. Hãy thử lại sau nhé.'));
       return;
     }
     this.lastVenueTransition = performance.now();
@@ -2589,12 +2727,13 @@ export class FarmWorld {
       bootTimings: this.bootTimings || null,
       fps: Math.round(this.engine.getFps()),
       graphicsQuality: this.graphicsQuality,
+      fpsLimit: this.engine.maxFPS,
       renderWidth: this.engine.getRenderWidth(),
       renderHeight: this.engine.getRenderHeight(),
       nativeDpr: window.devicePixelRatio || 1,
       renderDpr: this.engine.getRenderWidth() / Math.max(1, this.canvas.clientWidth),
-      antialiasSamples: this.cinematic?.pipeline?.samples ?? 1,
-      fxaa: this.cinematic?.pipeline?.fxaaEnabled ?? false,
+      antialiasSamples: this.cinematic?.fxaa?.samples ?? this.cinematic?.pipeline?.samples ?? 1,
+      fxaa: Boolean(this.cinematic?.fxaa || this.cinematic?.pipeline?.fxaaEnabled),
       sharpen: this.cinematic?.pipeline?.sharpenEnabled ?? false,
       resolutionScale: (this.graphicsQuality === 'auto' ? this.autoGraphics.scale : this.resolutionController.scale).toFixed(2),
       x: position.x.toFixed(1),
@@ -2638,7 +2777,7 @@ export class FarmWorld {
     if (!layout || !Number.isFinite(Number(layout.version))) return;
     this.serverFarmLayout = layout;
     if (Number(layout.version) !== FARM_LOT_SPEC.version || Number(layout.activePlots) !== FARM_CONFIG.activePlots) {
-      this.onStatus?.('Bản đồ nông trại đang chờ phiên bản đồng bộ từ server.');
+      this.onStatus?.('Nông trại đang chuẩn bị. Bạn chờ một chút nhé.');
     }
   }
 
@@ -2650,9 +2789,21 @@ export class FarmWorld {
     this.farming?.applyRemoteSync(allFarms);
   }
 
+  syncOwnedLivestock(animals, pens, farmId = this.playerFarmId) {
+    this.ownedLivestock={animals,pens,farmId};
+    if (!farmId) return;
+    const building=this.farmBuildings?.get(farmId);
+    building?.herd?.sync(animals,pens);
+    // Account data can precede streamed geometry. Retain it and request the
+    // owner's detailed chunk; construction reads the same retained snapshot.
+    if (farmId===this.playerFarmId && this.farmChunks?.has(farmId)) {
+      this.ensureDetailedFarm(farmId,true,this.callbacks.getPlayerName?.() || building?.ownerName || 'Nông dân',this.homeTier || 1,building?.barnLevel || 1);
+    }
+  }
+
   applyPublicFarmScope(farms, crops) {
     this.publicFarms = farms;
-    for (const profile of farms) this.farmBuildings?.get(profile.farmId)?.herd?.sync(profile.livestock || [], profile.animalPens);
+    for (const profile of farms) this.farmBuildings?.get(profile.farmId)?.herd?.sync(profile.farmId===this.playerFarmId && this.ownedLivestock?.farmId===profile.farmId ? this.ownedLivestock.animals : profile.livestock || [], profile.farmId===this.playerFarmId && this.ownedLivestock?.farmId===profile.farmId ? this.ownedLivestock.pens : profile.animalPens);
     // Network scope is data visibility, not permission to synchronously construct
     // every estate in a single WebSocket callback. Nearby non-owned estates are
     // promoted one per second by the render scheduler.
@@ -2668,6 +2819,10 @@ export class FarmWorld {
     }
     this.updateFarmSigns(this.remotePlayerState || []);
     this.applyRemoteFarmSync(crops);
+    if(this.livestockTarget && !this.livestockTarget.isOwner){
+      const animal=this.farmBuildings?.get(this.livestockTarget.farmId)?.herd?.members.get(this.livestockTarget.id)?.animal;
+      this.livestockTarget={...this.livestockTarget,animal};if(!this.livestockWorking)this.callbacks.onLivestockInteract?.(this.livestockTarget);
+    }
   }
 
   setPlayerFarmId(farmId, spawnPoint = null) {
@@ -2700,7 +2855,7 @@ export class FarmWorld {
     if (nextVenue && !this.venueMeshesMap.has(nextVenue)) {
       this.ensureVenueBuilt(nextVenue).then(() => {
         if (!this.scene.isDisposed && this.currentVenue === nextVenue) this.setVenueView(nextVenue);
-      }).catch(error => this.callbacks.onFatalError?.(`Không thể khôi phục nội thất: ${error.message}`));
+      }).catch(error => this.callbacks.onFatalError?.('Chưa thể mở cửa hàng. Hãy thử lại sau nhé.'));
     } else this.setVenueView(nextVenue);
     this.callbacks.onVenueState?.(nextVenue, nextVenue ? VENUES[nextVenue].label : null);
   }
@@ -2828,7 +2983,8 @@ export class FarmWorld {
 
     const herd = new OwnedHerd(scene, corral.root);
     const herdProfile = world.publicFarms?.find(profile => profile.farmId === farmId);
-    herd.sync(herdProfile?.livestock || [], herdProfile?.animalPens);
+    const owned = farmId===world.playerFarmId && world.ownedLivestock?.farmId===farmId ? world.ownedLivestock : null;
+    herd.sync(owned?.animals || herdProfile?.livestock || [], owned?.pens || herdProfile?.animalPens);
     world.farmBuildings.set(farmId, {
       herd,
       home,
@@ -2869,25 +3025,6 @@ export class FarmWorld {
       const owner = isOwner ? myName : available ? '' : (remoteOwner?.name || registeredFarm?.userName || registeredFarm?.name || listing?.userName || (listing ? 'Đang giao dịch' : ''));
       gate.updateSign({ owner, isOwner, available, price: available ? listing.price : null, lotNumber: gate.lotNumber });
     });
-  }
-
-  openNearbyLand() {
-    if (!this.player || this.currentVenue) return false;
-    const pos = this.player.root.position;
-    let nearest = null;
-    let minDistance = 4.8;
-    this.farmGates?.forEach(gate => {
-      if (gate.farmId === this.playerFarmId) return;
-      const gatePos = gate.root.getAbsolutePosition();
-      const distance = Math.hypot(pos.x - gatePos.x, pos.z - gatePos.z);
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearest = gate;
-      }
-    });
-    if (!nearest) return false;
-    this.callbacks.onLandInteract?.(nearest.farmId);
-    return true;
   }
 
   setLandListings(lots) {

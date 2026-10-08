@@ -3,9 +3,9 @@ import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { MongoClient } from 'mongodb';
 import { WebSocket } from 'ws';
-import { farmTilePosition } from '../shared/farmLayout.js';
+import { farmTilePosition, FARM_LOT_SPEC } from '../shared/farmLayout.js';
 import { CROPS } from '../shared/farmConfig.js';
-import { firstLandPurchasePrice } from '../shared/landConfig.js';
+import { firstLandPurchasePrice, LAND_CONFIG } from '../shared/landConfig.js';
 
 // Only an isolated, generated test database is used; never touches live player data.
 const databaseName = `farm_land_test_${randomUUID().replaceAll('-', '')}`;
@@ -54,8 +54,11 @@ try {
   assert.equal(a.welcome.farmId, null); assert.equal(a.welcome.spawn.x, 0); assert.equal(a.welcome.spawn.z, 42);
   assert.equal(a.account.progress.unlockedPlots, 0); assert.deepEqual(a.account.progress.ownedHomes, []);
   assert.equal(await db.collection('farm_assignments').countDocuments(), 0);
+  a.socket.send(JSON.stringify({type:'land_market'}));
+  const marketReply = await a.wait(m=>m.type==='land_market');
+  assert.equal(marketReply.lots.length,288,'market can load without nearby farms');
   const initialMarket = await a.wait(m => m.type === 'farm_scope' && m.lots);
-  const cheapBeforeCreation = initialMarket.lots.find(l => l.price === 150);
+  const cheapBeforeCreation = initialMarket.lots.find(l => l.price === LAND_CONFIG.minPrice);
   assert.equal((await a.action('buy_land', { farmId: cheapBeforeCreation.farmId })).type, 'action_error');
   assert.equal(await db.collection('farm_assignments').countDocuments(), 0);
   assert.equal((await a.action('claim_seeds')).type, 'action_error');
@@ -70,11 +73,14 @@ try {
   assert.equal(new Set(lots.map(l => l.farmId)).size, 288);
   const ordered = [...lots].sort((x, y) => Math.hypot(x.x, x.z) - Math.hypot(y.x, y.z));
   for (let i = 1; i < ordered.length; i++) assert.ok(ordered[i - 1].price >= ordered[i].price);
-  const cheapest = ordered.at(-1); assert.equal(cheapest.price, 150);
-  const starterOption = lots.find(lot => lot.price === 500 && lot.available);
+  const cheapest = ordered.at(-1); assert.equal(cheapest.price, LAND_CONFIG.minPrice);
+  const starterOption = lots.find(lot => lot.price > LAND_CONFIG.minPrice && lot.available);
   assert.ok(starterOption, 'an additional affordable starter option exists');
   assert.equal((await a.action('buy_land', { farmId: ordered[0].farmId, price: 0 })).type, 'action_error');
   assert.equal((await a.action('buy_land', { farmId: 'farm_999999', price: 0 })).type, 'action_error');
+  const startingFunds = LAND_CONFIG.maxPrice + 250;
+  // Isolated affordability fixture; this test validates spending/ownership, not earnings speed.
+  await db.collection('players').updateMany({playerId:{$in:[a.playerId,b.playerId]}},{$set:{'progress.coins':startingFunds}});
   const race = await Promise.all([a.action('buy_land', { farmId: cheapest.farmId, price: 0 }), b.action('buy_land', { farmId: cheapest.farmId, price: 0 })]);
   assert.equal(race.filter(r => r.type === 'account_state').length, 1);
   assert.equal(race.filter(r => r.type === 'action_error').length, 1);
@@ -82,27 +88,28 @@ try {
   const loser = winner === a ? b : a;
   const starterBuyer = await connect();
   assert.equal((await starterBuyer.action('character_create', { name: 'Starter Buyer' })).type, 'account_state');
+  await db.collection('players').updateOne({playerId:starterBuyer.playerId},{$set:{'progress.coins':startingFunds}});
   assert.equal((await starterBuyer.action('buy_land', { farmId: starterOption.farmId, price: 0 })).type, 'account_state');
   const starterReceipt = await db.collection('farm_assignments').findOne({ playerId: starterBuyer.playerId });
   assert.equal(starterReceipt.purchasePrice, firstLandPurchasePrice(starterOption.price));
-  assert.equal((await db.collection('players').findOne({ playerId: starterBuyer.playerId })).progress.coins, 180 - starterReceipt.purchasePrice);
+  assert.equal((await db.collection('players').findOne({ playerId: starterBuyer.playerId })).progress.coins, startingFunds - starterReceipt.purchasePrice);
   const owner = await db.collection('farm_assignments').findOne({ playerId: winner.playerId });
-  assert.equal(owner.status, 'owned'); assert.equal(owner.purchasePrice, 150);
+  assert.equal(owner.status, 'owned'); assert.equal(owner.purchasePrice, cheapest.price);
   const winnerDoc = await db.collection('players').findOne({ playerId: winner.playerId });
   const loserDoc = await db.collection('players').findOne({ playerId: loser.playerId });
-  assert.equal(winnerDoc.progress.coins, 30); assert.equal(loserDoc.progress.coins, 180);
-  assert.equal(winnerDoc.progress.unlockedPlots, 12); assert.equal(winnerDoc.progress.homeTier, 1);
+  assert.equal(winnerDoc.progress.coins, startingFunds - cheapest.price); assert.equal(loserDoc.progress.coins, startingFunds);
+  assert.equal(winnerDoc.progress.unlockedPlots, 4); assert.equal(winnerDoc.progress.homeTier, 1);
   assert.equal((await winner.action('buy_land', { farmId: ordered[1].farmId })).type, 'action_error');
   assert.equal((await winner.action('claim_seeds')).type, 'account_state');
   const rejoined = await connect(winner.playerId, winner.token);
   assert.equal(rejoined.welcome.farmId, cheapest.farmId);
-  assert.equal(rejoined.account.progress.coins, 80);
+  assert.equal(rejoined.account.progress.coins, startingFunds - cheapest.price + 50);
   const scope = await rejoined.wait(m => m.type === 'farm_scope' && m.lots);
   assert.equal(scope.lots.find(l => l.farmId === cheapest.farmId).userName, winner === a ? 'Buyer A' : 'Buyer B');
   // Exercise real websocket farm actions from the purchased parcel, without
   // teleporting a live user or waiting minutes for a crop in the test fixture.
   const tile = farmTilePosition(Number(cheapest.farmId.slice(-6)), '0:0');
-  await db.collection('players').updateOne({ playerId: winner.playerId }, { $set: { position: { ...tile, y: 0, rotation: 0, villageId: cheapest.villageId, layoutVersion: 7 } } });
+  await db.collection('players').updateOne({ playerId: winner.playerId }, { $set: { position: { ...tile, y: 0, rotation: 0, villageId: cheapest.villageId, layoutVersion: FARM_LOT_SPEC.version } } });
   const farmer = await connect(winner.playerId, winner.token);
   const farm = async (action, extra = {}) => {
     const requestId = randomUUID();
@@ -122,10 +129,32 @@ try {
   const amount = harvested.progress.inventory.carrot - (baseline.inventory.carrot || 0);
   assert.ok(amount > 0);
   assert.equal((await farm('harvest')).type, 'action_error', 'Cannot harvest twice');
+  // Complete the actual tutorial sequence before selling the next normal crop.
+  assert.equal(harvested.progress.onboarding.step,3);
+  assert.equal((await farmer.action('complete_onboarding')).type,'action_error');
+  const dailyBefore=structuredClone(harvested.progress.missions.daily);
+  assert.equal((await farmer.action('advance_onboarding',{step:4})).type,'account_state');
+  const delivery=await farmer.action('deliver_order',{id:'starter'});
+  assert.equal(delivery.type,'account_state',delivery.message);
+  assert.equal(delivery.progress.coins,harvested.progress.coins+65);
+  assert.equal(delivery.progress.inventory.carrot,harvested.progress.inventory.carrot-1);
+  const completion=await farmer.action('complete_onboarding');
+  assert.equal(completion.type,'account_state',completion.message);
+  assert.equal(completion.progress.coins,delivery.progress.coins+200);
+  assert.equal(completion.progress.onboarding.completed,true);
+  assert(completion.progress.ownedVehicles.includes('bike'));
+  assert.deepEqual(completion.progress.missions.daily,dailyBefore,'farm tutorial cannot reroll daily');
+  assert.equal((await farmer.action('complete_onboarding')).type,'action_error');
+  assert.equal((await farmer.action('claim_seeds')).type,'action_error');
+  const secondPlant=await farm('plant');assert.equal(secondPlant.type,'account_state');
+  assert.equal((await farm('water')).type,'account_state');
+  await db.collection('crops').updateOne({ villageId: cheapest.villageId, farmId: storedFarmId, tileKey:'0:0' },{$set:{wateredAt:Date.now()-CROPS.carrot.growMs-1000}});
+  const normalHarvest=await farm('harvest');assert.equal(normalHarvest.type,'account_state');
+  const sellAmount=normalHarvest.progress.inventory.carrot;
   for (const invalid of [1.5, -1, 0, 100, 'invalid']) assert.equal((await farmer.action('sell_item', { id: 'carrot', amount: invalid })).type, 'action_error');
-  const sold = await farmer.action('sell_item', { id: 'carrot', amount });
+  const sold = await farmer.action('sell_item', { id: 'carrot', amount: sellAmount });
   assert.equal(sold.type, 'account_state', sold.message);
-  assert.equal(sold.progress.coins, harvested.progress.coins + amount * CROPS.carrot.sellPrice);
+  assert.equal(sold.progress.coins, normalHarvest.progress.coins + sellAmount * CROPS.carrot.sellPrice);
   assert.equal(sold.progress.inventory.carrot, baseline.inventory.carrot || 0);
   const persisted = await connect(winner.playerId, winner.token);
   assert.equal(persisted.account.progress.coins, sold.progress.coins);
@@ -149,7 +178,7 @@ try {
   await db.collection('farm_assignments').insertOne({ playerId: loser.playerId, villageId: ordered[0].villageId, lot: ordered[0].lot });
   const legacy = await connect(loser.playerId, loser.token);
   assert.equal(legacy.welcome.farmId, ordered[0].farmId);
-  assert.equal(legacy.account.progress.coins, 180);
+  assert.equal(legacy.account.progress.coins, startingFunds);
   assert.equal((await legacy.action('buy_land', { farmId: ordered[1].farmId })).type, 'action_error');
   console.log('PASS: no free farm, 288 priced parcels, server price, insufficient funds, competing buyers, ownership/name, reconnect, farming gate, crash recovery.');
 } finally {

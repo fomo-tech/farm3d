@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {simulateNewPlayerJourney} from './economy/newPlayerJourney.js';
+import {simulateCombinedFarm} from './economy/combinedFarmSimulation.js';
+import {simulatePreLand} from './economy/preLandSimulation.js';
+import {getAttendanceStatus} from '../shared/dailyAttendance.js';
+const income=['cropSales','animalSales','craftedSales','orders','attendance','legacyRewards','mainRewards','dailyRewards'];
+const expense=['seeds','pens','animals','feed','reset','expansion'];
+for(const minutesPerDay of [30,60,120]){
+ const r=simulateNewPlayerJourney({minutesPerDay,days:7});
+ assert(r.purchase&&r.farm);
+ assert.equal(r.pre.coins,r.purchase.coins);
+ assert(r.purchase.progress.xp>0,'Fishing XP must carry into farming');
+ assert.equal(r.farm.coins,r.tutorial.coinsAfter+income.reduce((s,k)=>s+r.farm.ledger[k],0)-expense.reduce((s,k)=>s+r.farm.ledger[k],0));
+ assert.equal(r.tutorial.coinsAfter,r.purchase.coins-r.pre.landPrice+315);
+ assert(r.pre.firstAffordable.activeMinutes+10+r.farm.rows.at(-1).activeMinutes<=minutesPerDay*7+.01,'Shared daily time budget');
+ assert(r.farm.minCoins>=0);assert(r.farm.rows.every(row=>row.inventoryCount<=r.farm.capacity));
+ assert(r.farm.progress.stats.harvested>=r.farm.harvests+1,'Tutorial counters preserved');
+ assert(r.farm.ledger.attendance<=1220,'No attendance twice a day');
+ assert(r.milestones[5]&&r.milestones[8]);
+ assert(r.milestones[5].calendarDay>=Math.floor(r.purchase.calendarHours/24)+1);
+}
+const pre=simulatePreLand({sessionMinutes:60,sessions:10,stopAtLand:true});
+assert(pre.firstAffordable.progress.communityRewards);
+const now=pre.firstAffordable.at;
+assert(getAttendanceStatus(pre.firstAffordable.progress.communityRewards.daily,now).claimedToday);
+const farm=simulateCombinedFarm({initialProgress:pre.firstAffordable.progress,initialXp:pre.firstAffordable.progress.xp,initialCoins:250,sessions:2,sessionMinutes:1,includeRewards:true,schedule:[{startAt:now,minutes:1},{startAt:now+3600000,minutes:1}]});
+assert.equal(farm.ledger.attendance,0,'Already claimed day must remain claimed across handoff and same-day sessions');
+const free=simulateCombinedFarm({initialProgress:{freeSeeds:2},initialCoins:0,initialXp:0,sessions:1,sessionMinutes:.5,mode:'crops'});
+assert.equal(free.ledger.seeds,0);assert.equal(free.progress.stats.planted,2);assert.equal(free.coins,0);
+assert.throws(()=>simulateNewPlayerJourney({minutesPerDay:0}));
+assert.throws(()=>simulateCombinedFarm({sessions:1,schedule:[{startAt:0,minutes:-1}]}));
+console.log('PASS new-player journey: one wallet/time budget, real reward/XP carry, no duplicate attendance, tutorial counters/free seeds, expansion milestones and schedule validation.');

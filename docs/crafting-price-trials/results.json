@@ -1,0 +1,174 @@
+[
+  {
+    "policy": "current",
+    "recipes": [
+      {
+        "id": "flour",
+        "name": "Bột mì",
+        "rawValue": 60,
+        "sell": 18,
+        "margin": -42,
+        "npcCost": 84,
+        "npcMargin": -66,
+        "wholePackMaxProfit": -132,
+        "workshopPaybackCrafts": null,
+        "safeNpcLoop": true
+      },
+      {
+        "id": "cheese",
+        "name": "Phô mai",
+        "rawValue": 80,
+        "sell": 35,
+        "margin": -45,
+        "npcCost": null,
+        "npcMargin": null,
+        "wholePackMaxProfit": null,
+        "workshopPaybackCrafts": null,
+        "safeNpcLoop": null
+      },
+      {
+        "id": "jam",
+        "name": "Mứt dâu",
+        "rawValue": 240,
+        "sell": 55,
+        "margin": -185,
+        "npcCost": 336,
+        "npcMargin": -281,
+        "wholePackMaxProfit": -281,
+        "workshopPaybackCrafts": null,
+        "safeNpcLoop": true
+      }
+    ],
+    "orderCycleMargin": -32.39999999999998,
+    "verifiedNoNpcProfit": true
+  },
+  {
+    "policy": "premium10",
+    "recipes": [
+      {
+        "id": "flour",
+        "name": "Bột mì",
+        "rawValue": 60,
+        "sell": 66,
+        "margin": 6,
+        "npcCost": 84,
+        "npcMargin": -18,
+        "wholePackMaxProfit": -36,
+        "workshopPaybackCrafts": null,
+        "safeNpcLoop": true
+      },
+      {
+        "id": "cheese",
+        "name": "Phô mai",
+        "rawValue": 80,
+        "sell": 88,
+        "margin": 8,
+        "npcCost": null,
+        "npcMargin": null,
+        "wholePackMaxProfit": null,
+        "workshopPaybackCrafts": null,
+        "safeNpcLoop": null
+      },
+      {
+        "id": "jam",
+        "name": "Mứt dâu",
+        "rawValue": 240,
+        "sell": 264,
+        "margin": 24,
+        "npcCost": 336,
+        "npcMargin": -72,
+        "wholePackMaxProfit": -72,
+        "workshopPaybackCrafts": null,
+        "safeNpcLoop": true
+      }
+    ],
+    "orderCycleMargin": -32.39999999999998,
+    "verifiedNoNpcProfit": true
+  },
+  {
+    "policy": "premium20",
+    "recipes": [
+      {
+        "id": "flour",
+        "name": "Bột mì",
+        "rawValue": 60,
+        "sell": 72,
+        "margin": 12,
+        "npcCost": 84,
+        "npcMargin": -12,
+        "wholePackMaxProfit": -24,
+        "workshopPaybackCrafts": null,
+        "safeNpcLoop": true
+      },
+      {
+        "id": "cheese",
+        "name": "Phô mai",
+        "rawValue": 80,
+        "sell": 96,
+        "margin": 16,
+        "npcCost": null,
+        "npcMargin": null,
+        "wholePackMaxProfit": null,
+        "workshopPaybackCrafts": null,
+        "safeNpcLoop": null
+      },
+      {
+        "id": "jam",
+        "name": "Mứt dâu",
+        "rawValue": 240,
+        "sell": 288,
+        "margin": 48,
+        "npcCost": 336,
+        "npcMargin": -48,
+        "wholePackMaxProfit": -48,
+        "workshopPaybackCrafts": null,
+        "safeNpcLoop": true
+      }
+    ],
+    "orderCycleMargin": -32.39999999999998,
+    "verifiedNoNpcProfit": true
+  },
+  {
+    "policy": "premium30",
+    "recipes": [
+      {
+        "id": "flour",
+        "name": "Bột mì",
+        "rawValue": 60,
+        "sell": 78,
+        "margin": 18,
+        "npcCost": 84,
+        "npcMargin": -6,
+        "wholePackMaxProfit": -12,
+        "workshopPaybackCrafts": null,
+        "safeNpcLoop": true
+      },
+      {
+        "id": "cheese",
+        "name": "Phô mai",
+        "rawValue": 80,
+        "sell": 104,
+        "margin": 24,
+        "npcCost": null,
+        "npcMargin": null,
+        "wholePackMaxProfit": null,
+        "workshopPaybackCrafts": null,
+        "safeNpcLoop": null
+      },
+      {
+        "id": "jam",
+        "name": "Mứt dâu",
+        "rawValue": 240,
+        "sell": 312,
+        "margin": 72,
+        "npcCost": 336,
+        "npcMargin": -24,
+        "wholePackMaxProfit": -24,
+        "workshopPaybackCrafts": null,
+        "safeNpcLoop": true
+      }
+    ],
+    "orderCycleMargin": -32.39999999999998,
+    "verifiedNoNpcProfit": true
+  }
+]

@@ -1,0 +1,43 @@
+/* Farm welcome screen: the world and one clear play action. */
+body .pt-start-screen-backdrop.cutecore-theme.farm-start-v2{background:radial-gradient(ellipse at 50% 38%,#33bbf8 0%,#1093ef 52%,#0277bd 88%,#01528c 100%)!important;isolation:isolate}
+body .farm-start-v2 .pt-start-center-content{gap:18px!important;max-width:600px!important;z-index:2}
+body .farm-start-v2 .pt-generated-logo-lockup{width:min(430px,80vw)!important;filter:drop-shadow(0 12px 18px #3b746a33)!important;animation:none!important}
+body .farm-start-v2 .pt-ready-action-stage{width:min(360px,90vw)!important;gap:16px!important;padding:22px!important;box-sizing:border-box;background:#fff9edf2;border:3px solid #fff;border-radius:32px;box-shadow:0 6px 0 #8aa68c55,0 18px 40px #3a6e6433}
+body .farm-start-v2 .game-auth-start-player{width:100%!important;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}
+body .farm-start-v2 .game-auth-start-copy small{display:none}
+body .farm-start-v2 .game-auth-start-copy b{color:#46614e}
+body .farm-start-v2 .game-auth-start-copy>span{color:#8c967e;font-size:11px}
+body .farm-start-v2 .pt-play-now-wrap{width:100%!important}
+body .farm-start-v2 .pt-play-now-btn{width:100%!important;min-height:64px!important;border:3px solid #fff!important;border-radius:22px!important;background:linear-gradient(#ffdc8c,#f3b866)!important;box-shadow:0 5px 0 #bc8e52,0 8px 12px #926d3422!important;animation:none!important}
+body .farm-start-v2 .pt-play-now-text{font-size:22px!important;color:#70512f!important;letter-spacing:.03em!important;white-space:nowrap}
+body .farm-start-v2 .pt-play-now-icon{color:#70512f!important}
+body .farm-start-v2 .pt-play-now-btn::before,body .farm-start-v2 .pt-play-now-btn::after{display:none!important}
+body .farm-start-v2 .pt-google-login-btn{width:100%!important;margin:0!important}
+body .farm-start-v2 .pt-loading-console{width:min(350px,85vw)!important;background:#fff9eddd;padding:20px;border:2px solid white;border-radius:24px;box-sizing:border-box}
+body .farm-start-v2 .pt-jelly-track{background:#b6c9ad!important;border-color:#fff!important;box-shadow:inset 0 2px 3px #526b4433!important}
+body .farm-start-v2 .pt-status-msg{color:#476654!important;text-shadow:none!important;font-size:12px!important}
+body .farm-start-v2 .pt-progress-pct-bubble{background:#fff4d4!important;color:#755b35!important;border-color:white!important}
+@media(max-width:600px){body .farm-start-v2 .pt-generated-logo-lockup{width:min(330px,84vw)!important}.farm-start-prop{width:100px;bottom:3%}.prop-left{left:-16px}.prop-right{right:-16px}.farm-start-sun{width:68px;height:68px;top:8%;right:7%}body .farm-start-v2 .pt-ready-action-stage{padding:18px!important;gap:12px!important}}
+@media(max-height:520px) and (min-width:601px){body .farm-start-v2 .pt-start-center-content{max-width:800px!important;flex-direction:row!important;gap:30px!important}body .farm-start-v2 .pt-generated-logo-lockup{width:320px!important}body .farm-start-v2 .pt-ready-action-stage{width:320px!important;padding:16px!important;gap:10px!important}}
+@media(prefers-reduced-motion:reduce){body .farm-start-v2 *{animation:none!important;transition:none!important}}
+body .farm-start-v2 .pt-start-center-content{margin:0!important;gap:12px!important}
+body .farm-start-v2 .pt-generated-logo-lockup{width:min(340px,72vw)!important}
+body .farm-start-v2 .pt-ready-action-stage{margin:0!important;padding:18px!important;gap:12px!important}
+body .farm-start-v2 .pt-google-login-btn>*{min-width:0!important;width:100%!important;max-width:100%!important;box-sizing:border-box}
+body .farm-start-v2 .pt-google-login-btn small{font-size:10px!important;color:#899480!important;text-shadow:none!important}
+@media(max-width:600px){body .farm-start-v2 .pt-generated-logo-lockup{width:min(300px,72vw)!important}}
+@media(max-height:520px) and (min-width:601px){body .farm-start-v2 .pt-generated-logo-lockup{width:280px!important}}
+body .farm-start-v2 .pt-google-login-btn button{min-width:0!important;width:100%!important;max-width:100%!important;box-sizing:border-box;border-radius:16px!important}
+
+/* Loading stays light on the blue splash: no opaque panel around the bar. */
+body .pt-start-screen-backdrop.farm-start-v2 .pt-loading-console{width:min(420px,86vw)!important;background:transparent!important;border:0!important;border-radius:0!important;padding:0 4px!important;gap:12px!important;box-shadow:none!important;margin-top:20px!important}
+.start-loading-caption{display:flex;align-items:center;gap:9px;width:100%;color:#fff;font-size:14px;font-weight:800;text-shadow:0 2px 3px #035a9866}
+.start-loading-caption img{width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 2px 2px #035a9855)}
+.start-loading-caption b{margin-left:auto;color:#fff3bf;font-size:18px;font-variant-numeric:tabular-nums}
+body .pt-start-screen-backdrop.farm-start-v2 .pt-jelly-track-wrapper{width:100%!important}
+body .pt-start-screen-backdrop.farm-start-v2 .pt-jelly-track{box-sizing:border-box;height:28px!important;padding:3px!important;border:3px solid #ecfbff!important;background:#076ba9!important;box-shadow:0 4px 0 #025b97,inset 0 2px 4px #00385c66,0 8px 20px #004c8722!important}
+body .pt-start-screen-backdrop.farm-start-v2 .pt-jelly-fill{background:linear-gradient(#ffe99c,#ffc74e 60%,#f7a932)!important;box-shadow:inset 0 2px 0 #fff4cb,inset 0 -2px 0 #df922b!important;min-width:0}
+body .pt-start-screen-backdrop.farm-start-v2 .pt-candy-stripes{opacity:.35}
+body .pt-start-screen-backdrop.farm-start-v2 .pt-status-msg{color:#e2f6ff!important;text-shadow:0 1px 2px #045f9955!important;font-size:12px!important;font-weight:600!important}
+body .pt-start-screen-backdrop.farm-start-v2 .pt-loading-status-bar{min-height:20px;max-width:100%;line-height:1.5}
+@media(max-height:520px) and (min-width:601px){body .pt-start-screen-backdrop.farm-start-v2 .pt-loading-console{width:min(340px,45vw)!important}}

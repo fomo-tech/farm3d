@@ -81,3 +81,22 @@ export function restoreGuestIdentity() {
   safeStorageSet(sessionStore, SESSION_KEY, JSON.stringify(profile));
   return true;
 }
+
+export function leaveWorldSession({ deleted = false } = {}) {
+  const localStore = getBrowserStorage('localStorage');
+  const sessionStore = getBrowserStorage('sessionStorage');
+  const current = loadWorldSession();
+  if (!deleted) {
+    if (current.googleLinked) restoreGuestIdentity();
+    const guest = loadWorldSession();
+    return saveWorldSession({ ...guest, signedOut: true });
+  }
+  for (const key of [profileKey(current.playerId), STORAGE_KEY, PLAYER_ID_KEY]) {
+    try { localStore?.removeItem(key); } catch {}
+  }
+  if (safeStorageGet(localStore, GUEST_ID_KEY) === current.playerId) {
+    try { localStore?.removeItem(GUEST_ID_KEY); } catch {}
+  }
+  try { sessionStore?.removeItem(SESSION_KEY); } catch {}
+  return loadWorldSession();
+}

@@ -3,7 +3,7 @@
   "short_name": "Vibe City",
   "start_url": "/",
   "display": "fullscreen",
-  "orientation": "landscape",
-  "background_color": "#dbeafe",
-  "theme_color": "#dbeafe"
+  "orientation": "any",
+  "background_color": "#0277bd",
+  "theme_color": "#0277bd"
 }

@@ -1,3 +1,4 @@
+import { farmTileKeys } from '../shared/landExpansionConfig.js';
 import assert from 'node:assert/strict';
 import { MongoClient } from 'mongodb';
 import { randomUUID } from 'node:crypto';
@@ -10,7 +11,7 @@ try {
   const store = await import('../server/GameStore.js'); await store.initGameStore();
   await store.authenticate('owner', null); await store.authenticate('visitor', null);
   const db = mongo.db(databaseName);
-  await db.collection('players').updateOne({ playerId:'owner' }, { $set: { 'progress.coins': 5000, 'progress.barnLevel': 2 } });
+  await db.collection('players').updateOne({ playerId:'owner' }, { $set: { 'progress.coins': 5000, 'progress.barnLevel': 2, 'progress.unlockedTileKeys': farmTileKeys() } });
   await db.collection('farm_assignments').insertOne({ playerId:'owner', villageId:'binh-minh', lot:1, status:'owned' });
   const context = { farmId:'farm_000001', villageId:'binh-minh' };
   assert.ok((await store.performAction('visitor','build_pen',{species:'cow'},context)).error);
@@ -18,19 +19,56 @@ try {
     assert.ok(!(await store.performAction('owner','build_pen',{species},context)).error);
     assert.ok(!(await store.performAction('owner','buy_animal',{species, price:0},context)).error);
   }
+  // Old erroneous footprint records must no longer reserve crop tiles.
+  await db.collection('players').updateOne({playerId:'owner'},{$set:{'progress.farmBuildings':{'pen:chicken':{tiles:['0:0','1:0']}}}});
+  assert.ok(!(await store.farmAction('owner','binh-minh','farm_000001',{farmId:'farm_000001',tileKey:'0:0',action:'till'})).error);
+  assert.ok(!(await store.farmAction('owner','binh-minh','farm_000001',{farmId:'farm_000001',tileKey:'0:0',action:'plant',crop:'carrot'})).error);
   assert.ok(!(await store.performAction('owner','feed_animals',{},context)).error);
   assert.ok((await store.performAction('owner','feed_animals',{},context)).error);
   const before = await db.collection('players').findOne({playerId:'owner'});
   await db.collection('players').updateOne({playerId:'owner'},{$set:{livestock:before.livestock.map(a=>({...a,productReadyAt:Date.now()-1}))}});
   const collected = await store.performAction('owner','collect_animals',{},context);
-  assert.equal(collected.player.progress.inventory.duckEgg,1);
+  assert.equal(collected.result.livestockAction,'collect_animals');
+  assert.equal(collected.player.progress.inventory.duckEgg,4);
   assert.equal(collected.player.progress.inventory.maturePig,undefined);
   const pig = collected.player.livestock.find(a=>a.species==='pig');
   assert.ok(!(await store.performAction('owner','sell_animal',{id:pig.id},context)).error);
   assert.ok((await store.performAction('owner','sell_animal',{id:pig.id},context)).error);
   assert.ok(!(await store.performAction('owner','sell_livestock_product',{id:'duckEgg'},context)).error);
+  await db.collection('players').updateOne({playerId:'owner'},{$set:{'progress.inventory.wheat':2},$unset:{'progress.farmBuildings.workshop':''}});
+  assert.ok(!(await store.performAction('owner','craft',{id:'flour'},context)).error);
+  assert.ok((await store.performAction('owner','build_workshop',{anchor:'4:0'},context)).error);
   const profiles = await store.loadPublicFarmProfiles(['owner']);
   assert.equal(profiles[0].livestock.length,3);
+  assert.ok(profiles[0].livestock.every(a=>a.createdAt&&a.lifeVersion===1&&a.matureAt),'Public herd preserves growth/life timestamps');
+  const old=collected.player.livestock.find(a=>a.species==='chicken');
+  await db.collection('players').updateOne({playerId:'owner'},{$set:{livestock:[{...old,createdAt:Date.now()-8*86400000,productReadyAt:0}]}});
+  assert.ok((await store.performAction('owner','feed_animals',{id:old.id},context)).error);
+  const retired=await store.performAction('owner','retire_animal',{id:old.id},context);
+  assert.equal(retired.result.livestockAction,'retire_animal');assert.equal(retired.player.livestock.length,0);
+  const {APPLE_ORCHARD,appleTreePosition}=await import('../shared/appleOrchard.js');
+  const point=appleTreePosition('farm_000001');
+  const appleContext={...context,...point,farmId:'farm_000001'};
+  assert.equal((await db.collection('farm_assignments').findOne({playerId:'owner'})).farmId,undefined,'real stored assignment has no farmId field');
+  await db.collection('players').updateOne({playerId:'owner'},{$set:{'progress.inventory':{},'progress.appleReadyAt':Date.now()-1}});
+  assert.ok((await store.performAction('visitor','harvest_apples',{},appleContext)).error);
+  assert.ok((await store.performAction('owner','harvest_apples',{},{...appleContext,x:point.x+10})).error);
+  assert.ok((await store.performAction('owner','harvest_apples',{},{...appleContext,venue:'fishing'})).error);
+  const appleResults=await Promise.all([store.performAction('owner','harvest_apples',{},appleContext),store.performAction('owner','harvest_apples',{},appleContext)]);
+  assert.equal(appleResults.filter(r=>!r.error).length,1,'only one concurrent harvest succeeds');
+  let applePlayer=await store.loadPlayer('owner');
+  assert.equal(applePlayer.progress.inventory.apple,10);
+  assert.ok(applePlayer.progress.appleReadyAt>Date.now()+APPLE_ORCHARD.cycleMs-10000);
+  assert.ok((await store.performAction('owner','harvest_apples',{},appleContext)).error);
+  const coinsBefore=applePlayer.progress.coins;
+  assert.ok(!(await store.performAction('owner','sell_livestock_product',{id:'apple'},appleContext)).error);
+  applePlayer=await store.loadPlayer('owner');
+  assert.equal(applePlayer.progress.coins,coinsBefore+9);assert.equal(applePlayer.progress.inventory.apple,9);
+  await db.collection('players').updateOne({playerId:'owner'},{$set:{'progress.appleReadyAt':Date.now()-1,'progress.inventory':{wheat:40}}});
+  assert.ok((await store.performAction('owner','harvest_apples',{},appleContext)).error);
+  assert.ok((await store.loadPlayer('owner')).progress.appleReadyAt<Date.now());
+  assert.ok((await store.loadPublicFarmProfiles(['owner']))[0].appleReadyAt<Date.now());
+  console.log('PASS Mongo apple orchard: ownership, proximity, venue, concurrent harvest, cooldown, warehouse, sale and public state');
   console.log('PASS live Mongo livestock: ownership, durable purchase/feed/collect/sale, public herd');
 } catch (error) { failed=true; console.error(error); }
 finally { if (mongo.topology?.isConnected()) await mongo.db(databaseName).dropDatabase(); await mongo.close(); }

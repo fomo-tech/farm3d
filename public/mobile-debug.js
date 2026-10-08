@@ -2,7 +2,9 @@
   const startedAt = Date.now();
   const entries = [];
   const params = new URLSearchParams(location.search);
-  const forced = params.get('debug') === '1' || params.get('mobileDebug') === '1';
+  const flagEnabled = key => params.has(key) && !['0', 'false', 'off'].includes((params.get(key) || '').toLowerCase());
+  const forced = flagEnabled('debug') || flagEnabled('mobileDebug');
+  document.documentElement.dataset.debug = String(forced);
   const isLan = /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(location.hostname);
   let panel;
   let body;
@@ -165,19 +167,20 @@
         this.textContent = 'Giữ vào báo cáo để sao chép';
       }
     };
-    if (!forced && !isLan) badge.style.display = 'none';
+    if (!forced) badge.style.display = 'none';
     render();
   }
 
   function render() {
     if (!body) return;
     body.innerHTML = `<div class="info">${escapeHtml(systemReport())}</div>` + entries.map(item =>
-      `<div class="error"><b>${item.time} · ${item.type}</b>\n${item.message.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c])}</div>`
+      `<div class="${['DEBUG LOG', 'BOOT'].includes(item.type) ? 'info' : 'error'}"><b>${item.time} · ${item.type}</b>\n${item.message.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c])}</div>`
     ).join('');
   }
 
   function report(type, value, detail) {
     const message = [textOf(value), detail ? textOf(detail) : ''].filter(Boolean).join('\n');
+    if (forced) console.info(`[debug:${type}]`, message);
     entries.push({ type, message, time: new Date().toLocaleTimeString('vi-VN') });
     if (entries.length > 30) entries.shift();
     try { localStorage.setItem('farm.lastDiagnostic', JSON.stringify({ stage: runtimeStage, snapshot: runtimeSnapshot, entries, time: Date.now() })); } catch { /* Storage may be disabled. */ }
@@ -191,10 +194,15 @@
     render();
   }
 
+  if (forced) console.debug = (...values) => report('DEBUG LOG', values.map(textOf).join(' '));
+
   window.__farmDebug = {
+    enabled: forced,
+    log(...values) { if (forced) report('DEBUG LOG', values.map(textOf).join(' ')); },
     mark(stage) {
       if (hasReachedReady) return;
       currentStage = stage;
+      if (forced) report('BOOT', stage);
       if (stage === 'Creating Babylon world') {
         const bootStartedAt = Date.now();
         setTimeout(() => {
@@ -238,7 +246,7 @@
       lastFrameAt = now;
     },
     stopFrames() { worldRunning = false; },
-    ready() { hasReachedReady = true; currentStage = 'World ready'; ensureUi(); if (entries.length === 0) panel?.classList.remove('visible'); render(); },
+    ready() { if (forced) report('BOOT', 'World ready'); hasReachedReady = true; currentStage = 'World ready'; ensureUi(); if (entries.length === 0) panel?.classList.remove('visible'); render(); },
     getReport() { return { stage: currentStage, runtimeStage, snapshot: runtimeSnapshot, metrics: { ...sessionMetrics }, react: window.__farmReactMetrics || null, slowCallbacks: slowCallbacks.slice(), animationFrames: animationFrames.slice(), entries: entries.slice(), system: systemReport() }; },
   };
 

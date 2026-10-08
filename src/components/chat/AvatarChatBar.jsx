@@ -1,3 +1,4 @@
+import { HudIcon } from '../icons3d/HudIcon.jsx';
 import React, { useState, useRef, useEffect } from 'react';
 import './AvatarChatBar.css';
 
@@ -47,6 +48,7 @@ const AVATAR_EMOJIS = [
 
 export function AvatarChatBar({ onSendChat, disabled = false }) {
   const [inputText, setInputText] = useState('');
+  const [mobileExpanded, setMobileExpanded] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [quickMenuOpen, setQuickMenuOpen] = useState(false);
   const [emojiMenuOpen, setEmojiMenuOpen] = useState(false);
@@ -101,7 +103,8 @@ export function AvatarChatBar({ onSendChat, disabled = false }) {
   };
 
   return (
-    <div className={`avatar-chat-bar-container ${isFocused ? 'focused' : ''}`}>
+    <div className={`avatar-chat-bar-container ${isFocused ? 'focused' : ''} ${mobileExpanded ? 'mobile-expanded' : ''}`}>
+      <button type="button" className="mobile-chat-toggle" aria-label={mobileExpanded ? 'Đóng trò chuyện' : 'Mở trò chuyện'} aria-expanded={mobileExpanded} onClick={() => { setMobileExpanded(value => !value); setQuickMenuOpen(false); setEmojiMenuOpen(false); }}><HudIcon mobile asset="chat" size={28}/></button>
       {/* 1. Popover Bảng Chat Nhanh Phong Cách Avatar */}
       {quickMenuOpen && (
         <div className="avatar-quick-chat-popover" role="dialog" aria-label="Bảng câu nói nhanh">
@@ -167,7 +170,7 @@ export function AvatarChatBar({ onSendChat, disabled = false }) {
             setEmojiMenuOpen(false);
           }}
         >
-          💬
+          <HudIcon mobile asset="chat" size={26} />
         </button>
 
         {/* Nút mở Emoji Chibi */}
@@ -180,7 +183,7 @@ export function AvatarChatBar({ onSendChat, disabled = false }) {
             setQuickMenuOpen(false);
           }}
         >
-          😄
+          <HudIcon asset="emote" size={26} />
         </button>
 
         {/* Ô nhập văn bản */}
@@ -188,7 +191,7 @@ export function AvatarChatBar({ onSendChat, disabled = false }) {
           ref={inputRef}
           type="text"
           className="avatar-chat-input"
-          placeholder="Nhấn Enter để chat hoặc chọn câu nói..."
+          placeholder="Trò chuyện…"
           maxLength={60}
           value={inputText}
           onChange={e => setInputText(e.target.value)}

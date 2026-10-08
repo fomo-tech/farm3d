@@ -168,7 +168,7 @@ export function CasinoTable({
         <div className="pt-top-center-status">
           <div className={`pt-phase-countdown-capsule phase-${round?.phase || 'waiting'} ${seconds > 0 && seconds <= 5 ? 'is-urgent' : ''}`}>
             {round?.phase === 'open' && <span className="pt-countdown-dot-pulse" />}
-            <span className="phase-text">{PHASES[round?.phase || 'waiting'] || 'Đang đồng bộ ván'}</span>
+            <span className="phase-text">{PHASES[round?.phase || 'waiting'] || 'Đang chuẩn bị ván mới'}</span>
             {seconds > 0 && round && (
               <span className="timer-badge">{seconds}s</span>
             )}

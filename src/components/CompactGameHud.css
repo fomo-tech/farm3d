@@ -43,30 +43,31 @@
 .compact-game-hud .pt-profile-card {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
-  padding: 3px 8px 3px 3px !important;
+  gap: 7px !important;
+  padding: 3px 10px 3px 3px !important;
   border-radius: 999px !important;
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 2.5px solid #ffffff !important;
-  box-shadow: 0 3px 0 #d97706, 0 6px 16px rgba(0, 0, 0, 0.12) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 3px 0 #cbd5e1, 0 8px 18px rgba(0, 0, 0, 0.08) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
   cursor: pointer !important;
   user-select: none !important;
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease !important;
   width: fit-content !important;
-  max-width: 155px !important;
+  max-width: 170px !important;
+  height: 42px !important;
   flex-shrink: 0 !important;
 }
 
 .compact-game-hud .pt-profile-card:hover {
-  transform: translateY(-2px) scale(1.03) !important;
-  box-shadow: 0 5px 0 #d97706, 0 10px 20px rgba(0, 0, 0, 0.16) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 5px 0 #cbd5e1, 0 12px 22px rgba(0, 0, 0, 0.12) !important;
 }
 
 .compact-game-hud .pt-profile-card:active {
-  transform: translateY(2px) scale(0.97) !important;
-  box-shadow: 0 1px 0 #d97706 !important;
+  transform: translateY(2px) scale(0.98) !important;
+  box-shadow: 0 1px 0 #cbd5e1 !important;
 }
 
 .compact-game-hud .pt-avatar-ring {
@@ -134,11 +135,11 @@
 
 .compact-game-hud .pt-player-name {
   font-family: 'Baloo 2', 'Nunito', system-ui, sans-serif !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 900 !important;
-  color: #1e293b !important;
+  color: #0f172a !important;
   letter-spacing: -0.01em !important;
-  max-width: 90px !important;
+  max-width: 100px !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
@@ -149,31 +150,32 @@
 .compact-game-hud .pt-exp-wrap {
   display: flex !important;
   align-items: center !important;
-  gap: 4px !important;
+  gap: 5px !important;
 }
 
 .compact-game-hud .pt-exp-track {
   flex: 1 !important;
-  height: 6px !important;
+  height: 6.5px !important;
   border-radius: 999px !important;
-  background: #e2e8f0 !important;
+  background: #f1f5f9 !important;
   border: 1px solid #cbd5e1 !important;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08) !important;
   overflow: hidden !important;
+  position: relative !important;
 }
 
 .compact-game-hud .pt-exp-jelly {
   height: 100% !important;
   border-radius: 999px !important;
-  background: linear-gradient(90deg, #34d399 0%, #10b981 50%, #059669 100%) !important;
-  box-shadow: 0 0 5px #34d399, inset 0 1px 0 rgba(255, 255, 255, 0.75) !important;
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
   transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
 .compact-game-hud .pt-exp-val {
-  font-size: 8px !important;
+  font-size: 8.5px !important;
   font-weight: 900 !important;
-  color: #065f46 !important;
+  color: #059669 !important;
   line-height: 1 !important;
 }
 
@@ -227,6 +229,15 @@
   box-shadow: 0 3px 0 #0284c7, 0 6px 14px rgba(2, 132, 199, 0.22) !important;
 }
 
+.compact-game-hud .pt-candy-pill.pt-gem-pill:hover {
+  box-shadow: 0 5px 0 #0284c7, 0 8px 18px rgba(2, 132, 199, 0.32) !important;
+}
+
+.compact-game-hud .pt-pill-plus.pt-gem-plus {
+  background: linear-gradient(180deg, #38bdf8, #0284c7) !important;
+  box-shadow: 0 1.5px 0 #0369a1 !important;
+}
+
 /* Free Seed Pill */
 .compact-game-hud .pt-candy-pill.pt-seed-pill {
   display: inline-flex !important;
@@ -273,8 +284,8 @@
   transform: scale(1.15) !important;
 }
 
-/* --- Iconic Circular 3D Buttons: Fashion & Smartphone --- */
-.compact-game-hud .pt-candy-btn.pt-fashion-btn {
+/* --- Iconic Circular 3D Buttons: Bag, Fashion, Camera, Smartphone --- */
+.compact-game-hud .pt-candy-btn {
   display: grid !important;
   place-items: center !important;
   width: 38px !important;
@@ -283,51 +294,80 @@
   min-height: 38px !important;
   border-radius: 50% !important;
   padding: 0 !important;
-  background: linear-gradient(180deg, #fdf2f8 0%, #fce7f3 100%) !important;
   border: 2.5px solid #ffffff !important;
-  box-shadow: 0 3px 0 #db2777, 0 6px 14px rgba(219, 39, 119, 0.32) !important;
   cursor: pointer !important;
   user-select: none !important;
   flex-shrink: 0 !important;
+  position: relative !important;
   transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s ease !important;
+}
+
+.compact-game-hud .pt-candy-btn:hover {
+  transform: translateY(-2px) scale(1.08) !important;
+}
+
+.compact-game-hud .pt-candy-btn:active {
+  transform: translateY(2px) scale(0.95) !important;
+}
+
+/* 1. Bag / Backpack Button (Warm Amber Honey) */
+.compact-game-hud .pt-candy-btn.pt-bag-btn {
+  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 50%, #fed7aa 100%) !important;
+  box-shadow: 0 3px 0 #d97706, 0 6px 14px rgba(217, 119, 6, 0.28) !important;
+}
+
+.compact-game-hud .pt-candy-btn.pt-bag-btn:hover {
+  box-shadow: 0 5px 0 #d97706, 0 10px 18px rgba(217, 119, 6, 0.38) !important;
+}
+
+.compact-game-hud .pt-candy-btn.pt-bag-btn:active {
+  box-shadow: 0 1px 0 #d97706 !important;
+}
+
+/* 2. Wardrobe / Fashion Button (Clean Slate) */
+.compact-game-hud .pt-candy-btn.pt-fashion-btn {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 50%, #e2e8f0 100%) !important;
+  box-shadow: 0 3px 0 #64748b, 0 6px 14px rgba(100, 116, 139, 0.28) !important;
 }
 
 .compact-game-hud .pt-candy-btn.pt-fashion-btn:hover {
-  transform: translateY(-2px) scale(1.08) !important;
-  box-shadow: 0 5px 0 #db2777, 0 10px 18px rgba(219, 39, 119, 0.42) !important;
+  box-shadow: 0 5px 0 #64748b, 0 10px 18px rgba(100, 116, 139, 0.38) !important;
 }
 
 .compact-game-hud .pt-candy-btn.pt-fashion-btn:active {
-  transform: translateY(2px) scale(0.95) !important;
-  box-shadow: 0 1px 0 #db2777 !important;
+  box-shadow: 0 1px 0 #64748b !important;
 }
 
+/* 3. Camera / Angle Button (Sky Blue) */
+.compact-game-hud .pt-candy-btn.pt-cam-btn {
+  background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 50%, #bae6fd 100%) !important;
+  box-shadow: 0 3px 0 #0284c7, 0 6px 14px rgba(2, 132, 199, 0.28) !important;
+}
+
+.compact-game-hud .pt-candy-btn.pt-cam-btn:hover {
+  box-shadow: 0 5px 0 #0284c7, 0 10px 18px rgba(2, 132, 199, 0.38) !important;
+}
+
+.compact-game-hud .pt-candy-btn.pt-cam-btn:active {
+  box-shadow: 0 1px 0 #0284c7 !important;
+}
+
+.compact-game-hud .pt-candy-btn.pt-cam-btn .pt-hud-img-icon {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+/* 4. Phone Button (Fresh Mint Green) */
 .compact-game-hud .pt-candy-btn.pt-phone-btn {
-  display: grid !important;
-  place-items: center !important;
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
-  min-height: 38px !important;
-  border-radius: 50% !important;
-  padding: 0 !important;
   background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%) !important;
-  border: 2.5px solid #ffffff !important;
   box-shadow: 0 3px 0 #16a34a, 0 6px 14px rgba(22, 163, 74, 0.32) !important;
-  position: relative !important;
-  cursor: pointer !important;
-  user-select: none !important;
-  flex-shrink: 0 !important;
-  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s ease !important;
 }
 
 .compact-game-hud .pt-candy-btn.pt-phone-btn:hover {
-  transform: translateY(-2px) scale(1.08) !important;
   box-shadow: 0 5px 0 #16a34a, 0 10px 18px rgba(22, 163, 74, 0.42) !important;
 }
 
 .compact-game-hud .pt-candy-btn.pt-phone-btn:active {
-  transform: translateY(2px) scale(0.95) !important;
   box-shadow: 0 1px 0 #16a34a !important;
 }
 
@@ -349,104 +389,119 @@
    ========================================================================== */
 .compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock {
   position: fixed !important;
-  top: calc(var(--hud-top) + 48px) !important;
+  top: calc(var(--hud-top) + 52px) !important;
   left: var(--hud-left) !important;
   width: auto !important;
-  max-width: min(320px, calc(100vw - 32px)) !important;
+  max-width: min(295px, calc(100vw - 32px)) !important;
   z-index: 24 !important;
   pointer-events: none !important;
 }
 
-.compact-game-hud .pt-quest-ribbon {
+/* Sleek Play Together Compact Quest Card (Squircle 18px) */
+.compact-game-hud .pt-quest-card {
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
-  padding: 3px 6px 3px 3px !important;
-  border-radius: 999px !important;
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 2.5px solid #ffffff !important;
-  box-shadow: 0 3px 0 #ea580c, 0 8px 18px rgba(0, 0, 0, 0.14) !important;
+  gap: 9px !important;
+  padding: 7px 10px 7px 8px !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 3.5px 0 #cbd5e1, 0 10px 22px rgba(0, 0, 0, 0.1) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
   pointer-events: auto !important;
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease !important;
+  user-select: none !important;
 }
 
-.compact-game-hud .pt-quest-ribbon:hover {
-  transform: translateY(-1px) scale(1.02) !important;
-  box-shadow: 0 4px 0 #ea580c, 0 10px 22px rgba(0, 0, 0, 0.18) !important;
+.compact-game-hud .pt-quest-card:hover {
+  transform: translateY(-2px) scale(1.01) !important;
+  box-shadow: 0 5.5px 0 #cbd5e1, 0 14px 28px rgba(0, 0, 0, 0.14) !important;
 }
 
-/* 3D NPC / Item Avatar Pod with Step Badge */
-.compact-game-hud .pt-quest-ribbon-avatar {
+.compact-game-hud .pt-quest-card:active {
+  transform: translateY(1.5px) scale(0.99) !important;
+  box-shadow: 0 1.5px 0 #cbd5e1 !important;
+}
+
+/* Left: 3D Mission Avatar Pod with Step Badge */
+.compact-game-hud .pt-quest-avatar-pod {
   position: relative !important;
-  width: 36px !important;
-  height: 36px !important;
-  flex: 0 0 36px !important;
-  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+  flex: 0 0 40px !important;
+  cursor: pointer !important;
   display: grid !important;
   place-items: center !important;
-  background: radial-gradient(circle, #fef08a 0%, #f97316 100%) !important;
-  border: 2px solid #ffffff !important;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12) !important;
-  cursor: pointer !important;
 }
 
-.compact-game-hud .pt-quest-avatar-circle {
-  display: grid !important;
-  place-items: center !important;
+.compact-game-hud .pt-quest-avatar-inner {
   width: 100% !important;
   height: 100% !important;
+  border-radius: 14px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: radial-gradient(circle, #fef08a 0%, #fde047 60%, #f59e0b 100%) !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.28) !important;
+  transition: transform 0.14s ease !important;
 }
 
-.compact-game-hud .pt-quest-step-pill-mini {
+.compact-game-hud .pt-quest-avatar-pod:hover .pt-quest-avatar-inner {
+  transform: scale(1.08) rotate(-3deg) !important;
+}
+
+.compact-game-hud .pt-quest-step-badge {
   position: absolute !important;
-  bottom: -3px !important;
+  bottom: -5px !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
-  padding: 0 4px !important;
-  border-radius: 6px !important;
-  background: #ea580c !important;
+  padding: 0 5px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%) !important;
   color: #ffffff !important;
   font-family: 'Baloo 2', 'Nunito', system-ui, sans-serif !important;
   font-size: 8px !important;
   font-weight: 900 !important;
-  border: 1px solid #ffffff !important;
-  line-height: 1.1 !important;
+  border: 1.5px solid #ffffff !important;
+  box-shadow: 0 1px 3px rgba(234, 88, 12, 0.3) !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  z-index: 2 !important;
 }
 
-/* Center Goal & Distance Tag */
-.compact-game-hud .pt-quest-ribbon-body {
+/* Center: Two-line Title & Guide Text with Distance Tag */
+.compact-game-hud .pt-quest-body {
   display: flex !important;
   flex-direction: column !important;
-  gap: 1px !important;
+  gap: 2px !important;
   min-width: 0 !important;
   flex: 1 1 auto !important;
   cursor: pointer !important;
-  padding: 0 2px !important;
+  text-align: left !important;
 }
 
-.compact-game-hud .pt-quest-ribbon-title-row {
+.compact-game-hud .pt-quest-top-row {
   display: flex !important;
   align-items: center !important;
-  gap: 4px !important;
+  gap: 6px !important;
 }
 
-.compact-game-hud .pt-quest-title-text {
+.compact-game-hud .pt-quest-title {
   font-family: 'Baloo 2', 'Nunito', system-ui, sans-serif !important;
-  font-size: 11.5px !important;
+  font-size: 12.5px !important;
   font-weight: 900 !important;
-  color: #1e293b !important;
+  color: #0f172a !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  line-height: 1.15 !important;
+  line-height: 1.2 !important;
 }
 
-.compact-game-hud .pt-quest-dist-chip {
+.compact-game-hud .pt-quest-dist-badge {
   display: inline-flex !important;
   align-items: center !important;
-  padding: 0 5px !important;
+  padding: 1px 6px !important;
   border-radius: 999px !important;
   background: #0284c7 !important;
   color: #ffffff !important;
@@ -455,78 +510,85 @@
   font-weight: 800 !important;
   line-height: 13px !important;
   white-space: nowrap !important;
+  box-shadow: 0 1px 2px rgba(2, 132, 199, 0.25) !important;
 }
 
-.compact-game-hud .pt-quest-dist-chip.is-arrived {
+.compact-game-hud .pt-quest-dist-badge.is-arrived {
   background: #16a34a !important;
+  box-shadow: 0 1px 3px rgba(22, 163, 74, 0.35) !important;
   animation: ptPulse 1.2s infinite ease-in-out !important;
 }
 
-.compact-game-hud .pt-quest-desc-text {
+.compact-game-hud .pt-quest-desc {
   margin: 0 !important;
-  font-size: 9px !important;
-  font-weight: 700 !important;
+  font-size: 9.5px !important;
+  font-weight: 600 !important;
   color: #64748b !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  max-width: 150px !important;
-  line-height: 1.15 !important;
+  max-width: 140px !important;
+  line-height: 1.2 !important;
 }
 
-/* 3D Candy Action Button */
-.compact-game-hud .pt-quest-action-candy-btn {
+/* Right: Tactile 3D Candy Action Button */
+.compact-game-hud .pt-quest-action-btn {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 5px 9px !important;
+  padding: 5px 11px !important;
   border-radius: 999px !important;
-  background: linear-gradient(180deg, #f97316 0%, #ea580c 100%) !important;
+  background: linear-gradient(180deg, #ff7a18 0%, #ea580c 100%) !important;
   border: 1.5px solid #ffffff !important;
-  box-shadow: 0 2px 0 #9a3412, 0 4px 8px rgba(154, 52, 18, 0.3) !important;
+  box-shadow: 0 2.5px 0 #9a3412, 0 4px 10px rgba(234, 88, 12, 0.25) !important;
   cursor: pointer !important;
   flex-shrink: 0 !important;
   transition: transform 0.14s ease, box-shadow 0.14s ease !important;
+  color: #ffffff !important;
+  font-family: 'Baloo 2', 'Nunito', system-ui, sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2) !important;
+  white-space: nowrap !important;
 }
 
-.compact-game-hud .pt-quest-action-candy-btn:hover {
+.compact-game-hud .pt-quest-action-btn:hover {
   transform: translateY(-1px) scale(1.05) !important;
-  box-shadow: 0 3px 0 #9a3412, 0 6px 12px rgba(154, 52, 18, 0.36) !important;
+  box-shadow: 0 3.5px 0 #9a3412, 0 6px 14px rgba(234, 88, 12, 0.35) !important;
 }
 
-.compact-game-hud .pt-quest-action-candy-btn:active {
+.compact-game-hud .pt-quest-action-btn:active {
   transform: translateY(1.5px) scale(0.96) !important;
   box-shadow: 0 1px 0 #9a3412 !important;
 }
 
-.compact-game-hud .pt-action-candy-text {
-  font-family: 'Baloo 2', 'Nunito', system-ui, sans-serif !important;
-  font-size: 9.5px !important;
-  font-weight: 900 !important;
-  color: #ffffff !important;
-  letter-spacing: 0.02em !important;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25) !important;
-  white-space: nowrap !important;
+.compact-game-hud .pt-quest-action-btn.is-ready-pulse {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 2.5px 0 #047857, 0 4px 10px rgba(16, 185, 129, 0.3) !important;
+  animation: ptQuestBtnPulse 1.4s infinite ease-in-out !important;
 }
 
-/* Satellite Stamp Button */
-.compact-game-hud .pt-quest-stamp-mini-btn {
-  width: 28px !important;
-  height: 28px !important;
-  flex: 0 0 28px !important;
-  border-radius: 50% !important;
-  display: grid !important;
-  place-items: center !important;
-  background: #f1f5f9 !important;
-  border: 1.5px solid #cbd5e1 !important;
-  color: #475569 !important;
-  cursor: pointer !important;
-  transition: transform 0.14s ease, background 0.14s ease !important;
+@keyframes ptQuestBtnPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2.5px 0 #047857, 0 4px 10px rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 3px 0 #047857, 0 6px 16px rgba(16, 185, 129, 0.5);
+  }
 }
 
-.compact-game-hud .pt-quest-stamp-mini-btn:hover {
-  background: #e2e8f0 !important;
-  transform: scale(1.08) !important;
+@keyframes ptPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.9;
+  }
 }
 
 .compact-game-hud .pt-chibi-minimap-root {
@@ -765,8 +827,13 @@
 }
 
 /* Hide debug badge cleanly */
-#mobile-debug-badge {
+#mobile-debug-badge,
+#farm-debug-badge {
   display: none !important;
+}
+
+html[data-debug="true"] #farm-debug-badge {
+  display: block !important;
 }
 
 /* Smart Context Action Pill (Fishing / Talk / Gate / Buy Land) */
@@ -986,3 +1053,273 @@
 ) {
   display: none !important;
 }
+
+/* HUD v2: shared object renders, readable typography and restrained surfaces. */
+.compact-game-hud { --hud-ink:#243c4c; --hud-surface:#f8faf6; --hud-edge:#c6d2d6; }
+.hud-object-icon { object-fit:contain; flex-shrink:0; vertical-align:middle; pointer-events:none; }
+.compact-game-hud :is(.pt-profile-card,.pt-candy-pill,.pt-candy-btn,.pt-quest-card,.vehicle-quick-trigger,.pt-context-action-btn) {
+  border:2px solid #fff !important;
+  box-shadow:0 3px 0 var(--hud-edge),0 5px 12px #152e4024 !important;
+  backdrop-filter:none !important;
+  color:var(--hud-ink) !important;
+}
+.compact-game-hud .pt-topbar { gap:12px !important; align-items:flex-start !important; }
+.compact-game-hud .pt-profile-card { height:54px !important; max-width:214px !important; padding:4px 12px 4px 4px !important; background:var(--hud-surface) !important; }
+.compact-game-hud .pt-avatar-ring { width:44px !important;height:44px !important;min-width:44px !important;background:#e3ede2 !important;border:2px solid #fff !important;box-shadow:none !important; }
+.compact-game-hud .pt-avatar-img {width:100% !important;height:100% !important;object-fit:contain !important;border-radius:50%;}
+.hud-portrait-placeholder {color:#9bb5ac;font-size:30px;}
+.compact-game-hud .pt-player-name {font-size:14px !important;max-width:132px !important;line-height:1.2 !important;}
+.compact-game-hud .pt-exp-val {font-size:11px !important;color:#385f51 !important;}
+.compact-game-hud .pt-exp-track {height:5px !important;background:#dce6df !important;box-shadow:none !important;}
+.compact-game-hud .pt-exp-jelly {background:#70a58a !important;box-shadow:none !important;}
+.compact-game-hud .pt-currency-dock {margin-left:auto !important;gap:8px !important;align-self:center;}
+.compact-game-hud .pt-menu-dock {display:flex;gap:8px;align-items:center;pointer-events:auto; padding-left:12px;border-left:1px solid #ffffff90;}
+.compact-game-hud .pt-candy-pill {height:44px !important;min-height:44px !important;padding:4px 8px !important;background:var(--hud-surface) !important;gap:6px !important;}
+.compact-game-hud .pt-pill-val {font-size:15px !important;min-width:24px;font-variant-numeric:tabular-nums;}
+.compact-game-hud .pt-pill-icon {width:30px !important;height:30px !important;}
+.compact-game-hud .pt-pill-icon img {width:32px !important;height:32px !important;}
+.compact-game-hud .pt-pill-plus {background:#709987 !important;box-shadow:none !important;width:18px !important;height:18px !important;}
+.compact-game-hud .pt-candy-btn {width:48px !important;height:48px !important;min-width:48px !important;min-height:48px !important;background:var(--hud-surface) !important;border-radius:15px !important;}
+.compact-game-hud .pt-candy-btn :is(img,.hud-object-icon) {width:36px !important;height:36px !important;}
+.compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock {top:calc(var(--hud-top) + 68px) !important;max-width:340px !important;width:340px !important;}
+.compact-game-hud .pt-quest-card {padding:10px !important;gap:10px !important;border-radius:16px !important;background:var(--hud-surface) !important;}
+.compact-game-hud .pt-quest-avatar-pod {width:44px !important;height:44px !important;min-width:44px !important;cursor:pointer;}
+.compact-game-hud .pt-quest-avatar-inner {background:#e7eee6 !important;box-shadow:none !important;border:0 !important;}
+.compact-game-hud .pt-quest-title {font-size:14px !important;line-height:1.3 !important;white-space:normal !important;}
+.compact-game-hud .pt-quest-top-row {flex-wrap:wrap !important;gap:4px !important;}
+.compact-game-hud .pt-quest-desc {font-size:12px !important;line-height:1.4 !important;white-space:normal !important;overflow:visible !important;color:#4d6570 !important;margin-top:4px !important;}
+.compact-game-hud .pt-quest-dist-badge {font-size:11px !important;background:#e2ebe8 !important;color:#385f51 !important;}
+.compact-game-hud .pt-quest-action-btn {width:48px !important;height:44px !important;min-width:48px !important;border-radius:12px !important;background:#528574 !important;color:#fff !important;box-shadow:0 3px 0 #365e50 !important;animation:none !important;font-size:12px !important;}
+.compact-game-hud .pt-chibi-minimap-root {top:calc(var(--hud-top) + 66px) !important;gap:0 !important;background:var(--hud-surface);padding:6px 6px 2px;border-radius:22px;box-shadow:0 3px 0 var(--hud-edge),0 5px 12px #152e4024;}
+.compact-game-hud .pt-minimap-disc {box-shadow:none !important;border:2px solid #fff !important;}
+.compact-game-hud .pt-radar-location-pill {background:transparent !important;box-shadow:none !important;border:0 !important;font-size:12px !important;padding:5px 4px !important;margin-top:0 !important;}
+.compact-game-hud .pt-action-bubble {border:2px solid #fff !important;box-shadow:0 3px 0 #254e60,0 5px 12px #152e4024 !important;transition:transform .12s ease !important;}
+.compact-game-hud .pt-jump-bubble {width:64px !important;height:64px !important;min-height:64px !important;background:#5794b3 !important;}
+.compact-game-hud .pt-run-bubble {width:52px !important;height:52px !important;background:#bc8462 !important;}
+.compact-game-hud .pt-action-bubble img {width:32px !important;height:32px !important;}
+.compact-game-hud .pt-action-bubble b {font-size:12px !important;}
+.compact-game-hud .vehicle-quick-trigger {width:52px !important;height:52px !important;min-height:52px !important;background:var(--hud-surface) !important;}
+.compact-game-hud .vehicle-quick-trigger b {font-size:10px !important;}
+.compact-game-hud .pt-context-action-wrap {right:calc(var(--hud-right) + 142px) !important;bottom:var(--hud-bottom) !important;max-width:260px !important;}
+.compact-game-hud .pt-context-action-btn {background:var(--hud-surface) !important;border-radius:16px !important;padding:8px 12px !important;min-height:56px !important;animation:none !important;}
+.compact-game-hud .pt-context-icon-bubble {background:#e4ece0 !important;box-shadow:none !important;min-width:40px !important;width:40px !important;height:40px !important;}
+.compact-game-hud .pt-context-title {font-size:13px !important;color:var(--hud-ink) !important;}
+.compact-game-hud .pt-context-hint {font-size:11px !important;color:#526874 !important;}
+.compact-game-hud .avatar-chat-form {background:var(--hud-surface) !important;border:2px solid #fff !important;box-shadow:0 3px 0 var(--hud-edge) !important;padding:4px 6px !important;min-height:44px !important;}
+.compact-game-hud .avatar-chat-input {font-size:13px !important;color:var(--hud-ink) !important;min-width:0;}
+.compact-game-hud .avatar-chat-input::placeholder {color:#526874 !important;opacity:1;}
+.compact-game-hud .chat-addon-btn {width:32px !important;height:32px !important;background:transparent !important;box-shadow:none !important;}
+.compact-game-hud .avatar-chat-send {font-size:12px !important;}
+.compact-game-hud button:focus-visible,.compact-game-hud [role="button"]:focus-visible {outline:3px solid #2b708b;outline-offset:3px;}
+@media(max-width:700px) {
+  .compact-game-hud .pt-topbar {gap:8px !important;}
+  .compact-game-hud .pt-profile-card {max-width:168px !important;height:48px !important;padding-right:8px !important;}
+  .compact-game-hud .pt-player-name {max-width:88px !important;font-size:13px !important;}
+  .compact-game-hud .pt-avatar-ring {width:38px !important;height:38px !important;min-width:38px !important;}
+  .compact-game-hud .pt-menu-dock {padding-left:0;border:0;gap:6px;}
+  .compact-game-hud .pt-candy-btn {width:44px !important;height:44px !important;min-width:44px !important;min-height:44px !important;border-radius:13px !important;}
+  .compact-game-hud .pt-currency-dock {position:fixed;left:var(--hud-left);top:calc(var(--hud-top) + 58px);}
+  .compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock {top:calc(var(--hud-top) + 112px) !important;max-width:280px !important;width:calc(100vw - 145px) !important;}
+  .compact-game-hud .pt-chibi-minimap-root {top:calc(var(--hud-top) + 56px) !important;}
+  .compact-game-hud .pt-context-action-wrap {bottom:calc(var(--hud-bottom) + 76px) !important;right:var(--hud-right) !important;max-width:220px !important;}
+  .compact-game-hud .avatar-chat-bar-container {max-width:calc(100vw - 155px) !important;}
+  .compact-game-hud .avatar-chat-input {width:90px !important;}
+}
+@media(max-height:500px) and (min-width:701px) {
+  .compact-game-hud .pt-quest-desc {display:none !important;}
+  .compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock {width:300px !important;}
+}
+@media(prefers-reduced-motion:reduce) {.compact-game-hud * {animation:none !important;transition:none !important;}}
+.compact-game-hud .pt-level-star {background:#567f6a !important;border-radius:7px !important;width:20px !important;height:20px !important;border:1px solid #fff;box-shadow:none !important;color:#fff !important;display:grid !important;place-items:center;}
+.compact-game-hud .pt-level-star span {position:static !important;font-size:11px !important;text-shadow:none !important;}
+.compact-game-hud :is(.pt-profile-card,.pt-candy-pill,.pt-candy-btn,.pt-quest-card,.pt-radar-location-pill,.pt-action-bubble,.vehicle-quick-trigger,.pt-context-action-btn,.avatar-chat-form) * {font-family:'Nunito',system-ui,sans-serif !important;font-weight:700 !important;}
+.compact-game-hud .pt-profile-info {width:auto !important;min-width:100px !important;}
+.compact-game-hud .pt-player-name {display:block !important;max-width:140px !important;}
+.compact-game-hud .pt-quest-step-badge {top:auto !important;bottom:-5px !important;height:18px !important;width:auto !important;min-width:28px !important;padding:1px 5px !important;font-size:10px !important;background:#658d7b !important;box-shadow:none !important;}
+.compact-game-hud .pt-quest-card .pt-quest-avatar-pod {flex:0 0 44px !important;}
+@media(max-width:700px){.compact-game-hud .pt-profile-info{min-width:70px !important;}.compact-game-hud .pt-player-name{max-width:88px !important;}}
+.compact-game-hud .pt-topbar {min-width:0 !important;max-width:none !important;}
+.compact-game-hud .pt-radar-location-pill {width:100% !important;max-width:100% !important;box-sizing:border-box;white-space:normal !important;overflow:visible !important;text-overflow:clip !important;line-height:1.25 !important;min-height:28px;}
+@media(max-width:700px) {
+ .compact-game-hud .pt-menu-dock .pt-candy-btn {width:44px !important;height:44px !important;min-width:44px !important;min-height:44px !important;}
+ .compact-game-hud .pt-menu-dock {gap:4px !important;}
+}
+@media(max-width:380px) {
+ .compact-game-hud .pt-profile-info {display:none !important;}
+ .compact-game-hud .pt-profile-card {max-width:54px !important;padding-right:4px !important;}
+}
+.compact-game-hud .pt-location-badge-name {white-space:normal !important;overflow:visible !important;text-overflow:clip !important;max-width:none !important;line-height:1.25 !important;}
+
+/* HUD v3: raised game controls, larger objects, clear action hierarchy. */
+.compact-game-hud {--hud-ink:#293d58;--hud-edge:#b8c8db;}
+.compact-game-hud :is(.pt-profile-card,.pt-candy-pill,.pt-candy-btn,.pt-quest-card,.vehicle-quick-trigger,.pt-context-action-btn) {box-shadow:0 3px 0 #9eb1c7,0 6px 13px #243d4e26 !important;}
+.compact-game-hud .pt-profile-card {background:linear-gradient(#fff,#eaf3fa) !important;border-radius:30px !important;}
+.compact-game-hud .pt-avatar-ring {background:linear-gradient(#fff1b1,#efb95b) !important;border:2px solid #fff !important;}
+.compact-game-hud .pt-level-star {background:#eeac3d !important;border-radius:50% !important;color:#624815 !important;}
+.compact-game-hud .pt-exp-jelly {background:linear-gradient(#83d8a3,#4bb989) !important;}
+.compact-game-hud .pt-menu-dock {border-left:0;padding-left:4px;gap:10px;}
+.compact-game-hud .pt-menu-dock .pt-candy-btn {border-radius:50% !important;background:linear-gradient(#fff,#e2f0fc) !important;box-shadow:0 3px 0 #89a9c4,0 6px 12px #243d4e26,inset 0 -3px 0 #c9dfef !important;}
+.compact-game-hud .pt-menu-dock .pt-bag-btn {background:linear-gradient(#fffbed,#ffe4a5) !important;box-shadow:0 3px 0 #c3a364,0 6px 12px #243d4e26,inset 0 -3px 0 #efd294 !important;}
+.compact-game-hud .pt-menu-dock .pt-fashion-btn {background:linear-gradient(#fff,#ecddff) !important;}
+.compact-game-hud .pt-menu-dock .pt-phone-btn {background:linear-gradient(#fff,#dbf4e8) !important;}
+.compact-game-hud .pt-candy-btn .hud-object-icon {width:40px !important;height:40px !important;filter:drop-shadow(0 1px 0 #fff) drop-shadow(0 2px 1px #25475b25);}
+.compact-game-hud .pt-gold-pill {background:linear-gradient(#fffdf2,#ffedbd) !important;box-shadow:0 3px 0 #c3a364,0 5px 12px #243d4e26 !important;}
+.compact-game-hud .pt-gem-pill {display:inline-flex !important;background:linear-gradient(#fff,#d9f2ff) !important;box-shadow:0 3px 0 #80adca,0 5px 12px #243d4e26 !important;}
+.compact-game-hud .pt-pill-plus {background:#6ab7a5 !important;border:1px solid #fff;}
+.compact-game-hud .pt-quest-card {background:linear-gradient(#fff,#f2f7fd) !important;border-radius:18px !important;}
+.compact-game-hud .pt-quest-avatar-inner {background:linear-gradient(#fff5d4,#ffe0a0) !important;border-radius:12px !important;}
+.compact-game-hud .pt-quest-action-btn {background:linear-gradient(#6ac9c0,#339b9e) !important;border:2px solid #fff !important;border-radius:14px !important;box-shadow:0 3px 0 #287b82 !important;font-size:13px !important;}
+.compact-game-hud .pt-quest-step-badge {background:#d79a37 !important;}
+.compact-game-hud .pt-chibi-minimap-root {background:linear-gradient(#fff,#e7f2fa);border-radius:24px;box-shadow:0 3px 0 #8dafc8,0 6px 13px #243d4e26;}
+.compact-game-hud .pt-context-action-btn {background:linear-gradient(#fff8df,#ffdb84) !important;border-radius:28px !important;box-shadow:0 3px 0 #c08d37,0 6px 13px #243d4e26 !important;}
+.compact-game-hud .pt-context-icon-bubble {background:#fff7dc !important;border:1px solid #fff !important;}
+.compact-game-hud .pt-jump-bubble {background:linear-gradient(#72d0ed,#369cc8) !important;box-shadow:0 4px 0 #2478a1,0 6px 14px #183f5a40 !important;}
+.compact-game-hud .pt-run-bubble {background:linear-gradient(#ffcc7d,#ec974d) !important;box-shadow:0 3px 0 #b86d39,0 6px 12px #183f5a35 !important;}
+.compact-game-hud .pt-action-bubble img {width:38px !important;height:38px !important;}
+.compact-game-hud .pt-action-bubble b {font-weight:800 !important;text-shadow:0 1px 1px #29485f50;}
+.compact-game-hud .avatar-chat-form {background:linear-gradient(#fff,#eef5fa) !important;box-shadow:0 3px 0 #9bb7cb !important;}
+.compact-game-hud .vehicle-quick-trigger {background:linear-gradient(#fff,#e4f3f8) !important;}
+.compact-game-hud .pt-candy-btn:active,.compact-game-hud .pt-candy-pill:active {transform:translateY(2px) !important;box-shadow:0 1px 0 #89a9c4 !important;}
+@media(max-width:700px){.compact-game-hud .pt-currency-dock{gap:6px !important;}.compact-game-hud .pt-candy-pill{padding:3px 6px !important;}.compact-game-hud .pt-pill-val{font-size:13px !important;}.compact-game-hud .pt-menu-dock{gap:4px !important;}}
+
+/* Farm minimap: matte north-up map, no radar decoration. */
+.compact-game-hud .farm-minimap {width:132px!important;padding:6px 6px 5px!important;border-radius:20px!important;background:#fff9ed!important;box-shadow:0 3px 0 #bfd2c0,0 5px 10px #25475b20!important;}
+.compact-game-hud .farm-minimap .pt-minimap-disc {width:120px!important;height:120px!important;min-width:120px!important;min-height:120px!important;max-width:120px!important;max-height:120px!important;border:0!important;filter:none!important;box-shadow:none!important;}
+.compact-game-hud .farm-minimap .pt-radar-location-pill {padding:5px 2px!important;min-height:24px!important;}
+.compact-game-hud .farm-minimap .pt-location-badge-name {max-width:100%!important;min-width:0;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;}
+.hud-modal-open .farm-minimap,.game-shell.in-venue .farm-minimap {display:none!important;}
+@media(max-width:700px),(max-height:560px){
+ .compact-game-hud .farm-minimap {width:106px!important;border-radius:16px!important;}
+ .compact-game-hud .farm-minimap .pt-minimap-disc {width:94px!important;height:94px!important;min-width:94px!important;min-height:94px!important;max-width:94px!important;max-height:94px!important;}
+ .compact-game-hud .farm-minimap .pt-location-badge-name {font-size:11px!important;}
+}
+
+/* Phone/PWA layout: reserve the middle for the world and separate thumb zones. */
+@media (max-width: 700px), (max-width: 1100px) and (max-height: 600px) {
+  .compact-game-hud {
+    --hud-left: calc(var(--safe-left, 0px) + 8px);
+    --hud-right: calc(var(--safe-right, 0px) + 8px);
+    --hud-top: calc(var(--safe-top, 0px) + 8px);
+    --hud-bottom: calc(var(--safe-bottom, 0px) + 12px);
+  }
+  .compact-game-hud .pt-profile-card {height:44px!important;max-width:146px!important;padding:2px 7px 2px 2px!important;}
+  .compact-game-hud .pt-avatar-ring {width:34px!important;height:34px!important;min-width:34px!important;flex-basis:34px!important;}
+  .compact-game-hud .pt-profile-info {display:flex!important;min-width:0!important;}
+  .compact-game-hud .pt-player-name {max-width:86px!important;font-size:12px!important;}
+  .compact-game-hud .pt-menu-dock {gap:3px!important;}
+  .compact-game-hud .pt-menu-dock .pt-candy-btn {width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;}
+  .compact-game-hud .pt-candy-btn .hud-object-icon {width:32px!important;height:32px!important;}
+  .compact-game-hud .pt-currency-dock {position:fixed!important;left:var(--hud-left)!important;top:calc(var(--hud-top) + 52px)!important;gap:5px!important;}
+  .compact-game-hud .pt-candy-pill {height:32px!important;min-height:32px!important;padding:2px 5px!important;gap:3px!important;}
+  .compact-game-hud .pt-pill-icon, .compact-game-hud .pt-pill-icon img {width:24px!important;height:24px!important;}
+  .compact-game-hud .pt-pill-val {font-size:12px!important;}
+  .compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock {top:calc(var(--hud-top) + 92px)!important;width:calc(100vw - var(--hud-left) - var(--hud-right) - 96px)!important;max-width:260px!important;}
+  .compact-game-hud .pt-quest-card {padding:7px!important;gap:6px!important;min-height:64px!important;}
+  .compact-game-hud .pt-quest-card .pt-quest-avatar-pod {width:32px!important;height:38px!important;min-width:32px!important;flex-basis:32px!important;}
+  .compact-game-hud .pt-quest-card .pt-quest-title {font-size:12px!important;}
+  .compact-game-hud .pt-quest-card .pt-quest-desc {display:none!important;}
+  .compact-game-hud .pt-quest-card .pt-quest-top-row {gap:3px!important;}
+  .compact-game-hud .pt-quest-action-btn {width:44px!important;min-width:44px!important;height:44px!important;flex-shrink:0!important;white-space:nowrap!important;}
+  .compact-game-hud .mission-hud-links {left:var(--hud-left)!important;top:calc(var(--hud-top) + 168px)!important;width:calc(100vw - var(--hud-left) - var(--hud-right) - 96px)!important;max-width:260px!important;padding:2px!important;gap:1px!important;}
+  .compact-game-hud .mission-hud-links button {font-size:9px!important;min-height:32px!important;gap:2px!important;}
+  .compact-game-hud .mission-hud-links img {width:18px!important;height:18px!important;}
+  .compact-game-hud .farm-minimap {top:calc(var(--hud-top) + 52px)!important;width:88px!important;padding:4px!important;}
+  .compact-game-hud .farm-minimap .pt-minimap-disc {width:80px!important;height:80px!important;min-width:80px!important;min-height:80px!important;max-width:80px!important;max-height:80px!important;}
+  .compact-game-hud .farm-minimap .pt-location-badge-name {font-size:10px!important;}
+  .compact-game-hud .pt-joystick {width:88px!important;height:88px!important;display:block!important;backdrop-filter:none!important;}
+  .compact-game-hud .avatar-chat-bar-container {bottom:calc(var(--hud-bottom) + 104px)!important;width:170px!important;max-width:170px!important;}
+  .compact-game-hud .avatar-chat-form {gap:3px!important;padding:3px!important;}
+  .compact-game-hud .avatar-chat-input {width:60px!important;flex:1!important;font-size:12px!important;}
+  .compact-game-hud .avatar-chat-bar-container:not(.focused) .chat-send-btn {display:none!important;}
+  .compact-game-hud .avatar-chat-bar-container.focused {width:calc(100vw - var(--hud-left) - var(--hud-right))!important;max-width:380px!important;z-index:50!important;}
+  .compact-game-hud .pt-context-action-wrap {bottom:calc(var(--hud-bottom) + 104px)!important;right:var(--hud-right)!important;max-width:calc(100vw - var(--hud-left) - var(--hud-right) - 180px)!important;}
+  .compact-game-hud .pt-context-action-btn {padding:5px 7px!important;min-height:44px!important;gap:4px!important;}
+  .compact-game-hud .pt-context-title {font-size:11px!important;}
+  .compact-game-hud .pt-context-hint,.compact-game-hud .pt-context-desktop-key {display:none!important;}
+  .compact-game-hud .pt-context-icon-bubble {width:30px!important;height:30px!important;min-width:30px!important;}
+  .compact-game-hud .pt-context-icon-bubble img {width:28px!important;height:28px!important;}
+  .compact-game-hud .vehicle-quick-menu {bottom:calc(var(--hud-bottom) + 174px)!important;}
+}
+@media (orientation: landscape) and (max-height: 600px) and (max-width: 1100px) {
+  .compact-game-hud .pt-currency-dock {position:static!important;}
+  .compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock {top:calc(var(--hud-top) + 52px)!important;width:250px!important;}
+  .compact-game-hud .mission-hud-links {top:calc(var(--hud-top) + 128px)!important;width:250px!important;}
+  .compact-game-hud .avatar-chat-bar-container {left:calc(var(--hud-left) + 100px)!important;bottom:var(--hud-bottom)!important;}
+  .compact-game-hud .pt-context-action-wrap {bottom:var(--hud-bottom)!important;right:calc(var(--hud-right) + 138px)!important;max-width:200px!important;}
+  .compact-game-hud .vehicle-quick-menu {bottom:calc(var(--hud-bottom) + 82px)!important;}
+}
+
+@media(max-width:360px){.compact-game-hud .pt-profile-info{display:none!important;}.compact-game-hud .pt-profile-card{max-width:44px!important;}}
+
+.mobile-chat-toggle {display:none;}
+/* Final mobile authority: override legacy html.mobile-* and shell selectors. */
+@media (max-width:700px), (max-width:1100px) and (max-height:600px) {
+ html body .game-shell.compact-game-hud .topbar.pt-topbar {left:var(--hud-left)!important;right:var(--hud-right)!important;top:var(--hud-top)!important;width:calc(100% - var(--hud-left) - var(--hud-right))!important;}
+ html body .game-shell.compact-game-hud .pt-profile-info {display:none!important;}
+ html body .game-shell.compact-game-hud .pt-profile-card {width:44px!important;max-width:44px!important;height:44px!important;padding:2px!important;}
+ html body .game-shell.compact-game-hud .mission-hud-links {display:none!important;}
+ html body .game-shell.compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock {left:var(--hud-left)!important;top:calc(var(--hud-top) + 92px)!important;width:calc(100vw - var(--hud-left) - var(--hud-right) - 94px)!important;max-width:270px!important;}
+ html body .game-shell.compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock .pt-quest-card {min-height:54px!important;padding:5px!important;gap:5px!important;border-radius:16px!important;}
+ html body .game-shell.compact-game-hud .pt-quest-card .pt-quest-body {min-width:0!important;flex:1!important;}
+ html body .game-shell.compact-game-hud .pt-quest-card .pt-quest-title {display:block!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;font-size:11px!important;max-width:100%!important;}
+ html body .game-shell.compact-game-hud .pt-quest-card .pt-quest-desc {display:none!important;}
+ html body .game-shell.compact-game-hud .pt-quest-card .pt-quest-avatar-pod {flex:0 0 28px!important;min-width:28px!important;width:28px!important;height:34px!important;}
+ html body .game-shell.compact-game-hud .farm-minimap {right:var(--hud-right)!important;top:calc(var(--hud-top) + 52px)!important;width:82px!important;padding:2px!important;border-radius:50%!important;}
+ html body .game-shell.compact-game-hud .farm-minimap .pt-minimap-disc {width:78px!important;height:78px!important;min-width:78px!important;min-height:78px!important;max-width:78px!important;max-height:78px!important;}
+ html body .game-shell.compact-game-hud .farm-minimap .pt-radar-location-pill {display:none!important;}
+ html body .game-shell.compact-game-hud .pt-joystick {left:var(--hud-left)!important;bottom:var(--hud-bottom)!important;}
+ html body .game-shell.compact-game-hud .pt-action-bubbles {right:var(--hud-right)!important;bottom:var(--hud-bottom)!important;gap:8px!important;}
+ html body .game-shell.compact-game-hud .avatar-chat-bar-container {left:var(--hud-left)!important;bottom:calc(var(--hud-bottom) + 102px)!important;width:44px!important;max-width:44px!important;transform:none!important;}
+ html body .game-shell.compact-game-hud .mobile-chat-toggle {display:grid!important;place-items:center;width:44px;height:44px;border:2px solid white;border-radius:50%;background:#f5fafc;box-shadow:0 3px 0 #9bb7cb;cursor:pointer;}
+ html body .game-shell.compact-game-hud .avatar-chat-bar-container:not(.mobile-expanded):not(.focused) .avatar-chat-form {display:none!important;}
+ html body .game-shell.compact-game-hud .avatar-chat-bar-container:is(.mobile-expanded,.focused) {width:calc(100vw - var(--hud-left) - var(--hud-right))!important;max-width:380px!important;z-index:60!important;}
+ html body .game-shell.compact-game-hud .avatar-chat-bar-container:is(.mobile-expanded,.focused) .avatar-chat-form {display:flex!important;margin-top:6px;}
+ html body .game-shell.compact-game-hud .avatar-chat-bar-container:is(.mobile-expanded,.focused) .chat-send-btn {display:flex!important;}
+ html body .game-shell.compact-game-hud .pt-context-action-wrap {left:auto!important;transform:none!important;right:var(--hud-right)!important;bottom:calc(var(--hud-bottom) + 86px)!important;width:auto!important;max-width:190px!important;}
+ html body .game-shell.compact-game-hud .vehicle-quick-menu {right:var(--hud-right)!important;bottom:calc(var(--hud-bottom) + 146px)!important;}
+ html body .game-shell.compact-game-hud.hud-modal-open :is(.avatar-chat-bar-container,.pt-joystick,.pt-action-bubbles,.farm-minimap,.pt-context-action-wrap,.vehicle-quick-menu,.pt-candy-quest-tracker) {display:none!important;}
+}
+@media (orientation:landscape) and (max-width:1100px) and (max-height:600px) {
+ html body .game-shell.compact-game-hud .pt-currency-dock {position:static!important;}
+ html body .game-shell.compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock {top:calc(var(--hud-top) + 52px)!important;width:250px!important;}
+ html body .game-shell.compact-game-hud .avatar-chat-bar-container {left:calc(var(--hud-left) + 102px)!important;bottom:var(--hud-bottom)!important;}
+ html body .game-shell.compact-game-hud .pt-context-action-wrap {right:calc(var(--hud-right) + 138px)!important;bottom:var(--hud-bottom)!important;max-width:190px!important;}
+ html body .game-shell.compact-game-hud .vehicle-quick-menu {bottom:calc(var(--hud-bottom) + 82px)!important;}
+}
+@media (max-width:700px), (max-width:1100px) and (max-height:600px) {
+ html body .game-shell.compact-game-hud .pt-quest-card .pt-quest-avatar-inner {width:28px!important;height:34px!important;min-width:0!important;min-height:0!important;}
+ html body .game-shell.compact-game-hud .pt-quest-avatar-inner img {width:26px!important;height:30px!important;}
+ html body .game-shell.compact-game-hud .pt-quest-card .pt-quest-top-row {flex-direction:column!important;align-items:flex-start!important;gap:2px!important;}
+ html body .game-shell.compact-game-hud .pt-quest-card .pt-quest-step-badge {font-size:8px!important;min-width:24px!important;height:14px!important;bottom:-3px!important;}
+}
+
+/* Mobile gameplay surface contains symbols only. Details live in opened panels. */
+.compact-game-hud .pt-mobile-missions {display:none!important;}
+@media (max-width:700px), (max-width:1100px) and (max-height:600px) {
+ html body .game-shell.compact-game-hud .pt-mobile-missions {display:grid!important;place-items:center;}
+ html body .game-shell.compact-game-hud :is(.pt-pill-val,.pt-pill-plus,.pt-seed-pill,.pt-exp-wrap,.pt-profile-info,.pt-level-star,.pt-context-text-stack,.pt-context-desktop-key,.pt-candy-quest-tracker,.mission-hud-links,.mission-hud-tracker,.mission-tracker,.farm-zone-badge,.farm-herd-compact) {display:none!important;}
+ html body .game-shell.compact-game-hud :is(.pt-action-bubble,.vehicle-quick-trigger) b {display:none!important;}
+ html body .game-shell.compact-game-hud .pt-currency-dock {gap:6px!important;}
+ html body .game-shell.compact-game-hud .pt-candy-pill {width:44px!important;height:44px!important;min-height:44px!important;min-width:44px!important;padding:4px!important;border-radius:50%!important;justify-content:center!important;}
+ html body .game-shell.compact-game-hud .pt-pill-icon,html body .game-shell.compact-game-hud .pt-pill-icon img {width:32px!important;height:32px!important;}
+ html body .game-shell.compact-game-hud .farm-minimap {width:64px!important;height:64px!important;}
+ html body .game-shell.compact-game-hud .farm-minimap .pt-minimap-disc {width:60px!important;height:60px!important;min-width:60px!important;min-height:60px!important;max-width:60px!important;max-height:60px!important;}
+ html body .game-shell.compact-game-hud .pt-context-action-wrap {width:48px!important;max-width:48px!important;}
+ html body .game-shell.compact-game-hud .pt-context-action-btn {width:48px!important;height:48px!important;min-height:48px!important;padding:4px!important;border-radius:50%!important;justify-content:center!important;}
+ html body .game-shell.compact-game-hud .pt-context-icon-bubble {background:transparent!important;border:0!important;width:36px!important;height:36px!important;min-width:36px!important;}
+ html body .game-shell.compact-game-hud .pt-context-icon-bubble img {width:36px!important;height:36px!important;}
+ html body .game-shell.compact-game-hud .vehicle-quick-trigger {width:48px!important;height:48px!important;min-height:48px!important;}
+ html body .game-shell.compact-game-hud .pt-action-bubble {gap:0!important;}
+}
+@media (max-width:700px), (max-width:1100px) and (max-height:600px) {
+ html body .game-shell.compact-game-hud .pt-candy-btn .hud-object-icon {width:36px!important;height:36px!important;filter:none!important;}
+ html body .game-shell.compact-game-hud .pt-action-bubble .hud-object-icon {width:40px!important;height:40px!important;filter:none!important;}
+}
+
+.compact-game-hud .pt-avatar-img.pt-user-photo{object-fit:cover!important}
+
+/* A light compass frame keeps the terrain readable without a large HUD card. */
+html body .game-shell.compact-game-hud .farm-minimap {background:transparent!important;box-shadow:none!important;}
+html body .game-shell.compact-game-hud .farm-minimap .farm-minimap-surface {box-shadow:0 3px 0 #7a9b8b,0 5px 12px #183b4933;}
+html body .game-shell.compact-game-hud .farm-minimap .pt-radar-location-pill {margin-top:7px!important;border-radius:12px!important;background:#fffaf0!important;box-shadow:0 2px 0 #b9cdbb!important;padding:5px 8px!important;}
+html body .game-shell.compact-game-hud .farm-minimap .farm-minimap-destination {margin-top:6px;background:#fff4db;box-shadow:0 2px 0 #cdbd94;}

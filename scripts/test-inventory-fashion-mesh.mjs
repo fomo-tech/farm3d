@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { NullEngine } from '@babylonjs/core/Engines/nullEngine.js';
 import { Scene } from '@babylonjs/core/scene.js';
 import { buildHumanMesh } from '../src/game/player/buildHumanMesh.js';
-import { applyFashionInventoryItem, selectFashionObjectMeshes } from '../src/components/fashionInventoryMesh.js';
+import { applyFashionInventoryItem, selectFashionObjectMeshes, snapshotFashionMeshVisibility, restoreFashionMeshVisibility } from '../src/components/fashionInventoryMesh.js';
 import { ALL_FASHION_ITEMS_MAP, getDefaultCustomization } from '../shared/fashionConfig.js';
 
 globalThis.OffscreenCanvas ||= class {
@@ -32,6 +32,24 @@ for (const item of [
   if (type === 'top') assert.ok(meshes.every(mesh => !/sneaker|snk-lace/.test(mesh.name)), 'top icon must not include shoe meshes');
   if (type === 'bottom') assert.ok(meshes.every(mesh => !/sleeve/.test(mesh.name)), 'bottom icon must not include sleeve meshes');
   if (type === 'accessory') assert.ok(meshes.every(mesh => !mesh.name.endsWith('-head')), 'accessory icon must not include the avatar head');
+}
+// Reproduce thumbnail capture on the reused fitting-room avatar.
+avatar.applyCustomization(getDefaultCustomization());
+for (const id of Object.keys(ALL_FASHION_ITEMS_MAP)) {
+ const snapshot=snapshotFashionMeshVisibility(scene);
+ const type=applyFashionInventoryItem(avatar,{id:`customization:${id}`,itemId:id});
+ const selected=new Set(selectFashionObjectMeshes(avatar,type,id));
+ scene.meshes.forEach(mesh=>{if(mesh.getTotalVertices()>0&&!selected.has(mesh))mesh.setEnabled(false);});
+ restoreFashionMeshVisibility(snapshot);
+ avatar.applyCustomization(getDefaultCustomization());
+}
+for (const id of Object.keys(ALL_FASHION_ITEMS_MAP).filter(id=>id.startsWith('top_'))) {
+ avatar.setTop(id);
+ for(const lod of [0,1,2]){
+  avatar.setLOD(lod);
+  assert.ok(avatar.root.getChildMeshes().some(mesh=>/-body$/.test(mesh.name)&&mesh.isEnabled()&&!mesh.material.name.includes('skin')),`${id}: clothing torso survives captures at LOD ${lod}`);
+ }
+ avatar.setLOD(0);
 }
 const unmapped = [];
 for (const id of Object.keys(ALL_FASHION_ITEMS_MAP)) {

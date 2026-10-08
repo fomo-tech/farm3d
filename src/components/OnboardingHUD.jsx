@@ -1,24 +1,18 @@
-import React, { useState } from 'react';
+import { HudIcon } from './icons3d/HudIcon.jsx';
+import { preLandJourney } from '../../shared/preLandJourney.js';
+import React from 'react';
+import './QuestTrackerPolish.css';
 import { ONBOARDING_STEPS } from '../game/economy/GameProgress.js';
-import {
-  Icon3dManager,
-  Icon3dOrdersBox,
-  Icon3dBike,
-  Icon3dStamp,
-  Icon3dCarrot,
-  Icon3dCompass,
-  Icon3dSparkleStar,
-  Icon3dTrophyCup,
-} from './icons3d/GameIcons3D.jsx';
+
 
 export function OnboardingHUD({
   progress,
   hasFarm = false,
   targetDistance,
   onOpenLand,
+  onNavigateFishing,
   onNavigateTarget,
   onTalkToElder,
-  onOpenGuide,
   onOpenOrders,
   onOpenMissions,
 }) {
@@ -29,66 +23,60 @@ export function OnboardingHUD({
 
   let stepNumber = 2;
   let title = 'Gặp Oliver';
-  let desc = 'Đến đài phun nước trung tâm gặp Quản Gia nhận quà.';
-  let targetName = 'Oliver';
+  let desc = 'Đến gặp Quản Gia nhận quà tân thủ';
   let actionText = 'ĐI!';
   let onAction = onTalkToElder;
-  let avatarIcon = <Icon3dManager size={36} />;
+  let avatarIcon = <HudIcon asset="quest" size={36} />;
 
   if (!hasFarm) {
-    stepNumber = 1;
-    title = 'Chọn đất đầu tiên';
-    desc = 'Xem giá sau ưu đãi và chọn một lô đất vừa túi tiền.';
-    targetName = 'Bản đồ đất';
-    actionText = 'XEM ĐẤT';
-    avatarIcon = <Icon3dCompass size={36} />;
-    onAction = onOpenLand;
+    const guide = preLandJourney(progress);
+    stepNumber = guide.step;
+    title = guide.title;
+    desc = guide.description;
+    actionText = guide.target === 'land' ? 'XEM ĐẤT' : 'ĐI!';
+    avatarIcon = <HudIcon asset="quest" size={36} />;
+    onAction = guide.target === 'land' ? onOpenLand : () => onNavigateFishing?.(guide.target);
   } else if (step === ONBOARDING_STEPS.FIRST_PLANT) {
     stepNumber = 3;
-    avatarIcon = <Icon3dCarrot size={36} />;
-    targetName = 'Ruộng nhà';
+    avatarIcon = <HudIcon asset="quest" size={36} />;
     actionText = 'ĐI!';
     onAction = onNavigateTarget;
 
     if (progress.stats?.planted === 0) {
       title = 'Gieo Cà Rốt';
-      desc = 'Đến ruộng, xới một ô đất rồi gieo hạt cà rốt.';
+      desc = 'Đến ruộng, xới đất rồi gieo hạt';
     } else if (progress.stats?.watered === 0) {
       title = 'Tưới Nước';
-      desc = 'Chọn bình tưới và tưới ô vừa gieo.';
+      desc = 'Dùng bình tưới nước cho ô gieo';
     } else if (progress.stats?.harvested === 0) {
       title = 'Thu Hoạch';
-      desc = 'Cây chín sau khoảng 8 giây. Thu hoạch khi hiện biểu tượng sẵn sàng.';
+      desc = 'Thu hoạch khi cà rốt chín';
     } else {
       title = 'Báo Cáo Oliver';
-      desc = 'Mang cà rốt tươi ngon về báo cáo Quản Gia!';
-      targetName = 'Oliver';
-      avatarIcon = <Icon3dManager size={36} />;
+      desc = 'Mang cà rốt về báo cáo Quản Gia';
+      avatarIcon = <HudIcon asset="quest" size={36} />;
       actionText = 'GẶP!';
       onAction = onTalkToElder;
     }
   } else if (step === ONBOARDING_STEPS.EXPLAIN_SYSTEMS) {
     stepNumber = 4;
     title = 'Mẹo Nông Trại';
-    desc = 'Nghe Oliver chia sẻ bí quyết làm giàu và vận tải.';
-    targetName = 'Oliver';
-    avatarIcon = <Icon3dManager size={36} />;
+    desc = 'Nghe Oliver chia sẻ kinh nghiệm';
+    avatarIcon = <HudIcon asset="quest" size={36} />;
     actionText = 'NGHE!';
     onAction = onTalkToElder;
   } else if (step === ONBOARDING_STEPS.DELIVER_ORDER) {
     stepNumber = 5;
     title = 'Giao Đơn Xe Tải';
-    desc = 'Mở Bảng Đơn Hàng giao cà rốt lấy Xu x3.';
-    targetName = 'Bảng Đơn';
-    avatarIcon = <Icon3dOrdersBox size={36} />;
+    desc = 'Giao đơn đầu tiên để học cách kiếm xu';
+    avatarIcon = <HudIcon asset="quest" size={36} />;
     actionText = 'GIAO!';
     onAction = onOpenOrders;
   } else if (step === ONBOARDING_STEPS.CLAIM_REWARD) {
     stepNumber = 6;
     title = 'Nhận Xe Đạp!';
-    desc = 'Gặp Oliver nhận chứng chỉ tốt nghiệp & Xe Đạp.';
-    targetName = 'Oliver';
-    avatarIcon = <Icon3dBike size={36} />;
+    desc = 'Gặp Oliver nhận quà tốt nghiệp & Xe Đạp';
+    avatarIcon = <HudIcon asset="quest" size={36} />;
     actionText = 'NHẬN!';
     onAction = onTalkToElder;
   }
@@ -97,58 +85,51 @@ export function OnboardingHUD({
 
   return (
     <aside className="pt-candy-quest-tracker pt-quest-ribbon-dock" aria-label="Nhiệm vụ tân thủ">
-      {/* Sleek Play Together Quest Ribbon Banner */}
-      <div className="pt-quest-ribbon">
-        {/* Left: 3D NPC / Item Avatar Pod with Step Badge */}
+      {/* Sleek Play Together Compact Quest Card */}
+      <div className="pt-quest-card">
+        {/* Left: 3D Mission Avatar with Step Badge */}
         <div
-          className="pt-quest-ribbon-avatar"
+          className="pt-quest-avatar-pod"
           onClick={onOpenMissions}
           role="button"
           tabIndex={0}
+          onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.currentTarget.click(); } }}
           title="Xem danh sách nhiệm vụ"
         >
-          <div className="pt-quest-avatar-circle">
+          <div className="pt-quest-avatar-inner">
             {avatarIcon}
           </div>
-          <span className="pt-quest-step-pill-mini">{stepNumber}/6</span>
+          <span className="pt-quest-step-badge">{stepNumber}/{hasFarm ? 6 : 4}</span>
         </div>
 
-        {/* Center: Quest Goal & Distance Tag */}
+        {/* Center: Two-line Title & Guide Text with Distance Tag */}
         <div
-          className="pt-quest-ribbon-body"
-          onClick={onOpenMissions}
+          className="pt-quest-body"
+          onClick={onAction}
           role="button"
           tabIndex={0}
-          title={`${title} - ${desc} (Bấm để xem chi tiết)`}
+          onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.currentTarget.click(); } }}
+          title={`${title} - ${desc}`}
         >
-          <strong className="pt-quest-title-text">{title}</strong>
-          {targetDistance != null && (
-            <span className={`pt-quest-dist-chip ${isNear ? 'is-arrived' : ''}`}>
-              {isNear ? 'ĐÃ ĐẾN' : `${targetDistance}m`}
-            </span>
-          )}
+          <div className="pt-quest-top-row">
+            <strong className="pt-quest-title">{title}</strong>
+            {targetDistance != null && (
+              <span className={`pt-quest-dist-badge ${isNear ? 'is-arrived' : ''}`}>
+                {isNear ? '✓' : `${Math.round(targetDistance)} m`}
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Right: Glossy 3D Candy Action Button */}
+        {/* Right: Tactile 3D Candy Action Button */}
         <button
           type="button"
-          className={`pt-quest-action-candy-btn ${isNear ? 'is-ready-pulse' : ''}`}
+          className={`pt-quest-action-btn ${isNear ? 'is-ready-pulse' : ''}`}
           onClick={onAction}
           title={`${actionText}: ${desc}`}
           aria-label={actionText}
         >
-          <span className="pt-action-candy-text">{actionText}</span>
-        </button>
-
-        {/* Satellite Stamp Book Button */}
-        <button
-          type="button"
-          className="pt-quest-stamp-mini-btn"
-          onClick={onOpenGuide}
-          title="Sổ Tay Con Dấu Tân Thủ"
-          aria-label="Sổ Tay Con Dấu Tân Thủ"
-        >
-          <Icon3dStamp size={16} />
+          <span>{actionText}</span>
         </button>
       </div>
     </aside>

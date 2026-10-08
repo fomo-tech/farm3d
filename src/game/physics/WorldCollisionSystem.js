@@ -1,3 +1,4 @@
+import {networkWaterAt,networkBridgeAt} from '../../../shared/waterNetwork.js';
 /**
  * WorldCollisionSystem.js
  * 2.5D Continuous Wall & Building Collision Engine with Smooth Wall Sliding.
@@ -181,17 +182,12 @@ export class WorldCollisionSystem {
         cz: fz + 5.2,
       });
 
-      // 2. Chuồng gia súc / trang trại phụ (x: 4.8, z: 5.2, width: 6.4, depth: 5.6)
-      this.farmColliders.push({
-        id: `farm-barn-${farm.id}`,
-        type: 'box',
-        minX: fx + 4.8 - 3.3,
-        maxX: fx + 4.8 + 3.3,
-        minZ: fz + 5.2 - 2.9,
-        maxZ: fz + 5.2 + 2.9,
-        cx: fx + 4.8,
-        cz: fz + 5.2,
-      });
+      // Open corral: collide with the fence, leaving the front gate accessible.
+      for (const [side,x1,x2,z1,z2] of [
+        ['w',-3.3,-3.1,-2.8,2.8],['e',3.1,3.3,-2.8,2.8],
+        ['back',-3.2,3.2,2.7,2.9],['front-w',-3.2,-.95,-2.9,-2.7],['front-e',.95,3.2,-2.9,-2.7],
+      ]) this.farmColliders.push({id:`farm-corral-${farm.id}-${side}`,type:'box',
+        minX:fx+4.8+x1,maxX:fx+4.8+x2,minZ:fz+5.2+z1,maxZ:fz+5.2+z2,cx:fx+4.8+(x1+x2)/2,cz:fz+5.2+(z1+z2)/2});
 
       // 3. Hàng rào bao quanh lô đất 20m x 20m (chừa cổng 5.5m ở mặt trước z = fz - 9.0)
       // Hàng rào Tây (x = fx - 10)
@@ -324,6 +320,7 @@ export class WorldCollisionSystem {
    * @returns {boolean} True if point collides with any solid obstacle.
    */
   isColliding(cx, cz, r = this.playerRadius, venue = null) {
+    if (!venue && !networkBridgeAt(cx,cz) && networkWaterAt(cx,cz,r)) return true;
     if (!venue && lakeDeepWaterAt(cx, cz, r)) return true;
     if(!venue && beachDeepWaterAt(cx,cz)) return true;
     if (venue && this.interiorBoxes.has(venue)) {
@@ -340,6 +337,8 @@ export class WorldCollisionSystem {
     // 1. Check static boxes
     for (let i = 0; i < this.staticBoxes.length; i++) {
       const b = this.staticBoxes[i];
+      // Network water uses its exact shoreline above, not coarse raster bounds.
+      if(b.id.startsWith('water-network-')) continue;
       const dsq = (cx - b.cx) * (cx - b.cx) + (cz - b.cz) * (cz - b.cz);
       if (dsq > searchRadiusSq) continue;
 

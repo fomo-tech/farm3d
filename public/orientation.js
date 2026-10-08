@@ -29,7 +29,8 @@
   // Chrome's iOS embedding can retain native content insets with cover after
   // rotation. Let it own those insets rather than adding the same safe area
   // again inside the page. Safari keeps its edge-to-edge viewport.
-  const chromeIOS = /CriOS/i.test(navigator.userAgent);
+  const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
+  const chromeIOS = /CriOS/i.test(navigator.userAgent) && !standalone;
   if (chromeIOS) {
     const viewportMeta = document.querySelector('meta[name="viewport"]');
     if (viewportMeta) viewportMeta.setAttribute('content',
@@ -55,9 +56,21 @@
     if (viewport && Math.abs(viewport.scale - 1) > 0.01) return;
     const layoutPortrait = (window.innerHeight || 0) > (window.innerWidth || 0);
     const viewportPortrait = Boolean(viewport && viewport.height > viewport.width);
-    const useVisualViewport = Boolean(viewport && (layoutPortrait === viewportPortrait || !window.innerWidth));
-    const width = useVisualViewport ? (viewport?.width || window.innerWidth) : (window.innerWidth || viewport?.width);
+    const useVisualViewport = Boolean(!standalone && viewport && (layoutPortrait === viewportPortrait || !window.innerWidth));
+    let width = useVisualViewport ? (viewport?.width || window.innerWidth) : (window.innerWidth || viewport?.width);
     const height = useVisualViewport ? (viewport?.height || window.innerHeight) : (window.innerHeight || viewport?.height);
+
+    if (chromeIOS) {
+      // Chrome can keep a wider layout viewport behind its landscape controls.
+      // Only use measurements in the current orientation while metrics settle.
+      const landscape = width >= height;
+      const clientWidth = doc.clientWidth;
+      const portraitWidth = Math.min(window.screen.width, window.screen.height);
+      const candidates = [width, window.innerWidth, clientWidth].filter((value, index) =>
+        Number.isFinite(value) && value > 0 &&
+        (index === 0 || !landscape || value > Math.max(height, portraitWidth)));
+      width = Math.min(...candidates);
+    }
 
     const roundedW = `${Math.round(width)}px`;
     const roundedH = `${Math.round(height)}px`;

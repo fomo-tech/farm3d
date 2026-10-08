@@ -1,0 +1,75 @@
+import assert from 'node:assert/strict';
+import {MongoClient} from 'mongodb';
+import {randomUUID} from 'node:crypto';
+import {COMMUNITY_CODES} from '../server/communityCodeConfig.js';
+import {ECONOMY_REWARD_CONFIG as rewards} from '../shared/economyRewardConfig.js';
+import {MAIN_MISSIONS,DAILY_MISSIONS,freshDailyMissions} from '../shared/missions.js';
+import {getAttendanceStatus} from '../shared/dailyAttendance.js';
+const database=`reward_audit_test_${randomUUID().replaceAll('-','')}`;process.env.MONGODB_DB=database;
+const mongo=new MongoClient(process.env.MONGODB_URI||'mongodb://127.0.0.1:27017',{serverSelectionTimeoutMS:5000});let failed=false;
+try{
+ await mongo.connect();const store=await import('../server/GameStore.js');await store.initGameStore();await store.authenticate('reward-player',null);
+ const players=mongo.db(database).collection('players');
+ const assignments=mongo.db(database).collection('farm_assignments');
+ await assignments.insertOne({playerId:'reward-player',villageId:'binh-minh',lot:1,status:'owned'});
+ await players.updateOne({playerId:'reward-player'},{$set:{livestock:[{id:'test-chicken',species:'chicken'}]}});
+ const reset=extra=>players.updateOne({playerId:'reward-player'},{$set:{'progress.coins':1000,'progress.xp':0,'progress.communityRewards':{daily:[],codes:[]},'progress.claimedQuests':[],'progress.stats':{planted:100,watered:100,harvested:100,orders:100,crafted:100,animalsFed:100},...extra}});
+ const act=(action,payload={})=>store.performAction('reward-player',action,payload);
+ const unchanged=async(action,payload)=>{const before=await players.findOne({playerId:'reward-player'});assert((await act(action,payload)).error);assert.deepEqual(await players.findOne({playerId:'reward-player'}),before);};
+ await reset({'progress.onboarding':{completed:true,step:1},'progress.unlockedPlots':24});
+ await assignments.updateOne({playerId:'reward-player'},{$set:{status:'pending'}});
+ await unchanged('claim_mission',{kind:'main',id:MAIN_MISSIONS[0].id,hasLand:true,coins:999999});
+ await unchanged('claim_seeds',{});
+ await assignments.updateOne({playerId:'reward-player'},{$set:{status:'owned'}});
+ await reset({});
+ for(const id of ['toString','__proto__','constructor'])await unchanged('claim_quest',{id});
+ for(const [id,quest] of Object.entries(rewards.quests)){const before=await store.loadPlayer('reward-player');const r=await act('claim_quest',{id,coins:999999});assert(!r.error);assert.equal(r.player.progress.coins,before.progress.coins+quest.coins);await unchanged('claim_quest',{id});}
+ await reset({});
+ for(const [code,rule] of Object.entries(COMMUNITY_CODES)){if(!rule.enabled)continue;const before=await store.loadPlayer('reward-player');const r=await act('redeem_giftcode',{code,coins:999999});assert(!r.error);assert.equal(r.player.progress.coins,before.progress.coins+rule.coins);await unchanged('redeem_giftcode',{code:code.toLowerCase()});}
+ await reset({});
+ const dailyRace=await Promise.all([act('claim_daily_reward'),act('claim_daily_reward')]);assert.equal(dailyRace.filter(r=>!r.error).length,1);assert.equal((await store.loadPlayer('reward-player')).progress.coins,1000+getAttendanceStatus([],Date.now()).coins);await unchanged('claim_daily_reward',{});
+ await reset({'progress.onboarding':{completed:true,step:6},'progress.missions':{main:{claimed:[]},daily:freshDailyMissions({},Date.now())}});
+ for(const m of MAIN_MISSIONS){const before=await store.loadPlayer('reward-player');const r=await act('claim_mission',{kind:'main',id:m.id});assert(!r.error,r.error);assert.equal(r.player.progress.coins,before.progress.coins+m.coins);await unchanged('claim_mission',{kind:'main',id:m.id});}
+ for(const m of DAILY_MISSIONS){const before=await store.loadPlayer('reward-player');const r=await act('claim_mission',{kind:'daily',id:m.id});assert(!r.error);assert.equal(r.player.progress.coins,before.progress.coins+m.coins);await unchanged('claim_mission',{kind:'daily',id:m.id});}
+ await reset({'progress.onboarding':{step:1,freeSeedsReceived:false,bicycleAwarded:false},'progress.freeSeeds':0});const seeds=await act('claim_seeds');assert(!seeds.error);assert.equal(seeds.player.progress.coins,1050);assert.equal(seeds.player.progress.freeSeeds,3);await unchanged('claim_seeds',{});
+ await players.updateOne({playerId:'reward-player'},{$set:{'progress.onboarding.step':5}});const end=await act('complete_onboarding');assert(!end.error);assert.equal(end.player.progress.coins,1250);await unchanged('complete_onboarding',{});
+ await store.authenticate('preland-player',null);
+ const preAct=(action,payload={})=>store.performAction('preland-player',action,payload,{venue:'fishing'});
+ const beginner=await store.loadPlayer('preland-player');
+ assert(beginner.progress.missions.daily.ids.every(id=>id.startsWith('daily-fish')));
+ assert((await preAct('claim_mission',{kind:'daily',id:'daily-fish-3',fishCaught:999,coins:999999})).error);
+ assert(!(await preAct('fishing_buy',{id:'rod_bamboo'})).error);
+ await players.updateOne({playerId:'preland-player'},{$set:{'progress.fishing.ownedRods':['rod_bamboo'],'progress.fishing.stats.totalCaught':6,'progress.fishing.fish':{carp:{count:3,totalWeight:4.5}}}});
+ assert((await preAct('claim_mission',{kind:'daily',id:'daily-fish-3'})).error,'intro must include actual sale');
+ const sale=await preAct('fishing_sell_all');assert(!sale.error);assert.equal(sale.player.progress.fishing.stats.totalSold,3);
+ const beforeFishRewards=sale.player.progress.coins;
+ const race=await Promise.all([preAct('claim_mission',{kind:'daily',id:'daily-fish-3'}),preAct('claim_mission',{kind:'daily',id:'daily-fish-3'})]);
+ assert.equal(race.filter(r=>!r.error).length,1);
+ for(const id of ['daily-fish-sell-3','daily-fish-6'])assert(!(await preAct('claim_mission',{kind:'daily',id})).error);
+ assert.equal((await store.loadPlayer('preland-player')).progress.coins,beforeFishRewards+105);
+ await assignments.insertOne({playerId:'preland-player',villageId:'binh-minh',lot:2,status:'owned'});
+ await players.updateOne({playerId:'preland-player'},{$set:{'progress.unlockedPlots':4,'progress.onboarding.step':5}});
+ const finish=await preAct('complete_onboarding');assert(!finish.error);
+ assert.equal(finish.player.progress.missions.daily.claimed.length,3,'tutorial completion cannot reset daily claims');
+ assert((await preAct('claim_mission',{kind:'daily',id:'daily-plant-2'})).error,'cannot claim unassigned farm dailies on purchase day');
+ await store.authenticate('activity-player',null);
+ await assignments.insertOne({playerId:'activity-player',villageId:'binh-minh',lot:3,status:'owned'});
+ const activityStats={planted:0,watered:0,harvested:0,orders:1,crafted:1,animalsFed:0};
+ const activityDaily={...freshDailyMissions(activityStats,Date.now()),ids:['daily-plant-2','daily-orders-1','daily-feed-1'],baseline:{planted:0,orders:1,animalsFed:0}};
+ await players.updateOne({playerId:'activity-player'},{$set:{'progress.coins':1000,'progress.xp':80,'progress.unlockedPlots':4,'progress.onboarding.completed':true,'progress.stats':activityStats,'progress.inventory.carrot':1,'progress.inventory.wheat':2,'progress.missions':{main:{claimed:[]},daily:activityDaily},livestock:[{id:'activity-chicken',species:'chicken',productReadyAt:0}]}});
+ const activityAct=(action,payload={})=>store.performAction('activity-player',action,payload,{villageId:'binh-minh',farmId:'farm_000003'});
+ assert((await activityAct('claim_mission',{kind:'daily',id:'daily-orders-1',orders:1000})).error);
+ assert(!(await activityAct('deliver_order',{id:'starter'})).error);
+ const orderClaim=await activityAct('claim_mission',{kind:'daily',id:'daily-orders-1'});assert(!orderClaim.error);assert.equal(orderClaim.player.progress.coins,1105);
+ assert(!(await activityAct('feed_animals')).error);
+ assert(!(await activityAct('claim_mission',{kind:'daily',id:'daily-feed-1'})).error);
+ assert((await activityAct('claim_mission',{kind:'daily',id:'daily-feed-1'})).error);
+ assert((await activityAct('claim_mission',{kind:'daily',id:'daily-craft-1'})).error,'unassigned activity is rejected');
+ // A separate day's snapshot tests the craft event and its baseline.
+ await players.updateOne({playerId:'activity-player'},{$set:{'progress.missions.daily':{...freshDailyMissions(activityStats,Date.now()),ids:['daily-plant-2','daily-harvest-2','daily-craft-1'],baseline:{planted:0,harvested:0,crafted:1}}}});
+ assert(!(await activityAct('craft',{id:'flour'})).error);
+ const beforeCraft=await store.loadPlayer('activity-player');
+ const craftClaim=await activityAct('claim_mission',{kind:'daily',id:'daily-craft-1'});assert(!craftClaim.error);assert.equal(craftClaim.player.progress.coins,beforeCraft.progress.coins+35);
+ assert((await activityAct('claim_mission',{kind:'daily',id:'daily-craft-1'})).error);
+ console.log('PASS reward Mongo: authoritative amounts, code/attendance/quest/main/daily/tutorial duplicate protection, concurrent attendance and invalid quest IDs.');
+}catch(e){failed=true;console.error(e);}finally{if(mongo.topology?.isConnected())await mongo.db(database).dropDatabase();await mongo.close();}process.exit(failed?1:0);

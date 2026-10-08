@@ -7,13 +7,13 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { Color4 } from '@babylonjs/core/Maths/math.color.js';
 import { buildHumanMesh } from '../game/player/buildHumanMesh.js';
 
-export function ArrivalAvatar({ outfit, color }) {
+export function ArrivalAvatar({ outfit, color, gender = 'male', hair = 'hair_buzzcut', hairColor = '#76503b', skinTone = 'peach' }) {
   const mobile = useRef(window.matchMedia('(pointer: coarse), (max-width: 900px)').matches).current;
   const [failed, setFailed] = useState(false);
   const canvas = useRef(null);
   const model = useRef(null);
-  const latest = useRef({ outfit, color });
-  latest.current = { outfit, color };
+  const latest = useRef({ outfit, color, gender, hair, hairColor, skinTone });
+  latest.current = { outfit, color, gender, hair, hairColor, skinTone };
   useEffect(() => {
     if (mobile || failed || !canvas.current) return;
     let engine, scene, resize, stopped = false;
@@ -35,27 +35,46 @@ export function ArrivalAvatar({ outfit, color }) {
       engine.setHardwareScalingLevel(1 / Math.min(devicePixelRatio || 1, 1.5));
       scene = new Scene(engine);
       scene.clearColor = new Color4(0, 0, 0, 0);
-      const camera = new ArcRotateCamera('arrival-camera', Math.PI / 2, 1.42, 3.6, new Vector3(0, 1.15, 0), scene);
-      camera.lowerRadiusLimit = camera.upperRadiusLimit = 3.6;
-      camera.lowerBetaLimit = camera.upperBetaLimit = 1.42;
+      const camera = new ArcRotateCamera('arrival-camera', Math.PI / 2, 1.40, 3.45, new Vector3(0, 0.95, 0), scene);
+      camera.lowerRadiusLimit = camera.upperRadiusLimit = 3.45;
+      camera.lowerBetaLimit = camera.upperBetaLimit = 1.40;
       camera.panningSensibility = 0;
       camera.attachControl(canvas.current, true);
       new HemisphericLight('arrival-light', new Vector3(0.3, 1, 1), scene).intensity = 0.95;
       model.current = buildHumanMesh(scene, 'arrival-avatar');
       model.current.setOutfit(latest.current.outfit, latest.current.color);
+      if (latest.current.gender) model.current.setGender(latest.current.gender);
+      if (latest.current.hair || latest.current.hairColor) model.current.setHair(latest.current.hair, latest.current.hairColor);
+      if (latest.current.skinTone) model.current.setSkinTone(latest.current.skinTone);
       resize = new ResizeObserver(() => { if (!stopped) engine.resize(); });
       resize.observe(canvas.current);
-      engine.runRenderLoop(() => { if (!stopped) { try { scene.render(); } catch (error) { fail(error); } } });
+      let lastTime = performance.now();
+      engine.runRenderLoop(() => {
+        if (!stopped) {
+          try {
+            const now = performance.now();
+            const delta = Math.min(0.064, (now - lastTime) / 1000);
+            lastTime = now;
+            model.current?.animate(delta, false, 0);
+            scene.render();
+          } catch (error) { fail(error); }
+        }
+      });
       engine.onContextLostObservable.add(() => fail(new Error('Avatar preview context lost')));
     } catch (error) { fail(error); }
     return cleanup;
   }, [mobile, failed]);
   useEffect(() => {
-    try { model.current?.setOutfit(outfit, color); } catch (error) {
+    try {
+      model.current?.setOutfit(outfit, color);
+      if (gender) model.current?.setGender(gender);
+      if (hair || hairColor) model.current?.setHair(hair, hairColor);
+      if (skinTone) model.current?.setSkinTone(skinTone);
+    } catch (error) {
       window.__farmDebug?.report(error, 'AVATAR OUTFIT');
       setFailed(true);
     }
-  }, [outfit, color]);
+  }, [outfit, color, gender, hair, hairColor, skinTone]);
   // A vector preview shares no GPU buffers/context with the running world.
   // Outfit selection still applies to the actual 3D player on confirmation.
   if (mobile || failed) return <svg className="arrival-avatar-canvas" viewBox="0 0 220 300" role="img" aria-label="Xem trước nhân vật và màu trang phục">
@@ -65,11 +84,12 @@ export function ArrivalAvatar({ outfit, color }) {
     <path d="M78 153q32-18 64 0l7 62H71z" fill={color || '#f8fafc'} stroke="#3c5367" strokeWidth="3" />
     <path d="M76 210h68v22H76z" fill="#38689b" />
     <ellipse cx="110" cy="104" rx="47" ry="50" fill="#f2cfad" stroke="#d6a580" strokeWidth="2" />
-    <path d="M64 103q-8-66 51-60 54 0 42 65l-20-31-30 16-29-7z" fill="#6b452c" />
+    <path d={hair === 'hair_buzzcut' || hair === 'buzzcut'
+      ? 'M64 99q0-46 46-46t46 46l-5-13q-41-12-82 0z'
+      : 'M64 103q-8-66 51-60 54 0 42 65l-20-31-30 16-29-7z'} fill={hairColor} />
     <ellipse cx="93" cy="109" rx="4" ry="6" fill="#28303c" /><ellipse cx="127" cy="109" rx="4" ry="6" fill="#28303c" />
     <path d="M100 130q10 10 20 0" fill="none" stroke="#9c583c" strokeWidth="3" strokeLinecap="round" />
     <path d="M77 272h24m19 0h24" stroke="#f8fafc" strokeWidth="14" strokeLinecap="round" />
-    {outfit === 'farmer' && <path d="M56 71l54-43 54 43z" fill="#f5c96c" stroke="#b78535" strokeWidth="3" />}
   </svg>;
   return <canvas ref={canvas} className="arrival-avatar-canvas" aria-label="Nhân vật 3D — kéo để xoay" />;
 }

@@ -307,9 +307,11 @@ export function createOceanDepthTexture(scene, size = 512, options = {}) {
   const ctx = dt.getContext();
 
   // Màu nước biển phẳng mịn, tươi sáng, thuần khiết chuẩn Play Together (100% như mẫu)
-  ctx.fillStyle = '#38bdf8';
+  ctx.fillStyle = '#f1ffff';
   ctx.fillRect(0, 0, size, size);
 
+  ctx.strokeStyle='#e3f2f4';ctx.lineWidth=.7;
+  for(let i=0;i<28;i++){const x=(i*83)%size,y=(i*59)%size;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+7,y+1.5,x+17,y);ctx.stroke();}
   dt.update();
   return dt;
 }
@@ -1245,7 +1247,7 @@ export function createOceanHorizonTexture(scene, size = 256) {
   dt.wrapV = Texture.CLAMP_ADDRESSMODE;
   const ctx = dt.getContext();
   // Màu nước biển phẳng mịn, tươi sáng, thuần khiết chuẩn Play Together (100% đồng nhất)
-  ctx.fillStyle = '#38bdf8';
+  ctx.fillStyle = '#f1ffff';
   ctx.fillRect(0, 0, size, size);
   dt.update();
   return dt;

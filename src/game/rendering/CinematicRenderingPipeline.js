@@ -1,3 +1,4 @@
+import { FxaaPostProcess } from '@babylonjs/core/PostProcesses/fxaaPostProcess.js';
 import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline.js';
 import { ImageProcessingConfiguration } from '@babylonjs/core/Materials/imageProcessingConfiguration.js';
 import { isolateColorGrading, applyColorPreset } from './IsolatedColorGrading.js';
@@ -11,6 +12,10 @@ export function resolveAntialiasSamples(quality, supportedSamples = 1) {
   return Math.min(quality === 'eco' ? 1 : 4, Math.max(1, supportedSamples));
 }
 
+export function resolveMobileAntialiasSamples(quality, supportedSamples = 1) {
+  return Math.min(quality === 'eco' ? 1 : 2, Math.max(1, supportedSamples));
+}
+
 export function createCinematicRenderingPipeline(scene, camera, options = {}) {
   let pipeline = null;
   let currentPreset = 'day';
@@ -20,8 +25,7 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
   const supportedSamples = engine.webGLVersion >= 2 ? Math.max(1, engine.getCaps().maxMSAASamples || 1) : 1;
   const resolveSamples = quality => options.lightweight ? 1 : resolveAntialiasSamples(quality, supportedSamples);
 
-  // Mobile grades each material directly. A full-screen postprocess allocates
-  // an additional color/depth target at Retina resolution even with MSAA off.
+  // Two samples smooth geometry edges before the LDR FXAA pass; no HDR buffers.
   if (options.lightweight) {
     const config = scene.imageProcessingConfiguration;
     config.applyByPostProcess = false;
@@ -29,7 +33,11 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     config.toneMappingEnabled = true;
     config.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_KHR_PBR_NEUTRAL;
     applyColorPreset(config, 'day');
-    return { pipeline: null, ssao: null, updateFocus: () => {}, setQuality: () => {},
+    const fxaa = new FxaaPostProcess('mobile-fxaa', 1, camera);
+    fxaa.samples = resolveMobileAntialiasSamples(currentQuality, supportedSamples);
+    return { pipeline: null, fxaa, ssao: null, updateFocus: () => {}, setQuality: (quality) => {
+        fxaa.samples = resolveMobileAntialiasSamples(quality, supportedSamples);
+      },
       // Avoid dirtying every world material during the mobile day/night loop.
       setCinematicPreset: () => {} };
   }

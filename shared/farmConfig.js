@@ -1,5 +1,5 @@
 // Single client/server source of truth. Times are milliseconds; prices are coins.
-// Preserve existing balance and IDs so saved progress remains compatible.
+// Stable IDs preserve saved progress; growth times govern both harvest and theft.
 function deepFreeze(value) {
   for (const child of Object.values(value)) if (child && typeof child === 'object') deepFreeze(child);
   return Object.freeze(value);
@@ -40,22 +40,23 @@ export function validateFarmConfig(config) {
   if (!Number.isFinite(config.security.theft.newFarmProtectionMs) || config.security.theft.newFarmProtectionMs < 0) throw new Error('Farm config: invalid new farm protection time');
   if (typeof config.security.gate.defaultOpen !== 'boolean') throw new Error('Farm config: defaultOpen must be boolean');
   if (config.security.theft.requireOpenGate !== true) throw new Error('Farm config: theft requires an open gate');
-  if (!(config.security.theft.ownerRetainedRatio >= .75 && config.security.theft.ownerRetainedRatio < 1)) throw new Error('Farm config: protect at least 75% of owner yield');
+  if (!(config.security.theft.ownerRetainedRatio >= 0 && config.security.theft.ownerRetainedRatio < 1)) throw new Error('Farm config: invalid owner retained ratio');
   return config;
 }
 
 export const FARM_CONFIG = deepFreeze(validateFarmConfig({
-  version: 1,
+  version: 2,
   crops: {
-    carrot: { id: 'carrot', name: 'Cà rốt', icon: 'carrot', seedCost: 5, sellPrice: 12, growMs: 60_000, level: 1, color: '#ed8b35' },
-    wheat: { id: 'wheat', name: 'Lúa mì', icon: 'wheat', seedCost: 12, sellPrice: 30, growMs: 180_000, level: 2, color: '#d9ad45' },
-    tomato: { id: 'tomato', name: 'Cà chua', icon: 'tomato', seedCost: 20, sellPrice: 52, growMs: 300_000, level: 3, color: '#d94c3d' },
-    strawberry: { id: 'strawberry', name: 'Dâu tây', icon: 'strawberry', seedCost: 45, sellPrice: 120, growMs: 600_000, level: 5, color: '#ca3858' },
-    pumpkin: { id: 'pumpkin', name: 'Bí ngô', icon: 'pumpkin', seedCost: 32, sellPrice: 86, growMs: 420_000, level: 4, color: '#f97316' },
-    melon: { id: 'melon', name: 'Dưa hấu', icon: 'melon', seedCost: 58, sellPrice: 155, growMs: 720_000, level: 6, color: '#22c55e' },
-    turnip: { id: 'turnip', name: 'Củ cải', icon: 'turnip', seedCost: 76, sellPrice: 205, growMs: 900_000, level: 8, color: '#d8b4fe' },
+    carrot: { id: 'carrot', name: 'Cà rốt', icon: 'carrot', seedCost: 5, sellPrice: 12, growMs: 1_800_000, level: 1, color: '#ed8b35' },
+    wheat: { id: 'wheat', name: 'Lúa mì', icon: 'wheat', seedCost: 12, sellPrice: 30, growMs: 2_700_000, level: 2, color: '#d9ad45' },
+    tomato: { id: 'tomato', name: 'Cà chua', icon: 'tomato', seedCost: 20, sellPrice: 52, growMs: 3_600_000, level: 3, color: '#d94c3d' },
+    strawberry: { id: 'strawberry', name: 'Dâu tây', icon: 'strawberry', seedCost: 45, sellPrice: 120, growMs: 7_200_000, level: 5, color: '#ca3858' },
+    pumpkin: { id: 'pumpkin', name: 'Bí ngô', icon: 'pumpkin', seedCost: 32, sellPrice: 86, growMs: 5_400_000, level: 4, color: '#f97316' },
+    melon: { id: 'melon', name: 'Dưa hấu', icon: 'melon', seedCost: 58, sellPrice: 155, growMs: 10_800_000, level: 6, color: '#22c55e' },
+    turnip: { id: 'turnip', name: 'Củ cải', icon: 'turnip', seedCost: 76, sellPrice: 205, growMs: 14_400_000, level: 8, color: '#d8b4fe' },
   },
   products: {
+    apple: { name: 'Táo', sellPrice: 9 },
     egg: { name: 'Trứng gà', sellPrice: 18 },
     duckEgg: { name: 'Trứng vịt', sellPrice: 24 },
     milk: { name: 'Sữa', sellPrice: 40 },
@@ -79,8 +80,8 @@ export const FARM_CONFIG = deepFreeze(validateFarmConfig({
   security: {
     gate: { defaultOpen: false, animationMs: 700, interactionDistance: 3, allowGuestExit: true },
     theft: { enabled: true, requireOpenGate: true, interactionMs: 3000, interactionDistance: 3,
-      dailyPlayerLimit: 3, dailyFarmLimit: 3, dailyLimitsEnabled: false, ownerRetainedRatio: 0.75,
-      newFarmProtectionMs: 0, normalYield: 4, tutorialYield: 1 },
+      dailyPlayerLimit: 10, dailyFarmLimit: 6, dailyLimitsEnabled: true, ownerRetainedRatio: 0,
+      newFarmProtectionMs: 1_800_000, normalYield: 4, tutorialYield: 1 },
   },
 }));
 
@@ -99,8 +100,9 @@ export function collectFarmProducts(animals, now = Date.now()) {
   const livestock = animals.map(animal => {
     const definition = FARM_CONFIG.animals[animal.species];
     if (!definition || definition.saleOnly || !Number.isFinite(animal.productReadyAt) || animal.productReadyAt <= 0 || animal.productReadyAt > now) return animal;
-    products[definition.product] = (products[definition.product] || 0) + 1;
-    return { ...animal, productReadyAt: 0 };
+    const amount=Math.max(0,(animal.productYield||1)-(animal.stolenAmount||0));
+    products[definition.product] = (products[definition.product] || 0) + amount;
+    return { ...animal, productReadyAt: 0, stolenAmount:0 };
   });
   return { livestock, products, count: Object.values(products).reduce((sum, count) => sum + count, 0) };
 }

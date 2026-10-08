@@ -1,0 +1,5259 @@
+{
+  "version": 1,
+  "date": "2026-10-06",
+  "samples": 32,
+  "sessions": 8,
+  "startAt": "2026-10-06T09:00:00+07:00",
+  "caveats": [
+    "Thời gian và tỷ lệ thành công là giả định, chưa đo telemetry; các phân vị chỉ thể hiện biến động trong mô hình.",
+    "Hai buổi mỗi ngày lúc 09:00/19:00 Việt Nam; điểm danh giữ giờ đổi ngày UTC như server hiện tại.",
+    "Sau mốc đủ tiền mua đất, mô hình tiếp tục câu cá để so sánh dòng tiền; số dư những buổi sau không phải nông trại sau khi mua.",
+    "Phiên câu chưa xong khi hết buổi mất mồi và không nhận cá; cá, mồi dư và tiến độ đi lại được giữ; không tạo thu nhập offline.",
+    "Xu luôn nguyên; bán cả thùng dùng trọng lượng trung bình và cách làm tròn của server; cá chưa bán không được tính là xu mua đất.",
+    "Mua cần trúc một lần, giữ thùng 10 con; chưa nâng cần/thùng. Không tính hao độ bền vì server chưa áp cơ chế này.",
+    "Chỉ xét lô rẻ nhất. Chưa mô phỏng lô cao cấp, phí dịch chuyển nhanh, chiến lược đơn NPC, casino hoặc việc nhờ người chơi khác.",
+    "Giá lô cao cấp và code đã phát hành cần chính sách chuyển tiếp riêng. Phương án thử chỉ chạy offline."
+  ],
+  "sources": {
+    "rewardsVersion": 1,
+    "fishingVersion": 2,
+    "landConfig": {
+      "minPrice": 2000,
+      "maxPrice": 8000,
+      "starterDiscount": 0,
+      "roundingStep": 50,
+      "center": {
+        "x": 0,
+        "z": 0
+      },
+      "villageMultipliers": {},
+      "overrides": {}
+    }
+  },
+  "profiles": {
+    "fast": {
+      "initialTravelMs": 60000,
+      "returnTravelMs": 15000,
+      "saleMs": 3000,
+      "castOverheadMs": 1200,
+      "betweenCastsMs": 1200,
+      "reactionMs": 300,
+      "hookSuccess": 0.98,
+      "rareFightSuccess": 0.95
+    },
+    "regular": {
+      "initialTravelMs": 180000,
+      "returnTravelMs": 45000,
+      "saleMs": 6000,
+      "castOverheadMs": 2500,
+      "betweenCastsMs": 3000,
+      "reactionMs": 750,
+      "hookSuccess": 0.9,
+      "rareFightSuccess": 0.8
+    },
+    "relaxed": {
+      "initialTravelMs": 240000,
+      "returnTravelMs": 75000,
+      "saleMs": 10000,
+      "castOverheadMs": 5000,
+      "betweenCastsMs": 6000,
+      "reactionMs": 1200,
+      "hookSuccess": 0.75,
+      "rareFightSuccess": 0.6
+    }
+  },
+  "policies": [
+    {
+      "id": "current",
+      "initialCoins": 180,
+      "codes": {
+        "KAIAFARM": {
+          "coins": 500,
+          "enabled": true,
+          "expiresAt": null
+        },
+        "PLAYTOGETHER": {
+          "coins": 1000,
+          "enabled": true,
+          "expiresAt": null
+        },
+        "CHAOCUDAN": {
+          "coins": 300,
+          "enabled": true,
+          "expiresAt": null
+        }
+      },
+      "attendance": [
+        200,
+        250,
+        300,
+        350,
+        400,
+        500,
+        1000
+      ],
+      "landPrice": 2000
+    },
+    {
+      "id": "trial",
+      "initialCoins": 180,
+      "codes": {
+        "TRIAL_WELCOME": {
+          "coins": 100,
+          "enabled": true,
+          "expiresAt": null
+        },
+        "TRIAL_COMMUNITY": {
+          "coins": 100,
+          "enabled": true,
+          "expiresAt": null
+        },
+        "TRIAL_NEW_FARMER": {
+          "coins": 100,
+          "enabled": true,
+          "expiresAt": null
+        }
+      },
+      "attendance": [
+        100,
+        120,
+        140,
+        160,
+        180,
+        220,
+        300
+      ],
+      "landPrice": 6000
+    },
+    {
+      "id": "trial-existing-codes",
+      "initialCoins": 180,
+      "codes": {
+        "KAIAFARM": {
+          "coins": 500,
+          "enabled": true,
+          "expiresAt": null
+        },
+        "PLAYTOGETHER": {
+          "coins": 1000,
+          "enabled": true,
+          "expiresAt": null
+        },
+        "CHAOCUDAN": {
+          "coins": 300,
+          "enabled": true,
+          "expiresAt": null
+        }
+      },
+      "attendance": [
+        100,
+        120,
+        140,
+        160,
+        180,
+        220,
+        300
+      ],
+      "landPrice": 6000
+    }
+  ],
+  "rewardCatalog": {
+    "entries": [
+      {
+        "id": "initial",
+        "kind": "initial",
+        "coins": 180,
+        "availableBeforeLand": true
+      },
+      {
+        "id": "KAIAFARM",
+        "kind": "giftcode",
+        "coins": 500,
+        "enabled": true,
+        "expiresAt": null,
+        "availableBeforeLand": true
+      },
+      {
+        "id": "PLAYTOGETHER",
+        "kind": "giftcode",
+        "coins": 1000,
+        "enabled": true,
+        "expiresAt": null,
+        "availableBeforeLand": true
+      },
+      {
+        "id": "CHAOCUDAN",
+        "kind": "giftcode",
+        "coins": 300,
+        "enabled": true,
+        "expiresAt": null,
+        "availableBeforeLand": true
+      },
+      {
+        "id": "neighbor-water",
+        "kind": "repeatable-help",
+        "coins": 5,
+        "availableBeforeLand": true,
+        "reason": "Requires another owned farm, open gate and planted/unwatered crop; excluded from fishing-only strategy"
+      },
+      {
+        "id": "attendance",
+        "kind": "daily",
+        "coinsByDay": [
+          200,
+          250,
+          300,
+          350,
+          400,
+          500,
+          1000
+        ],
+        "availableBeforeLand": true,
+        "reset": "UTC, 07:00 Vietnam"
+      },
+      {
+        "id": "first_fish",
+        "kind": "fishing-mission",
+        "coins": 20,
+        "goal": 1,
+        "availableBeforeLand": true
+      },
+      {
+        "id": "lake_angler",
+        "kind": "fishing-mission",
+        "coins": 60,
+        "goal": 10,
+        "availableBeforeLand": true
+      },
+      {
+        "id": "collector",
+        "kind": "fishing-mission",
+        "coins": 80,
+        "goal": 3,
+        "availableBeforeLand": true
+      },
+      {
+        "id": "tutorial-seeds",
+        "kind": "onboarding",
+        "coins": 50,
+        "seeds": 3,
+        "availableBeforeLand": false
+      },
+      {
+        "id": "tutorial-completion",
+        "kind": "onboarding",
+        "coins": 200,
+        "xp": 80,
+        "vehicle": "bike",
+        "availableBeforeLand": false
+      },
+      {
+        "id": "plant-3",
+        "kind": "legacy-quest",
+        "coins": 35,
+        "goal": 3,
+        "availableBeforeLand": false
+      },
+      {
+        "id": "harvest-3",
+        "kind": "legacy-quest",
+        "coins": 60,
+        "goal": 3,
+        "availableBeforeLand": false
+      },
+      {
+        "id": "feed-2",
+        "kind": "legacy-quest",
+        "coins": 50,
+        "goal": 2,
+        "availableBeforeLand": false
+      },
+      {
+        "id": "main-harvest-3",
+        "kind": "main-mission",
+        "coins": 80,
+        "goal": 3,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding"
+      },
+      {
+        "id": "main-orders-2",
+        "kind": "main-mission",
+        "coins": 120,
+        "goal": 2,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding"
+      },
+      {
+        "id": "main-feed-2",
+        "kind": "main-mission",
+        "coins": 150,
+        "goal": 2,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding"
+      },
+      {
+        "id": "main-plant-5",
+        "kind": "main-mission",
+        "coins": 90,
+        "goal": 5,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding"
+      },
+      {
+        "id": "main-water-5",
+        "kind": "main-mission",
+        "coins": 100,
+        "goal": 5,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding"
+      },
+      {
+        "id": "main-harvest-6",
+        "kind": "main-mission",
+        "coins": 120,
+        "goal": 6,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding"
+      },
+      {
+        "id": "main-craft-1",
+        "kind": "main-mission",
+        "coins": 130,
+        "goal": 1,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding"
+      },
+      {
+        "id": "main-orders-3",
+        "kind": "main-mission",
+        "coins": 160,
+        "goal": 3,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding"
+      },
+      {
+        "id": "main-feed-4",
+        "kind": "main-mission",
+        "coins": 170,
+        "goal": 4,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding"
+      },
+      {
+        "id": "main-harvest-10",
+        "kind": "main-mission",
+        "coins": 180,
+        "goal": 10,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding"
+      },
+      {
+        "id": "main-craft-3",
+        "kind": "main-mission",
+        "coins": 190,
+        "goal": 3,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding"
+      },
+      {
+        "id": "main-plant-15",
+        "kind": "main-mission",
+        "coins": 200,
+        "goal": 15,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding"
+      },
+      {
+        "id": "daily-plant-2",
+        "kind": "daily-mission",
+        "coins": 30,
+        "goal": 2,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding",
+        "reset": "UTC+7"
+      },
+      {
+        "id": "daily-harvest-2",
+        "kind": "daily-mission",
+        "coins": 40,
+        "goal": 2,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding",
+        "reset": "UTC+7"
+      },
+      {
+        "id": "daily-water-2",
+        "kind": "daily-mission",
+        "coins": 35,
+        "goal": 2,
+        "availableBeforeLand": false,
+        "reason": "Requires completed farm onboarding",
+        "reset": "UTC+7"
+      },
+      {
+        "id": "starter",
+        "kind": "order",
+        "coins": 65,
+        "inputs": {
+          "carrot": 1
+        },
+        "availableBeforeLand": true,
+        "reason": "Requires actual goods; not a free reward and not modeled as fishing income"
+      },
+      {
+        "id": "bakery",
+        "kind": "order",
+        "coins": 145,
+        "inputs": {
+          "wheat": 4
+        },
+        "availableBeforeLand": true,
+        "reason": "Requires actual goods; not a free reward and not modeled as fishing income"
+      },
+      {
+        "id": "market",
+        "kind": "order",
+        "coins": 220,
+        "inputs": {
+          "carrot": 2,
+          "tomato": 3
+        },
+        "availableBeforeLand": true,
+        "reason": "Requires actual goods; not a free reward and not modeled as fishing income"
+      }
+    ],
+    "totals": {
+      "initial": 180,
+      "activeCodes": 1800,
+      "attendanceWeek": 3000,
+      "fishingOneTime": 160,
+      "onboardingOneTime": 250,
+      "legacyOneTime": 145,
+      "mainOneTime": 1690,
+      "dailyFarm": 105
+    }
+  },
+  "rows": [
+    {
+      "variant": "current-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 12.32,
+        "p50": 13.58,
+        "p90": 14.46
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 13.95,
+      "walletAfterLandP50": 93,
+      "caughtMean": 631.41,
+      "escapedMean": 20.09,
+      "saleTripsMean": 62.84,
+      "firstSessionNetP50": 2064,
+      "finalCoinsP50": 17240,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 16032.5
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 14.96,
+        "p50": 15.87,
+        "p90": 17.11
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 15.87,
+      "walletAfterLandP50": 113,
+      "caughtMean": 650.25,
+      "escapedMean": 19.91,
+      "saleTripsMean": 66.66,
+      "firstSessionNetP50": 1666,
+      "finalCoinsP50": 14412,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -3371.88,
+        "fishing-mission": 160,
+        "fish-sale": 16474.16
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 26.89,
+        "p50": 30.3,
+        "p90": 35.28
+      },
+      "sessionAtPurchaseP50": 3,
+      "reserveActiveMinutesP50": 30.3,
+      "walletAfterLandP50": 65,
+      "caughtMean": 445.56,
+      "escapedMean": 19.94,
+      "saleTripsMean": 92.81,
+      "firstSessionNetP50": 761,
+      "finalCoinsP50": 7009,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -11220,
+        "fishing-mission": 160,
+        "fish-sale": 16909.91
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 60.19,
+        "p50": 87.71,
+        "p90": 90.24
+      },
+      "sessionAtPurchaseP50": 6,
+      "reserveActiveMinutesP50": 87.71,
+      "walletAfterLandP50": 55,
+      "caughtMean": 378.84,
+      "escapedMean": 13.41,
+      "saleTripsMean": 130.44,
+      "firstSessionNetP50": 320,
+      "finalCoinsP50": 2665,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -10480,
+        "fishing-mission": 160,
+        "fish-sale": 11887.72
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 12.32,
+        "p50": 13.58,
+        "p90": 14.46
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 13.95,
+      "walletAfterLandP50": 93,
+      "caughtMean": 1267.09,
+      "escapedMean": 34.75,
+      "saleTripsMean": 126.44,
+      "firstSessionNetP50": 4013,
+      "finalCoinsP50": 33562,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 32339.16
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 14.96,
+        "p50": 15.76,
+        "p90": 17.11
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 15.98,
+      "walletAfterLandP50": 117,
+      "caughtMean": 1304.59,
+      "escapedMean": 35.47,
+      "saleTripsMean": 133.66,
+      "firstSessionNetP50": 3305,
+      "finalCoinsP50": 27759,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -6715.63,
+        "fishing-mission": 160,
+        "fish-sale": 33254.13
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 26.88,
+        "p50": 35.15,
+        "p90": 41.17
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 35.15,
+      "walletAfterLandP50": 53,
+      "caughtMean": 896.06,
+      "escapedMean": 34.5,
+      "saleTripsMean": 185.81,
+      "firstSessionNetP50": 1489,
+      "finalCoinsP50": 13395,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -22391.25,
+        "fishing-mission": 160,
+        "fish-sale": 34439.63
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 82.55,
+        "p50": 105.38,
+        "p90": 120
+      },
+      "sessionAtPurchaseP50": 4,
+      "reserveActiveMinutesP50": 108.11,
+      "walletAfterLandP50": 48,
+      "caughtMean": 761.75,
+      "escapedMean": 23.31,
+      "saleTripsMean": 261.34,
+      "firstSessionNetP50": 493,
+      "finalCoinsP50": 4556,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -20970,
+        "fishing-mission": 160,
+        "fish-sale": 24069.56
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 12.32,
+        "p50": 13.58,
+        "p90": 14.46
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 13.95,
+      "walletAfterLandP50": 93,
+      "caughtMean": 2534.22,
+      "escapedMean": 65.34,
+      "saleTripsMean": 253.19,
+      "firstSessionNetP50": 8122,
+      "finalCoinsP50": 66102,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 64817.81
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 14.96,
+        "p50": 15.76,
+        "p90": 17.11
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 15.98,
+      "walletAfterLandP50": 117,
+      "caughtMean": 2611.16,
+      "escapedMean": 66.94,
+      "saleTripsMean": 267.41,
+      "firstSessionNetP50": 6660,
+      "finalCoinsP50": 54601,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -13410.94,
+        "fishing-mission": 160,
+        "fish-sale": 66803
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 26.88,
+        "p50": 32.94,
+        "p90": 39.61
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 32.94,
+      "walletAfterLandP50": 71,
+      "caughtMean": 1795.22,
+      "escapedMean": 64.94,
+      "saleTripsMean": 371.72,
+      "firstSessionNetP50": 3145,
+      "finalCoinsP50": 26026,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -44688.75,
+        "fishing-mission": 160,
+        "fish-sale": 69240.13
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 92.04,
+        "p50": 120,
+        "p90": 128.23
+      },
+      "sessionAtPurchaseP50": 3,
+      "reserveActiveMinutesP50": 120,
+      "walletAfterLandP50": 42,
+      "caughtMean": 1529.56,
+      "escapedMean": 43.63,
+      "saleTripsMean": 524,
+      "firstSessionNetP50": 787,
+      "finalCoinsP50": 7540,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -41980,
+        "fishing-mission": 160,
+        "fish-sale": 48263.88
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 25.07,
+        "p50": 28.23,
+        "p90": 29.57
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 28.51,
+      "walletAfterLandP50": 111,
+      "caughtMean": 313.72,
+      "escapedMean": 44.03,
+      "saleTripsMean": 31.13,
+      "firstSessionNetP50": 955,
+      "finalCoinsP50": 9062,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 7807.53
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 30,
+        "p50": 32.6,
+        "p90": 33.52
+      },
+      "sessionAtPurchaseP50": 3,
+      "reserveActiveMinutesP50": 32.77,
+      "walletAfterLandP50": 124,
+      "caughtMean": 302.91,
+      "escapedMean": 41.31,
+      "saleTripsMean": 34.09,
+      "firstSessionNetP50": 682,
+      "finalCoinsP50": 7051,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -1748.44,
+        "fishing-mission": 160,
+        "fish-sale": 7550.38
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 31,
+      "reachedFraction": 0.96875,
+      "activeMinutes": {
+        "p10": 60.51,
+        "p50": 90,
+        "p90": 97.98
+      },
+      "sessionAtPurchaseP50": 7,
+      "reserveActiveMinutesP50": 90,
+      "walletAfterLandP50": 47,
+      "caughtMean": 190,
+      "escapedMean": 37.59,
+      "saleTripsMean": 45.13,
+      "firstSessionNetP50": 195,
+      "finalCoinsP50": 2625,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -5505,
+        "fishing-mission": 160,
+        "fish-sale": 6778.56
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 144.16,
+      "escapedMean": 21.75,
+      "saleTripsMean": 55.03,
+      "firstSessionNetP50": 108,
+      "finalCoinsP50": 1150,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -4455,
+        "fishing-mission": 160,
+        "fish-sale": 4339.72
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 25.24,
+        "p50": 28.26,
+        "p90": 29.51
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 28.64,
+      "walletAfterLandP50": 140,
+      "caughtMean": 635.63,
+      "escapedMean": 83.72,
+      "saleTripsMean": 63.25,
+      "firstSessionNetP50": 1972,
+      "finalCoinsP50": 17096,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 15850
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 32.95,
+        "p50": 36.39,
+        "p90": 39.47
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 36.52,
+      "walletAfterLandP50": 82,
+      "caughtMean": 614.84,
+      "escapedMean": 79.44,
+      "saleTripsMean": 69.13,
+      "firstSessionNetP50": 1512,
+      "finalCoinsP50": 13190,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -3495.31,
+        "fishing-mission": 160,
+        "fish-sale": 15322.84
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 80.91,
+        "p50": 111.69,
+        "p90": 123.68
+      },
+      "sessionAtPurchaseP50": 4,
+      "reserveActiveMinutesP50": 113.22,
+      "walletAfterLandP50": 44,
+      "caughtMean": 389.41,
+      "escapedMean": 69.63,
+      "saleTripsMean": 91.53,
+      "firstSessionNetP50": 408,
+      "finalCoinsP50": 4157,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -11047.5,
+        "fishing-mission": 160,
+        "fish-sale": 13905.75
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 292.34,
+      "escapedMean": 43.72,
+      "saleTripsMean": 111.22,
+      "firstSessionNetP50": 129,
+      "finalCoinsP50": 1137,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -8935,
+        "fishing-mission": 160,
+        "fish-sale": 8808.97
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 25.24,
+        "p50": 28.26,
+        "p90": 29.51
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 28.64,
+      "walletAfterLandP50": 119,
+      "caughtMean": 1278.22,
+      "escapedMean": 162.75,
+      "saleTripsMean": 127.59,
+      "firstSessionNetP50": 3940,
+      "finalCoinsP50": 33281,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 31944.22
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 32.93,
+        "p50": 36.39,
+        "p90": 39.48
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 36.54,
+      "walletAfterLandP50": 75,
+      "caughtMean": 1236.69,
+      "escapedMean": 156.5,
+      "saleTripsMean": 139.03,
+      "firstSessionNetP50": 2911,
+      "finalCoinsP50": 25169,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -6990.63,
+        "fishing-mission": 160,
+        "fish-sale": 30957.47
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 89.19,
+        "p50": 120,
+        "p90": 150
+      },
+      "sessionAtPurchaseP50": 3,
+      "reserveActiveMinutesP50": 120,
+      "walletAfterLandP50": 41,
+      "caughtMean": 783.81,
+      "escapedMean": 135.88,
+      "saleTripsMean": 183.63,
+      "firstSessionNetP50": 790,
+      "finalCoinsP50": 7725,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -22098.75,
+        "fishing-mission": 160,
+        "fish-sale": 28390.72
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 4,
+      "reachedFraction": 0.125,
+      "activeMinutes": {
+        "p10": 398.01,
+        "p50": 402.78,
+        "p90": 435
+      },
+      "sessionAtPurchaseP50": 7,
+      "reserveActiveMinutesP50": 408.72,
+      "walletAfterLandP50": 31,
+      "caughtMean": 588,
+      "escapedMean": 86.72,
+      "saleTripsMean": 223.31,
+      "firstSessionNetP50": 118,
+      "finalCoinsP50": 1163,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -17920,
+        "fishing-mission": 160,
+        "fish-sale": 17784.91
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 39.21,
+        "p50": 43.09,
+        "p90": 47.78
+      },
+      "sessionAtPurchaseP50": 3,
+      "reserveActiveMinutesP50": 43.59,
+      "walletAfterLandP50": 103,
+      "caughtMean": 175.59,
+      "escapedMean": 70.16,
+      "saleTripsMean": 17.41,
+      "firstSessionNetP50": 442,
+      "finalCoinsP50": 5463,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 4182.13
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 57.71,
+        "p50": 60,
+        "p90": 62.22
+      },
+      "sessionAtPurchaseP50": 5,
+      "reserveActiveMinutesP50": 60,
+      "walletAfterLandP50": 115,
+      "caughtMean": 153.53,
+      "escapedMean": 61.38,
+      "saleTripsMean": 21,
+      "firstSessionNetP50": 335,
+      "finalCoinsP50": 3880,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -1100,
+        "fishing-mission": 160,
+        "fish-sale": 3680.41
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 95.5,
+      "escapedMean": 50.56,
+      "saleTripsMean": 28.19,
+      "firstSessionNetP50": 75,
+      "finalCoinsP50": 822,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -3453.75,
+        "fishing-mission": 160,
+        "fish-sale": 3043.03
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 73.09,
+      "escapedMean": 31.59,
+      "saleTripsMean": 33.5,
+      "firstSessionNetP50": 9,
+      "finalCoinsP50": 613,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -2705,
+        "fishing-mission": 160,
+        "fish-sale": 2020.38
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 46.83,
+        "p50": 49.92,
+        "p90": 53.87
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 50.56,
+      "walletAfterLandP50": 142,
+      "caughtMean": 357.84,
+      "escapedMean": 135.72,
+      "saleTripsMean": 35.5,
+      "firstSessionNetP50": 1134,
+      "finalCoinsP50": 9920,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 8642.84
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 60,
+        "p50": 63.3,
+        "p90": 74.42
+      },
+      "sessionAtPurchaseP50": 3,
+      "reserveActiveMinutesP50": 63.3,
+      "walletAfterLandP50": 75,
+      "caughtMean": 314,
+      "escapedMean": 117.97,
+      "saleTripsMean": 43,
+      "firstSessionNetP50": 676,
+      "finalCoinsP50": 6706,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -2198.44,
+        "fishing-mission": 160,
+        "fish-sale": 7662.31
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 198.09,
+      "escapedMean": 98.66,
+      "saleTripsMean": 56.66,
+      "firstSessionNetP50": 69,
+      "finalCoinsP50": 812,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -6873.75,
+        "fishing-mission": 160,
+        "fish-sale": 6479.47
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 154.94,
+      "escapedMean": 66.91,
+      "saleTripsMean": 66.28,
+      "firstSessionNetP50": 10,
+      "finalCoinsP50": 181,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -5350,
+        "fishing-mission": 160,
+        "fish-sale": 4256.13
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 47.12,
+        "p50": 50.03,
+        "p90": 54.05
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 50.56,
+      "walletAfterLandP50": 168,
+      "caughtMean": 721.69,
+      "escapedMean": 266.94,
+      "saleTripsMean": 71.88,
+      "firstSessionNetP50": 2201,
+      "finalCoinsP50": 18759,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 17473.59
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 68.31,
+        "p50": 74.22,
+        "p90": 84.91
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 74.46,
+      "walletAfterLandP50": 64,
+      "caughtMean": 633.78,
+      "escapedMean": 237.16,
+      "saleTripsMean": 86.88,
+      "firstSessionNetP50": 1432,
+      "finalCoinsP50": 12214,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -4379.69,
+        "fishing-mission": 160,
+        "fish-sale": 15358.88
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 2,
+      "reachedFraction": 0.0625,
+      "activeMinutes": {
+        "p10": 408.36,
+        "p50": 408.36,
+        "p90": 408.36
+      },
+      "sessionAtPurchaseP50": 7,
+      "reserveActiveMinutesP50": 408.36,
+      "walletAfterLandP50": 11,
+      "caughtMean": 404,
+      "escapedMean": 198.19,
+      "saleTripsMean": 113.53,
+      "firstSessionNetP50": 44,
+      "finalCoinsP50": 620,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -13695,
+        "fishing-mission": 160,
+        "fish-sale": 13136.13
+      }
+    },
+    {
+      "variant": "current-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 338.59,
+      "escapedMean": 139.69,
+      "saleTripsMean": 129.66,
+      "firstSessionNetP50": -19,
+      "finalCoinsP50": 190,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -10417.5,
+        "fishing-mission": 160,
+        "fish-sale": 9313.56
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 631.41,
+      "escapedMean": 20.09,
+      "saleTripsMean": 62.84,
+      "firstSessionNetP50": 3864,
+      "finalCoinsP50": 19040,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 16032.5
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 650.25,
+      "escapedMean": 19.91,
+      "saleTripsMean": 66.66,
+      "firstSessionNetP50": 3466,
+      "finalCoinsP50": 16212,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -3371.88,
+        "fishing-mission": 160,
+        "fish-sale": 16474.16
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 445.56,
+      "escapedMean": 19.94,
+      "saleTripsMean": 92.81,
+      "firstSessionNetP50": 2561,
+      "finalCoinsP50": 8809,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -11220,
+        "fishing-mission": 160,
+        "fish-sale": 16909.91
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 378.78,
+      "escapedMean": 13.34,
+      "saleTripsMean": 130.47,
+      "firstSessionNetP50": 2120,
+      "finalCoinsP50": 4465,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -10482.5,
+        "fishing-mission": 160,
+        "fish-sale": 11886.63
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 1267.09,
+      "escapedMean": 34.75,
+      "saleTripsMean": 126.44,
+      "firstSessionNetP50": 5813,
+      "finalCoinsP50": 35362,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 32339.16
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 1304.59,
+      "escapedMean": 35.47,
+      "saleTripsMean": 133.66,
+      "firstSessionNetP50": 5105,
+      "finalCoinsP50": 29559,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -6715.63,
+        "fishing-mission": 160,
+        "fish-sale": 33254.13
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 896.06,
+      "escapedMean": 34.5,
+      "saleTripsMean": 185.81,
+      "firstSessionNetP50": 3289,
+      "finalCoinsP50": 15195,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -22391.25,
+        "fishing-mission": 160,
+        "fish-sale": 34439.63
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 761.63,
+      "escapedMean": 23.25,
+      "saleTripsMean": 261.38,
+      "firstSessionNetP50": 2293,
+      "finalCoinsP50": 6356,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -20972.5,
+        "fishing-mission": 160,
+        "fish-sale": 24066.94
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 2534.22,
+      "escapedMean": 65.34,
+      "saleTripsMean": 253.19,
+      "firstSessionNetP50": 9922,
+      "finalCoinsP50": 67902,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 64817.81
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 2611.16,
+      "escapedMean": 66.94,
+      "saleTripsMean": 267.41,
+      "firstSessionNetP50": 8460,
+      "finalCoinsP50": 56401,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -13410.94,
+        "fishing-mission": 160,
+        "fish-sale": 66803
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 1795.22,
+      "escapedMean": 64.94,
+      "saleTripsMean": 371.72,
+      "firstSessionNetP50": 4945,
+      "finalCoinsP50": 27826,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -44688.75,
+        "fishing-mission": 160,
+        "fish-sale": 69240.13
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 1529.38,
+      "escapedMean": 43.66,
+      "saleTripsMean": 524.03,
+      "firstSessionNetP50": 2587,
+      "finalCoinsP50": 9340,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -41982.5,
+        "fishing-mission": 160,
+        "fish-sale": 48258.5
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 313.72,
+      "escapedMean": 44.03,
+      "saleTripsMean": 31.13,
+      "firstSessionNetP50": 2755,
+      "finalCoinsP50": 10862,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 7807.53
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 302.91,
+      "escapedMean": 41.31,
+      "saleTripsMean": 34.09,
+      "firstSessionNetP50": 2482,
+      "finalCoinsP50": 8851,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -1748.44,
+        "fishing-mission": 160,
+        "fish-sale": 7550.38
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 189.63,
+      "escapedMean": 37.78,
+      "saleTripsMean": 45.16,
+      "firstSessionNetP50": 1986,
+      "finalCoinsP50": 4320,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -5505,
+        "fishing-mission": 160,
+        "fish-sale": 6759.13
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 143.75,
+      "escapedMean": 21.72,
+      "saleTripsMean": 55.06,
+      "firstSessionNetP50": 1908,
+      "finalCoinsP50": 2950,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -4457.5,
+        "fishing-mission": 160,
+        "fish-sale": 4328.78
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 635.63,
+      "escapedMean": 83.72,
+      "saleTripsMean": 63.25,
+      "firstSessionNetP50": 3772,
+      "finalCoinsP50": 18896,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 15850
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 614.84,
+      "escapedMean": 79.44,
+      "saleTripsMean": 69.13,
+      "firstSessionNetP50": 3312,
+      "finalCoinsP50": 14990,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -3495.31,
+        "fishing-mission": 160,
+        "fish-sale": 15322.84
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 389.28,
+      "escapedMean": 69.53,
+      "saleTripsMean": 91.56,
+      "firstSessionNetP50": 2183,
+      "finalCoinsP50": 5923,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -11047.5,
+        "fishing-mission": 160,
+        "fish-sale": 13904
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 290.94,
+      "escapedMean": 43.63,
+      "saleTripsMean": 111.38,
+      "firstSessionNetP50": 1921,
+      "finalCoinsP50": 2917,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -8950,
+        "fishing-mission": 160,
+        "fish-sale": 8772.03
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 1278.22,
+      "escapedMean": 162.75,
+      "saleTripsMean": 127.59,
+      "firstSessionNetP50": 5740,
+      "finalCoinsP50": 35081,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 31944.22
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 1236.69,
+      "escapedMean": 156.5,
+      "saleTripsMean": 139.03,
+      "firstSessionNetP50": 4711,
+      "finalCoinsP50": 26969,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -6990.63,
+        "fishing-mission": 160,
+        "fish-sale": 30957.47
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 783.34,
+      "escapedMean": 136.03,
+      "saleTripsMean": 183.69,
+      "firstSessionNetP50": 2590,
+      "finalCoinsP50": 9464,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -22102.5,
+        "fishing-mission": 160,
+        "fish-sale": 28380.81
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 585.09,
+      "escapedMean": 86.5,
+      "saleTripsMean": 223.66,
+      "firstSessionNetP50": 1904,
+      "finalCoinsP50": 2870,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -17952.5,
+        "fishing-mission": 160,
+        "fish-sale": 17717.38
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 175.59,
+      "escapedMean": 70.16,
+      "saleTripsMean": 17.41,
+      "firstSessionNetP50": 2242,
+      "finalCoinsP50": 7263,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 4182.13
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 153.53,
+      "escapedMean": 61.38,
+      "saleTripsMean": 21,
+      "firstSessionNetP50": 2135,
+      "finalCoinsP50": 5680,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -1100,
+        "fishing-mission": 160,
+        "fish-sale": 3680.41
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 93.59,
+      "escapedMean": 50.25,
+      "saleTripsMean": 28.38,
+      "firstSessionNetP50": 1848,
+      "finalCoinsP50": 2538,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -3480,
+        "fishing-mission": 160,
+        "fish-sale": 2975.81
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 71.22,
+      "escapedMean": 30.72,
+      "saleTripsMean": 33.94,
+      "firstSessionNetP50": 1777,
+      "finalCoinsP50": 2298,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -2722.5,
+        "fishing-mission": 160,
+        "fish-sale": 1969.38
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 357.84,
+      "escapedMean": 135.72,
+      "saleTripsMean": 35.5,
+      "firstSessionNetP50": 2934,
+      "finalCoinsP50": 11720,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 8642.84
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 314,
+      "escapedMean": 117.97,
+      "saleTripsMean": 43,
+      "firstSessionNetP50": 2476,
+      "finalCoinsP50": 8506,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -2198.44,
+        "fishing-mission": 160,
+        "fish-sale": 7662.31
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 192.34,
+      "escapedMean": 96.97,
+      "saleTripsMean": 57.63,
+      "firstSessionNetP50": 1832,
+      "finalCoinsP50": 2436,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -6971.25,
+        "fishing-mission": 160,
+        "fish-sale": 6329.44
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 142.78,
+      "escapedMean": 61.59,
+      "saleTripsMean": 68,
+      "firstSessionNetP50": 1772,
+      "finalCoinsP50": 1608,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -5507.5,
+        "fishing-mission": 160,
+        "fish-sale": 4009.72
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 721.69,
+      "escapedMean": 266.94,
+      "saleTripsMean": 71.88,
+      "firstSessionNetP50": 4001,
+      "finalCoinsP50": 20559,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 17473.59
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 633.78,
+      "escapedMean": 237.16,
+      "saleTripsMean": 86.88,
+      "firstSessionNetP50": 3232,
+      "finalCoinsP50": 14014,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -4379.69,
+        "fishing-mission": 160,
+        "fish-sale": 15358.88
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 388.97,
+      "escapedMean": 191.28,
+      "saleTripsMean": 115.84,
+      "firstSessionNetP50": 1746,
+      "finalCoinsP50": 1863,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -13983.75,
+        "fishing-mission": 160,
+        "fish-sale": 12874.09
+      }
+    },
+    {
+      "variant": "current-all-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 0,
+        "p50": 0,
+        "p90": 0
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 0,
+      "walletAfterLandP50": 180,
+      "caughtMean": 293.06,
+      "escapedMean": 123.81,
+      "saleTripsMean": 136.47,
+      "firstSessionNetP50": 1618,
+      "finalCoinsP50": 243,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 1100,
+        "rod": -150,
+        "bait": -10967.5,
+        "fishing-mission": 160,
+        "fish-sale": 8284.63
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 41.55,
+        "p50": 42.61,
+        "p90": 44.18
+      },
+      "sessionAtPurchaseP50": 3,
+      "reserveActiveMinutesP50": 42.87,
+      "walletAfterLandP50": 102,
+      "caughtMean": 631.41,
+      "escapedMean": 20.09,
+      "saleTripsMean": 62.84,
+      "firstSessionNetP50": 1964,
+      "finalCoinsP50": 16660,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 16032.5
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 49.33,
+        "p50": 51.81,
+        "p90": 53.72
+      },
+      "sessionAtPurchaseP50": 4,
+      "reserveActiveMinutesP50": 51.81,
+      "walletAfterLandP50": 85,
+      "caughtMean": 650.25,
+      "escapedMean": 19.91,
+      "saleTripsMean": 66.66,
+      "firstSessionNetP50": 1566,
+      "finalCoinsP50": 13832,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -3371.88,
+        "fishing-mission": 160,
+        "fish-sale": 16474.16
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 29,
+      "reachedFraction": 0.90625,
+      "activeMinutes": {
+        "p10": 94.83,
+        "p50": 104.96,
+        "p90": 114.28
+      },
+      "sessionAtPurchaseP50": 7,
+      "reserveActiveMinutesP50": 105.68,
+      "walletAfterLandP50": 37,
+      "caughtMean": 448.28,
+      "escapedMean": 19.25,
+      "saleTripsMean": 92.19,
+      "firstSessionNetP50": 740,
+      "finalCoinsP50": 6649,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -11156.25,
+        "fishing-mission": 160,
+        "fish-sale": 17048.34
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 381.25,
+      "escapedMean": 13.53,
+      "saleTripsMean": 129.88,
+      "firstSessionNetP50": 261,
+      "finalCoinsP50": 2150,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -10432.5,
+        "fishing-mission": 160,
+        "fish-sale": 11930.09
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 42.29,
+        "p50": 44.21,
+        "p90": 45.19
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 44.22,
+      "walletAfterLandP50": 121,
+      "caughtMean": 1267.09,
+      "escapedMean": 34.75,
+      "saleTripsMean": 126.44,
+      "firstSessionNetP50": 3913,
+      "finalCoinsP50": 32982,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 32339.16
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 50.91,
+        "p50": 52.54,
+        "p90": 54.39
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 52.54,
+      "walletAfterLandP50": 116,
+      "caughtMean": 1304.59,
+      "escapedMean": 35.47,
+      "saleTripsMean": 133.66,
+      "firstSessionNetP50": 3205,
+      "finalCoinsP50": 27179,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -6715.63,
+        "fishing-mission": 160,
+        "fish-sale": 33254.13
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 98.99,
+        "p50": 108.94,
+        "p90": 120.27
+      },
+      "sessionAtPurchaseP50": 4,
+      "reserveActiveMinutesP50": 109.85,
+      "walletAfterLandP50": 70,
+      "caughtMean": 898.44,
+      "escapedMean": 34.03,
+      "saleTripsMean": 185.25,
+      "firstSessionNetP50": 1546,
+      "finalCoinsP50": 13002,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -22305,
+        "fishing-mission": 160,
+        "fish-sale": 34505.16
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 764.44,
+      "escapedMean": 23.19,
+      "saleTripsMean": 260.75,
+      "firstSessionNetP50": 512,
+      "finalCoinsP50": 3988,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -20920,
+        "fishing-mission": 160,
+        "fish-sale": 24111.53
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 42.31,
+        "p50": 44.08,
+        "p90": 45.12
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 44.2,
+      "walletAfterLandP50": 102,
+      "caughtMean": 2534.22,
+      "escapedMean": 65.34,
+      "saleTripsMean": 253.19,
+      "firstSessionNetP50": 8022,
+      "finalCoinsP50": 65522,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 64817.81
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 49.47,
+        "p50": 52.62,
+        "p90": 54.42
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 52.75,
+      "walletAfterLandP50": 128,
+      "caughtMean": 2611.16,
+      "escapedMean": 66.94,
+      "saleTripsMean": 267.41,
+      "firstSessionNetP50": 6560,
+      "finalCoinsP50": 54021,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -13410.94,
+        "fishing-mission": 160,
+        "fish-sale": 66803
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 99.55,
+        "p50": 110.57,
+        "p90": 121.7
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 111.83,
+      "walletAfterLandP50": 45,
+      "caughtMean": 1797.75,
+      "escapedMean": 64.63,
+      "saleTripsMean": 371.03,
+      "firstSessionNetP50": 3059,
+      "finalCoinsP50": 25445,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -44628.75,
+        "fishing-mission": 160,
+        "fish-sale": 69323.5
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 28,
+      "reachedFraction": 0.875,
+      "activeMinutes": {
+        "p10": 332.35,
+        "p50": 384.54,
+        "p90": 456.62
+      },
+      "sessionAtPurchaseP50": 7,
+      "reserveActiveMinutesP50": 388.6,
+      "walletAfterLandP50": 33,
+      "caughtMean": 1532.09,
+      "escapedMean": 43.5,
+      "saleTripsMean": 523.31,
+      "firstSessionNetP50": 825,
+      "finalCoinsP50": 7027,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -41927.5,
+        "fishing-mission": 160,
+        "fish-sale": 48286.41
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 81.07,
+        "p50": 85.39,
+        "p90": 89.3
+      },
+      "sessionAtPurchaseP50": 6,
+      "reserveActiveMinutesP50": 85.42,
+      "walletAfterLandP50": 138,
+      "caughtMean": 313.72,
+      "escapedMean": 44.03,
+      "saleTripsMean": 31.13,
+      "firstSessionNetP50": 855,
+      "finalCoinsP50": 8482,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 7807.53
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 31,
+      "reachedFraction": 0.96875,
+      "activeMinutes": {
+        "p10": 103.78,
+        "p50": 108.58,
+        "p90": 114.75
+      },
+      "sessionAtPurchaseP50": 8,
+      "reserveActiveMinutesP50": 108.29,
+      "walletAfterLandP50": 92,
+      "caughtMean": 302.91,
+      "escapedMean": 41.31,
+      "saleTripsMean": 34.09,
+      "firstSessionNetP50": 582,
+      "finalCoinsP50": 6471,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -1748.44,
+        "fishing-mission": 160,
+        "fish-sale": 7550.38
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 193.25,
+      "escapedMean": 37.69,
+      "saleTripsMean": 44.78,
+      "firstSessionNetP50": 301,
+      "finalCoinsP50": 2138,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -5471.25,
+        "fishing-mission": 160,
+        "fish-sale": 6874.5
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 147.59,
+      "escapedMean": 23.19,
+      "saleTripsMean": 54.66,
+      "firstSessionNetP50": 144,
+      "finalCoinsP50": 656,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -4400,
+        "fishing-mission": 160,
+        "fish-sale": 4402.06
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 84.01,
+        "p50": 87.51,
+        "p90": 89.9
+      },
+      "sessionAtPurchaseP50": 3,
+      "reserveActiveMinutesP50": 87.73,
+      "walletAfterLandP50": 155,
+      "caughtMean": 635.63,
+      "escapedMean": 83.72,
+      "saleTripsMean": 63.25,
+      "firstSessionNetP50": 1872,
+      "finalCoinsP50": 16516,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 15850
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 106.11,
+        "p50": 114.79,
+        "p90": 120
+      },
+      "sessionAtPurchaseP50": 4,
+      "reserveActiveMinutesP50": 114.79,
+      "walletAfterLandP50": 95,
+      "caughtMean": 614.84,
+      "escapedMean": 79.44,
+      "saleTripsMean": 69.13,
+      "firstSessionNetP50": 1412,
+      "finalCoinsP50": 12610,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -3495.31,
+        "fishing-mission": 160,
+        "fish-sale": 15322.84
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 393,
+      "escapedMean": 69.53,
+      "saleTripsMean": 91.03,
+      "firstSessionNetP50": 465,
+      "finalCoinsP50": 3733,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -11010,
+        "fishing-mission": 160,
+        "fish-sale": 14036.16
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 296.47,
+      "escapedMean": 44.09,
+      "saleTripsMean": 110.63,
+      "firstSessionNetP50": 126,
+      "finalCoinsP50": 692,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -8890,
+        "fishing-mission": 160,
+        "fish-sale": 8913.84
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 84.44,
+        "p50": 87.98,
+        "p90": 92.77
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 88.26,
+      "walletAfterLandP50": 68,
+      "caughtMean": 1278.22,
+      "escapedMean": 162.75,
+      "saleTripsMean": 127.59,
+      "firstSessionNetP50": 3840,
+      "finalCoinsP50": 32701,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 31944.22
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 109.51,
+        "p50": 116.39,
+        "p90": 121.43
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 116.39,
+      "walletAfterLandP50": 83,
+      "caughtMean": 1236.69,
+      "escapedMean": 156.5,
+      "saleTripsMean": 139.03,
+      "firstSessionNetP50": 2811,
+      "finalCoinsP50": 24589,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -6990.63,
+        "fishing-mission": 160,
+        "fish-sale": 30957.47
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 29,
+      "reachedFraction": 0.90625,
+      "activeMinutes": {
+        "p10": 333.86,
+        "p50": 376.32,
+        "p90": 424.3
+      },
+      "sessionAtPurchaseP50": 7,
+      "reserveActiveMinutesP50": 377.77,
+      "walletAfterLandP50": 36,
+      "caughtMean": 787.13,
+      "escapedMean": 136,
+      "saleTripsMean": 183.06,
+      "firstSessionNetP50": 855,
+      "finalCoinsP50": 7240,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -22053.75,
+        "fishing-mission": 160,
+        "fish-sale": 28489.16
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 594.19,
+      "escapedMean": 87.16,
+      "saleTripsMean": 222.56,
+      "firstSessionNetP50": 114,
+      "finalCoinsP50": 748,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -17847.5,
+        "fishing-mission": 160,
+        "fish-sale": 17935.91
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": null,
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 175.59,
+      "escapedMean": 70.16,
+      "saleTripsMean": 17.41,
+      "firstSessionNetP50": 342,
+      "finalCoinsP50": 4883,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 4182.13
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 153.53,
+      "escapedMean": 61.38,
+      "saleTripsMean": 21,
+      "firstSessionNetP50": 235,
+      "finalCoinsP50": 3300,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -1100,
+        "fishing-mission": 160,
+        "fish-sale": 3680.41
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 100.38,
+      "escapedMean": 51.75,
+      "saleTripsMean": 27.5,
+      "firstSessionNetP50": 148,
+      "finalCoinsP50": 455,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -3382.5,
+        "fishing-mission": 160,
+        "fish-sale": 3140.13
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 79.13,
+      "escapedMean": 32.03,
+      "saleTripsMean": 32.53,
+      "firstSessionNetP50": 53,
+      "finalCoinsP50": 243,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -2652.5,
+        "fishing-mission": 160,
+        "fish-sale": 2200.81
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 146.13,
+        "p50": 155.41,
+        "p90": 162.31
+      },
+      "sessionAtPurchaseP50": 6,
+      "reserveActiveMinutesP50": 155.41,
+      "walletAfterLandP50": 131,
+      "caughtMean": 357.84,
+      "escapedMean": 135.72,
+      "saleTripsMean": 35.5,
+      "firstSessionNetP50": 1034,
+      "finalCoinsP50": 9340,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 8642.84
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 26,
+      "reachedFraction": 0.8125,
+      "activeMinutes": {
+        "p10": 211.1,
+        "p50": 232.2,
+        "p90": 237.85
+      },
+      "sessionAtPurchaseP50": 8,
+      "reserveActiveMinutesP50": 232.2,
+      "walletAfterLandP50": 54,
+      "caughtMean": 314,
+      "escapedMean": 117.97,
+      "saleTripsMean": 43,
+      "firstSessionNetP50": 576,
+      "finalCoinsP50": 6126,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -2198.44,
+        "fishing-mission": 160,
+        "fish-sale": 7662.31
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 204.75,
+      "escapedMean": 100.56,
+      "saleTripsMean": 55.66,
+      "firstSessionNetP50": 105,
+      "finalCoinsP50": 507,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -6780,
+        "fishing-mission": 160,
+        "fish-sale": 6595.66
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 169.53,
+      "escapedMean": 71.41,
+      "saleTripsMean": 64.13,
+      "firstSessionNetP50": 45,
+      "finalCoinsP50": 101,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -5185,
+        "fishing-mission": 160,
+        "fish-sale": 4618.22
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 149.21,
+        "p50": 156.5,
+        "p90": 163.21
+      },
+      "sessionAtPurchaseP50": 3,
+      "reserveActiveMinutesP50": 157.59,
+      "walletAfterLandP50": 111,
+      "caughtMean": 721.69,
+      "escapedMean": 266.94,
+      "saleTripsMean": 71.88,
+      "firstSessionNetP50": 2101,
+      "finalCoinsP50": 18179,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 17473.59
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 227.94,
+        "p50": 242.94,
+        "p90": 249.69
+      },
+      "sessionAtPurchaseP50": 5,
+      "reserveActiveMinutesP50": 242.97,
+      "walletAfterLandP50": 51,
+      "caughtMean": 633.78,
+      "escapedMean": 237.16,
+      "saleTripsMean": 86.88,
+      "firstSessionNetP50": 1332,
+      "finalCoinsP50": 11634,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -4379.69,
+        "fishing-mission": 160,
+        "fish-sale": 15358.88
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 412.56,
+      "escapedMean": 198.53,
+      "saleTripsMean": 112.53,
+      "firstSessionNetP50": 60,
+      "finalCoinsP50": 383,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -13578.75,
+        "fishing-mission": 160,
+        "fish-sale": 13315.97
+      }
+    },
+    {
+      "variant": "trial-no-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 353.16,
+      "escapedMean": 144.41,
+      "saleTripsMean": 127.66,
+      "firstSessionNetP50": -22,
+      "finalCoinsP50": 164,
+      "cashflowMean": {
+        "initial": 180,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -10250,
+        "fishing-mission": 160,
+        "fish-sale": 9718.53
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 39.77,
+        "p50": 40.7,
+        "p90": 41.82
+      },
+      "sessionAtPurchaseP50": 3,
+      "reserveActiveMinutesP50": 40.81,
+      "walletAfterLandP50": 118,
+      "caughtMean": 631.41,
+      "escapedMean": 20.09,
+      "saleTripsMean": 62.84,
+      "firstSessionNetP50": 2264,
+      "finalCoinsP50": 16960,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 16032.5
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 47.44,
+        "p50": 49.09,
+        "p90": 50.78
+      },
+      "sessionAtPurchaseP50": 4,
+      "reserveActiveMinutesP50": 49.18,
+      "walletAfterLandP50": 116,
+      "caughtMean": 650.25,
+      "escapedMean": 19.91,
+      "saleTripsMean": 66.66,
+      "firstSessionNetP50": 1866,
+      "finalCoinsP50": 14132,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -3371.88,
+        "fishing-mission": 160,
+        "fish-sale": 16474.16
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 30,
+      "reachedFraction": 0.9375,
+      "activeMinutes": {
+        "p10": 90.3,
+        "p50": 101.34,
+        "p90": 112.23
+      },
+      "sessionAtPurchaseP50": 7,
+      "reserveActiveMinutesP50": 101.34,
+      "walletAfterLandP50": 54,
+      "caughtMean": 445.56,
+      "escapedMean": 19.94,
+      "saleTripsMean": 92.81,
+      "firstSessionNetP50": 961,
+      "finalCoinsP50": 6729,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -11220,
+        "fishing-mission": 160,
+        "fish-sale": 16909.91
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "fast",
+      "sessionMinutes": 15,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 378.78,
+      "escapedMean": 13.34,
+      "saleTripsMean": 130.47,
+      "firstSessionNetP50": 520,
+      "finalCoinsP50": 2385,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -10482.5,
+        "fishing-mission": 160,
+        "fish-sale": 11886.63
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 39.77,
+        "p50": 41.82,
+        "p90": 42.88
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 42.15,
+      "walletAfterLandP50": 127,
+      "caughtMean": 1267.09,
+      "escapedMean": 34.75,
+      "saleTripsMean": 126.44,
+      "firstSessionNetP50": 4213,
+      "finalCoinsP50": 33282,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 32339.16
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 47.6,
+        "p50": 49.97,
+        "p90": 51.78
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 50.27,
+      "walletAfterLandP50": 76,
+      "caughtMean": 1304.59,
+      "escapedMean": 35.47,
+      "saleTripsMean": 133.66,
+      "firstSessionNetP50": 3505,
+      "finalCoinsP50": 27479,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -6715.63,
+        "fishing-mission": 160,
+        "fish-sale": 33254.13
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 97.19,
+        "p50": 106.25,
+        "p90": 116.75
+      },
+      "sessionAtPurchaseP50": 4,
+      "reserveActiveMinutesP50": 106.25,
+      "walletAfterLandP50": 57,
+      "caughtMean": 896.06,
+      "escapedMean": 34.5,
+      "saleTripsMean": 185.81,
+      "firstSessionNetP50": 1689,
+      "finalCoinsP50": 13115,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -22391.25,
+        "fishing-mission": 160,
+        "fish-sale": 34439.63
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "fast",
+      "sessionMinutes": 30,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 761.63,
+      "escapedMean": 23.25,
+      "saleTripsMean": 261.38,
+      "firstSessionNetP50": 693,
+      "finalCoinsP50": 4276,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -20972.5,
+        "fishing-mission": 160,
+        "fish-sale": 24066.94
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 40.16,
+        "p50": 41.82,
+        "p90": 42.88
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 42.19,
+      "walletAfterLandP50": 125,
+      "caughtMean": 2534.22,
+      "escapedMean": 65.34,
+      "saleTripsMean": 253.19,
+      "firstSessionNetP50": 8322,
+      "finalCoinsP50": 65822,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 64817.81
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 47.67,
+        "p50": 49.74,
+        "p90": 51.48
+      },
+      "sessionAtPurchaseP50": 1,
+      "reserveActiveMinutesP50": 49.77,
+      "walletAfterLandP50": 84,
+      "caughtMean": 2611.16,
+      "escapedMean": 66.94,
+      "saleTripsMean": 267.41,
+      "firstSessionNetP50": 6860,
+      "finalCoinsP50": 54321,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -13410.94,
+        "fishing-mission": 160,
+        "fish-sale": 66803
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 97.46,
+        "p50": 107.63,
+        "p90": 120.26
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 107.63,
+      "walletAfterLandP50": 65,
+      "caughtMean": 1795.22,
+      "escapedMean": 64.94,
+      "saleTripsMean": 371.72,
+      "firstSessionNetP50": 3345,
+      "finalCoinsP50": 25746,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -44688.75,
+        "fishing-mission": 160,
+        "fish-sale": 69240.13
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "fast",
+      "sessionMinutes": 60,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 30,
+      "reachedFraction": 0.9375,
+      "activeMinutes": {
+        "p10": 321.38,
+        "p50": 375.91,
+        "p90": 457.92
+      },
+      "sessionAtPurchaseP50": 7,
+      "reserveActiveMinutesP50": 377.49,
+      "walletAfterLandP50": 14,
+      "caughtMean": 1529.38,
+      "escapedMean": 43.66,
+      "saleTripsMean": 524.03,
+      "firstSessionNetP50": 987,
+      "finalCoinsP50": 7260,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -41982.5,
+        "fishing-mission": 160,
+        "fish-sale": 48258.5
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 76.98,
+        "p50": 81.2,
+        "p90": 85.23
+      },
+      "sessionAtPurchaseP50": 6,
+      "reserveActiveMinutesP50": 81.2,
+      "walletAfterLandP50": 120,
+      "caughtMean": 313.72,
+      "escapedMean": 44.03,
+      "saleTripsMean": 31.13,
+      "firstSessionNetP50": 1155,
+      "finalCoinsP50": 8782,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 7807.53
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 98.42,
+        "p50": 101.74,
+        "p90": 108.06
+      },
+      "sessionAtPurchaseP50": 7,
+      "reserveActiveMinutesP50": 104.02,
+      "walletAfterLandP50": 69,
+      "caughtMean": 302.91,
+      "escapedMean": 41.31,
+      "saleTripsMean": 34.09,
+      "firstSessionNetP50": 882,
+      "finalCoinsP50": 6771,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -1748.44,
+        "fishing-mission": 160,
+        "fish-sale": 7550.38
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 189.63,
+      "escapedMean": 37.78,
+      "saleTripsMean": 45.16,
+      "firstSessionNetP50": 386,
+      "finalCoinsP50": 2240,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -5505,
+        "fishing-mission": 160,
+        "fish-sale": 6759.13
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 143.75,
+      "escapedMean": 21.72,
+      "saleTripsMean": 55.06,
+      "firstSessionNetP50": 308,
+      "finalCoinsP50": 870,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -4457.5,
+        "fishing-mission": 160,
+        "fish-sale": 4328.78
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 80,
+        "p50": 83.21,
+        "p90": 86.26
+      },
+      "sessionAtPurchaseP50": 3,
+      "reserveActiveMinutesP50": 83.21,
+      "walletAfterLandP50": 135,
+      "caughtMean": 635.63,
+      "escapedMean": 83.72,
+      "saleTripsMean": 63.25,
+      "firstSessionNetP50": 2172,
+      "finalCoinsP50": 16816,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 15850
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 103.97,
+        "p50": 107.72,
+        "p90": 114.42
+      },
+      "sessionAtPurchaseP50": 4,
+      "reserveActiveMinutesP50": 108.22,
+      "walletAfterLandP50": 78,
+      "caughtMean": 614.84,
+      "escapedMean": 79.44,
+      "saleTripsMean": 69.13,
+      "firstSessionNetP50": 1712,
+      "finalCoinsP50": 12910,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -3495.31,
+        "fishing-mission": 160,
+        "fish-sale": 15322.84
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 389.28,
+      "escapedMean": 69.53,
+      "saleTripsMean": 91.56,
+      "firstSessionNetP50": 583,
+      "finalCoinsP50": 3843,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -11047.5,
+        "fishing-mission": 160,
+        "fish-sale": 13904
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 291.5,
+      "escapedMean": 43.88,
+      "saleTripsMean": 111.28,
+      "firstSessionNetP50": 321,
+      "finalCoinsP50": 837,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -8942.5,
+        "fishing-mission": 160,
+        "fish-sale": 8787.88
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 80.71,
+        "p50": 84.36,
+        "p90": 88.53
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 84.36,
+      "walletAfterLandP50": 122,
+      "caughtMean": 1278.22,
+      "escapedMean": 162.75,
+      "saleTripsMean": 127.59,
+      "firstSessionNetP50": 4140,
+      "finalCoinsP50": 33001,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 31944.22
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 104.78,
+        "p50": 111.27,
+        "p90": 117.56
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 111.27,
+      "walletAfterLandP50": 94,
+      "caughtMean": 1236.69,
+      "escapedMean": 156.5,
+      "saleTripsMean": 139.03,
+      "firstSessionNetP50": 3111,
+      "finalCoinsP50": 24889,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -6990.63,
+        "fishing-mission": 160,
+        "fish-sale": 30957.47
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 30,
+      "reachedFraction": 0.9375,
+      "activeMinutes": {
+        "p10": 313.6,
+        "p50": 368.74,
+        "p90": 417.55
+      },
+      "sessionAtPurchaseP50": 7,
+      "reserveActiveMinutesP50": 371.69,
+      "walletAfterLandP50": 29,
+      "caughtMean": 783.34,
+      "escapedMean": 136.03,
+      "saleTripsMean": 183.69,
+      "firstSessionNetP50": 990,
+      "finalCoinsP50": 7384,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -22102.5,
+        "fishing-mission": 160,
+        "fish-sale": 28380.81
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 588.28,
+      "escapedMean": 86.78,
+      "saleTripsMean": 223.28,
+      "firstSessionNetP50": 304,
+      "finalCoinsP50": 880,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -17920,
+        "fishing-mission": 160,
+        "fish-sale": 17773.94
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": null,
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 175.59,
+      "escapedMean": 70.16,
+      "saleTripsMean": 17.41,
+      "firstSessionNetP50": 642,
+      "finalCoinsP50": 5183,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 4182.13
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 153.53,
+      "escapedMean": 61.38,
+      "saleTripsMean": 21,
+      "firstSessionNetP50": 535,
+      "finalCoinsP50": 3600,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -1100,
+        "fishing-mission": 160,
+        "fish-sale": 3680.41
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 94.41,
+      "escapedMean": 50.66,
+      "saleTripsMean": 28.22,
+      "firstSessionNetP50": 248,
+      "finalCoinsP50": 473,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -3472.5,
+        "fishing-mission": 160,
+        "fish-sale": 3006.81
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 15,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 72.31,
+      "escapedMean": 31.31,
+      "saleTripsMean": 33.66,
+      "firstSessionNetP50": 177,
+      "finalCoinsP50": 275,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -2717.5,
+        "fishing-mission": 160,
+        "fish-sale": 2003.03
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 139.12,
+        "p50": 146.6,
+        "p90": 152.55
+      },
+      "sessionAtPurchaseP50": 5,
+      "reserveActiveMinutesP50": 147.25,
+      "walletAfterLandP50": 121,
+      "caughtMean": 357.84,
+      "escapedMean": 135.72,
+      "saleTripsMean": 35.5,
+      "firstSessionNetP50": 1334,
+      "finalCoinsP50": 9640,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 8642.84
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 29,
+      "reachedFraction": 0.90625,
+      "activeMinutes": {
+        "p10": 200.18,
+        "p50": 221.21,
+        "p90": 227.44
+      },
+      "sessionAtPurchaseP50": 8,
+      "reserveActiveMinutesP50": 221.21,
+      "walletAfterLandP50": 95,
+      "caughtMean": 314,
+      "escapedMean": 117.97,
+      "saleTripsMean": 43,
+      "firstSessionNetP50": 876,
+      "finalCoinsP50": 6426,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -2198.44,
+        "fishing-mission": 160,
+        "fish-sale": 7662.31
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 198.34,
+      "escapedMean": 99.41,
+      "saleTripsMean": 56.59,
+      "firstSessionNetP50": 232,
+      "finalCoinsP50": 529,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -6870,
+        "fishing-mission": 160,
+        "fish-sale": 6443.5
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 30,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 162.44,
+      "escapedMean": 69.53,
+      "saleTripsMean": 65.16,
+      "firstSessionNetP50": 172,
+      "finalCoinsP50": 125,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -5267.5,
+        "fishing-mission": 160,
+        "fish-sale": 4397.38
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 142.59,
+        "p50": 149.76,
+        "p90": 157.26
+      },
+      "sessionAtPurchaseP50": 3,
+      "reserveActiveMinutesP50": 149.76,
+      "walletAfterLandP50": 91,
+      "caughtMean": 721.69,
+      "escapedMean": 266.94,
+      "saleTripsMean": 71.88,
+      "firstSessionNetP50": 2401,
+      "finalCoinsP50": 18479,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 17473.59
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": "bait_worm",
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 211.46,
+        "p50": 232.64,
+        "p90": 240
+      },
+      "sessionAtPurchaseP50": 4,
+      "reserveActiveMinutesP50": 232.84,
+      "walletAfterLandP50": 52,
+      "caughtMean": 633.78,
+      "escapedMean": 237.16,
+      "saleTripsMean": 86.88,
+      "firstSessionNetP50": 1632,
+      "finalCoinsP50": 11934,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -4379.69,
+        "fishing-mission": 160,
+        "fish-sale": 15358.88
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": "bait_lure",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 404.84,
+      "escapedMean": 197.63,
+      "saleTripsMean": 113.41,
+      "firstSessionNetP50": 159,
+      "finalCoinsP50": 339,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -13691.25,
+        "fishing-mission": 160,
+        "fish-sale": 13177.5
+      }
+    },
+    {
+      "variant": "trial-future-codes",
+      "profile": "relaxed",
+      "sessionMinutes": 60,
+      "baitId": "fish_chum",
+      "samples": 32,
+      "reached": 0,
+      "reachedFraction": 0,
+      "activeMinutes": {
+        "p10": null,
+        "p50": null,
+        "p90": null
+      },
+      "sessionAtPurchaseP50": null,
+      "reserveActiveMinutesP50": null,
+      "walletAfterLandP50": null,
+      "caughtMean": 347.41,
+      "escapedMean": 144.06,
+      "saleTripsMean": 128.28,
+      "firstSessionNetP50": 40,
+      "finalCoinsP50": 156,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 300,
+        "attendance": 520,
+        "rod": -150,
+        "bait": -10310,
+        "fishing-mission": 160,
+        "fish-sale": 9451.19
+      }
+    },
+    {
+      "variant": "trial-existing-codes",
+      "profile": "regular",
+      "sessionMinutes": 15,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 58.74,
+        "p50": 60,
+        "p90": 61.6
+      },
+      "sessionAtPurchaseP50": 5,
+      "reserveActiveMinutesP50": 60,
+      "walletAfterLandP50": 119,
+      "caughtMean": 313.72,
+      "escapedMean": 44.03,
+      "saleTripsMean": 31.13,
+      "firstSessionNetP50": 2655,
+      "finalCoinsP50": 10282,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 7807.53
+      }
+    },
+    {
+      "variant": "trial-existing-codes",
+      "profile": "regular",
+      "sessionMinutes": 30,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 59.27,
+        "p50": 61.23,
+        "p90": 63.26
+      },
+      "sessionAtPurchaseP50": 3,
+      "reserveActiveMinutesP50": 61.67,
+      "walletAfterLandP50": 118,
+      "caughtMean": 635.63,
+      "escapedMean": 83.72,
+      "saleTripsMean": 63.25,
+      "firstSessionNetP50": 3672,
+      "finalCoinsP50": 18316,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 15850
+      }
+    },
+    {
+      "variant": "trial-existing-codes",
+      "profile": "regular",
+      "sessionMinutes": 60,
+      "baitId": null,
+      "samples": 32,
+      "reached": 32,
+      "reachedFraction": 1,
+      "activeMinutes": {
+        "p10": 59.27,
+        "p50": 62.52,
+        "p90": 66.28
+      },
+      "sessionAtPurchaseP50": 2,
+      "reserveActiveMinutesP50": 62.69,
+      "walletAfterLandP50": 148,
+      "caughtMean": 1278.22,
+      "escapedMean": 162.75,
+      "saleTripsMean": 127.59,
+      "firstSessionNetP50": 5640,
+      "finalCoinsP50": 34501,
+      "cashflowMean": {
+        "initial": 180,
+        "giftcode": 1800,
+        "attendance": 520,
+        "rod": -150,
+        "fishing-mission": 160,
+        "fish-sale": 31944.22
+      }
+    }
+  ],
+  "example": {
+    "seed": 1,
+    "sessionMinutes": 30,
+    "sessions": 4,
+    "profile": "regular",
+    "useCodes": false,
+    "baitId": null,
+    "zone": "lake",
+    "policy": "current",
+    "landPrice": 2000,
+    "firstAffordable": {
+      "activeMinutes": 28.794,
+      "calendarHours": 0.48,
+      "session": 1,
+      "coins": 2152,
+      "walletAfterLand": 152,
+      "nextTutorialCoins": 50,
+      "nextTutorialFreeSeeds": 3
+    },
+    "firstWithReserve": {
+      "activeMinutes": 28.794,
+      "calendarHours": 0.48,
+      "session": 1,
+      "coins": 2152,
+      "walletAfterLand": 152,
+      "nextTutorialCoins": 50,
+      "nextTutorialFreeSeeds": 3
+    },
+    "coins": 8479,
+    "seedReserve": 20,
+    "cashflow": {
+      "initial": 180,
+      "attendance": 450,
+      "rod": -150,
+      "fishing-mission": 160,
+      "fish-sale": 7839
+    },
+    "attempts": 355,
+    "caught": 310,
+    "escaped": 45,
+    "sold": 300,
+    "saleTrips": 31,
+    "fallbackCasts": 0,
+    "unsoldFish": 10,
+    "claimedFishingMissions": [
+      "first_fish",
+      "lake_angler",
+      "collector"
+    ],
+    "sessionsDetail": [
+      {
+        "session": 1,
+        "day": 1,
+        "startingCoins": 180,
+        "endingCoins": 2152,
+        "netCoins": 1972,
+        "cashflow": {
+          "attendance": 200,
+          "rod": -150,
+          "fishing-mission": 160,
+          "fish-sale": 1762
+        },
+        "caught": 71,
+        "attempts": 83,
+        "sold": 70,
+        "saleTrips": 7,
+        "unsoldFish": 1,
+        "remainingBait": 0
+      },
+      {
+        "session": 2,
+        "day": 1,
+        "startingCoins": 2152,
+        "endingCoins": 4342,
+        "netCoins": 2190,
+        "cashflow": {
+          "fish-sale": 2190
+        },
+        "caught": 82,
+        "attempts": 89,
+        "sold": 80,
+        "saleTrips": 8,
+        "unsoldFish": 3,
+        "remainingBait": 0
+      },
+      {
+        "session": 3,
+        "day": 2,
+        "startingCoins": 4342,
+        "endingCoins": 6704,
+        "netCoins": 2362,
+        "cashflow": {
+          "attendance": 250,
+          "fish-sale": 2112
+        },
+        "caught": 77,
+        "attempts": 91,
+        "sold": 80,
+        "saleTrips": 8,
+        "unsoldFish": 0,
+        "remainingBait": 0
+      },
+      {
+        "session": 4,
+        "day": 2,
+        "startingCoins": 6704,
+        "endingCoins": 8479,
+        "netCoins": 1775,
+        "cashflow": {
+          "fish-sale": 1775
+        },
+        "caught": 80,
+        "attempts": 92,
+        "sold": 70,
+        "saleTrips": 8,
+        "unsoldFish": 10,
+        "remainingBait": 0
+      }
+    ],
+    "ledger": [
+      {
+        "source": "attendance",
+        "delta": 200,
+        "session": 1,
+        "activeMs": 0,
+        "at": 1791252000000
+      },
+      {
+        "source": "rod",
+        "delta": -150,
+        "session": 1,
+        "activeMs": 0,
+        "at": 1791252000000
+      },
+      {
+        "source": "fishing-mission",
+        "delta": 20,
+        "session": 1,
+        "activeMs": 216791,
+        "at": 1791252216791
+      },
+      {
+        "source": "fishing-mission",
+        "delta": 60,
+        "session": 1,
+        "activeMs": 324217,
+        "at": 1791252324217
+      },
+      {
+        "source": "fish-sale",
+        "delta": 212,
+        "session": 1,
+        "activeMs": 375217,
+        "at": 1791252375217
+      },
+      {
+        "source": "fishing-mission",
+        "delta": 80,
+        "session": 1,
+        "activeMs": 540802,
+        "at": 1791252540802
+      },
+      {
+        "source": "fish-sale",
+        "delta": 274,
+        "session": 1,
+        "activeMs": 604031,
+        "at": 1791252604031
+      },
+      {
+        "source": "fish-sale",
+        "delta": 225,
+        "session": 1,
+        "activeMs": 831158,
+        "at": 1791252831158
+      },
+      {
+        "source": "fish-sale",
+        "delta": 368,
+        "session": 1,
+        "activeMs": 1056020,
+        "at": 1791253056020
+      },
+      {
+        "source": "fish-sale",
+        "delta": 270,
+        "session": 1,
+        "activeMs": 1270780,
+        "at": 1791253270780
+      },
+      {
+        "source": "fish-sale",
+        "delta": 218,
+        "session": 1,
+        "activeMs": 1501969,
+        "at": 1791253501969
+      },
+      {
+        "source": "fish-sale",
+        "delta": 195,
+        "session": 1,
+        "activeMs": 1727636,
+        "at": 1791253727636
+      },
+      {
+        "source": "fish-sale",
+        "delta": 305,
+        "session": 2,
+        "activeMs": 1973523,
+        "at": 1791288173523
+      },
+      {
+        "source": "fish-sale",
+        "delta": 306,
+        "session": 2,
+        "activeMs": 2187735,
+        "at": 1791288387735
+      },
+      {
+        "source": "fish-sale",
+        "delta": 388,
+        "session": 2,
+        "activeMs": 2434730,
+        "at": 1791288634730
+      },
+      {
+        "source": "fish-sale",
+        "delta": 264,
+        "session": 2,
+        "activeMs": 2672309,
+        "at": 1791288872309
+      },
+      {
+        "source": "fish-sale",
+        "delta": 218,
+        "session": 2,
+        "activeMs": 2886806,
+        "at": 1791289086806
+      },
+      {
+        "source": "fish-sale",
+        "delta": 230,
+        "session": 2,
+        "activeMs": 3096949,
+        "at": 1791289296949
+      },
+      {
+        "source": "fish-sale",
+        "delta": 296,
+        "session": 2,
+        "activeMs": 3307258,
+        "at": 1791289507258
+      },
+      {
+        "source": "fish-sale",
+        "delta": 183,
+        "session": 2,
+        "activeMs": 3518989,
+        "at": 1791289718989
+      },
+      {
+        "source": "attendance",
+        "delta": 250,
+        "session": 3,
+        "activeMs": 3600000,
+        "at": 1791338400000
+      },
+      {
+        "source": "fish-sale",
+        "delta": 271,
+        "session": 3,
+        "activeMs": 3760404,
+        "at": 1791338560404
+      },
+      {
+        "source": "fish-sale",
+        "delta": 311,
+        "session": 3,
+        "activeMs": 3983140,
+        "at": 1791338783140
+      },
+      {
+        "source": "fish-sale",
+        "delta": 223,
+        "session": 3,
+        "activeMs": 4200723,
+        "at": 1791339000723
+      },
+      {
+        "source": "fish-sale",
+        "delta": 279,
+        "session": 3,
+        "activeMs": 4443643,
+        "at": 1791339243643
+      },
+      {
+        "source": "fish-sale",
+        "delta": 242,
+        "session": 3,
+        "activeMs": 4666938,
+        "at": 1791339466938
+      },
+      {
+        "source": "fish-sale",
+        "delta": 208,
+        "session": 3,
+        "activeMs": 4917262,
+        "at": 1791339717262
+      },
+      {
+        "source": "fish-sale",
+        "delta": 330,
+        "session": 3,
+        "activeMs": 5141524,
+        "at": 1791339941524
+      },
+      {
+        "source": "fish-sale",
+        "delta": 248,
+        "session": 3,
+        "activeMs": 5373677,
+        "at": 1791340173677
+      },
+      {
+        "source": "fish-sale",
+        "delta": 215,
+        "session": 4,
+        "activeMs": 5590732,
+        "at": 1791374590732
+      },
+      {
+        "source": "fish-sale",
+        "delta": 225,
+        "session": 4,
+        "activeMs": 5823740,
+        "at": 1791374823740
+      },
+      {
+        "source": "fish-sale",
+        "delta": 242,
+        "session": 4,
+        "activeMs": 6064989,
+        "at": 1791375064989
+      },
+      {
+        "source": "fish-sale",
+        "delta": 228,
+        "session": 4,
+        "activeMs": 6300164,
+        "at": 1791375300164
+      },
+      {
+        "source": "fish-sale",
+        "delta": 273,
+        "session": 4,
+        "activeMs": 6524477,
+        "at": 1791375524477
+      },
+      {
+        "source": "fish-sale",
+        "delta": 322,
+        "session": 4,
+        "activeMs": 6753266,
+        "at": 1791375753266
+      },
+      {
+        "source": "fish-sale",
+        "delta": 270,
+        "session": 4,
+        "activeMs": 7002090,
+        "at": 1791376002090
+      }
+    ]
+  }
+}

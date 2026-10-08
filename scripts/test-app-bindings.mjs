@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { parse } from '@babel/parser';
+import traverseModule from '@babel/traverse';
+const traverse=traverseModule.default;
+const source=readFileSync(new URL('../src/App.jsx',import.meta.url),'utf8');
+const ast=parse(source,{sourceType:'module',plugins:['jsx']});
+const globals=new Set([...Object.getOwnPropertyNames(globalThis),'window','document','localStorage','navigator','requestAnimationFrame','cancelAnimationFrame']);
+const missing=new Map();
+traverse(ast,{ReferencedIdentifier(path){const name=path.node.name;if(!path.scope.hasBinding(name)&&!globals.has(name))missing.set(name,path.node.loc.start.line);}});
+assert.deepEqual([...missing],[],'App references must resolve in scope, including conditional JSX and async boot callbacks');
+console.log('PASS: App identifiers resolve, including camera state and plaza notice dialog.');

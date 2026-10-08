@@ -1,0 +1,1024 @@
+[
+  {
+    "id": "hair_buzzcut",
+    "group": "HAIR_STYLES",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "hair_high_ponytail",
+    "group": "HAIR_STYLES",
+    "rarity": "rare",
+    "before": 260,
+    "after": 1600
+  },
+  {
+    "id": "hair_ponytail",
+    "group": "HAIR_STYLES",
+    "rarity": "rare",
+    "before": 260,
+    "after": 1600
+  },
+  {
+    "id": "hair_classic",
+    "group": "HAIR_STYLES",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "hair_anime_bangs",
+    "group": "HAIR_STYLES",
+    "rarity": "rare",
+    "before": 150,
+    "after": 1200
+  },
+  {
+    "id": "hair_twintails",
+    "group": "HAIR_STYLES",
+    "rarity": "epic",
+    "before": 250,
+    "after": 2400
+  },
+  {
+    "id": "hair_chic_bob",
+    "group": "HAIR_STYLES",
+    "rarity": "rare",
+    "before": 220,
+    "after": 1350
+  },
+  {
+    "id": "hair_wavy_curly",
+    "group": "HAIR_STYLES",
+    "rarity": "epic",
+    "before": 320,
+    "after": 2600
+  },
+  {
+    "id": "hair_slick_side",
+    "group": "HAIR_STYLES",
+    "rarity": "legendary",
+    "before": 380,
+    "after": 5500
+  },
+  {
+    "id": "hair_wolf_cut",
+    "group": "HAIR_STYLES",
+    "rarity": "epic",
+    "before": 340,
+    "after": 2750
+  },
+  {
+    "id": "hair_beach_surfer",
+    "group": "HAIR_STYLES",
+    "rarity": "rare",
+    "before": 290,
+    "after": 1750
+  },
+  {
+    "id": "hair_celestial_flow",
+    "group": "HAIR_STYLES",
+    "rarity": "legendary",
+    "before": 450,
+    "after": 5500
+  },
+  {
+    "id": "dye_chestnut",
+    "group": "HAIR_DYES",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "dye_black",
+    "group": "HAIR_DYES",
+    "rarity": "common",
+    "before": 50,
+    "after": 200
+  },
+  {
+    "id": "dye_blonde",
+    "group": "HAIR_DYES",
+    "rarity": "rare",
+    "before": 90,
+    "after": 400
+  },
+  {
+    "id": "dye_platinum",
+    "group": "HAIR_DYES",
+    "rarity": "rare",
+    "before": 120,
+    "after": 500
+  },
+  {
+    "id": "dye_pink",
+    "group": "HAIR_DYES",
+    "rarity": "epic",
+    "before": 140,
+    "after": 700
+  },
+  {
+    "id": "dye_lavender",
+    "group": "HAIR_DYES",
+    "rarity": "epic",
+    "before": 160,
+    "after": 800
+  },
+  {
+    "id": "dye_mint",
+    "group": "HAIR_DYES",
+    "rarity": "rare",
+    "before": 150,
+    "after": 600
+  },
+  {
+    "id": "dye_coral",
+    "group": "HAIR_DYES",
+    "rarity": "rare",
+    "before": 130,
+    "after": 550
+  },
+  {
+    "id": "dye_chocolate",
+    "group": "HAIR_DYES",
+    "rarity": "common",
+    "before": 70,
+    "after": 250
+  },
+  {
+    "id": "dye_coffee",
+    "group": "HAIR_DYES",
+    "rarity": "common",
+    "before": 70,
+    "after": 250
+  },
+  {
+    "id": "dye_ruby",
+    "group": "HAIR_DYES",
+    "rarity": "epic",
+    "before": 180,
+    "after": 900
+  },
+  {
+    "id": "dye_cyan",
+    "group": "HAIR_DYES",
+    "rarity": "rare",
+    "before": 150,
+    "after": 600
+  },
+  {
+    "id": "dye_midnight",
+    "group": "HAIR_DYES",
+    "rarity": "epic",
+    "before": 170,
+    "after": 850
+  },
+  {
+    "id": "dye_matcha",
+    "group": "HAIR_DYES",
+    "rarity": "rare",
+    "before": 160,
+    "after": 650
+  },
+  {
+    "id": "dye_sunset_gold",
+    "group": "HAIR_DYES",
+    "rarity": "rare",
+    "before": 150,
+    "after": 600
+  },
+  {
+    "id": "dye_ocean_teal",
+    "group": "HAIR_DYES",
+    "rarity": "epic",
+    "before": 190,
+    "after": 950
+  },
+  {
+    "id": "top_tank_basic",
+    "group": "TOPS",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "top_tee_white",
+    "group": "TOPS",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "top_hoodie_cozy",
+    "group": "TOPS",
+    "rarity": "rare",
+    "before": 220,
+    "after": 2200
+  },
+  {
+    "id": "top_bomber_varsity",
+    "group": "TOPS",
+    "rarity": "epic",
+    "before": 350,
+    "after": 5000
+  },
+  {
+    "id": "top_croptop_sport",
+    "group": "TOPS",
+    "rarity": "rare",
+    "before": 280,
+    "after": 2800
+  },
+  {
+    "id": "top_polo_preppy",
+    "group": "TOPS",
+    "rarity": "rare",
+    "before": 260,
+    "after": 2600
+  },
+  {
+    "id": "top_knit_sweater",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 400,
+    "after": 12000
+  },
+  {
+    "id": "top_school_blazer",
+    "group": "TOPS",
+    "rarity": "epic",
+    "before": 380,
+    "after": 5350
+  },
+  {
+    "id": "top_hawaii_shirt",
+    "group": "TOPS",
+    "rarity": "rare",
+    "before": 310,
+    "after": 3100
+  },
+  {
+    "id": "top_duck_hoodie",
+    "group": "TOPS",
+    "rarity": "epic",
+    "before": 420,
+    "after": 5900
+  },
+  {
+    "id": "top_angel_tunic",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 520,
+    "after": 12000
+  },
+  {
+    "id": "top_suit_vest_luxury",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 580,
+    "after": 12000
+  },
+  {
+    "id": "top_school_vest",
+    "group": "TOPS",
+    "rarity": "epic",
+    "before": 360,
+    "after": 5050
+  },
+  {
+    "id": "top_cat_ear_hoodie",
+    "group": "TOPS",
+    "rarity": "epic",
+    "before": 420,
+    "after": 5900
+  },
+  {
+    "id": "top_dino_hoodie",
+    "group": "TOPS",
+    "rarity": "epic",
+    "before": 450,
+    "after": 6300
+  },
+  {
+    "id": "top_pastel_cloud_hoodie",
+    "group": "TOPS",
+    "rarity": "rare",
+    "before": 390,
+    "after": 3900
+  },
+  {
+    "id": "top_sailor_uniform",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 480,
+    "after": 12000
+  },
+  {
+    "id": "top_cyber_jacket",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 540,
+    "after": 12000
+  },
+  {
+    "id": "top_royal_prince",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 680,
+    "after": 13600
+  },
+  {
+    "id": "top_ballgown_corset",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 620,
+    "after": 12400
+  },
+  {
+    "id": "top_vampire_count",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 590,
+    "after": 12000
+  },
+  {
+    "id": "top_kimono_sakura",
+    "group": "TOPS",
+    "rarity": "epic",
+    "before": 520,
+    "after": 7300
+  },
+  {
+    "id": "top_teddy_mascot",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 580,
+    "after": 12000
+  },
+  {
+    "id": "top_aodai_nu_sen",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 580,
+    "after": 12000
+  },
+  {
+    "id": "top_aodai_nu_trang",
+    "group": "TOPS",
+    "rarity": "epic",
+    "before": 480,
+    "after": 6750
+  },
+  {
+    "id": "top_aodai_nam_gam",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 580,
+    "after": 12000
+  },
+  {
+    "id": "top_aodai_nam_gold",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 620,
+    "after": 12400
+  },
+  {
+    "id": "top_kpop_streetwear",
+    "group": "TOPS",
+    "rarity": "epic",
+    "before": 490,
+    "after": 6900
+  },
+  {
+    "id": "top_kpop_harness_crop",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 520,
+    "after": 12000
+  },
+  {
+    "id": "top_kpop_cardigan_school",
+    "group": "TOPS",
+    "rarity": "epic",
+    "before": 450,
+    "after": 6300
+  },
+  {
+    "id": "top_blazer_luxury",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 580,
+    "after": 12000
+  },
+  {
+    "id": "top_vest_tuxedo_white",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 620,
+    "after": 12400
+  },
+  {
+    "id": "top_vest_pinstripe",
+    "group": "TOPS",
+    "rarity": "legendary",
+    "before": 600,
+    "after": 12000
+  },
+  {
+    "id": "bot_denim_shorts",
+    "group": "BOTTOMS",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "bot_overalls_bib",
+    "group": "BOTTOMS",
+    "rarity": "rare",
+    "before": 180,
+    "after": 1800
+  },
+  {
+    "id": "bot_tennis_skirt",
+    "group": "BOTTOMS",
+    "rarity": "epic",
+    "before": 320,
+    "after": 4200
+  },
+  {
+    "id": "bot_cargo_wide",
+    "group": "BOTTOMS",
+    "rarity": "epic",
+    "before": 360,
+    "after": 4350
+  },
+  {
+    "id": "bot_jogger_sport",
+    "group": "BOTTOMS",
+    "rarity": "rare",
+    "before": 240,
+    "after": 2200
+  },
+  {
+    "id": "bot_school_uniform",
+    "group": "BOTTOMS",
+    "rarity": "epic",
+    "before": 340,
+    "after": 4200
+  },
+  {
+    "id": "bot_swim_trunks",
+    "group": "BOTTOMS",
+    "rarity": "rare",
+    "before": 220,
+    "after": 2000
+  },
+  {
+    "id": "bot_duck_pants",
+    "group": "BOTTOMS",
+    "rarity": "epic",
+    "before": 360,
+    "after": 4350
+  },
+  {
+    "id": "bot_angel_pants",
+    "group": "BOTTOMS",
+    "rarity": "legendary",
+    "before": 480,
+    "after": 10000
+  },
+  {
+    "id": "bot_suit_slacks",
+    "group": "BOTTOMS",
+    "rarity": "epic",
+    "before": 420,
+    "after": 5050
+  },
+  {
+    "id": "bot_plaid_pleated_pink",
+    "group": "BOTTOMS",
+    "rarity": "epic",
+    "before": 360,
+    "after": 4350
+  },
+  {
+    "id": "bot_sailor_skirt",
+    "group": "BOTTOMS",
+    "rarity": "epic",
+    "before": 380,
+    "after": 4600
+  },
+  {
+    "id": "bot_tech_straps",
+    "group": "BOTTOMS",
+    "rarity": "legendary",
+    "before": 460,
+    "after": 10000
+  },
+  {
+    "id": "bot_ballgown_princess",
+    "group": "BOTTOMS",
+    "rarity": "legendary",
+    "before": 720,
+    "after": 13000
+  },
+  {
+    "id": "bot_royal_prince_pants",
+    "group": "BOTTOMS",
+    "rarity": "epic",
+    "before": 480,
+    "after": 5800
+  },
+  {
+    "id": "bot_gothic_lolita_skirt",
+    "group": "BOTTOMS",
+    "rarity": "epic",
+    "before": 560,
+    "after": 6750
+  },
+  {
+    "id": "bot_teddy_pants",
+    "group": "BOTTOMS",
+    "rarity": "epic",
+    "before": 460,
+    "after": 5550
+  },
+  {
+    "id": "bot_aodai_pants_silk",
+    "group": "BOTTOMS",
+    "rarity": "epic",
+    "before": 380,
+    "after": 4600
+  },
+  {
+    "id": "bot_aodai_pants_black",
+    "group": "BOTTOMS",
+    "rarity": "epic",
+    "before": 340,
+    "after": 4200
+  },
+  {
+    "id": "bot_kpop_cargo_chains",
+    "group": "BOTTOMS",
+    "rarity": "epic",
+    "before": 420,
+    "after": 5050
+  },
+  {
+    "id": "shoe_chunky_white",
+    "group": "SHOES",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "shoe_running_neon",
+    "group": "SHOES",
+    "rarity": "rare",
+    "before": 200,
+    "after": 1600
+  },
+  {
+    "id": "shoe_vintage_boots",
+    "group": "SHOES",
+    "rarity": "epic",
+    "before": 340,
+    "after": 3750
+  },
+  {
+    "id": "shoe_puffy_slides",
+    "group": "SHOES",
+    "rarity": "rare",
+    "before": 160,
+    "after": 1400
+  },
+  {
+    "id": "shoe_doll_flats",
+    "group": "SHOES",
+    "rarity": "epic",
+    "before": 280,
+    "after": 3500
+  },
+  {
+    "id": "shoe_school_loafers",
+    "group": "SHOES",
+    "rarity": "epic",
+    "before": 320,
+    "after": 3550
+  },
+  {
+    "id": "shoe_beach_sandals",
+    "group": "SHOES",
+    "rarity": "rare",
+    "before": 180,
+    "after": 1450
+  },
+  {
+    "id": "shoe_duck_feet",
+    "group": "SHOES",
+    "rarity": "epic",
+    "before": 360,
+    "after": 4000
+  },
+  {
+    "id": "shoe_celestial_heels",
+    "group": "SHOES",
+    "rarity": "legendary",
+    "before": 490,
+    "after": 8000
+  },
+  {
+    "id": "shoe_oxford_wingtip",
+    "group": "SHOES",
+    "rarity": "epic",
+    "before": 380,
+    "after": 4200
+  },
+  {
+    "id": "shoe_dino_claws",
+    "group": "SHOES",
+    "rarity": "rare",
+    "before": 320,
+    "after": 2600
+  },
+  {
+    "id": "shoe_mary_jane",
+    "group": "SHOES",
+    "rarity": "epic",
+    "before": 340,
+    "after": 3750
+  },
+  {
+    "id": "shoe_roller_skates",
+    "group": "SHOES",
+    "rarity": "legendary",
+    "before": 490,
+    "after": 8000
+  },
+  {
+    "id": "shoe_glass_slippers",
+    "group": "SHOES",
+    "rarity": "legendary",
+    "before": 650,
+    "after": 10400
+  },
+  {
+    "id": "shoe_royal_prince_boots",
+    "group": "SHOES",
+    "rarity": "epic",
+    "before": 420,
+    "after": 4650
+  },
+  {
+    "id": "shoe_geta_wood",
+    "group": "SHOES",
+    "rarity": "rare",
+    "before": 280,
+    "after": 2250
+  },
+  {
+    "id": "human",
+    "group": "EARS_OPTIONS",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "cat_ears",
+    "group": "EARS_OPTIONS",
+    "rarity": "epic",
+    "before": 250,
+    "after": 4500
+  },
+  {
+    "id": "rabbit_ears",
+    "group": "EARS_OPTIONS",
+    "rarity": "epic",
+    "before": 280,
+    "after": 4500
+  },
+  {
+    "id": "bear_ears",
+    "group": "EARS_OPTIONS",
+    "rarity": "rare",
+    "before": 260,
+    "after": 2350
+  },
+  {
+    "id": "elf_ears",
+    "group": "EARS_OPTIONS",
+    "rarity": "legendary",
+    "before": 320,
+    "after": 10000
+  },
+  {
+    "id": "shiba_ears",
+    "group": "EARS_OPTIONS",
+    "rarity": "epic",
+    "before": 310,
+    "after": 4500
+  },
+  {
+    "id": "duck_beak",
+    "group": "EARS_OPTIONS",
+    "rarity": "epic",
+    "before": 350,
+    "after": 4500
+  },
+  {
+    "id": "halo_crown",
+    "group": "EARS_OPTIONS",
+    "rarity": "legendary",
+    "before": 580,
+    "after": 10450
+  },
+  {
+    "id": "duck_floatie",
+    "group": "EARS_OPTIONS",
+    "rarity": "legendary",
+    "before": 480,
+    "after": 10000
+  },
+  {
+    "id": "frog_backpack",
+    "group": "EARS_OPTIONS",
+    "rarity": "epic",
+    "before": 390,
+    "after": 4700
+  },
+  {
+    "id": "cat_headphones",
+    "group": "EARS_OPTIONS",
+    "rarity": "epic",
+    "before": 420,
+    "after": 5050
+  },
+  {
+    "id": "round_glasses",
+    "group": "EARS_OPTIONS",
+    "rarity": "rare",
+    "before": 180,
+    "after": 1800
+  },
+  {
+    "id": "angel_wings",
+    "group": "EARS_OPTIONS",
+    "rarity": "legendary",
+    "before": 650,
+    "after": 11700
+  },
+  {
+    "id": "fox_tail",
+    "group": "EARS_OPTIONS",
+    "rarity": "legendary",
+    "before": 520,
+    "after": 10000
+  },
+  {
+    "id": "devil_horns",
+    "group": "EARS_OPTIONS",
+    "rarity": "epic",
+    "before": 440,
+    "after": 5300
+  },
+  {
+    "id": "toast_mouth",
+    "group": "EARS_OPTIONS",
+    "rarity": "epic",
+    "before": 320,
+    "after": 4500
+  },
+  {
+    "id": "lollipop_sweet",
+    "group": "EARS_OPTIONS",
+    "rarity": "rare",
+    "before": 260,
+    "after": 2350
+  },
+  {
+    "id": "steampunk_goggles",
+    "group": "EARS_OPTIONS",
+    "rarity": "epic",
+    "before": 380,
+    "after": 4600
+  },
+  {
+    "id": "crown_royal",
+    "group": "EARS_OPTIONS",
+    "rarity": "legendary",
+    "before": 750,
+    "after": 13500
+  },
+  {
+    "id": "aura_stars",
+    "group": "EARS_OPTIONS",
+    "rarity": "legendary",
+    "before": 880,
+    "after": 15850
+  },
+  {
+    "id": "cape_royal",
+    "group": "EARS_OPTIONS",
+    "rarity": "legendary",
+    "before": 690,
+    "after": 12450
+  },
+  {
+    "id": "wings_faerie",
+    "group": "EARS_OPTIONS",
+    "rarity": "legendary",
+    "before": 790,
+    "after": 14250
+  },
+  {
+    "id": "wings_bat",
+    "group": "EARS_OPTIONS",
+    "rarity": "legendary",
+    "before": 680,
+    "after": 12250
+  },
+  {
+    "id": "non_la_vietnam",
+    "group": "EARS_OPTIONS",
+    "rarity": "legendary",
+    "before": 420,
+    "after": 10000
+  },
+  {
+    "id": "khan_dong_truyenthong",
+    "group": "EARS_OPTIONS",
+    "rarity": "epic",
+    "before": 360,
+    "after": 4500
+  },
+  {
+    "id": "kpop_beret",
+    "group": "EARS_OPTIONS",
+    "rarity": "epic",
+    "before": 380,
+    "after": 4600
+  },
+  {
+    "id": "kpop_idol_mic",
+    "group": "EARS_OPTIONS",
+    "rarity": "rare",
+    "before": 350,
+    "after": 3150
+  },
+  {
+    "id": "classic",
+    "group": "EYES_OPTIONS",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "sparkle",
+    "group": "EYES_OPTIONS",
+    "rarity": "rare",
+    "before": 160,
+    "after": 650
+  },
+  {
+    "id": "smile_arc",
+    "group": "EYES_OPTIONS",
+    "rarity": "rare",
+    "before": 120,
+    "after": 500
+  },
+  {
+    "id": "cat_eyes",
+    "group": "EYES_OPTIONS",
+    "rarity": "epic",
+    "before": 180,
+    "after": 900
+  },
+  {
+    "id": "surprised",
+    "group": "EYES_OPTIONS",
+    "rarity": "rare",
+    "before": 140,
+    "after": 600
+  },
+  {
+    "id": "eyecolor_brown",
+    "group": "EYE_COLORS",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "eyecolor_black",
+    "group": "EYE_COLORS",
+    "rarity": "common",
+    "before": 40,
+    "after": 200
+  },
+  {
+    "id": "eyecolor_ocean",
+    "group": "EYE_COLORS",
+    "rarity": "common",
+    "before": 80,
+    "after": 250
+  },
+  {
+    "id": "eyecolor_amethyst",
+    "group": "EYE_COLORS",
+    "rarity": "common",
+    "before": 110,
+    "after": 350
+  },
+  {
+    "id": "eyecolor_emerald",
+    "group": "EYE_COLORS",
+    "rarity": "common",
+    "before": 110,
+    "after": 350
+  },
+  {
+    "id": "dot",
+    "group": "NOSE_OPTIONS",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "cat_nose",
+    "group": "NOSE_OPTIONS",
+    "rarity": "common",
+    "before": 80,
+    "after": 250
+  },
+  {
+    "id": "none",
+    "group": "NOSE_OPTIONS",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "smile",
+    "group": "MOUTH_OPTIONS",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "beaming",
+    "group": "MOUTH_OPTIONS",
+    "rarity": "common",
+    "before": 90,
+    "after": 300
+  },
+  {
+    "id": "cat_mouth",
+    "group": "MOUTH_OPTIONS",
+    "rarity": "common",
+    "before": 130,
+    "after": 400
+  },
+  {
+    "id": "surprised_o",
+    "group": "MOUTH_OPTIONS",
+    "rarity": "common",
+    "before": 90,
+    "after": 300
+  },
+  {
+    "id": "tongue",
+    "group": "MOUTH_OPTIONS",
+    "rarity": "common",
+    "before": 150,
+    "after": 450
+  },
+  {
+    "id": "peach",
+    "group": "BLUSH_OPTIONS",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  },
+  {
+    "id": "heart",
+    "group": "BLUSH_OPTIONS",
+    "rarity": "common",
+    "before": 120,
+    "after": 400
+  },
+  {
+    "id": "drunk",
+    "group": "BLUSH_OPTIONS",
+    "rarity": "common",
+    "before": 100,
+    "after": 300
+  },
+  {
+    "id": "none",
+    "group": "BLUSH_OPTIONS",
+    "rarity": "common",
+    "before": 0,
+    "after": 0
+  }
+]

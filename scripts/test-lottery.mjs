@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {randomBytes,createHash} from 'node:crypto';
+import {MongoClient} from 'mongodb';
+import {lotteryDay,lotteryDrawAt,lotterySaleDay,lotteryPrize,LOTTERY_CONFIG} from '../shared/lotteryConfig.js';
+import {applyLotteryAction,lotterySnapshot,lotteryDraw} from '../server/LotteryStore.js';
+const mongo=new MongoClient(process.env.MONGODB_URI||'mongodb://127.0.0.1:27017',{serverSelectionTimeoutMS:5000});
+await mongo.connect();const db=mongo.db(`lottery_test_${randomBytes(6).toString('hex')}`);
+try{
+ const now=Date.parse('2030-10-07T12:00:00+07:00'),day='2030-10-07',context={...LOTTERY_CONFIG.npc};
+ assert.equal(lotteryDay(Date.parse('2030-10-06T17:00:00Z')),day);
+ assert.equal(lotterySaleDay(lotteryDrawAt(day)),'2030-10-08');
+ const draws=await Promise.all(Array.from({length:5},()=>lotteryDraw(db,day)));
+ assert.equal(new Set(draws.map(d=>d.winner)).size,1);
+ const d=draws[0];assert.equal(d.commitment,createHash('sha256').update(`${day}:${d.winner}:${d.salt}`).digest('hex'));
+ const p={coins:1000};
+ await assert.rejects(applyLotteryAction(db,p,'lottery_buy',{number:'123456'},{x:0,z:42},now));
+ await assert.rejects(applyLotteryAction(db,p,'lottery_buy',{number:123456},context,now));
+ assert.equal(p.coins,1000);
+ const bought=await applyLotteryAction(db,p,'lottery_buy',{number:d.winner},context,now);
+ assert.equal(p.coins,900);
+ const before=await lotterySnapshot(db,p,now);assert.ok(!before.results.some(r=>r.day===day));assert.equal(before.tickets[0].prize,null);assert.equal(before.winner,undefined);
+ await assert.rejects(applyLotteryAction(db,p,'lottery_claim',{ticketId:bought.lotteryPurchase.id},context,now));
+ for(let i=1;i<5;i++)await applyLotteryAction(db,p,'lottery_buy',{},context,now);
+ await assert.rejects(applyLotteryAction(db,p,'lottery_buy',{},context,now));assert.equal(p.coins,500);
+ await assert.rejects(applyLotteryAction(db,{coins:1000},'lottery_buy',{},context,lotteryDrawAt(day)-300000));
+ const after=await lotterySnapshot(db,p,lotteryDrawAt(day));assert.equal(after.results.find(r=>r.day===day).winner,d.winner);
+ const result=await applyLotteryAction(db,p,'lottery_claim',{ticketId:bought.lotteryPurchase.id},context,lotteryDrawAt(day));assert.equal(result.lotteryReward,50000);assert.equal(p.coins,50500);
+ await assert.rejects(applyLotteryAction(db,p,'lottery_claim',{ticketId:bought.lotteryPurchase.id},context,lotteryDrawAt(day)));
+ await assert.rejects(applyLotteryAction(db,p,'lottery_buy',{},context,lotteryDrawAt(day)));
+ assert.equal(lotteryPrize('111456','123456'),3000);assert.equal(lotteryPrize('111156','123456'),300);assert.equal(lotteryPrize('111111','123456'),0);
+ console.log('PASS lottery: shared persisted draw, hidden result, VN cutoff, proximity, input validation, 5-ticket cap, rewards and duplicate claim.');
+}finally{await db.dropDatabase();await mongo.close();}

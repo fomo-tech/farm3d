@@ -1,3 +1,36 @@
+import { lakeShoreDistance } from '../../../shared/lakeConfig.js';
+import { networkWaterAt } from '../../../shared/waterNetwork.js';
+
+export function distanceToWater(x, z) {
+  // 1. Crystal Lake
+  const lakeDist = Math.abs(lakeShoreDistance(x, z));
+  if (lakeDist < 25) return lakeDist;
+
+  // 2. Water Network (4 satellite lakes + 5 streams)
+  if (networkWaterAt(x, z, 5)) return 0;
+  if (networkWaterAt(x, z, 14)) return 8;
+  if (networkWaterAt(x, z, 24)) return 18;
+
+  // 3. Central Park Pond & Brook
+  const pondD = Math.hypot(x - 84, z - 68);
+  if (pondD < 24) return Math.max(0, pondD - 6);
+
+  // 4. Grand Winding River (runs roughly x ~ 205-225, z: -580 to 720)
+  if (z >= -580 && z <= 720) {
+    const rx = 215 + Math.sin(z * 0.015) * 8;
+    const dX = Math.abs(x - rx);
+    if (dX < 32) return Math.max(0, dX - 9);
+  }
+
+  // 5. South Beach & Ocean (z > 318)
+  if (z >= 318) {
+    const dZ = Math.abs(z - 350);
+    if (dZ < 35) return Math.max(0, dZ - 8);
+  }
+
+  return 100;
+}
+
 /**
  * FarmAudioSystem - Hệ thống âm thanh Procedural Web Audio API cho Farm Online 3D
  * Không phụ thuộc file âm thanh ngoài, độ trễ 0ms, âm sắc trong trẻo mượt mà.
@@ -11,6 +44,10 @@ class FarmAudioSystem {
     this.isInitialized = false;
     this.natureOscillators = [];
     this.lastFootstep = 0;
+    this.waterGain = null;
+    this.waterFilter = null;
+    this.waterSource = null;
+    this.waterAudioActive = false;
   }
 
   init() {
@@ -304,6 +341,75 @@ class FarmAudioSystem {
         osc.stop(now + offset + 0.13);
       });
     });
+  }
+
+  // === 3. ÂM THANH MÔI TRƯỜNG SÔNG NƯỚC THƯ THÁI (WATERFRONT AMBIENCE) ===
+  initWaterAmbience() {
+    if (!this.ctx || this.waterAudioActive) return;
+    try {
+      const bufferSize = Math.floor(this.ctx.sampleRate * 2.5);
+      const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        b3 = 0.86650 * b3 + white * 0.3104856;
+        b4 = 0.55000 * b4 + white * 0.5329522;
+        b5 = -0.7616 * b5 - white * 0.0168980;
+        output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.045;
+        b6 = white * 0.115926;
+      }
+
+      this.waterSource = this.ctx.createBufferSource();
+      this.waterSource.buffer = noiseBuffer;
+      this.waterSource.loop = true;
+
+      this.waterFilter = this.ctx.createBiquadFilter();
+      this.waterFilter.type = 'lowpass';
+      this.waterFilter.frequency.setValueAtTime(420, this.ctx.currentTime);
+      this.waterFilter.Q.setValueAtTime(1.4, this.ctx.currentTime);
+
+      this.waterGain = this.ctx.createGain();
+      this.waterGain.gain.setValueAtTime(0, this.ctx.currentTime);
+
+      this.waterSource.connect(this.waterFilter);
+      this.waterFilter.connect(this.waterGain);
+      if (this.ambientGain) {
+        this.waterGain.connect(this.ambientGain);
+      } else {
+        this.waterGain.connect(this.masterGain);
+      }
+
+      this.waterSource.start(0);
+      this.waterAudioActive = true;
+    } catch {
+      // Audio fallback
+    }
+  }
+
+  updateWaterfrontPosition(x, z) {
+    if (this.isMuted || !this.ctx) return;
+    const d = distanceToWater(x, z);
+    if (!this.waterAudioActive) {
+      if (d < 26) this.initWaterAmbience();
+      else return;
+    }
+    const now = this.ctx.currentTime;
+    let targetVolume = 0;
+    if (d < 24) {
+      const proximity = Math.max(0, 1 - d / 24);
+      targetVolume = proximity * proximity * 0.32;
+      if (this.waterFilter) {
+        const waveFreq = 340 + Math.sin(now * 1.2) * 90 + Math.cos(now * 0.45) * 50;
+        this.waterFilter.frequency.setTargetAtTime(waveFreq, now, 0.2);
+      }
+    }
+    if (this.waterGain) {
+      this.waterGain.gain.setTargetAtTime(targetVolume, now, 0.25);
+    }
   }
 }
 

@@ -4,8 +4,8 @@ Sửa `shared/landConfig.js`, khởi động lại backend, tải lại danh sá
 
 | Trường | Ý nghĩa |
 | --- | --- |
-| `minPrice` | Giá thấp nhất theo công thức, hiện 150 xu |
-| `maxPrice` | Giá cao nhất theo công thức, hiện 2000 xu |
+| `minPrice` | Giá thấp nhất theo công thức, hiện 6000 xu |
+| `maxPrice` | Giá cao nhất theo công thức, hiện 12000 xu |
 | `roundingStep` | Bước làm tròn phần giá tăng theo vị trí, hiện 50 xu |
 | `center` | Tọa độ tâm tính khoảng cách, hiện x=0, z=0 |
 | `villageMultipliers` | Hệ số theo ID làng; mặc định 1 |

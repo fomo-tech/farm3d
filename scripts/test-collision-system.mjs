@@ -31,9 +31,9 @@ for (const [x, z] of [[0, 18], [0, 12], [-24, -20.9], [24, -20.9], [-24, 20.9], 
   if (collision.isColliding(x, z)) throw new Error(`Town plaza route/venue door blocked at ${x}, ${z}`);
 }
 for (const [x, z] of [[-14, -14], [14, -14], [-14, 14], [14, 14]]) {
-  if (!collision.isColliding(x, z)) throw new Error(`Town plaza flowerbed has no collision at ${x}, ${z}`);
+  if (collision.isColliding(x, z)) throw new Error(`Removed flowerbed leaves an invisible wall at ${x}, ${z}`);
 }
-console.log('Town plaza access OK: spawn and four shop entrances open; flowerbeds solid.');
+console.log('Town plaza access OK: spawn and four shop entrances open; removed flowerbed positions remain walkable.');
 
 // Test 1: Spawn point must NOT collide
 const spawn = WORLD_LAYOUT.spawn;
@@ -131,9 +131,9 @@ if (!farmHome) {
 
 // Farm Barn inside plot
 const farmBarn = collision.isColliding(farm1.x + 4.8, farm1.z + 5.2);
-console.log(`- Farm 1 Barn (${farm1.x + 4.8}, ${farm1.z + 5.2}) collision: ${farmBarn} (Expected: true)`);
-if (!farmBarn) {
-  console.error('FAIL: Farm 1 barn is not solid!');
+console.log(`- Farm 1 open corral (${farm1.x + 4.8}, ${farm1.z + 5.2}) collision: ${farmBarn} (Expected: false)`);
+if (farmBarn) {
+  console.error('FAIL: Farm 1 corral interior is blocked!');
   process.exit(1);
 }
 
@@ -176,3 +176,21 @@ if (perQueryMicroseconds > 100) {
 }
 
 console.log('ALL TESTS PASSED!');
+
+for(const farm of WORLD_LAYOUT.farms){
+ for(const dz of [-3.5,-2.8,-1.8,0]) assert.equal(collision.isColliding(farm.x+4.8,farm.z+5.2+dz),false,`Corral gate blocked: ${farm.id}/${dz}`);
+ assert.equal(collision.isColliding(farm.x+4.8+3.2,farm.z+5.2),true,`Corral fence missing: ${farm.id}`);
+}
+console.log('PASS: every corral has an accessible gate and walkable interior, with solid side fences');
+const {findWalkingPath}=await import('../src/game/physics/findWalkingPath.js');
+const {FARM_CONFIG}=await import('../shared/farmConfig.js');
+for(const farm of WORLD_LAYOUT.farms.slice(0,3)){
+ const start={x:farm.x+4.8,z:farm.z+5.2-3.8};
+ for(const [species,[x,z]] of Object.entries(FARM_CONFIG.livestockVisuals.slots)){
+  for(const [dx,dz] of [[-.55,-.38],[.55,-.38],[0,.62]]){
+   const target={x:farm.x+4.8+x+dx,z:farm.z+5.2+Math.max(-2.1,z+dz-(species==='cow'?1.2:.9))};
+   assert.ok(findWalkingPath(start,target,(x,z)=>collision.isColliding(x,z)),`No care path ${farm.id}/${species}/${dx}`);
+  }
+ }
+}
+console.log('PASS: paths through the gate reach all 15 animal care positions');

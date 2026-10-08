@@ -93,15 +93,24 @@ export function createCozyBeach(scene, shadows, scheduler) {
 
   // Flock of seagulls cruising above the bay
   const seagullGroup=new TransformNode('beach-seagulls',scene); seagullGroup.parent=root;
+  // Moving birds must never share static scenery instance batches or octree bounds.
+  seagullGroup.metadata={spatialBoundsMutable:true};
+  function birdBox(parent,name,x,y,z,w,h,d,color) {
+    const mesh=MeshBuilder.CreateBox(name,{width:w,height:h,depth:d},scene);
+    mesh.parent=parent;mesh.position.set(x,y,z);mesh.material=mats[color];
+    mesh.isPickable=false;mesh.metadata={spatialBoundsMutable:true};
+    return mesh;
+  }
   const seagulls=[];
   for(let s=0;s<4;s++) {
     const gBird=new TransformNode(`seagull-${s}`,scene); gBird.parent=seagullGroup;
-    box(gBird,`gull-body-${s}`,0,0,0,.35,.22,.85,'white');
+    birdBox(gBird,`gull-body-${s}`,0,0,0,.35,.22,.85,'white');
     for(const wSide of [-1,1]) {
-      const wing=box(gBird,`gull-wing-${s}-${wSide}`,wSide*.65,.04,0,1.0,.03,.4,'white'); wing.rotation.z=wSide*.12;
-      box(gBird,`gull-tip-${s}-${wSide}`,wSide*1.22,.06,0,.3,.03,.3,'ink');
+      const wing=birdBox(gBird,`gull-wing-${s}-${wSide}`,wSide*.65,.04,0,1.0,.03,.4,'white'); wing.rotation.z=wSide*.12;
+      birdBox(gBird,`gull-tip-${s}-${wSide}`,wSide*1.22,.06,0,.3,.03,.3,'ink');
     }
-    box(gBird,`gull-beak-${s}`,0,-.04,.52,.1,.08,.22,'yellow');
+    birdBox(gBird,`gull-beak-${s}`,0,-.04,.52,.1,.08,.22,'yellow');
+    gBird.position.set(0,14+s*1.8,348);
     seagulls.push({node:gBird,angle:(s*Math.PI)/2,radius:40+s*6,speed:.28+s*.04,h:14+s*1.8});
   }
   const animObs=scene.onBeforeRenderObservable.add(()=>{

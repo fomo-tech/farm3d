@@ -1,3 +1,4 @@
+import {networkWaterAt} from '../../../shared/waterNetwork.js';
 /**
  * WaterSafetyZone.js
  * Centralized spatial safety validator ensuring ZERO trees, bushes, rocks, or terrestrial props
@@ -12,6 +13,7 @@
  * @returns {boolean} True if point is inside or too close to water bodies
  */
 export function isPointInLakeOrRiver(x, z, margin = 3.0) {
+  if (networkWaterAt(x,z,margin)) return true;
   // 1. Crystal Lake (Hồ Pha Lê mở rộng - Tọa độ tâm ~167, 2, bán kính trục X: 54m, trục Z: 68m)
   // Bao trọn 100% lòng hồ, bãi cát vàng bao quanh và thềm đảo Vọng Lâu
   const lakeMinX = 126.0 - margin;

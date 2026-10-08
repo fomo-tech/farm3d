@@ -28,6 +28,8 @@ import { buildBridge } from './nature/BridgeSystem.js';
 import { createGlobalDenseFloraSteps } from './createGlobalDenseFlora.js';
 import { FoliageInstancingEngine } from './FoliageInstancingEngine.js';
 import { createProceduralMountainRange } from './nature/ProceduralMountainRange.js';
+import { createVintageRowingBoat, createChibiSteppingStones } from './nature/CinematicWaterfrontDecor.js';
+import { createWaterRippleRingSystem } from './nature/StylizedWaterEngine.js';
 
 function makeMat(scene, name, hex, emissiveHex = null, specular = 0.08) {
   const m = new StandardMaterial(name, scene);
@@ -722,6 +724,8 @@ function createVenSongRiver(scene, parent, foliage, shadows) {
   root.parent = parent;
 
   const matWoodBridge = makeMat(scene, 'vensong-pier-wood', WORLD_PALETTE.woodOakDark, null, 0.08);
+  const matLanternPost = makeMat(scene, 'vensong-lantern-post', '#78350f');
+  const matLanternGlow = makeMat(scene, 'vensong-lantern-glow', '#fef08a', '#f59e0b', 0.1);
 
   // 1. Bến Thuyền Câu Cá & Cầu Tàu Gỗ mộc mạc (x = 227, z = 145) ngay ven bờ sông uốn lượn
   const pierRoot = new TransformNode('vensong-fishing-pier', scene);
@@ -732,17 +736,88 @@ function createVenSongRiver(scene, parent, foliage, shadows) {
   pierDeck.position.set(0, 0.18, 0);
   pierDeck.material = matWoodBridge;
   pierDeck.parent = pierRoot;
+  if (shadows) shadows.addShadowCaster(pierDeck);
 
-  // Thuyền gỗ nhỏ neo cạnh bến
-  spawnModelSync(scene, MODEL_PATHS.town.cart, {
-    position: new Vector3(219, 0.05, 145),
-    rotation: new Vector3(0, 0.3, 0),
-    scaling: new Vector3(1.1, 1.1, 1.1),
-    parent: pierRoot,
-    name: 'vensong-rowboat',
+  // Cột đèn bão cổ điển tỏa ánh sáng vàng trên bến thuyền
+  [-1.4, 1.4].forEach((pz, pIdx) => {
+    const post = MeshBuilder.CreateBox(`pier-lamp-post-${pIdx}`, { width: 0.14, height: 1.15, depth: 0.14 }, scene);
+    post.position.set(2.1, 0.75, pz);
+    post.material = matLanternPost;
+    post.parent = pierRoot;
+
+    const bulb = MeshBuilder.CreateSphere(`pier-lamp-bulb-${pIdx}`, { diameter: 0.32, segments: 6 }, scene);
+    bulb.position.set(2.1, 1.45, pz);
+    bulb.material = matLanternGlow;
+    bulb.parent = pierRoot;
   });
 
-  // 2. Cây rủ bóng nước hai bên hành lang bờ sông (tránh lòng đường QL 86 và cầu bộ hành)
+  // Thùng đồ nghề câu cá trên bến
+  const crate = MeshBuilder.CreateBox('pier-fish-crate', { width: 0.8, height: 0.65, depth: 0.75 }, scene);
+  crate.position.set(1.4, 0.60, 0.9);
+  crate.material = matLanternPost;
+  crate.parent = pierRoot;
+
+  // Thuyền gỗ vintage chèo tay đích thực dập dềnh theo nhịp sóng nước
+  createVintageRowingBoat(scene, pierRoot, {
+    x: -8.0,
+    y: 0.08,
+    z: 0.2,
+    rotationY: 0.15,
+  }, shadows);
+
+  // 2. CỐI XAY NƯỚC CỔ TÍCH VEN SUỐI (Fairytale Watermill với guồng nước ven sông)
+  const watermillRoot = new TransformNode('vensong-watermill-root', scene);
+  watermillRoot.position.set(227.0, 0.12, 172.0);
+  watermillRoot.parent = root;
+
+  spawnModelSync(scene, MODEL_PATHS.town.watermill, {
+    position: new Vector3(0, 0, 0),
+    rotation: new Vector3(0, -Math.PI / 2, 0),
+    scaling: new Vector3(1.5, 1.5, 1.5),
+    shadows,
+    parent: watermillRoot,
+    name: 'vensong-watermill-mesh',
+  });
+
+  // Bọt nước rẽ sóng quanh chân guồng nước cối xay
+  createWaterRippleRingSystem(scene, watermillRoot, {
+    count: 3,
+    minRadius: 0.8,
+    maxRadius: 2.2,
+    speed: 1.1,
+    y: 0.084,
+    color: '#e0f2fe',
+    center: new Vector3(-3.2, 0, 0),
+    prefix: 'watermill-wake',
+  });
+
+  // 3. ĐÀN CÒ TRẮNG (Storks) rỉa cánh bình yên ven bờ bãi bồi nông
+  const storkSpots = [
+    { x: 225.5, z: 118.0, rot: 1.2 },
+    { x: 226.2, z: 122.5, rot: 0.8 },
+    { x: 204.0, z: 194.0, rot: -1.4 },
+  ];
+  storkSpots.forEach((sp, idx) => {
+    spawnModelSync(scene, MODEL_PATHS.animals.stork, {
+      position: new Vector3(sp.x, 0.10, sp.z),
+      rotation: new Vector3(0, sp.rot, 0),
+      scaling: new Vector3(1.2, 1.2, 1.2),
+      shadows,
+      parent: root,
+      name: `vensong-stork-${idx}`,
+    });
+  });
+
+  // 4. Bậc đá tròn chibi băng qua suối ven sông
+  createChibiSteppingStones(
+    scene,
+    root,
+    new Vector3(205.5, 0, 235.0),
+    new Vector3(219.0, 0, 235.0),
+    5
+  );
+
+  // 5. Cây rủ bóng nước hai bên hành lang bờ sông (tránh lòng đường QL 86 và cầu bộ hành)
   for (let z = 45; z <= 315; z += 38) {
     if (Math.abs(z - 86) > 12 && Math.abs(z - 210) > 10) {
       foliage.createCloudTree(202, z, 1.35, true);
@@ -750,7 +825,7 @@ function createVenSongRiver(scene, parent, foliage, shadows) {
     }
   }
 
-  // 3. Đàn vịt trời tung tăng bơi lội trên dòng sông
+  // 6. Đàn vịt trời tung tăng bơi lội trên dòng sông
   [110, 175, 260].forEach((dz, i) => {
     spawnModelSync(scene, MODEL_PATHS.animals.duck, {
       position: new Vector3(216 + (i % 2 === 0 ? -1.5 : 1.5), 0.05, dz),

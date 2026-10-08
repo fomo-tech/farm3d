@@ -1,158 +1,48 @@
-import { useState } from 'react';
-import { CROPS } from '../game/economy/GameProgress.js';
-import {
-  Icon3dMarketStall,
-  Icon3dGuideBook,
-  Icon3dBackpack,
-  Icon3dBasket,
-  Icon3dGoldCoin,
-  Icon3dCarrot,
-  Icon3dRiceSpike,
-  Icon3dSprout,
-  Icon3dFlower,
-} from './icons3d/GameIcons3D.jsx';
-
-function renderCrop3D(cropId, size = 24) {
-  if (cropId === 'carrot') return <Icon3dCarrot size={size} />;
-  if (cropId === 'wheat') return <Icon3dRiceSpike size={size} />;
-  if (cropId === 'tomato') return <Icon3dSprout size={size} />;
-  if (cropId === 'strawberry') return <Icon3dFlower size={size} />;
-  return <Icon3dSprout size={size} />;
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { NPC_TRADING_CONFIG } from '../../shared/npcTradingConfig.js';
+import { CROPS, barnCapacity, inventoryCount } from '../game/economy/GameProgress.js';
+import { HudIcon } from './icons3d/HudIcon.jsx';
+import { useInventoryMeshArt } from './useInventoryMeshArt.js';
+import './FarmMarket.css';
+const OFFERS = Object.values(NPC_TRADING_CONFIG.roadside.offers);
+export function RoadsideShopModal({ progress = {}, onBuyOffer, onVisitShop, onOpenInventory, onClose, pending = false, connected }) {
+  const [tab,setTab] = useState('offers');
+  const panel = useRef(null), close = useRef(onClose); close.current = onClose;
+  const capacity = barnCapacity(progress), used = inventoryCount({...progress,inventory:progress.inventory||{}});
+  const coins = progress.coins || 0, free = Math.max(0,capacity-used);
+  const stock = Object.entries(progress.inventory||{}).filter(([id,count]) => count>0 && CROPS[id]);
+  const items = useMemo(() => Object.keys(CROPS).map(id => ({id:`produce:${id}`,itemId:id,kind:'crop',category:'produce',name:CROPS[id].name,count:1})),[]);
+  const images = useInventoryMeshArt(true,'produce',items);
+  const art = id => images[`produce:${id}`] && images[`produce:${id}`] !== 'unavailable' ? <img src={images[`produce:${id}`]} alt={CROPS[id].name}/> : <HudIcon asset="basket" size={65}/>;
+  useEffect(() => {
+    const previous = document.activeElement;
+    panel.current?.querySelector('button')?.focus();
+    const keys = event => {
+      if (event.key==='Escape') { event.preventDefault(); event.stopPropagation(); close.current?.(); }
+      if (event.key!=='Tab') return;
+      const controls = [...panel.current.querySelectorAll('button:not(:disabled)')].filter(el=>el.getClientRects().length);
+      const first=controls[0],last=controls[controls.length-1];
+      if (event.shiftKey&&document.activeElement===first) { event.preventDefault();last?.focus(); }
+      else if (!event.shiftKey&&document.activeElement===last) { event.preventDefault();first?.focus(); }
+    };
+    document.addEventListener('keydown',keys,true);
+    return ()=>{document.removeEventListener('keydown',keys,true);if(previous?.isConnected)previous.focus();};
+  },[]);
+  const buy = offer => { if (!connected||pending||coins<offer.price||free<offer.amount) return;onBuyOffer?.(offer); };
+  return <div className="farm-market-overlay" onClick={event=>{if(event.target===event.currentTarget)onClose?.();}}>
+    <section className="farm-market" ref={panel} role="dialog" aria-modal="true" aria-labelledby="farm-market-title">
+      <div className="farm-market-canopy" aria-hidden="true"/>
+      <header className="farm-market-header"><span className="farm-market-logo"><HudIcon asset="shop" size={51}/></span><div><small>GIAN HÀNG VEN ĐƯỜNG · HOA MAI</small><h2 id="farm-market-title">Cửa hàng dân gian</h2></div><div className="farm-market-wallet"><HudIcon asset="coin" size={28}/><span><small>Xu của bạn</small><b>{coins.toLocaleString('vi-VN')}</b></span></div><button className="farm-market-close" aria-label="Đóng cửa hàng dân gian" onClick={onClose}>×</button></header>
+      <nav className="farm-market-tabs" aria-label="Danh mục cửa hàng"><button aria-pressed={tab==='offers'} onClick={()=>setTab('offers')}><HudIcon asset="basket" size={29}/><span>Nông sản bổ sung</span><small>{OFFERS.length}</small></button><button aria-pressed={tab==='stock'} onClick={()=>setTab('stock')}><HudIcon asset="backpack" size={29}/><span>Hàng trong kho</span><small>{stock.length}</small></button><div className={`farm-market-capacity ${free===0?'full':''}`}><span>Kho <b>{used}/{capacity}</b></span><div><i style={{width:`${Math.min(100,used/capacity*100)}%`}}/></div></div></nav>
+      <div className="farm-market-content">
+        {tab==='offers'?<><section className="farm-market-banner"><HudIcon asset="shop" size={61}/><div><small>THÊM MỘT CHÚT CHO ĐƠN HÀNG</small><h3>Ghé quầy, chọn nông sản</h3><p>Mua thêm khi cần đủ nguyên liệu. Giá mua cao hơn giá bán lại; mỗi nút mua là một gói hàng.</p></div><button disabled={pending||!onVisitShop} onClick={onVisitShop}><HudIcon asset="map" size={23}/> Đến gian hàng</button></section>
+          <div className="farm-market-offers">{OFFERS.map(offer=>{const missing=Math.max(0,offer.price-coins);const noSpace=free<offer.amount;const disabled=!connected||pending||missing>0||noSpace||!onBuyOffer;return <article key={offer.id} className="farm-market-offer"><div className="farm-market-product-art">{art(offer.crop)}<span>Gói {offer.amount}</span></div><div className="farm-market-product-copy"><small>NÔNG SẢN</small><h3>{CROPS[offer.crop].name}</h3><p>{offer.amount} sản phẩm / gói</p><div className="farm-market-price"><HudIcon asset="coin" size={24}/><strong>{offer.price.toLocaleString('vi-VN')}</strong><small>xu / gói</small></div><button disabled={disabled} onClick={()=>buy(offer)} aria-label={`Mua gói ${offer.amount} ${CROPS[offer.crop].name}, ${offer.price} xu`}>{pending?'Đang xác nhận…':!connected?'Chờ kết nối':noSpace?'Kho không đủ chỗ':missing?'Thiếu xu':'Mua tại quầy'}</button><small className="farm-market-buy-hint">{!connected?'Kết nối lại để mua hàng.':noSpace?`Cần ${offer.amount} chỗ trống; kho còn ${free}.`:missing?`Cần thêm ${missing.toLocaleString('vi-VN')} xu.`:`Trong kho: ${progress.inventory?.[offer.crop]||0} sản phẩm`}</small></div></article>;})}</div>
+          <p className="farm-market-footnote">Mua hàng tại quầy ven đường. Nếu đang ở xa, chọn “Đến gian hàng” để được dẫn đường.</p>
+        </>:<><div className="farm-market-stock-heading"><div><small>NÔNG SẢN CỦA BẠN</small><h3>Vụ mùa đang cất trong kho</h3><p>Giá thu mua dưới đây tính cho một sản phẩm.</p></div><button disabled={!onOpenInventory||pending} onClick={onOpenInventory}><HudIcon asset="backpack" size={24}/> Mở Túi đồ</button></div>
+          {stock.length?<div className="farm-market-stock">{stock.map(([id,count])=><article key={id}><div className="farm-market-stock-art">{art(id)}</div><div><h4>{CROPS[id].name}</h4><p>Đang có <b>{count}</b> sản phẩm</p><small>Giá thu mua <b>{CROPS[id].sellPrice} xu</b> / sản phẩm</small></div><span>×{count}</span></article>)}</div>:<div className="farm-market-empty"><HudIcon asset="basket" size={83}/><h3>Kho chưa có nông sản</h3><p>Thu hoạch ở nông trại hoặc mua một gói hàng tại quầy để bổ sung.</p><button onClick={()=>setTab('offers')}>Xem nông sản</button></div>}
+          <div className="farm-market-stock-tip"><HudIcon asset="quest" size={34}/><p>Mở Túi đồ để bán nông sản hoặc dùng chúng để giao đơn hàng. Giá gói mua tại quầy và giá thu mua là hai mức khác nhau.</p></div>
+        </>}
+      </div><footer className="farm-market-footer"><span role="status">{pending?'Vui lòng chờ một chút…':!connected?'Chưa có kết nối':`Kho còn ${free} chỗ trống`}</span><button onClick={onClose}>Tiếp tục khám phá</button></footer>
+    </section>
+  </div>;
 }
-
-const MARKET_OFFERS = [
-  { id: 'off_1', seller: 'Hợp tác xã', crop: 'carrot', amount: 5, price: 50, tag: 'Bán chạy' },
-  { id: 'off_2', seller: 'Hợp tác xã', crop: 'wheat', amount: 4, price: 100, tag: 'Giá rẻ' },
-  { id: 'off_3', seller: 'Hợp tác xã', crop: 'tomato', amount: 3, price: 135, tag: 'Tươi ngon' },
-  { id: 'off_4', seller: 'Hợp tác xã', crop: 'strawberry', amount: 2, price: 210, tag: 'Đặc sản' },
-];
-
-export function RoadsideShopModal({ progress, onBuyOffer, onClose }) {
-  const [tab, setTab] = useState('gazette'); // 'gazette' | 'my_shop'
-  const [offers, setOffers] = useState(MARKET_OFFERS);
-
-  const handleBuy = offer => {
-    if (progress.coins < offer.price) return;
-    setOffers(prev => prev.filter(o => o.id !== offer.id));
-    onBuyOffer?.(offer);
-  };
-
-  return (
-    <div className="onboarding-backdrop" onClick={onClose}>
-      <section className="roadside-shop-card" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
-        {/* Striped Canopy Roof Header */}
-        <div className="shop-canopy-stripe">
-          <div className="shop-title-wrap">
-            <span className="shop-icon" style={{ display: 'inline-flex' }}>
-              <Icon3dMarketStall size={36} />
-            </span>
-            <div>
-              <small>CHỢ NÔNG DÂN HOA MAI</small>
-              <h2>Gian Hàng Ven Đường</h2>
-            </div>
-          </div>
-          <button type="button" className="close-btn" onClick={onClose} aria-label="Đóng">
-            ×
-          </button>
-        </div>
-
-        {/* Tab selection */}
-        <div className="shop-tab-bar">
-          <button
-            type="button"
-            className={`shop-tab-btn ${tab === 'gazette' ? 'active' : ''}`}
-            onClick={() => setTab('gazette')}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <Icon3dGuideBook size={18} />
-            <span>Tạp Chí Rao Vặt Thung Lũng</span>
-          </button>
-          <button
-            type="button"
-            className={`shop-tab-btn ${tab === 'my_shop' ? 'active' : ''}`}
-            onClick={() => setTab('my_shop')}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <Icon3dBackpack size={18} />
-            <span>Quầy Hàng Của Bạn</span>
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        <div className="shop-content-area">
-          {tab === 'gazette' && (
-            <div className="offers-grid">
-              {offers.length === 0 ? (
-                <div className="empty-shop-notice">
-                  <Icon3dBasket size={40} />
-                  <p>Hôm nay cả chợ đã bán hết sạch hàng! Hãy quay lại sau nhé.</p>
-                </div>
-              ) : (
-                offers.map(offer => {
-                  const cropObj = CROPS[offer.crop] || CROPS.carrot;
-                  const canAfford = progress.coins >= offer.price;
-
-                  return (
-                    <div key={offer.id} className="market-crate-card">
-                      <span className="crate-seller-tag">{offer.seller}</span>
-                      <div className="crate-crop-display">
-                        <span className="crate-crop-icon" style={{ display: 'inline-flex' }}>{renderCrop3D(offer.crop, 26)}</span>
-                        <b className="crate-crop-name">{cropObj.name} × {offer.amount}</b>
-                      </div>
-                      <div className="crate-bottom-row">
-                        <span className="crate-price" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <Icon3dGoldCoin size={18} />
-                          <span>{offer.price}</span>
-                        </span>
-                        <button
-                          type="button"
-                          className="crate-buy-btn"
-                          disabled={!canAfford}
-                          onClick={() => handleBuy(offer)}
-                        >
-                          {canAfford ? 'Mua ngay' : 'Thiếu xu'}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          )}
-
-          {tab === 'my_shop' && (
-            <div className="my-shop-crates">
-              <div className="my-shop-intro">
-                <p>Đặt nông sản từ kho của bạn lên thùng gỗ để bán cho hàng xóm ghé thăm:</p>
-              </div>
-              <div className="my-crates-grid">
-                {Object.entries(progress.inventory)
-                  .filter(([key, count]) => count > 0 && CROPS[key])
-                  .map(([cropId, count]) => {
-                    const crop = CROPS[cropId];
-                    return (
-                      <div key={cropId} className="my-stock-crate">
-                        <span className="my-crate-icon" style={{ display: 'inline-flex' }}>{renderCrop3D(cropId, 26)}</span>
-                        <b>{crop.name}</b>
-                        <small>Có: {count} củ trong kho</small>
-                        <span className="my-crate-val">Giá thị trường: {crop.sellPrice * 2} xu</span>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <footer className="shop-footer">
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <span>Số dư của bạn:</span>
-            <Icon3dGoldCoin size={18} />
-            <b>{progress.coins.toLocaleString('vi-VN')} xu</b>
-          </span>
-        </footer>
-      </section>
-    </div>
-  );
-}
-

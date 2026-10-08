@@ -1,0 +1,293 @@
+{
+  "assumptions": "Static code audit; crops exclude actions/travel/storage/theft; fish assume all catches succeed and time phases equally weighted; no live DB access.",
+  "initial": 180,
+  "dayOneWithCodesAndAttendance": 2180,
+  "minLand": 2000,
+  "maxLand": 8000,
+  "attendanceWeek": 3000,
+  "crops": [
+    {
+      "id": "carrot",
+      "level": 1,
+      "minutes": 1,
+      "netPerTile": 43,
+      "netPerTileHour": 2580
+    },
+    {
+      "id": "wheat",
+      "level": 2,
+      "minutes": 3,
+      "netPerTile": 108,
+      "netPerTileHour": 2160
+    },
+    {
+      "id": "tomato",
+      "level": 3,
+      "minutes": 5,
+      "netPerTile": 188,
+      "netPerTileHour": 2256
+    },
+    {
+      "id": "strawberry",
+      "level": 5,
+      "minutes": 10,
+      "netPerTile": 435,
+      "netPerTileHour": 2610
+    },
+    {
+      "id": "pumpkin",
+      "level": 4,
+      "minutes": 7,
+      "netPerTile": 312,
+      "netPerTileHour": 2674.3
+    },
+    {
+      "id": "melon",
+      "level": 6,
+      "minutes": 12,
+      "netPerTile": 562,
+      "netPerTileHour": 2810
+    },
+    {
+      "id": "turnip",
+      "level": 8,
+      "minutes": 15,
+      "netPerTile": 744,
+      "netPerTileHour": 2976
+    }
+  ],
+  "crafts": [
+    {
+      "id": "flour",
+      "rawValue": 60,
+      "sell": 18,
+      "valueChange": -42
+    },
+    {
+      "id": "cheese",
+      "rawValue": 80,
+      "sell": 35,
+      "valueChange": -45
+    },
+    {
+      "id": "jam",
+      "rawValue": 240,
+      "sell": 55,
+      "valueChange": -185
+    }
+  ],
+  "roadsideFlips": [
+    {
+      "id": "carrot",
+      "cost": 50,
+      "resale": 60,
+      "profit": 10
+    },
+    {
+      "id": "wheat",
+      "cost": 100,
+      "resale": 120,
+      "profit": 20
+    },
+    {
+      "id": "tomato",
+      "cost": 135,
+      "resale": 156,
+      "profit": 21
+    },
+    {
+      "id": "strawberry",
+      "cost": 210,
+      "resale": 240,
+      "profit": 30
+    }
+  ],
+  "orders": {
+    "starter": {
+      "items": {
+        "carrot": 1
+      },
+      "coins": 65,
+      "xp": 40
+    },
+    "bakery": {
+      "items": {
+        "wheat": 4
+      },
+      "coins": 145,
+      "xp": 70
+    },
+    "market": {
+      "items": {
+        "carrot": 2,
+        "tomato": 3
+      },
+      "coins": 220,
+      "xp": 110
+    }
+  },
+  "animals": [
+    {
+      "id": "chicken",
+      "initialPenAndAnimal": 140,
+      "cycleMinutes": 1.5,
+      "netPerAnimalCycle": 13,
+      "netPerAnimalHour": 520
+    },
+    {
+      "id": "duck",
+      "initialPenAndAnimal": 180,
+      "cycleMinutes": 2,
+      "netPerAnimalCycle": 18,
+      "netPerAnimalHour": 540
+    },
+    {
+      "id": "pig",
+      "initialPenAndAnimal": 310,
+      "cycleMinutes": 10,
+      "netPerAnimalCycle": 78,
+      "netPerAnimalHour": 468
+    },
+    {
+      "id": "cow",
+      "initialPenAndAnimal": 420,
+      "cycleMinutes": 3,
+      "netPerAnimalCycle": 25,
+      "netPerAnimalHour": 500
+    },
+    {
+      "id": "sheep",
+      "initialPenAndAnimal": 500,
+      "cycleMinutes": 4,
+      "netPerAnimalCycle": 30,
+      "netPerAnimalHour": 450
+    }
+  ],
+  "expansion": [
+    {
+      "through": 8,
+      "cost": 350,
+      "level": 1,
+      "count": 4,
+      "total": 1400
+    },
+    {
+      "through": 12,
+      "cost": 700,
+      "level": 2,
+      "count": 4,
+      "total": 2800
+    },
+    {
+      "through": 18,
+      "cost": 1400,
+      "level": 4,
+      "count": 6,
+      "total": 8400
+    },
+    {
+      "through": 24,
+      "cost": 2400,
+      "level": 6,
+      "count": 6,
+      "total": 14400
+    }
+  ],
+  "expansionTotal": 27000,
+  "stageTimes": [
+    {
+      "tiles": 4,
+      "carrotNetPerMinute": 172,
+      "nextTileCost": 350,
+      "idealMinutesForNextTile": 2.03
+    },
+    {
+      "tiles": 8,
+      "carrotNetPerMinute": 344,
+      "nextTileCost": 700,
+      "idealMinutesForNextTile": 2.03
+    },
+    {
+      "tiles": 12,
+      "carrotNetPerMinute": 516,
+      "nextTileCost": 1400,
+      "idealMinutesForNextTile": 2.71
+    },
+    {
+      "tiles": 18,
+      "carrotNetPerMinute": 774,
+      "nextTileCost": 2400,
+      "idealMinutesForNextTile": 3.1
+    },
+    {
+      "tiles": 24,
+      "carrotNetPerMinute": 1032
+    }
+  ],
+  "fishing": [
+    {
+      "zone": "lake",
+      "bait": null,
+      "baitPerCast": 0,
+      "meanBiteSeconds": 4.5,
+      "expectedSale": 25.83,
+      "expectedNetPerSuccessfulCast": 25.83
+    },
+    {
+      "zone": "lake",
+      "bait": "bait_worm",
+      "baitPerCast": 5,
+      "meanBiteSeconds": 4.090909090909091,
+      "expectedSale": 25.83,
+      "expectedNetPerSuccessfulCast": 20.83
+    },
+    {
+      "zone": "lake",
+      "bait": "bait_lure",
+      "baitPerCast": 24,
+      "meanBiteSeconds": 3.4615384615384612,
+      "expectedSale": 39.14,
+      "expectedNetPerSuccessfulCast": 15.14
+    },
+    {
+      "zone": "lake",
+      "bait": "fish_chum",
+      "baitPerCast": 26.666666666666668,
+      "meanBiteSeconds": 3.103448275862069,
+      "expectedSale": 31.85,
+      "expectedNetPerSuccessfulCast": 5.18
+    },
+    {
+      "zone": "river",
+      "bait": null,
+      "baitPerCast": 0,
+      "meanBiteSeconds": 4.5,
+      "expectedSale": 23.81,
+      "expectedNetPerSuccessfulCast": 23.81
+    },
+    {
+      "zone": "river",
+      "bait": "bait_worm",
+      "baitPerCast": 5,
+      "meanBiteSeconds": 4.090909090909091,
+      "expectedSale": 23.38,
+      "expectedNetPerSuccessfulCast": 18.38
+    },
+    {
+      "zone": "river",
+      "bait": "bait_lure",
+      "baitPerCast": 24,
+      "meanBiteSeconds": 3.4615384615384612,
+      "expectedSale": 33.54,
+      "expectedNetPerSuccessfulCast": 9.54
+    },
+    {
+      "zone": "river",
+      "bait": "fish_chum",
+      "baitPerCast": 26.666666666666668,
+      "meanBiteSeconds": 3.103448275862069,
+      "expectedSale": 26.83,
+      "expectedNetPerSuccessfulCast": 0.17
+    }
+  ]
+}

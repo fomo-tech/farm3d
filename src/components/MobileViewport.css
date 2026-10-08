@@ -1,0 +1,18 @@
+/* Mobile HUD, ride overlays and dialogs share the canvas's visible viewport.
+   Fixed descendants use this containing block, including Safari and PWA. */
+html.is-mobile-device .game-shell{contain:layout!important;--mobile-ui-width:var(--game-viewport-width,100vw);--mobile-ui-height:var(--game-viewport-height,100dvh)}
+html.is-mobile-device .game-shell>:is(.profile-backdrop,.ranking-overlay,.pt-phone-backdrop,.pt-map-backdrop,.pt-inv-backdrop,.game-confirm-overlay,.fashion-modal-overlay,.casino-overlay,.farm-lounge-overlay,.farm-map-backdrop,.pt-inv-overlay,.fashion-modal-backdrop,.pt-casino-in-game-hud,.fortune-overlay,.farm-guide-overlay,.fishing-shop-overlay,.farm-settings-overlay,.farm-supplies-overlay){inset:0!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important}
+html.is-mobile-device .game-shell>:is(.fish-hud,.fish-result){right:var(--hud-right,12px)!important;max-width:calc(var(--mobile-ui-width) - var(--hud-left,12px) - var(--hud-right,12px))!important;max-height:calc(var(--mobile-ui-height) - var(--hud-top,12px) - var(--hud-bottom,12px))!important;overflow:auto}
+html.is-mobile-device .game-shell>:is(.pt-transit-dashboard-root,.pt-transit-prompt-root){max-width:calc(var(--mobile-ui-width) - var(--hud-left,12px) - var(--hud-right,12px))!important;max-height:calc(var(--mobile-ui-height) - var(--hud-top,12px) - var(--hud-bottom,12px))!important;overflow:auto}
+html.is-mobile-device .game-shell :is(.profile-card,.ranking-panel,.pt-phone-device,.game-panel,.pt-map-modal,.pt-inv-modal,.fashion-modal-card,.casino-lobby,.casino-table,.farm-map-dialog,.farm-lounge,.farm-lounge-sub,.fortune-panel,.farm-settings-panel,.farm-supplies-panel,.fishing-shop-panel){max-width:calc(var(--mobile-ui-width) - 24px)!important;max-height:calc(var(--mobile-ui-height) - var(--sat,0px) - var(--sab,0px) - 24px)!important}
+/* Browser-scale blur over a live scene adds compositing work on phones. */
+html.is-mobile-device .game-shell :is(.profile-backdrop,.ranking-overlay,.pt-phone-backdrop,.pt-map-backdrop,.farm-map-backdrop,.farm-lounge-overlay,.pt-inv-overlay,.fashion-modal-backdrop,.game-panel,.pt-transit-capsule,.pt-topbar){backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.is-mobile-device.mobile-landscape .game-shell>:is(.fish-hud,.fish-result){bottom:var(--hud-bottom,12px)!important}
+html.is-mobile-device.mobile-landscape .game-shell .pt-transit-dashboard-root{bottom:var(--hud-bottom,12px)!important;top:auto!important}
+
+html.is-mobile-device .game-shell>.pt-casino-in-game-hud{--casino-viewport-width:var(--mobile-ui-width);--casino-viewport-height:var(--mobile-ui-height)}
+html.is-mobile-device .game-shell :is(.pt-ingame-top-hud,.pt-ingame-bottom-dock){max-width:100%!important}
+
+html.is-mobile-device .game-shell>.pt-casino-in-game-hud{padding:max(0px,var(--sat,0px)) max(0px,var(--sar,0px)) max(0px,var(--sab,0px)) max(0px,var(--sal,0px))!important}
+html.is-mobile-device .game-shell .pt-ingame-top-hud{min-width:0;flex-wrap:wrap;gap:8px!important;padding:8px 12px!important}
+html.is-mobile-device .game-shell .pt-ingame-bottom-dock{max-height:calc(var(--mobile-ui-height) - 90px)!important;overflow:auto}

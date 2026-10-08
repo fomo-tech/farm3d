@@ -161,8 +161,7 @@
   50% { transform: scale(1.1); }
 }
 
-.hud-modal-open .mission-tracker,
-.in-venue .mission-tracker {
+.hud-modal-open .mission-tracker {
   display: none;
 }
 
@@ -468,7 +467,7 @@
 /* MILESTONE STEPPER NAVIGATION */
 .pt-milestone-stepper {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: 8px;
   position: relative;
 }
@@ -935,3 +934,9 @@
     grid-row: 1 / span 2;
   }
 }
+
+/* Keep all mission categories discoverable during outdoor and indoor play. */
+.mission-hud-links {position:fixed;top:calc(max(14px, env(safe-area-inset-top, 0px)) + 162px);left:max(14px, env(safe-area-inset-left, 0px));z-index:30;display:flex;gap:5px;max-width:calc(100vw - 28px);}
+.mission-hud-links button {min-height:36px;padding:6px 10px;border:2px solid white;border-radius:12px;background:#f7fbff;color:#244b67;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 2px 0 #9eb1c7;}
+.hud-modal-open .mission-hud-links {display:none;}
+@media(max-width:600px){.mission-hud-links{top:calc(max(14px, env(safe-area-inset-top, 0px)) + 216px);}}

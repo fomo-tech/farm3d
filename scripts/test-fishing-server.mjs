@@ -1,3 +1,4 @@
+import {fishingBiteBounds} from '../shared/fishingConditions.js';
 import assert from 'node:assert/strict';
 import {MongoClient} from 'mongodb';
 import {randomUUID} from 'node:crypto';
@@ -12,7 +13,10 @@ try{
  assert.ok((await store.performAction('angler','fishing_cast',{},ctx)).error);
  assert.ok((await store.performAction('angler','fishing_buy',{id:'rod_bamboo'},ctx)).error);
  assert.ok(!(await store.performAction('angler','fishing_buy',{id:'rod_bamboo'},{venue:'fishing'})).error);
- const cast=await store.performAction('angler','fishing_cast',{},ctx);assert.ok(!cast.error);const id=cast.player.progress.fishing.pending.id;
+ for(const payload of [{power:NaN},{power:2},{aim:10}])assert.ok((await store.performAction('angler','fishing_cast',payload,ctx)).error);
+ const cast=await store.performAction('angler','fishing_cast',{dayKey:'2099-01-01',density:{density:'high',biteMultiplier:0}},ctx);assert.ok(!cast.error);const id=cast.player.progress.fishing.pending.id;
+ const pending=cast.player.progress.fishing.pending,bounds=fishingBiteBounds('lake',null,'rod_bamboo',pending.castAt);
+ assert.equal(pending.conditionDay,bounds.dayKey);assert.deepEqual(pending.density,bounds.condition);assert.ok(pending.biteAt-pending.castAt>=Math.floor(bounds.minMs)&&pending.biteAt-pending.castAt<=Math.ceil(bounds.maxMs));
  assert.ok((await store.performAction('angler','fishing_cast',{},ctx)).error);
  assert.ok((await store.performAction('angler','fishing_reel',{sessionId:id},ctx)).error);
  // Only the isolated test database is advanced to avoid real-time sleeps.
@@ -35,7 +39,11 @@ try{
  await players.updateOne({playerId:'angler'},{$set:{'progress.fishing.pending.fishId':'carp','progress.fishing.pending.biteAt':Date.now()-20,'progress.fishing.pending.expiresAt':Date.now()+2000}});
  const normalFinishes=await Promise.all([1,2].map(()=>store.performAction('angler','fishing_reel',{sessionId:normalId},ctx)));
  assert.equal(normalFinishes.filter(result=>!result.error).length,1,'timed hook cannot award twice');
- assert.equal(normalFinishes.find(result=>!result.error).result.fishCaught,'carp');
+ assert.equal(normalFinishes.find(result=>!result.error).player.progress.fishing.pending.phase,'fighting');
+ assert.equal((await store.loadPlayer('angler')).progress.fishing.stats.totalCaught,1);
+ await players.updateOne({playerId:'angler'},{$set:{'progress.fishing.pending.pull':99,'progress.fishing.pending.lastPulseAt':Date.now()-450}});
+ const normalPulls=await Promise.all([1,2].map(()=>store.performAction('angler','fishing_pull',{sessionId:normalId,sequence:1,holding:true},ctx)));
+ assert.equal(normalPulls.filter(r=>!r.error).length,1);assert.equal(normalPulls.find(r=>!r.error).result.fishCaught,'carp');
  assert.equal((await store.loadPlayer('angler')).progress.fishing.stats.totalCaught,2);
  await players.updateOne({playerId:'angler'},{$set:{'progress.fishing.fish.carp':{count:10,totalWeight:10,maxWeight:1}}});
  assert.ok((await store.performAction('angler','fishing_cast',{},ctx)).error);

@@ -1,3 +1,6 @@
+import {Icon3dRedApple} from './icons3d/Inventory3DIcons.jsx';
+import { FISHING_CONFIG } from '../../shared/fishingConfig.js';
+import { fishForm } from '../../shared/fishAppearance.js';
 import React from 'react';
 import { getFashionItem, EYES_OPTIONS, EYE_COLORS, NOSE_OPTIONS, MOUTH_OPTIONS, BLUSH_OPTIONS } from '../../shared/fashionConfig.js';
 import { Icon3dTabEars, Icon3dTabFace } from './icons3d/Fashion3DIcons.jsx';
@@ -8,6 +11,7 @@ import {
 } from './icons3d/GameIcons3D.jsx';
 
 const EXISTING = {
+  apple: Icon3dRedApple,
   carrot: Icon3dCarrot, tomato: Icon3dTomato, strawberry: Icon3dStrawberry,
   egg: Icon3dEgg, milk: Icon3dMilk, flour: Icon3dFlourBowl,
   cheese: Icon3dCheese, jam: Icon3dJamJar, rod_bamboo: Icon3dFishingRodBamboo,
@@ -22,7 +26,7 @@ const CROP_COLORS = {
 
 function CropArt({ id, size }) {
   const color = CROP_COLORS[id];
-  return <svg width={size} height={size} viewBox="0 0 80 80" role="img" aria-label={id}>
+  return <svg width={size} height={size} viewBox="0 0 80 80" role="img" aria-label={spec?.name||id}>
     {id === 'wheat' ? <g fill="none" stroke={color} strokeWidth="3" strokeLinecap="round">
       <path d="M39 68V13M27 67 51 30"/><path d="M39 22q-12-10-10-15 11 0 10 15Zm1 8q12-12 13-19-13 1-13 19Zm-1 10q-13-10-14-18 12 2 14 18Zm1 9q12-10 13-18-13 2-13 18Z" fill={color}/>
     </g> : id === 'pumpkin' ? <g><ellipse cx="40" cy="47" rx="29" ry="22" fill={color}/><ellipse cx="40" cy="47" rx="13" ry="22" fill="#f5a83c"/><path d="M40 27q-1-11 9-14" fill="none" stroke="#39874d" strokeWidth="6" strokeLinecap="round"/><path d="M38 29q-10-8-18-4" fill="none" stroke="#39874d" strokeWidth="4"/></g>
@@ -45,7 +49,9 @@ const FISH_SHAPES = {
 };
 
 function FishArt({ id, size }) {
-  const fish = FISH_SHAPES[id];
+  const spec=FISHING_CONFIG.fish[id],form=fishForm(spec);
+  const bodies={oval:'M17 42Q35 20 62 40Q39 61 17 42Z',deep:'M20 42Q34 8 60 40Q39 73 20 42Z',long:'M7 42Q35 25 70 40Q39 58 7 42Z',slender:'M10 42Q38 31 67 40Q39 52 10 42Z',catfish:'M9 42Q34 23 68 40Q39 59 9 42Z',eel:'M4 44Q30 31 70 38Q39 45 4 48Z',round:'M24 42A19 19 0 1 0 62 42A19 19 0 1 0 24 42Z',flat:'M14 42 38 18 66 42 38 62Z'};
+  const fish = FISH_SHAPES[id] || (spec?{color:spec.color,belly:'#eef2db',body:bodies[form],tail:form==='flat'?'M15 42 2 43 15 45Z':form==='eel'?'M10 43 1 46 10 47Z':'M18 42 4 30v25Z'}:null);
   if (!fish) return null;
   return <svg width={size} height={size} viewBox="0 0 80 80" role="img" aria-label={id}>
     <defs><linearGradient id={`fish-${id}`} x1="0" y1="0" x2="0" y2="1"><stop stopColor="#ffffff" stopOpacity=".55"/><stop offset=".35" stopColor={fish.color}/><stop offset="1" stopColor={fish.belly}/></linearGradient></defs>
@@ -559,7 +565,7 @@ function FashionArt({ item, size }) {
 export function InventoryItemArt({ item, size = 48 }) {
   const ExactIcon = EXISTING[item.itemId];
   if (ExactIcon) return <ExactIcon size={size}/>;
-  if (FISH_SHAPES[item.itemId] && item.kind === 'fish') return <FishArt id={item.itemId} size={size}/>;
+  if (FISHING_CONFIG.fish[item.itemId] && item.kind === 'fish') return <FishArt id={item.itemId} size={size}/>;
   if (CROP_COLORS[item.itemId]) return <CropArt id={item.itemId} size={size}/>;
   if (item.category === 'fashion') return <FashionArt item={item} size={size}/>;
   return <span className="pt-inv-name-art" style={{ '--art-size': `${size}px` }} aria-label={item.name}>{item.name}</span>;

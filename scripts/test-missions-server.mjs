@@ -51,8 +51,9 @@ try {
   };
   assert.equal((await action('claim_mission', { kind: 'daily', id: 'daily-plant-2' })).type, 'action_error');
   const players = mongo.db(databaseName).collection('players');
+  await mongo.db(databaseName).collection('farm_assignments').insertOne({playerId,villageId:'binh-minh',lot:1,status:'owned'});
   const stats = { planted: 10, watered: 0, harvested: 3, orders: 1, animalsFed: 0, crafted: 0 };
-  await players.updateOne({ playerId }, { $set: { 'progress.onboarding.completed': true, 'progress.onboarding.step': 6, 'progress.stats': stats, 'progress.missions': { main: { claimed: [] }, daily: freshDailyMissions(stats) } } });
+  await players.updateOne({ playerId }, { $set: { 'progress.unlockedPlots':4, 'progress.onboarding.completed': true, 'progress.onboarding.step': 6, 'progress.stats': stats, 'progress.missions': { main: { claimed: [] }, daily: freshDailyMissions(stats) } } });
   assert.equal((await action('claim_mission', { kind: 'main', id: 'main-orders-2' })).type, 'action_error', 'main missions are sequential');
   const [first, second] = await Promise.all([
     action('claim_mission', { kind: 'main', id: 'main-harvest-3' }),

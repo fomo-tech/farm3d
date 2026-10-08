@@ -1,85 +1,118 @@
 import React, { useState } from 'react';
+import { getDefaultCustomization } from '../../shared/fashionConfig.js';
 import { ArrivalAvatar } from './ArrivalAvatar.jsx';
 import './CharacterArrival.css';
 import './CharacterGameStyle.css';
-import {
-  Icon3dNonLa,
-  Icon3dShirt,
-  Icon3dFlower,
-  Icon3dCap,
-  Icon3dCrown,
-  Icon3dDice,
-  Icon3dGoldCoin,
-  Icon3dCarrot,
-  Icon3dPartyPopper,
-  Icon3dSparkleStar,
-  Icon3dCheck,
-  Icon3dModernCity,
-  Icon3dVillageGate,
-} from './icons3d/GameIcons3D.jsx';
+
+function CheckIcon({ size = 16, className = '' }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function DiceIcon({ size = 22, className = '' }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect x="3" y="3" width="18" height="18" rx="4" fill="#ffffff" stroke="currentColor" />
+      <circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="16" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.5" fill="#ef4444" stroke="none" />
+      <circle cx="16" cy="8" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="8" cy="16" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
 
 const CUTE_NICKNAMES = [
   'Bắp Non',
   'Bé Mây',
-  'Mèo Ú Nông Dân',
-  'Thỏ Bảy Màu',
-  'Gấu Dâu Tây',
+  'Mèo Ú',
+  'Thỏ Trắng',
+  'Gấu Dâu',
   'Cam Ngọt',
-  'Bánh Tiêu',
-  'Khoai Tây Mini',
-  'Hạt Dẻ Cười',
-  'Bé Đậu Nành',
-  'Cà Rốt Tí Hon',
-  'Cún Con Vui Vẻ',
+  'Khoai Tây',
+  'Hạt Dẻ',
+  'Đậu Nành',
+  'Cà Rốt',
+  'Cún Con',
   'Mầm Xanh',
-  'Chôm Chôm',
-  'Trà Sữa Trân Châu',
-  'Bơ Sáp Béo Ngậy',
-  'Dưa Hấu Đỏ',
   'Mochi Dẻo',
-  'Củ Cải Trắng',
-  'Gà Con Lon Ton',
-  'Bánh Bao Nóng',
-  'Kẹo Bông Gòn',
-  'Xoài Cát Mini',
-  'Kem Dâu Tây',
-  'Gấu Trúc Kaia',
-  'Nông Dân Triệu Phú',
-  'Chủ Vườn Tí Hon',
-  'Chú Heo Đáng Yêu',
+  'Bánh Bao',
+  'Kẹo Bông',
+  'Gấu Trúc',
+  'Vịt Con',
+  'Kem Dâu',
+  'Trà Sữa',
+  'Bơ Sáp',
 ];
 
-const OUTFITS_LIST = [
-  { id: 'starter', name: 'Áo phông mộc mạc', icon: <Icon3dShirt size={28} />, defaultColor: '#f8fafc', desc: 'Trẻ trung, năng động' },
-  { id: 'farmer', name: 'Nông dân Bình Minh', icon: <Icon3dNonLa size={28} />, defaultColor: '#f1b445', desc: 'Yếm cam làm vườn' },
-  { id: 'rose', name: 'Hoa Hồng Dịu Dàng', icon: <Icon3dFlower size={28} />, defaultColor: '#e87994', desc: 'Ngọt ngào, thanh lịch' },
-  { id: 'lake', name: 'Hồ Pha Lê', icon: <Icon3dCap size={28} />, defaultColor: '#5f91c8', desc: 'Thể thao dạo hồ' },
-  { id: 'royal', name: 'Hoàng Gia Kaia', icon: <Icon3dCrown size={28} />, defaultColor: '#8a72b8', desc: 'Quý phái, sang trọng' },
+const STARTER_SHIRT_COLORS = [
+  { hex: '#f8fafc', name: 'Trắng Tinh' },
+  { hex: '#fef08a', name: 'Vàng Kem' },
+  { hex: '#fbbf24', name: 'Cam Nắng' },
+  { hex: '#38bdf8', name: 'Xanh Biển' },
+  { hex: '#f472b6', name: 'Hồng Phấn' },
+  { hex: '#4ade80', name: 'Xanh Bơ' },
+  { hex: '#a78bfa', name: 'Tím Nhạt' },
+  { hex: '#334155', name: 'Xám Than' },
 ];
 
-const HEADWEAR_LIST = [
-  { id: 'nonla', name: 'Nón Lá Việt Nam', icon: <Icon3dNonLa size={26} /> },
-  { id: 'cap', name: 'Mũ Lưỡi Trai', icon: <Icon3dCap size={26} /> },
-  { id: 'crown', name: 'Vương Miện Vàng', icon: <Icon3dCrown size={26} /> },
-  { id: 'flower', name: 'Cài Hoa Xinh', icon: <Icon3dFlower size={26} /> },
+const HAIR_STYLES = [
+  { id: 'hair_buzzcut', label: 'Đầu Đinh', desc: 'Gọn gàng' },
+  { id: 'hair_high_ponytail', label: 'Đuôi Gà', desc: 'Buộc cao' },
+  { id: 'classic', label: 'Tóc Ngắn', desc: 'Năng động' },
+  { id: 'twintails', label: 'Hai Chùm', desc: 'Đáng yêu' },
+  { id: 'bob', label: 'Tóc Bob', desc: 'Trẻ trung' },
+  { id: 'wavy', label: 'Gợn Sóng', desc: 'Mềm mại' },
 ];
 
-const COLOR_SWATCHES = [
-  { hex: '#f1b445', name: 'Vàng Nắng' },
-  { hex: '#e87994', name: 'Hồng Dâu' },
-  { hex: '#5f91c8', name: 'Xanh Biển' },
-  { hex: '#8a72b8', name: 'Tím Mộng Mơ' },
-  { hex: '#4ade80', name: 'Xanh Bạc Hà' },
-  { hex: '#f8fafc', name: 'Trắng Mây' },
+const HAIR_COLORS = [
+  { hex: '#76503b', name: 'Nâu Hạt Dẻ' },
+  { hex: '#f59e0b', name: 'Vàng Mơ' },
+  { hex: '#262626', name: 'Đen Tuyền' },
+  { hex: '#f472b6', name: 'Hồng Pastel' },
+  { hex: '#38bdf8', name: 'Xanh Bạc Hà' },
+];
+
+const SKIN_SWATCHES = [
+  { id: 'peach', hex: '#e6b08f', name: 'Đào Sáng' },
+  { id: 'porcelain', hex: '#efc2ad', name: 'Trắng Sứ' },
+  { id: 'honey', hex: '#c88962', name: 'Mật Ong' },
+  { id: 'caramel', hex: '#9a6547', name: 'Bánh Mật' },
 ];
 
 export function CharacterCreationModal({ defaultName = '', onSubmit, pending = false, error = '' }) {
-  const [step, setStep] = useState('studio'); // 'studio' | 'ticket'
   const [name, setName] = useState(defaultName || 'Bắp Non');
-  const [selectedOutfit, setSelectedOutfit] = useState('starter');
-  const [selectedColor, setSelectedColor] = useState('#f8fafc');
-  const [selectedHeadwear, setSelectedHeadwear] = useState('none');
-  const [activeTab, setActiveTab] = useState('outfit'); // 'outfit' | 'headwear' | 'color'
+  const [gender, setGender] = useState(() => getDefaultCustomization().gender); // 'female' | 'male'
+  const [shirtColor, setShirtColor] = useState('#f8fafc');
+  const [selectedHair, setSelectedHair] = useState(() => getDefaultCustomization().hairStyle);
+  const [selectedHairColor, setSelectedHairColor] = useState('#76503b');
+  const [selectedSkinTone, setSelectedSkinTone] = useState('peach');
+  const [activeTab, setActiveTab] = useState('shirt'); // 'shirt' | 'hair' | 'color'
   const [diceRolling, setDiceRolling] = useState(false);
 
   const handleRollDice = () => {
@@ -88,296 +121,245 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
       const randomName = CUTE_NICKNAMES[Math.floor(Math.random() * CUTE_NICKNAMES.length)];
       setName(randomName);
       setDiceRolling(false);
-    }, 250);
+    }, 180);
   };
 
-  const handleOutfitChange = (outfit) => {
-    setSelectedOutfit(outfit.id);
-    setSelectedColor(outfit.defaultColor);
+  const handleGenderSelect = (g) => {
+    setGender(g);
+    if (g === 'male' && selectedHair === 'twintails') {
+      setSelectedHair('classic');
+    } else if (g === 'female' && selectedHair === 'classic') {
+      setSelectedHair('twintails');
+    }
   };
 
-  const handleCompleteStudio = (e) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-    setStep('ticket');
-  };
-
-  const handleFinalSubmit = () => {
+  const handleSubmit = (e) => {
+    e?.preventDefault();
+    if (!name.trim() || pending) return;
     onSubmit({
       name: name.trim(),
-      avatarIcon: selectedOutfit,
-      outfit: selectedOutfit,
-      outfitColor: selectedColor,
-      headwear: selectedHeadwear,
+      avatarIcon: 'starter',
+      outfit: 'starter',
+      outfitColor: shirtColor,
+      gender,
+      hair: selectedHair,
+      hairColor: selectedHairColor,
+      skinTone: selectedSkinTone,
     });
   };
 
   return (
-    <div className="pt-onboarding-backdrop arrival-screen arrival-starter-only">
-      {step === 'studio' && (
-        <section className="pt-studio-card" role="dialog" aria-modal="true" aria-label="Studio thiết kế nhân vật">
-          {/* Header */}
-          <div className="pt-studio-header">
-            <div className="pt-studio-badge">
-              <Icon3dSparkleStar size={20} />
-              <span>LÀNG BÌNH MINH · TẠO NHÂN VẬT</span>
-              <Icon3dPartyPopper size={20} />
+    <div className="pt-onboarding-backdrop arrival-screen">
+      <section className="pt-studio-card" role="dialog" aria-modal="true" aria-label="Tạo nhân vật Play Together">
+        {/* Header */}
+        <header className="pt-studio-header">
+          <div className="pt-studio-badge">
+            <span>KHỞI ĐẦU HÀNH TRÌNH</span>
+          </div>
+          <h2>Tạo Nhân Vật</h2>
+          <p>Tùy chỉnh diện mạo ban đầu trước khi bước vào thị trấn</p>
+        </header>
+
+        {error && <div className="pt-creation-error-banner">{error}</div>}
+
+        <div className="pt-studio-body">
+          {/* Cột trái: Sân khấu 3D Podium */}
+          <div className="pt-studio-podium-wrap">
+            <ArrivalAvatar
+              outfit="starter"
+              color={shirtColor}
+              gender={gender}
+              hair={selectedHair}
+              hairColor={selectedHairColor}
+              skinTone={selectedSkinTone}
+            />
+            <p className="arrival-rotate-hint">Kéo chuột hoặc vuốt để xoay nhân vật</p>
+            <div className="pt-podium-name-tag">
+              <span className="pt-tag-role">Tân Cư Dân</span>
+              <strong className="pt-tag-name">{name || 'Chưa đặt tên'}</strong>
             </div>
-            <h2>Sẵn sàng vào thị trấn?</h2>
-            <p>Đặt tên và bắt đầu với trang phục cơ bản. Bạn có thể mua đồ mới sau này.</p>
           </div>
 
-          <div className="pt-studio-body">
-            {/* Left: 3D Character Preview Podium */}
-            <div className="pt-studio-podium-wrap">
-              <ArrivalAvatar outfit={selectedOutfit} color={selectedColor} />
-              <div className="pt-podium-stage" hidden style={{display:'none'}}>
-                <div
-                  className="pt-podium-chibi-avatar"
-                  style={{
-                    boxShadow: `0 14px 30px ${selectedColor}66, inset 0 2px 4px rgba(255, 255, 255, 0.8)`,
-                    borderColor: selectedColor,
-                  }}
-                >
-                  <div className="pt-podium-headwear">
-                    {selectedHeadwear === 'nonla' && <Icon3dNonLa size={44} />}
-                    {selectedHeadwear === 'cap' && <Icon3dCap size={44} />}
-                    {selectedHeadwear === 'crown' && <Icon3dCrown size={44} />}
-                    {selectedHeadwear === 'flower' && <Icon3dFlower size={44} />}
-                  </div>
-                  <div className="pt-podium-outfit-icon">
-                    {selectedOutfit === 'starter' && <Icon3dShirt size={48} />}
-                    {selectedOutfit === 'farmer' && <Icon3dNonLa size={48} />}
-                    {selectedOutfit === 'rose' && <Icon3dFlower size={48} />}
-                    {selectedOutfit === 'lake' && <Icon3dCap size={48} />}
-                    {selectedOutfit === 'royal' && <Icon3dCrown size={48} />}
-                  </div>
-                </div>
-                {/* 3D Circular Pedestal */}
-                <div className="pt-podium-base" />
-              </div>
-              <p className="arrival-rotate-hint">↔ Kéo nhân vật để xoay</p>
-
-              {/* Character Identity Strip */}
-              <div className="pt-podium-name-tag">
-                <span className="pt-tag-role">Nông Dân Mới Đến</span>
-                <strong className="pt-tag-name">{name || 'Chưa đặt tên'}</strong>
-              </div>
-            </div>
-
-            {/* Right: Customization Controls */}
-            <div className="pt-studio-controls">
-              {/* Name Input with Lucky Dice */}
-              <div className="pt-input-block">
-                <label htmlFor="chibi-name-input">TÊN NHÂN VẬT CỦA BẠN</label>
-                <div className="pt-input-with-dice">
-                  <input
-                    id="chibi-name-input"
-                    type="text"
-                    required
-                    maxLength={18}
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    placeholder="Đặt tên riêng của bạn"
-                  />
-                  <button
-                    type="button"
-                    className={`pt-dice-btn ${diceRolling ? 'is-rolling' : ''}`}
-                    onClick={handleRollDice}
-                    title="Gợi ý tên nhân vật"
-                    aria-label="Xúc xắc chọn tên ngẫu nhiên"
-                  >
-                    <Icon3dDice size={28} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Tabs Switcher */}
-              <div className="pt-studio-tabs" hidden style={{display:'none'}}>
+          {/* Cột phải: Bảng điều khiển tùy chọn phong cách */}
+          <div className="pt-studio-controls">
+            {/* 1. Nhập tên nhân vật & Xúc xắc */}
+            <div className="pt-input-block">
+              <label htmlFor="chibi-name-input">TÊN NHÂN VẬT</label>
+              <div className="pt-input-with-dice">
+                <input
+                  id="chibi-name-input"
+                  type="text"
+                  required
+                  maxLength={18}
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Nhập tên riêng của bạn..."
+                />
                 <button
                   type="button"
-                  className={`pt-tab-btn ${activeTab === 'outfit' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('outfit')}
+                  className={`pt-dice-btn ${diceRolling ? 'is-rolling' : ''}`}
+                  onClick={handleRollDice}
+                  title="Gợi ý tên ngẫu nhiên"
+                  aria-label="Xúc xắc chọn tên"
                 >
-                  <Icon3dShirt size={18} />
-                  <span>Trang Phục</span>
+                  <DiceIcon size={24} />
                 </button>
-                {false && <button
-                  type="button"
-                  className={`pt-tab-btn ${activeTab === 'headwear' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('headwear')}
-                >
-                  <Icon3dNonLa size={18} />
-                  <span>Nón Mũ</span>
-                </button>}
+              </div>
+            </div>
+
+            {/* 2. Chọn Giới Tính Nhanh (Clean UI, không dùng emoji) */}
+            <div className="pt-gender-select">
+              <label>GIỚI TÍNH</label>
+              <div className="pt-gender-buttons">
                 <button
                   type="button"
-                  className={`pt-tab-btn ${activeTab === 'color' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('color')}
+                  className={`pt-gender-btn pt-gender-female ${gender === 'female' ? 'selected' : ''}`}
+                  onClick={() => handleGenderSelect('female')}
                 >
-                  <span className="pt-tab-color-dot" style={{ background: selectedColor }} />
-                  <span>Màu Sắc</span>
+                  <span className="pt-gender-label">NỮ</span>
+                  {gender === 'female' && <CheckIcon size={16} className="pt-check-badge" />}
+                </button>
+                <button
+                  type="button"
+                  className={`pt-gender-btn pt-gender-male ${gender === 'male' ? 'selected' : ''}`}
+                  onClick={() => handleGenderSelect('male')}
+                >
+                  <span className="pt-gender-label">NAM</span>
+                  {gender === 'male' && <CheckIcon size={16} className="pt-check-badge" />}
                 </button>
               </div>
+            </div>
 
-              {/* Tab Panel Content */}
-              <div className="pt-studio-tab-content">
-                {activeTab === 'outfit' && (
-                  <div className="pt-options-grid">
-                    {OUTFITS_LIST.filter(item => item.id === 'starter').map(item => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={`pt-option-card ${selectedOutfit === item.id ? 'selected' : ''}`}
-                        onClick={() => handleOutfitChange(item)}
-                      >
-                        <div className="pt-option-icon">{item.icon}</div>
-                        <b>{item.name}</b>
-                        <small>{item.desc}</small>
-                        {selectedOutfit === item.id && <span className="pt-card-check"><Icon3dCheck size={14} /></span>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {activeTab === 'headwear' && (
-                  <div className="pt-options-grid headwear-grid">
-                    {HEADWEAR_LIST.map(item => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={`pt-option-card ${selectedHeadwear === item.id ? 'selected' : ''}`}
-                        onClick={() => setSelectedHeadwear(item.id)}
-                      >
-                        <div className="pt-option-icon">{item.icon}</div>
-                        <b>{item.name}</b>
-                        {selectedHeadwear === item.id && <span className="pt-card-check"><Icon3dCheck size={14} /></span>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {activeTab === 'color' && (
-                  <div className="pt-colors-grid">
-                    {COLOR_SWATCHES.map(swatch => (
-                      <button
-                        key={swatch.hex}
-                        type="button"
-                        className={`pt-color-bubble ${selectedColor === swatch.hex ? 'selected' : ''}`}
-                        style={{ backgroundColor: swatch.hex }}
-                        onClick={() => setSelectedColor(swatch.hex)}
-                        title={swatch.name}
-                      >
-                        {selectedColor === swatch.hex && <Icon3dCheck size={18} />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Submit Button */}
-              <p>Bạn chưa có đất hoặc nhà. Sau khi vào thị trấn, khám phá các làng và dùng xu mua lô đất phù hợp. Đất gần trung tâm có giá cao hơn.</p>
+            {/* 3. Tab chuyển đổi: Áo Phông | Kiểu Tóc | Màu Sắc (Không dùng emoji) */}
+            <div className="pt-studio-tabs">
               <button
                 type="button"
-                className="pt-studio-submit-btn"
-                disabled={!name.trim()}
-                onClick={handleCompleteStudio}
+                className={`pt-tab-btn ${activeTab === 'shirt' ? 'active' : ''}`}
+                onClick={() => setActiveTab('shirt')}
               >
-                Xác nhận nhân vật →
+                Áo Phông
+              </button>
+              <button
+                type="button"
+                className={`pt-tab-btn ${activeTab === 'hair' ? 'active' : ''}`}
+                onClick={() => setActiveTab('hair')}
+              >
+                Kiểu Tóc
+              </button>
+              <button
+                type="button"
+                className={`pt-tab-btn ${activeTab === 'color' ? 'active' : ''}`}
+                onClick={() => setActiveTab('color')}
+              >
+                Màu Sắc
               </button>
             </div>
+
+            {/* 4. Nội dung từng Tab */}
+            <div className="pt-studio-tab-content">
+              {/* Tab 1: Màu Áo Phông Tân Thủ (Chỉ có Áo Phông, không bán đồ thời trang tại bước tạo nhân vật) */}
+              {activeTab === 'shirt' && (
+                <div className="pt-shirt-colors-grid">
+                  {STARTER_SHIRT_COLORS.map(item => (
+                    <button
+                      key={item.hex}
+                      type="button"
+                      className={`pt-shirt-card ${shirtColor === item.hex ? 'selected' : ''}`}
+                      onClick={() => setShirtColor(item.hex)}
+                    >
+                      <div className="pt-shirt-swatch" style={{ backgroundColor: item.hex }} />
+                      <span className="pt-shirt-name">{item.name}</span>
+                      {shirtColor === item.hex && (
+                        <span className="pt-card-check">
+                          <CheckIcon size={12} />
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Tab 2: Kiểu Tóc Tân Thủ */}
+              {activeTab === 'hair' && (
+                <div className="pt-hairs-grid">
+                  {HAIR_STYLES.map(h => (
+                    <button
+                      key={h.id}
+                      type="button"
+                      className={`pt-hair-card ${selectedHair === h.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedHair(h.id)}
+                    >
+                      <div className="pt-hair-preview-dot" style={{ backgroundColor: selectedHairColor }} />
+                      <div className="pt-hair-info">
+                        <strong>{h.label}</strong>
+                        <span>{h.desc}</span>
+                      </div>
+                      {selectedHair === h.id && (
+                        <span className="pt-card-check">
+                          <CheckIcon size={12} />
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Tab 3: Bảng Màu Da & Màu Tóc */}
+              {activeTab === 'color' && (
+                <div className="pt-colors-container">
+                  <div className="pt-color-section">
+                    <span className="pt-section-title">MÀU DA CHIBI</span>
+                    <div className="pt-colors-grid">
+                      {SKIN_SWATCHES.map(s => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          className={`pt-color-bubble ${selectedSkinTone === s.id ? 'selected' : ''}`}
+                          style={{ backgroundColor: s.hex }}
+                          onClick={() => setSelectedSkinTone(s.id)}
+                          title={s.name}
+                          aria-label={`Màu da: ${s.name}`}
+                        >
+                          {selectedSkinTone === s.id && <CheckIcon size={16} />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-color-section">
+                    <span className="pt-section-title">MÀU TÓC</span>
+                    <div className="pt-colors-grid">
+                      {HAIR_COLORS.map(c => (
+                        <button
+                          key={c.hex}
+                          type="button"
+                          className={`pt-color-bubble ${selectedHairColor === c.hex ? 'selected' : ''}`}
+                          style={{ backgroundColor: c.hex }}
+                          onClick={() => setSelectedHairColor(c.hex)}
+                          title={c.name}
+                          aria-label={`Màu tóc: ${c.name}`}
+                        >
+                          {selectedHairColor === c.hex && <CheckIcon size={16} />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 5. Nút Khởi Hành Bắt Đầu Chơi (Thuần typography game, không emoji tên lửa) */}
+            <button
+              type="button"
+              className="pt-studio-submit-btn"
+              disabled={!name.trim() || pending}
+              onClick={handleSubmit}
+            >
+              {pending ? 'Đang chuẩn bị vào thị trấn…' : 'VÀO THỊ TRẤN'}
+            </button>
           </div>
-        </section>
-      )}
-
-      {/* Step 2: Kaia Resident ID & Bus Arrival Ticket */}
-      {step === 'ticket' && (
-        <section className="pt-ticket-card" role="dialog" aria-modal="true" aria-label="Thẻ cư dân Kaia">
-          <div className="pt-ticket-stamp">CƯ DÂN MỚI</div>
-
-          <div className="pt-ticket-inner">
-            {/* Header */}
-            <div className="pt-ticket-header">
-              <div className="pt-ticket-logo">
-                <Icon3dVillageGate size={28} />
-                <div>
-                  <h3>THẺ CƯ DÂN THUNG LŨNG KAIA</h3>
-                  <small>XÁC NHẬN THÔNG TIN NHÂN VẬT</small>
-                </div>
-              </div>
-            </div>
-
-            {/* Resident Card Details */}
-            <div className="pt-ticket-profile-strip">
-              <div
-                className="pt-ticket-avatar"
-                style={{ borderColor: selectedColor, background: `${selectedColor}22` }}
-              >
-                {selectedHeadwear === 'nonla' && <Icon3dNonLa size={38} />}
-                {selectedHeadwear === 'cap' && <Icon3dCap size={38} />}
-                {selectedHeadwear === 'crown' && <Icon3dCrown size={38} />}
-                {selectedHeadwear === 'flower' && <Icon3dFlower size={38} />}
-              </div>
-              <div className="pt-ticket-info">
-                <div className="pt-ticket-name-row">
-                  <span className="label">TÊN CƯ DÂN:</span>
-                  <strong>{name}</strong>
-                </div>
-                <div className="pt-ticket-role-row">
-                  <span className="label">CHỨC DANH:</span>
-                  <b>Nông Dân Tập Sự · Cấp 1</b>
-                </div>
-                <div className="pt-ticket-village-row">
-                  <span className="label">ĐIỂM ĐẾN:</span>
-                  <span>Quảng Trường Trung Tâm Thung Lũng</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Welcome Starter Gifts */}
-            <div className="pt-starter-gift-box" hidden style={{display:'none'}}>
-              <span className="pt-gift-label">QUÀ TÂN THỦ CHÀO MỪNG:</span>
-              <div className="pt-gift-items">
-                <div className="pt-gift-pill coins">
-                  <Icon3dGoldCoin size={22} />
-                  <span>180 Xu Khởi Nghiệp</span>
-                </div>
-                <div className="pt-gift-pill seeds">
-                  <Icon3dCarrot size={20} />
-                  <span>3 Hạt Cà Rốt Đột Biến</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Tip from Elder Oliver */}
-            <div className="pt-ticket-elder-note">
-              <span>Gặp Oliver tại quảng trường để bắt đầu hướng dẫn. Bạn cần tự mua đất; lô đất mua thành công sẽ đứng tên bạn, gồm 12 ô trồng, một chuồng và một nhà nhỏ cấp 1.</span>
-            </div>
-
-            {/* Actions */}
-            {error && <p role="alert" style={{color:'#b42318'}}>{error}</p>}
-            <div className="pt-ticket-actions">
-              <button
-                type="button"
-                className="pt-ticket-back-btn"
-                disabled={pending}
-                onClick={() => setStep('studio')}
-              >
-                ← Chỉnh sửa lại
-              </button>
-              <button
-                type="button"
-                className="pt-ticket-enter-btn"
-                disabled={pending}
-                onClick={handleFinalSubmit}
-              >
-                <Icon3dPartyPopper size={24} />
-                <span>{pending ? 'ĐANG TẠO NHÂN VẬT…' : 'TẠO NHÂN VẬT & VÀO THỊ TRẤN'}</span>
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
+        </div>
+      </section>
     </div>
   );
 }

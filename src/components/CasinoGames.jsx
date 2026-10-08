@@ -138,7 +138,7 @@ export function CasinoGames({
 
   return (
     <div className="cq-root-wrapper" ref={focus} tabIndex={-1}>
-      {!enabled && <div className="cq-toast-message" role="status">{!connected ? 'Mất kết nối server · chưa thể vào bàn hoặc chơi. Đang kết nối lại…' : 'Bạn chưa vào bên trong hội quán.'}</div>}
+      {!enabled && <div className="cq-toast-message" role="status">{!connected ? 'Mất kết nối. Bạn có thể vào bàn khi kết nối trở lại.' : 'Bạn chưa vào bên trong hội quán.'}</div>}
       {visibleMessage && <div className="cq-toast-message">{visibleMessage}</div>}
 
       {room ? (
@@ -158,6 +158,7 @@ export function CasinoGames({
         />
       ) : (
         <CasinoLobby
+          message={visibleMessage}
           quickPlaying={quickPlaying}
           coins={coins}
           rooms={state?.rooms || []}

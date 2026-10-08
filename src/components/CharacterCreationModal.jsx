@@ -111,12 +111,12 @@ export function CharacterCreationModal({ defaultName = 'Nông Dân Mới', villa
                       >
                         <i><Icon3dHouseCabin size={27} /></i>
                         <span><b>{village.name}</b><small>{village.description}</small></span>
-                        <em>{full ? 'Đã đầy' : village.provisional ? 'Đang đồng bộ · có thể chọn' : `${village.available}/${village.capacity} lô trống`}</em>
+                        <em>{full ? 'Đã đầy' : village.provisional ? 'Đang cập nhật · có thể chọn' : `${village.available}/${village.capacity} lô trống`}</em>
                       </button>
                     );
                   })}
                 </div>
-              ) : <div className="village-loading">Đang lấy danh sách làng từ máy chủ…</div>}
+              ) : <div className="village-loading">Đang tìm ngôi làng cho bạn…</div>}
             </div>
 
             <div className="input-group">

@@ -149,7 +149,7 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     depth: 3.8,
     height: 0.08,
   }, scene);
-  entryPath.position.set(0, 0.11, -7.8);
+  entryPath.position.set(0, 0.13, -7.8);
   entryPath.material = stonePathMat;
   entryPath.parent = root;
   entryPath.receiveShadows = true;
@@ -160,7 +160,7 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     depth: 3.2,
     height: 0.07,
   }, scene);
-  drivewayApron.position.set(0, 0.075, -11.2);
+  drivewayApron.position.set(0, 0.095, -11.2);
   drivewayApron.material = stonePathMat;
   drivewayApron.receiveShadows = true;
   drivewayApron.parent = root;
@@ -171,7 +171,7 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     depth: 1.8,
     height: 0.08,
   }, scene);
-  midWalkway.position.set(0, 0.11, 0.8);
+  midWalkway.position.set(0, 0.15, 0.8);
   midWalkway.material = stonePathMat;
   midWalkway.parent = root;
   midWalkway.receiveShadows = true;
@@ -182,7 +182,7 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     depth: 2.4,
     height: 0.08,
   }, scene);
-  homePath.position.set(-4.8, 0.11, 2.0);
+  homePath.position.set(-4.8, 0.17, 2.0);
   homePath.material = stonePathMat;
   homePath.parent = root;
   homePath.receiveShadows = true;
@@ -193,7 +193,7 @@ export function createFarmPlot(scene, origin = { x: 0, z: 0 }, shadows = null) {
     depth: 2.4,
     height: 0.08,
   }, scene);
-  corralPath.position.set(4.8, 0.11, 2.0);
+  corralPath.position.set(4.8, 0.17, 2.0);
   corralPath.material = stonePathMat;
   corralPath.parent = root;
   corralPath.receiveShadows = true;
