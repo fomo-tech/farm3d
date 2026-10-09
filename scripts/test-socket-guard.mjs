@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {SocketGuard,allowSocketOperation} from '../server/SocketGuard.js';
+let now=0;const guard=new SocketGuard({clock:()=>now,maxPerIp:2,maxTotal:3});
+assert.ok(guard.admit('a'));guard.connected('a');assert.ok(guard.admit('a'));guard.connected('a');assert.equal(guard.admit('a'),false);
+assert.ok(guard.admit('b'));guard.connected('b');assert.equal(guard.admit('c'),false);
+guard.disconnected('a');assert.ok(guard.admit('a'));
+guard.disconnected('a');guard.disconnected('b');now=60001;guard.prune();assert.equal(guard.addresses.size,0);
+const client={};for(let i=0;i<4;i++)assert.ok(allowSocketOperation(client,'chat',now));assert.equal(allowSocketOperation(client,'chat',now),false);assert.ok(allowSocketOperation(client,'chat',now+5000));
+for(let i=0;i<2;i++)assert.ok(allowSocketOperation(client,'get_social_state',now));assert.equal(allowSocketOperation(client,'get_social_state',now),false);
+for(let i=0;i<20;i++)assert.ok(allowSocketOperation(client,'unknown-'+i,now));assert.equal(allowSocketOperation(client,'unknown-more',now),false);assert.ok(client.operationWindows.size<=3);
+console.log('PASS: per-IP/global admission, cleanup, chat/database throttling and bounded unknown-message buckets.');

@@ -4,12 +4,12 @@ import { ImageProcessingConfiguration } from '@babylonjs/core/Materials/imagePro
 import { isolateColorGrading, applyColorPreset } from './IsolatedColorGrading.js';
 
 /**
- * Crisp world rendering: 4x MSAA, Khronos PBR Neutral Tone Mapping (Cozy Farmy standard),
+ * Crisp world rendering: 2x MSAA (4x in Ultra), Khronos PBR Neutral Tone Mapping (Cozy Farmy standard),
  * without an edge-enhancement pass that amplifies stair-stepping.
  * Highlights roll off softly without burning out, preserving lush grass and pastel toy colors.
  */
 export function resolveAntialiasSamples(quality, supportedSamples = 1) {
-  return Math.min(quality === 'eco' ? 1 : 4, Math.max(1, supportedSamples));
+  return Math.min(quality === 'eco' ? 1 : (quality === 'ultra' ? 4 : 2), Math.max(1, supportedSamples));
 }
 
 export function resolveMobileAntialiasSamples(quality, supportedSamples = 1) {

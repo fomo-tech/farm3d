@@ -78,6 +78,7 @@ export function createFishingRig(scene, root, human) {
   silhouetteMaterial.diffuseColor = Color3.FromHexString('#082e51');
   silhouetteMaterial.emissiveColor = Color3.FromHexString('#082e51').scale(0.28);
   silhouetteMaterial.alpha = 0.8;
+  silhouetteMaterial.disableLighting = true;
   silhouetteMaterial.backFaceCulling = false;
   const silhouette = MeshBuilder.CreateSphere('fishing-fish-shadow', {diameter:1,segments:12}, scene);
   silhouette.scaling.set(.18,.016,.52);
@@ -92,11 +93,27 @@ export function createFishingRig(scene, root, human) {
   const splash=MeshBuilder.CreateTorus('fishing-bite-splash',{diameter:.4,thickness:.035,tessellation:20},scene);
   splash.material=splashMaterial;splash.setEnabled(false);
   const alertMaterial=new StandardMaterial('fishing-bite-alert-material',scene);
-  alertMaterial.diffuseColor=Color3.White();alertMaterial.emissiveColor=Color3.White();alertMaterial.disableLighting=true;
-  const biteAlert=MeshBuilder.CreatePlane('fishing-bite-alert',{width:.10,height:.30},scene);
-  biteAlert.billboardMode=Mesh.BILLBOARDMODE_ALL;biteAlert.material=alertMaterial;biteAlert.setEnabled(false);
-  const biteAlertDot=MeshBuilder.CreateSphere('fishing-bite-alert-dot',{diameter:.12,segments:8},scene);
-  biteAlertDot.material=alertMaterial;biteAlertDot.setEnabled(false);
+  alertMaterial.diffuseColor=Color3.FromHexString('#ffcc49');
+  alertMaterial.emissiveColor=alertMaterial.diffuseColor;
+  alertMaterial.disableLighting=true;
+  const alertOutline=new StandardMaterial('fishing-bite-alert-outline',scene);
+  alertOutline.diffuseColor=Color3.FromHexString('#492839');
+  alertOutline.emissiveColor=alertOutline.diffuseColor;alertOutline.disableLighting=true;
+  const alertParts=[];
+  for(const outline of [true,false]){
+    const stem=MeshBuilder.CreateCapsule('bite-alert-rounded-stem',{
+      height:outline?.47:.39,radius:outline?.105:.068,tessellation:16,subdivisions:1,capSubdivisions:4,
+    },scene);
+    stem.position.set(0,.09,outline?.025:-.025);stem.scaling.z=.3;
+    const dot=MeshBuilder.CreateSphere('bite-alert-round-dot',{diameter:outline?.22:.145,segments:12},scene);
+    dot.position.set(0,-.29,outline?.025:-.025);dot.scaling.z=.3;
+    stem.material=dot.material=outline?alertOutline:alertMaterial;
+    alertParts.push(stem,dot);
+  }
+  const biteAlert=Mesh.MergeMeshes(alertParts,true,true,undefined,false,true);
+  biteAlert.name='fishing-bite-alert';biteAlert.billboardMode=Mesh.BILLBOARDMODE_ALL;
+  biteAlert.isPickable=false;biteAlert.setEnabled(false);
+
 
   // =========================================================================
   // NÂNG CẤP MESH CÁ CHIBI PLAY TOGETHER (CUTE EXPRESSIVE CARTOON FISH)
@@ -347,6 +364,7 @@ export function createFishingRig(scene, root, human) {
   const target = new Vector3();
   const baseTarget = new Vector3();
   let phase = 'idle';
+  let fishApproachDirection = 0;
   let fight = null;
   let displayedPull = 0;
   let elapsed = 0;
@@ -376,7 +394,7 @@ export function createFishingRig(scene, root, human) {
     silhouette.setEnabled(false);
     shadowTail.setEnabled(false);
     splash.setEnabled(false);
-    biteAlert.setEnabled(false);biteAlertDot.setEnabled(false);
+    biteAlert.setEnabled(false);
     caughtRoot.parent=null;
     catchAttached=false;
   };
@@ -435,15 +453,17 @@ export function createFishingRig(scene, root, human) {
       if(timeUntilBiteMs!==null)timeUntilBiteMs=Math.max(0,timeUntilBiteMs-delta*1000);
       const approach=phase==='bite'?1:timeUntilBiteMs===null?0:Math.max(0,Math.min(1,(3400-timeUntilBiteMs)/3000));
       const distance=2.1*(1-approach);
-      const direction=root.rotation.y+.55;
+      const direction=fishApproachDirection;
       const dims=shadowDimensions(),shadowScale=dims.size;
       silhouette.scaling.set(dims.width,.016,dims.length);
       shadowTail.scaling.set(.16*shadowScale,.012,.13*shadowScale);
-      silhouette.position.set(target.x+Math.sin(direction)*distance+Math.sin(elapsed*2)*.035,target.y-.035,target.z+Math.cos(direction)*distance+Math.cos(elapsed*2)*.04);
+      // Water is opaque on mobile. A flat tinted surface silhouette represents
+      // the fish below it without disabling depth tests through banks or piers.
+      silhouette.position.set(target.x+Math.sin(direction)*distance+Math.sin(elapsed*2)*.035,target.y+.015,target.z+Math.cos(direction)*distance+Math.cos(elapsed*2)*.04);
       silhouette.rotation.y=direction+Math.PI;
       shadowTail.position.set(silhouette.position.x+Math.sin(direction)*dims.length*.48,silhouette.position.y,silhouette.position.z+Math.cos(direction)*dims.length*.48);
       shadowTail.rotation.y=silhouette.rotation.y;
-      silhouetteMaterial.alpha=phase==='bite'?.92:.76;
+      silhouetteMaterial.alpha=phase==='bite'?.96:.86;
       silhouette.setEnabled(approach>0);
       shadowTail.setEnabled(approach>0);
       if(phase==='waiting'&&fishingNibbleState(timeUntilBiteMs))bobber.position.y-=.04+Math.abs(Math.sin(elapsed*20))*.025;
@@ -452,12 +472,13 @@ export function createFishingRig(scene, root, human) {
         splash.scaling.setAll(.8+Math.abs(Math.sin(elapsed*10))*.6);
         splash.setEnabled(true);
         const alertY=target.y+.7+Math.sin(elapsed*8)*.05;
-        biteAlert.position.set(target.x+.45,alertY,target.z);
-        biteAlertDot.position.set(target.x+.45,alertY-.23,target.z);
-        biteAlert.setEnabled(true);biteAlertDot.setEnabled(true);
-      }else{ splash.setEnabled(false);biteAlert.setEnabled(false);biteAlertDot.setEnabled(false); }
-    }else if(phase==='reel'&&fight){const motion=fishingFightState(fight,Date.now()+(fight.serverOffset||0));const dims=shadowDimensions();silhouette.scaling.set(dims.width,.016,dims.length);silhouette.position.set(bobber.position.x,target.y-.035,bobber.position.z);silhouette.rotation.y=root.rotation.y+motion.direction*.6;silhouette.setEnabled(true);shadowTail.setEnabled(false);splash.position.set(bobber.position.x,target.y+.1,bobber.position.z);splash.scaling.setAll(.65+Math.abs(Math.sin(elapsed*12))*.5);splash.setEnabled(motion.phase==='rush'||motion.phase==='warning');biteAlert.setEnabled(false);biteAlertDot.setEnabled(false);
-    }else{silhouette.setEnabled(false);shadowTail.setEnabled(false);splash.setEnabled(false);biteAlert.setEnabled(false);biteAlertDot.setEnabled(false);}
+        biteAlert.position.set(target.x,alertY+.25,target.z);
+        biteAlert.scaling.setAll(1+Math.sin(elapsed*8)*.06);
+
+        biteAlert.setEnabled(true);
+      }else{ splash.setEnabled(false);biteAlert.setEnabled(false); }
+    }else if(phase==='reel'&&fight){const motion=fishingFightState(fight,Date.now()+(fight.serverOffset||0));const dims=shadowDimensions();silhouette.scaling.set(dims.width,.016,dims.length);silhouette.position.set(bobber.position.x,target.y+.015,bobber.position.z);silhouette.rotation.y=root.rotation.y+motion.direction*.6;silhouette.setEnabled(true);shadowTail.setEnabled(false);splash.position.set(bobber.position.x,target.y+.1,bobber.position.z);splash.scaling.setAll(.65+Math.abs(Math.sin(elapsed*12))*.5);splash.setEnabled(motion.phase==='rush'||motion.phase==='warning');biteAlert.setEnabled(false);
+    }else{silhouette.setEnabled(false);shadowTail.setEnabled(false);splash.setEnabled(false);biteAlert.setEnabled(false);}
     updateWaterEffects(delta);
     updateLine();
   };
@@ -477,6 +498,7 @@ export function createFishingRig(scene, root, human) {
         root.rotation.y=Math.atan2(baseTarget.x-position.x,baseTarget.z-position.z);
       }
       target.copyFrom(baseTarget);
+      fishApproachDirection=Math.atan2(baseTarget.x-position.x,baseTarget.z-position.z)+.55;
       fight = null;displayedPull=0;landingTime=0;hideWaterEffects();bobber.rotation.set(0,0,0);
       phase = 'cast';
       elapsed = 0;
@@ -586,7 +608,7 @@ export function createFishingRig(scene, root, human) {
       caughtRoot.setEnabled(true);
       bobber.setEnabled(false);line.setEnabled(false);hideWaterEffects();splash.setEnabled(false);
       silhouette.setEnabled(false);
-      biteAlert.setEnabled(false);biteAlertDot.setEnabled(false);
+      biteAlert.setEnabled(false);
       human.playFishingAction?.('catch', () => human.setFishingCatchPose?.(), animationDuration('catch'));
     },
     clear: hide,
@@ -596,7 +618,7 @@ export function createFishingRig(scene, root, human) {
       bobber.dispose();floatWhite.dispose();
       ripples.forEach(mesh=>{mesh.material.dispose();mesh.dispose();});drops.forEach(mesh=>mesh.dispose());
       silhouette.dispose();silhouetteMaterial.dispose();
-      shadowTail.dispose();splash.dispose();splashMaterial.dispose();biteAlert.dispose();biteAlertDot.dispose();alertMaterial.dispose();
+      shadowTail.dispose();splash.dispose();splashMaterial.dispose();biteAlert.material?.dispose();biteAlert.dispose();alertMaterial.dispose();alertOutline.dispose();
       line.dispose();
       caughtRoot.dispose(false,true);
       caughtMaterial.dispose();eyeMaterial.dispose();eyeWhiteMat.dispose();blushMaterial.dispose();mouthMat.dispose();crownMat.dispose();crownGemMat.dispose();

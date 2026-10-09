@@ -1,3 +1,4 @@
+import { batchRigidMeshes } from '../rendering/batchRigidMeshes.js';
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
@@ -260,6 +261,8 @@ export function createFoliageFactory(scene, shadows, instancing = null) {
         bloom.material = materials.cloth;
         bloom.isPickable = false;
       }
+
+      batchRigidMeshes(lodRoot);
 
       const flowerModels = [
         MODEL_PATHS.foliage.flowerRed,

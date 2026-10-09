@@ -25,3 +25,13 @@ assert.equal(findWalkingPath(firstTile,{x:-7.4,z:76},(x,z)=>collision.isCollidin
 assert(findWalkingPath(firstTile,elderApproach,(x,z)=>collision.isColliding(x,z)));
 assert(findWalkingPath(elderApproach,firstTile,(x,z)=>collision.isColliding(x,z)));
 console.log('PASS: first unlocked crop cell ↔ Oliver approach; blocked kiosk target rejected.');
+
+const {findWalkingPathAsync}=await import('../src/game/physics/findWalkingPath.js');
+let yields=0;
+const asyncPath=await findWalkingPathAsync(start,target,wall,{budgetMs:0,yieldFrame:async()=>{yields++;}});
+assert.deepEqual(asyncPath,path,'yielded search retains collision-safe route');
+assert.ok(yields>0,'search releases the event loop before completing');
+let cancelled=false,checks=0;
+const aborted=await findWalkingPathAsync(start,{x:200,z:0},()=>{checks++;return false;},{budgetMs:0,cancelled:()=>cancelled,yieldFrame:async()=>{cancelled=true;}});
+assert.equal(aborted,null);assert.ok(checks<600,'cancelled search does not continue');
+console.log('PASS: async route matches sync route, yields and cancels obsolete work.');

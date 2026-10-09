@@ -7,30 +7,34 @@ import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { WORLD_PALETTE, createLampGlowAndPool } from './worldDesignSystem.js';
 
-function* batchMobileRoadBorders(root) {
-  if (!root.getScene().metadata?.mobile) return;
+function* batchRoadBorders(root, shadows) {
+  const casters = new Set(shadows?.getShadowMap?.()?.renderList || []);
   const groups = new Map();
   for (const mesh of root.getChildMeshes()) {
-    if (!/^(curb-|sidewalk-|outer-trim-|walk-trim-)/.test(mesh.name) || !mesh.material) continue;
+    if (!/^(curb-|sidewalk-|outer-trim-|walk-trim-|edgestone-|(?:c-)?lamp-(?:base|pole|arm|cage|flame)-)/.test(mesh.name) || !mesh.material) continue;
     if (!groups.has(mesh.material)) groups.set(mesh.material, []);
     groups.get(mesh.material).push(mesh);
   }
   for (const [material, meshes] of groups) {
     if (meshes.length < 2) continue;
     const receiveShadows = meshes.some(mesh => mesh.receiveShadows);
-    const merged = Mesh.MergeMeshes(meshes, true, true, undefined, false, false);
+    const castsShadows = meshes.some(mesh => casters.has(mesh));
+    const merged = Mesh.MergeMeshes(meshes, false, true, undefined, false, false);
     if (merged) {
       merged.name = `road-border-batch-${root.name}-${material.name}`;
       merged.material = material;
-      merged.setParent(root);
+      merged.bakeTransformIntoVertices(root.getWorldMatrix().clone().invert());
+      merged.parent = root;
+      for (const mesh of meshes) { shadows?.removeShadowCaster(mesh); mesh.dispose(); }
       merged.receiveShadows = receiveShadows;
       merged.isPickable = false;
+      if (castsShadows) shadows?.addShadowCaster(merged);
     }
     yield;
   }
 }
 
-// Preserve each marking's box geometry while giving phones one GPU resource
+// Preserve each marking's box geometry while giving every device one GPU resource
 // per road instead of hundreds of independently allocated meshes.
 function createMarkingBatch(scene, name, root, boxes, material) {
   if (!boxes.length) return;
@@ -217,7 +221,7 @@ export function* createModernBoulevardSteps(scene, options = {}) {
 
   // 2. Tim đường phân làn: Dải đá sa thạch hoa văn cổ điển (Inlaid Sandstone Ribbons)
   if (hasCenterDashes && length >= 8) {
-    const mobileDashes = [];
+    const dashBoxes = [];
     const dashLength = 2.4;
     const dashGap = 3.6;
     const stride = dashLength + dashGap;
@@ -229,22 +233,10 @@ export function* createModernBoulevardSteps(scene, options = {}) {
       const inIntersection = openings.some(op => dz >= op.start - 0.8 && dz <= op.end + 0.8);
       if (inIntersection) continue;
 
-      if (scene.metadata?.mobile) {
-        mobileDashes.push({ width: 0.28, height: 0.016, depth: dashLength, y: 0.089, z: dz });
-        yield;
-        continue;
-      }
-      const dash = MeshBuilder.CreateBox(`dash-${id}-${i}`, {
-        width: 0.28,
-        height: 0.016,
-        depth: dashLength,
-      }, scene);
-      dash.position.set(0, 0.089, dz);
-      dash.material = mats.centerInlay;
-      dash.parent = root;
+      dashBoxes.push({ width: 0.28, height: 0.016, depth: dashLength, y: 0.089, z: dz });
       yield;
     }
-    createMarkingBatch(scene, `dash-batch-${id}`, root, mobileDashes, mats.centerInlay);
+    createMarkingBatch(scene, `dash-batch-${id}`, root, dashBoxes, mats.centerInlay);
     yield;
   }
 
@@ -419,7 +411,7 @@ export function* createModernBoulevardSteps(scene, options = {}) {
     }
   }
 
-  yield* batchMobileRoadBorders(root);
+  yield* batchRoadBorders(root, shadows);
   freezeSubtree(root);
   return root;
 }
@@ -452,23 +444,12 @@ export function createZebraCrosswalk(scene, options = {}) {
   const numStripes = Math.floor((width - 0.4) / (stripeWidth + gap));
   const startX = -((numStripes - 1) * (stripeWidth + gap)) / 2;
 
-  const mobileStripes = [];
+  const stripeBoxes = [];
   for (let i = 0; i < numStripes; i++) {
     const sx = startX + i * (stripeWidth + gap);
-    if (scene.metadata?.mobile) {
-      mobileStripes.push({ width: stripeWidth, height: 0.012, depth, x: sx });
-      continue;
-    }
-    const stripe = MeshBuilder.CreateBox(`cross-stone-${id}-${i}`, {
-      width: stripeWidth,
-      height: 0.012,
-      depth: depth,
-    }, scene);
-    stripe.position.set(sx, 0, 0);
-    stripe.material = matStripe;
-    stripe.parent = root;
+    stripeBoxes.push({ width: stripeWidth, height: 0.012, depth, x: sx });
   }
-  createMarkingBatch(scene, `cross-stone-batch-${id}`, root, mobileStripes, matStripe);
+  createMarkingBatch(scene, `cross-stone-batch-${id}`, root, stripeBoxes, matStripe);
 
   freezeSubtree(root);
   return root;
@@ -670,7 +651,7 @@ export function* createCountryRoadSteps(scene, options = {}) {
 
   // 4. Tim đường phân làn đá sa thạch
   if (hasCenterDashes && length >= 12) {
-    const mobileDashes = [];
+    const dashBoxes = [];
     const dashLength = 2.4;
     const dashGap = 4.2;
     const stride = dashLength + dashGap;
@@ -682,23 +663,10 @@ export function* createCountryRoadSteps(scene, options = {}) {
       const inIntersection = openings.some(op => dz >= op.start - 0.5 && dz <= op.end + 0.5);
       if (inIntersection) continue;
 
-      if (scene.metadata?.mobile) {
-        mobileDashes.push({ width: 0.26, height: 0.016, depth: dashLength, y: 0.089, z: dz });
-        yield;
-        continue;
-      }
-      const dash = MeshBuilder.CreateBox(`dash-${id}-${i}`, {
-        width: 0.26,
-        height: 0.016,
-        depth: dashLength,
-      }, scene);
-      dash.position.set(0, 0.089, dz);
-      dash.material = mats.centerInlay;
-      dash.parent = root;
-
+      dashBoxes.push({ width: 0.26, height: 0.016, depth: dashLength, y: 0.089, z: dz });
       yield;
 }
-    createMarkingBatch(scene, `dash-batch-${id}`, root, mobileDashes, mats.centerInlay);
+    createMarkingBatch(scene, `dash-batch-${id}`, root, dashBoxes, mats.centerInlay);
     yield;
   }
     yield;
@@ -769,7 +737,7 @@ export function* createCountryRoadSteps(scene, options = {}) {
   }
     yield;
 
-  yield* batchMobileRoadBorders(root);
+  yield* batchRoadBorders(root, shadows);
   freezeSubtree(root);
     yield;
   return root;

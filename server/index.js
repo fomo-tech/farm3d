@@ -1,3 +1,6 @@
+import { SocketGuard, allowSocketOperation } from './SocketGuard.js';
+import { presenceLimit, selectPresenceIndices } from './PresenceSelection.js';
+import {worldEvent} from './SeasonConfig.js';
 import { publicWorldPlayer } from './PublicWorldState.js';
 import { publicFishAppearance } from '../shared/fishAppearance.js';
 import {lotterySnapshot} from './LotteryStore.js';
@@ -58,6 +61,8 @@ const recentActions = new Map();
 const ACTION_CACHE_TTL = 5 * 60_000;
 const authAttempts = new Map();
 const AUTH_WINDOW_MS = 60_000;
+// Only the isolated local load-test server may relax per-IP authentication.
+const LOCAL_LOAD_TEST = process.env.LOCAL_LOAD_TEST === '1' && /^farm_load_test_[a-f0-9]{32}$/.test(process.env.MONGODB_DB || '');
 const AUTH_MAX_ATTEMPTS = 12;
 
 const httpServer = createServer((request, response) => {
@@ -71,12 +76,21 @@ const httpServer = createServer((request, response) => {
   response.end(JSON.stringify({ error: 'Not found' }));
 });
 
-const wss = new WebSocketServer({ server: httpServer });
+const socketGuard = new SocketGuard({maxPerIp:LOCAL_LOAD_TEST?10000:Number(process.env.WS_MAX_CONNECTIONS_PER_IP)||32,maxTotal:LOCAL_LOAD_TEST?10000:1500});
+const allowedOrigins=new Set((process.env.WS_ALLOWED_ORIGINS||'').split(',').map(s=>s.trim()).filter(Boolean));
+const wss = new WebSocketServer({ server: httpServer, maxPayload:16_384, perMessageDeflate:false,
+  verifyClient:({req},done)=>{
+    const origin=req.headers.origin;
+    if(allowedOrigins.size&&(!origin||!allowedOrigins.has(origin)))return done(false,403,'Origin rejected');
+    done(socketGuard.admit(req.socket.remoteAddress||'unknown'),429,'Connection limit');
+  }
+});
+setInterval(()=>socketGuard.prune(),60000).unref();
 
 function safeSend(socket, payload) {
   const now=Date.now();
   const visible = payload.progress ? { ...payload, progress: publicFishingProgress(payload.progress), serverNow:now,fishingConditions:getFishingConditions(now) } : payload;
-  if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(visible));
+  if (socket.readyState === WebSocket.OPEN) { if(socket.bufferedAmount>1024*1024){socket.close(1013,'Slow consumer');return;} socket.send(JSON.stringify(visible)); }
 }
 
 function clientAddress(socket) {
@@ -86,7 +100,9 @@ function clientAddress(socket) {
 function allowAuthAttempt(address) {
   const now = Date.now();
   const recent = (authAttempts.get(address) || []).filter(time => now - time < AUTH_WINDOW_MS);
-  if (recent.length >= AUTH_MAX_ATTEMPTS) {
+  const loopback = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(address);
+  const limit = LOCAL_LOAD_TEST && loopback ? 10000 : AUTH_MAX_ATTEMPTS;
+  if (recent.length >= limit) {
     authAttempts.set(address, recent);
     return false;
   }
@@ -144,16 +160,52 @@ function isRoomTransition(client, x, y, z, venue) {
   return false;
 }
 
-function broadcastPresence(channelId) {
-  const channel = channelPlayers(channelId);
-  const conditions=getFishingConditions();
+// Coalesce joins/disconnects with the 10Hz presence tick instead of emitting
+// a complete channel snapshot for every connection in a burst.
+const deltaBaselines = new WeakMap();
+const pendingPresence = new Set();
+function broadcastPresence(channelId) { pendingPresence.add(channelId); }
+function flushPresence(channelId) {
   const now = Date.now();
+  const channel = channelPlayers(channelId);
+  if (!channel.length) return;
+  const conditions = getFishingConditions(now);
+  const season = worldEvent(now);
+  // Project through the public allowlist once per player, never from raw clients.
+  const players = channel.map(player => publicWorldPlayer(player, now));
+  const encoded = players.map(player => JSON.stringify(player));
+  const metadata = players.map(({ x, y, z, rotation, ...player }) => JSON.stringify(player));
+  const entries = players.map((player, i) => ({ metadata: metadata[i], encoded: encoded[i] }));
+  const encodedMoves = players.map(player => JSON.stringify([player.playerId, player.x, player.y, player.z, player.rotation]));
+  const snapshots = new Map();
   channel.forEach(client => {
-    if(client.fishingDay!==conditions.dayKey){client.fishingDay=conditions.dayKey;safeSend(client.socket,{type:'fishing_conditions',fishingConditions:conditions,serverNow:Date.now()});}
-    const players = channel
-      .filter(other => other.roomId === client.roomId && (other === client || Math.hypot(other.x - client.x, other.z - client.z) <= PLAYER_VIEW_RADIUS))
-      .map(player => publicWorldPlayer(player, now));
-    safeSend(client.socket, { type: 'world_state', serverTime: Date.now(), players });
+    if (client.socket.readyState !== WebSocket.OPEN || client.socket.bufferedAmount > 1024 * 1024) return;
+    if (client.fishingDay !== conditions.dayKey) {
+      client.fishingDay = conditions.dayKey;
+      safeSend(client.socket, { type: 'fishing_conditions', fishingConditions: conditions, serverNow: now });
+    }
+    const visible = selectPresenceIndices(channel, client, PLAYER_VIEW_RADIUS, client.presenceLimit, deltaBaselines.get(client.socket));
+    if (client.worldDelta) {
+      const previous = deltaBaselines.get(client.socket) || new Map();
+      const next = new Map(), added = [], moves = [];
+      for (const i of visible) {
+        const player = players[i], old = previous.get(player.playerId);
+        next.set(player.playerId, entries[i]);
+        if (!old || old.metadata !== metadata[i]) added.push(encoded[i]);
+        else if (old.encoded !== encoded[i]) moves.push(encodedMoves[i]);
+      }
+      const removed = [...previous.keys()].filter(id => !next.has(id));
+      client.socket.send(`{"type":"world_delta","serverTime":${now},"online":${channel.length},"season":${JSON.stringify(season)},"players":[${added.join(',')}],"moves":[${moves.join(',')}],"removed":${JSON.stringify(removed)}}`);
+      deltaBaselines.set(client.socket, next);
+      return;
+    }
+    const key = visible.join(',');
+    let snapshot = snapshots.get(key);
+    if (!snapshot) {
+      snapshot = `{"type":"world_state","serverTime":${now},"online":${channel.length},"season":${JSON.stringify(season)},"players":[${visible.map(i => encoded[i]).join(',')}]}`;
+      snapshots.set(key, snapshot);
+    }
+    client.socket.send(snapshot);
   });
 }
 
@@ -161,6 +213,33 @@ function fishingPresence(pending) {
   return pending ? { id:pending.id, phase:pending.phase, target:pending.target, castDistance:pending.castDistance, biteAt:pending.biteAt, expiresAt:pending.expiresAt,hookedAt:pending.hookedAt,fightProfile:pending.fightProfile,pull:pending.pull,tension:pending.tension,...publicFishAppearance(pending.fishId,pending.weight) } : null;
 }
 
+// All clients share this public catalog; coalesce concurrent readers rather
+// than queueing two Mongo queries per player every second.
+let publicAssignmentsCache;
+let publicAssignmentsExpires = 0;
+function publicAssignments(force = false) {
+  if (force) publicAssignmentsExpires = 0;
+  if (!publicAssignmentsCache || Date.now() >= publicAssignmentsExpires) {
+    publicAssignmentsExpires = Infinity;
+    publicAssignmentsCache = listVillageAssignments().then(items => {
+      publicAssignmentsExpires = Date.now() + 1000;
+      return items;
+    }, error => { publicAssignmentsCache = null; publicAssignmentsExpires = 0; throw error; });
+  }
+  return publicAssignmentsCache;
+}
+let publicMarketCache;
+let publicMarketExpires = 0;
+function publicMarket() {
+  if (!publicMarketCache || Date.now() >= publicMarketExpires) {
+    publicMarketExpires = Infinity;
+    publicMarketCache = listLandMarket().then(value => {
+      publicMarketExpires = Date.now() + 1000;
+      return value;
+    }, error => { publicMarketCache = null; publicMarketExpires = 0; throw error; });
+  }
+  return publicMarketCache;
+}
 async function publicFarmScope(client, force = false) {
   if (!client.villageId || (!force && Date.now() - client.lastFarmScopeAt < 1000)) return;
   client.lastFarmScopeAt = Date.now();
@@ -172,7 +251,7 @@ async function publicFarmScope(client, force = false) {
     }
     return;
   }
-  const assignments = await listVillageAssignments();
+  const assignments = await publicAssignments();
   const visible = assignments.filter(item => {
     const position = positionForLot(Number(item.farmId.slice(-6)));
     return item.playerId === client.playerId || Math.hypot(position.x - client.x, position.z - client.z) <= FARM_VIEW_RADIUS;
@@ -196,7 +275,7 @@ async function publicFarmScope(client, force = false) {
   for (const villageId of new Set(visible.map(item => item.villageId))) {
     Object.assign(crops, await loadFarms(villageId, visible.filter(item => item.villageId === villageId).map(item => item.farmId)));
   }
-  safeSend(client.socket, { type: 'farm_scope', farms, crops, lots: await listLandMarket() });
+  safeSend(client.socket, { type: 'farm_scope', farms, crops, lots: await publicMarket() });
 }
 
 function broadcastFarmUpdate(actor, payload) {
@@ -212,6 +291,8 @@ function farmTilePosition(farmId, tileKey) {
 }
 
 async function refreshPublicFarms(channelId) {
+  publicMarketExpires = 0;
+  await publicAssignments(true);
   await Promise.all(channelPlayers(channelId).map(client => publicFarmScope(client, true)));
 }
 
@@ -225,16 +306,24 @@ function broadcastToChannel(channelId, payload, excludeSocket = null) {
 }
 
 wss.on('connection', socket => {
+  const address=clientAddress(socket);socketGuard.connected(address);
+  socket.on('error',()=>{});
+  const joinTimeout=setTimeout(()=>{if(!clients.has(socket))socket.close(1008,'Join timeout');},15000);joinTimeout.unref();
   const client = { socket, playerId: null, name: 'Nông dân', channelId: null, farmId: null, villageId: null, x: TOWN_SPAWN.x, y: TOWN_SPAWN.y, z: TOWN_SPAWN.z, rotation: 0, venue: null, lastSeen: Date.now(), lastPersisted: 0, lastFarmScopeAt: 0, farmScopeKey: '', visibleFarmIds: new Set(), messages: [] };
   socket.on('message', async raw => {
     let message;
+    let counted=false;
     try {
-    if (String(raw).length > 16_384) return socket.close(1009, 'Message too large');
+    if (raw.length > 16_384) return socket.close(1009, 'Message too large');
     const now = Date.now();
     client.messages = client.messages.filter(time => now - time < 1000);
-    if (client.messages.length >= 40) return;
+    if (client.messages.length >= 40) {client.floods=(client.floods||0)+1;if(client.floods>=80)socket.close(1008,'Message flood');return;}
     client.messages.push(now);
-    try { message = JSON.parse(String(raw)); } catch { return; }
+    try { message = JSON.parse(String(raw)); } catch { return socket.close(1008,'Invalid JSON'); }
+    if(!message||typeof message!=='object'||Array.isArray(message)||typeof message.type!=='string')return socket.close(1008,'Invalid message');
+    if(!allowSocketOperation(client,message.type,now))return;
+    if((client.inFlight||0)>=4)return;
+    client.inFlight=(client.inFlight||0)+1;counted=true;
     if (message.type === 'google_login' || message.type === 'google_link') {
       if (!allowAuthAttempt(clientAddress(socket))) {
         safeSend(socket, { type: 'google_auth_result', status: 'error', message: 'Thử lại sau một phút.' });
@@ -253,6 +342,10 @@ wss.on('connection', socket => {
       return;
     }
     if (message.type === 'join') {
+      if(client.joining||clients.has(socket))return;
+      client.joining=true;
+      client.worldDelta = message.worldDelta === 1;
+      client.presenceLimit = presenceLimit(message.presenceLimit);
       client.playerId = String(message.playerId || '').slice(0, 64);
       if (!/^player_[a-z0-9_-]{8,64}$/i.test(client.playerId)) return socket.close(1008, 'Invalid player id');
       if (!allowAuthAttempt(clientAddress(socket))) {
@@ -285,7 +378,9 @@ wss.on('connection', socket => {
       client.x = assignedLot.spawn.x;
       client.y = assignedLot.spawn.y;
       client.z = assignedLot.spawn.z;
+      if(socket.readyState!==WebSocket.OPEN)return;
       clients.set(socket, client);
+      clearTimeout(joinTimeout);
       await casinoManager.reconnect(client.playerId);
       safeSend(socket, casinoManager.view(client.playerId));
 
@@ -315,6 +410,7 @@ wss.on('connection', socket => {
 
       safeSend(socket, {
         type: 'welcome',
+        season: worldEvent(),
         playerId: client.playerId,
         channelId: client.channelId,
         villageId: assignedLot.villageId,
@@ -330,8 +426,10 @@ wss.on('connection', socket => {
       });
       safeSend(socket, { type: 'village_list', villages: await listVillages() });
       
-      await refreshPublicFarms(client.channelId);
-      safeSend(socket, { type: 'social_state', ...(await loadSocialState(client.playerId)) });
+      // A town visitor owns no farm, so joining does not change others' farm scopes.
+      if (client.farmId) await refreshPublicFarms(client.channelId);
+      else await publicFarmScope(client, true);
+      safeSend(socket, { type: 'social_state', ...(await loadSocialState(client.playerId, { includeRanks: false })) });
       
       broadcastPresence(client.channelId);
       return;
@@ -430,7 +528,7 @@ wss.on('connection', socket => {
       safeSend(socket, { type: 'move_ack', accepted: true, x, y, z, rotation, venue: client.venue, roomId: client.roomId, serverTime: Date.now() });
       if (Date.now() - client.lastPersisted > 2000) {
         client.lastPersisted = Date.now();
-        savePosition(client.playerId, { x, y, z, rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION });
+        savePosition(client.playerId, { x, y, z, rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION }).catch(error => console.error("Position save failed:", error.message));
       }
       await publicFarmScope(client);
       if (previousRoom !== client.roomId) broadcastPresence(client.channelId);
@@ -459,7 +557,7 @@ wss.on('connection', socket => {
         fishingTelemetry.observe(client.telemetrySessionId, client, { meaningful: true });
         client.roomId = roomKey(client.villageId, client.venue);
         safeSend(socket, { type: 'move_ack', x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, serverTime: Date.now() });
-        savePosition(client.playerId, { x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION });
+        savePosition(client.playerId, { x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION }).catch(error => console.error("Position save failed:", error.message));
         await publicFarmScope(client, true);
         if (previousRoom !== client.roomId) broadcastPresence(client.channelId);
       }
@@ -581,7 +679,7 @@ wss.on('connection', socket => {
         const response = { type: 'action_error', requestId: message.requestId, message: 'Bạn cần mua lô đất trước khi sử dụng tính năng nông trại.' };
         safeSend(socket, response); finishAction(tracked.key, [response]); return;
       }
-      const result = await performAction(client.playerId, String(message.action || ''), message.payload || {}, { x: client.x, z: client.z, venue: client.venue, farmId: client.farmId, villageId: client.villageId, telemetrySessionId: client.telemetrySessionId });
+      const result = await performAction(client.playerId, String(message.action || ''), message.payload || {}, { x: client.x, z: client.z, rotation: client.rotation, venue: client.venue, farmId: client.farmId, villageId: client.villageId, telemetrySessionId: client.telemetrySessionId });
       if (result.error) { const response = { type: 'action_error', requestId: message.requestId, message: result.error }; safeSend(socket, response); finishAction(tracked.key, [response]); return; }
       fishingTelemetry.observe(client.telemetrySessionId, client, { meaningful: true });
       client.name = result.player.name;
@@ -613,6 +711,7 @@ wss.on('connection', socket => {
       return;
     }
     if (message.type === 'social_action') {
+      if(!['add_friend','remove_friend'].includes(message.action))return;
       const result = await updateFriend(client.playerId, message.friendId, message.action !== 'remove_friend');
       if (result.error) safeSend(socket, { type: 'action_error', message: result.error });
       else safeSend(socket, { type: 'social_state', ...result });
@@ -660,9 +759,10 @@ wss.on('connection', socket => {
       recentActions.delete(actionCacheKey(client, message?.requestId));
       console.error('WebSocket action failed:', error);
       safeSend(socket, { type: 'action_error', requestId: message?.requestId, message: error instanceof CasinoActionError ? error.message : 'Chưa thể thực hiện. Hãy thử lại sau nhé.' });
-    }
+    } finally { if(counted)client.inFlight=Math.max(0,(client.inFlight||0)-1); }
   });
   socket.on('close', () => {
+    clearTimeout(joinTimeout);socketGuard.disconnected(address);
     clientSessionTokens.delete(client);
     fishingTelemetry?.endSession(client.telemetrySessionId, client);
     if (![...clients.values()].some(other => other !== client && other.playerId === client.playerId && other.venue === 'casino')) casinoManager?.disconnect(client.playerId).then(broadcastCasinoState).catch(console.error);
@@ -674,8 +774,9 @@ wss.on('connection', socket => {
 });
 
 setInterval(() => {
-  const channels = new Set([...clients.values()].map(client => client.channelId));
-  channels.forEach(broadcastPresence);
+  const channels = new Set([...pendingPresence, ...[...clients.values()].map(client => client.channelId)]);
+  pendingPresence.clear();
+  channels.forEach(flushPresence);
 }, TICK_MS);
 
 setInterval(() => {
@@ -720,4 +821,4 @@ casinoManager = new CasinoRoomManager(getGameStoreDatabase(), { onWallet: async 
 await casinoManager.init();
 await initVillageRegistry();
 await initFarmSecurity();
-httpServer.listen(PORT, '0.0.0.0', () => console.log(`Farm multiplayer listening on http://localhost:${PORT} · MongoDB connected`));
+httpServer.listen(PORT, LOCAL_LOAD_TEST && process.env.LOCAL_LOAD_TEST_LAN !== '1' ? '127.0.0.1' : '0.0.0.0', () => console.log(`Farm multiplayer listening on http://localhost:${PORT} · MongoDB connected`));

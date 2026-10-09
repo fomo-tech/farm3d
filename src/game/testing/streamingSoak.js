@@ -65,6 +65,8 @@ world = new FarmWorld(canvas, text => { status.textContent = text; }, {
   },
   onFatalError: message => { report.failures.push(message); status.textContent = message; },
 });
+if (params.get('profile') === '1') import('./renderProfile.js').then(({ installRenderProfile }) => installRenderProfile(world));
+
 // Compare the former 3ms boot budget in this isolated harness only.
 if(params.get('bootBudget')==='3'){const update=world.scheduler.update.bind(world.scheduler);world.scheduler.update=budget=>update(!world.bootReady?3:budget);}
 

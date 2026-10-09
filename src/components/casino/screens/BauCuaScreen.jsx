@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useEffect} from 'react';
 import { CASINO_SYMBOLS, CASINO_CONFIG } from '../../../../shared/casino/casinoConfig.js';
 import { SymbolArt, Chip } from '../CasinoArt.jsx';
 import { Icon3dSparkleStar } from '../../icons3d/GameIcons3D.jsx';
@@ -19,6 +19,11 @@ export function BauCuaScreen({
   onOpenHistory,
 }) {
   const CHIP_VALUES = CASINO_CONFIG.chips;
+  useEffect(()=>{
+    const choose=event=>{if(event.detail?.game==='bau-cua'&&isOpen&&!isSpectator)putBet(event.detail.choice);};
+    window.addEventListener('casino-table-choice',choose);
+    return()=>window.removeEventListener('casino-table-choice',choose);
+  },[isOpen,isSpectator,putBet]);
 
   const result = round?.result;
   const symbols = result?.symbols || null;
@@ -112,7 +117,7 @@ export function BauCuaScreen({
       <footer className="pt-screen-action-dock">
         <div className="pt-dock-left">
           <div className="pt-chip-selector-group">
-            <span className="dock-label">Chọn phỉnh:</span>
+            <span className="dock-label">Chọn xu · chạm linh vật trên bàn</span>
             {CHIP_VALUES.map(val => (
               <button
                 key={val}

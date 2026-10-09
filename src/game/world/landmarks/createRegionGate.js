@@ -1,3 +1,4 @@
+import { batchRigidMeshes } from '../../rendering/batchRigidMeshes.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
@@ -40,6 +41,10 @@ export function createRegionGate(scene, {name='region-gate', position, yaw=0, la
  function updateName(value){const ctx=texture.getContext();ctx.clearRect(0,0,1024,128);ctx.fillStyle='#fff6e5';ctx.fillRect(0,0,1024,128);ctx.fillStyle='#284c4a';ctx.textAlign='center';ctx.textBaseline='middle';let size=72;ctx.font=`800 ${size}px Nunito, sans-serif`;while(ctx.measureText(value).width>920&&size>30){size-=2;ctx.font=`800 ${size}px Nunito, sans-serif`;}ctx.fillText(value,512,68);texture.update();}
  for(const side of [-1,1]){const panel=MeshBuilder.CreatePlane(`${name}-name-${side}`,{width:signWidth,height:1.05},scene);panel.parent=root;panel.position.set(0,5.85,side*.331);panel.rotation.y=side===1?Math.PI:0;panel.material=signMat;panel.isPickable=false;}
  updateName(label);
+ // Keep the named beam/sign planes for layout checks and editable lettering.
+ // All other solid gate parts share a handful of material draw calls.
+ const preserve=new Set(root.getChildMeshes().filter(mesh=>mesh.name.endsWith('-beam')||mesh.name.includes('-name-')));
+ batchRigidMeshes(root,{exclude:preserve,shadows});
  root.metadata={regionGate:true,halfSpan,clearance:5.23,label};
  return {root,updateName,dispose(){texture.dispose();root.dispose(false,false);materials.forEach(m=>m.dispose());}};
 }

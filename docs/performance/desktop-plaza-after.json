@@ -1,0 +1,127 @@
+{
+  "fps": 48,
+  "mobile": false,
+  "boot": {
+    "playableMs": 2722,
+    "sceneryComplete": true,
+    "sceneryMs": 4777
+  },
+  "renderSize": [
+    1280,
+    720
+  ],
+  "meshTotal": 9882,
+  "active": 2095,
+  "candidates": 6952,
+  "dynamic": 2567,
+  "indexed": 7315,
+  "drawCalls": 1879,
+  "frameMs": 21.46,
+  "evaluateMs": 8.85,
+  "renderMs": 10.49,
+  "targetsMs": 0.25,
+  "quality": {
+    "effects": "balanced",
+    "scale": 1
+  },
+  "dynamicGroups": [
+    [
+      "foliage-lod-",
+      251
+    ],
+    [
+      "foliage-lod-#",
+      221
+    ],
+    [
+      "foliage-chunk-#",
+      157
+    ],
+    [
+      "foliage-chunk-",
+      136
+    ],
+    [
+      "bus-#A-#",
+      90
+    ],
+    [
+      "bus-#B-#",
+      90
+    ],
+    [
+      "local-player-aodai",
+      68
+    ],
+    [
+      "bus-#A-rigid",
+      45
+    ],
+    [
+      "bus-#B-rigid",
+      45
+    ],
+    [
+      "bus-#C-rigid",
+      45
+    ],
+    [
+      "bus-#D-rigid",
+      45
+    ],
+    [
+      "bus-#A-t#",
+      21
+    ]
+  ],
+  "activeGroups": [
+    [
+      "road-border-batch",
+      132
+    ],
+    [
+      "foliage-chunk-#",
+      105
+    ],
+    [
+      "__root___inst_#",
+      98
+    ],
+    [
+      "foliage-chunk-",
+      81
+    ],
+    [
+      "flower_redA_primitive#_inst_#",
+      58
+    ],
+    [
+      "flower_yellowA_primitive#_inst_#",
+      58
+    ],
+    [
+      "flower_purpleA_primitive#_inst_#",
+      42
+    ],
+    [
+      "flower-patch-lod",
+      36
+    ],
+    [
+      "lamp-pool-",
+      35
+    ],
+    [
+      "cozy-beach-palm",
+      34
+    ],
+    [
+      "bridge-highway-#",
+      34
+    ],
+    [
+      "lamp-halo-",
+      33
+    ]
+  ]
+}

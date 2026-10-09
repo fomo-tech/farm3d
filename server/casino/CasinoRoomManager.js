@@ -22,13 +22,13 @@ export class CasinoRoomManager {
     for await(const room of this.collection.find({})) {
       delete room._id;
       this.rooms.set(room.id,room);
-      room.seats.forEach(seat=>{if(seat){seat.offlineAt=this.clock();this.members.set(seat.playerId,room.id);}});
+      room.seats.forEach(seat=>{if(seat){seat.offlineAt=this.clock();if(!seat.left)this.members.set(seat.playerId,room.id);}});
       if(room.round?.plan) await this.finishSettlement(room);
       else if(active(room.round)) {
         room.round.phase='aborted';room.round.abortReason='Server khởi động lại: hoàn lại toàn bộ cược chưa quyết toán.';
         room.history=[{id:room.round.id,phase:'aborted',at:this.clock(),reason:room.round.abortReason},...(room.history||[])].slice(0,20);
       }
-      room.round=null;room.seats.forEach(seat=>{if(seat)seat.ready=false;});await this.save(room);
+      room.round=null;this.releaseDepartedSeats(room);room.seats.forEach(seat=>{if(seat)seat.ready=false;});await this.save(room);
     }
     // Also covers debit committed before the room snapshot was written.
     for(const escrow of await this.wallet.escrows()) {
@@ -92,7 +92,7 @@ export class CasinoRoomManager {
           const target=room.seats.findIndex(value=>!value);
           if(target>=0)room.seats[target]={playerId:player.playerId,name:player.name,ready:false,offlineAt:null};
         }
-        this.members.set(player.playerId,room.id);if(seat)seat.offlineAt=null;
+        this.members.set(player.playerId,room.id);if(seat){seat.offlineAt=null;seat.left=false;}
       } else {
         if(this.members.get(player.playerId)!==room.id) throw new Error('Bạn chưa vào bàn này.');
         if(payload.kind==='seat') {
@@ -103,7 +103,7 @@ export class CasinoRoomManager {
           if(index>=0)room.seats[index]=null;
           room.seats[target]={playerId:player.playerId,name:player.name,ready:false,offlineAt:null};
         } else if(payload.kind==='leave') {
-          if(active(room.round)&&seat) {seat.offlineAt=this.clock();seat.ready=false;}
+          if(active(room.round)&&seat) {seat.offlineAt=this.clock();seat.ready=false;seat.left=true;}
           else if(index>=0)room.seats[index]=null;
           this.members.delete(player.playerId);
         } else if(payload.kind==='chat'||payload.kind==='emote') {
@@ -144,7 +144,7 @@ export class CasinoRoomManager {
       if(!Object.keys(bets).length)throw new Error('Chưa có mức cược ván trước.');
     } else {
       if(!CASINO_GAMES[room.game].choices.includes(payload.choice)||!CONFIG.chips.includes(payload.amount))throw new Error('Cửa hoặc chip không hợp lệ.');
-      if(room.game==='bai-cao')throw new Error('Bài Cào dùng mức cược cố định khi sẵn sàng.');
+      if(room.game==='bai-cao')throw new Error('Bộ Ba Kỳ Diệu dùng mức cược cố định khi sẵn sàng.');
       bets[payload.choice]=(bets[payload.choice]||0)+payload.amount;
     }
     const amount=Object.values(bets).reduce((a,b)=>a+b,0);
@@ -238,18 +238,30 @@ export class CasinoRoomManager {
     if(room.history.some(h=>h.id===room.round.id))return;
     room.history=[{id:room.round.id,ruleVersion:room.round.ruleVersion,at:this.clock(),result:copy(room.round.result),settlements:copy(room.round.plan||[])},...room.history].slice(0,20);
   }
+  releaseDepartedSeats(room) {
+    if(active(room.round))return false;
+    let changed=false;
+    for(let i=0;i<room.seats.length;i++) {
+      const seat=room.seats[i];
+      // A deliberate departure has no reconnect grace. Also recover seats left
+      // by older servers that removed membership without recording departure.
+      if(seat&&(seat.left||!this.members.has(seat.playerId))){room.seats[i]=null;changed=true;}
+    }
+    return changed;
+  }
   async finishSettlement(room) {
     for(const payment of room.round.plan) {
       const receipt=await this.wallet.settle(payment.playerId,payment.roundId,payment.reward);
       if(receipt)await this.onWallet(payment.playerId,receipt);
     }
     room.previousBets=copy(room.round.bets);room.round.phase='result';room.round.deadline=this.clock()+room.round.config.resultMs;
-    this.addHistory(room);await this.save(room);
+    this.addHistory(room);this.releaseDepartedSeats(room);await this.save(room);
   }
   async tick() {
     let changed=false;
     for(const room of this.rooms.values())await this.locked(room.id,async()=>{
       const now=this.clock(),round=room.round;
+      if(!active(round)&&this.releaseDepartedSeats(room)){await this.save(room);changed=true;}
       if(!active(round)) for(let i=0;i<room.seats.length;i++) {
         const seat=room.seats[i];
         if(seat?.offlineAt&&now-seat.offlineAt>=this.config.reconnectMs) {room.seats[i]=null;this.members.delete(seat.playerId);await this.save(room);changed=true;}
@@ -284,7 +296,7 @@ export class CasinoRoomManager {
     await this.locked(room.id,async()=>{const seat=room.seats.find(s=>s?.playerId===playerId);if(seat){seat.offlineAt=null;await this.save(room);}});
   }
   view(playerId) {
-    const summaries=[...this.rooms.values()].map(room=>({id:room.id,game:room.game,name:room.name,private:room.private,stake:room.stake,seats:room.seats.length,
+    const summaries=[...this.rooms.values()].map(room=>({id:room.id,game:room.game,name:room.system?CASINO_GAMES[room.game].name:room.name,private:room.private,stake:room.stake,seats:room.seats.length,
       occupied:room.seats.filter(Boolean).length,phase:room.round?.phase||'waiting'}));
     const room=this.rooms.get(this.members.get(playerId));
     let mine=null;
@@ -297,6 +309,7 @@ export class CasinoRoomManager {
           bets:copy(round.bets[playerId]||{}),totals:Object.fromEntries(CASINO_GAMES[room.game].choices.map(choice=>[choice,Object.values(round.bets).reduce((n,b)=>n+(b[choice]||0),0)])),
           result:publicResult?copy(round.result):null,revealed:copy(round.revealed),ranking:copy(round.ranking||[])}:null};
     }
-    return {type:'casino_state',viewerId:playerId,rooms:summaries,mine,serverTime:this.clock(),ruleVersion:this.config.version};
+    const pendingRoom=!mine?summaries.find(summary=>{const pending=this.rooms.get(summary.id);return active(pending.round)&&pending.seats.some(seat=>seat?.playerId===playerId);})||null:null;
+    return {type:'casino_state',viewerId:playerId,rooms:summaries,mine,pendingRoom,serverTime:this.clock(),ruleVersion:this.config.version};
   }
 }

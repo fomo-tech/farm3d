@@ -1,6 +1,8 @@
+import { collectVenueMeshes } from '../rendering/collectVenueMeshes.js';
+import { selectVisiblePlayers } from '../network/visiblePlayers.js';
 import {createFortuneNPC} from '../npc/FortuneNPC.js';
 import {LOTTERY_CONFIG} from '../../../shared/lotteryConfig.js';
-import { findWalkingPath } from '../physics/findWalkingPath.js';
+import { findWalkingPathAsync } from '../physics/findWalkingPath.js';
 import { FrameSafeResize } from '../rendering/FrameSafeResize.js';
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera.js';
 import { sampleMovement } from '../network/sampleMovement.js';
@@ -239,28 +241,13 @@ function getClampedInteriorRadius(camera, target, bounds, desiredRadius) {
 function* createInteriorSteps(scene, kind, config, shadows) {
   const shopStyle = SHOP_CONFIG[kind];
   if (kind === 'fashion') {
-    const firstMeshIndex = scene.meshes.length;
     yield* createFashionBoutiqueInterior(scene, config, shadows);
-    const venueMeshes = scene.meshes.slice(firstMeshIndex);
-    venueMeshes.forEach(mesh => {
-      mesh.metadata = { ...(mesh.metadata || {}), interiorVenue: kind };
-      mesh.setEnabled(false);
-    });
-    return venueMeshes;
+    return;
   }
   if (kind === 'casino') {
-    const firstMeshIndex = scene.meshes.length;
     yield* createCasinoLoungeInterior(scene, config, shadows);
-    const venueMeshes = scene.meshes.slice(firstMeshIndex);
-    for (let index = 0; index < venueMeshes.length; index++) {
-      const mesh = venueMeshes[index];
-      mesh.metadata = { ...(mesh.metadata || {}), interiorVenue: kind };
-      mesh.setEnabled(false);
-      if ((index + 1) % 24 === 0) yield;
-    }
-    return venueMeshes;
+    return;
   }
-  const firstMeshIndex = scene.meshes.length;
   yield;
   const { x, y, z } = config.interior;
   yield;
@@ -442,14 +429,7 @@ function* createInteriorSteps(scene, kind, config, shadows) {
     }
   }
   yield;
-  const venueMeshes = scene.meshes.slice(firstMeshIndex);
-  yield;
-  venueMeshes.forEach(mesh => {
-    mesh.metadata = { ...(mesh.metadata || {}), interiorVenue: kind };
-    mesh.setEnabled(false);
-  });
-  yield;
-  return venueMeshes;
+
 }
 
 function belongsToPlayer(mesh, playerRoot) {
@@ -492,7 +472,7 @@ export class FarmWorld {
       // default framebuffer MSAA enabled as well duplicates raster/resolve
       // work on the full-size canvas.
       antialias: false,
-      powerPreference: this.isMobile ? 'low-power' : 'high-performance',
+      powerPreference: this.graphicsQuality === 'eco' ? 'low-power' : 'high-performance',
     });
 
     applyWorldPowerPolicy(this.engine, this.isMobile);
@@ -683,6 +663,11 @@ export class FarmWorld {
     if (this.scene?.onPointerObservable) {
       this.pointerObserver = this.scene.onPointerObservable.add((pointerInfo) => {
         if (pointerInfo.type === 32 /* POINTERTAP */ && pointerInfo.pickInfo?.hit) {
+          const choice=pointerInfo.pickInfo.pickedMesh?.metadata?.casinoChoice;
+          if(choice&&this.casinoScreenActive&&this.currentVenue==='casino'){
+            window.dispatchEvent(new CustomEvent('casino-table-choice',{detail:{game:'bau-cua',choice}}));
+            return;
+          }
           const sponsor = pointerInfo.pickInfo.pickedMesh?.metadata;
           if (sponsor?.interactive === 'sponsor') {
             this.callbacks.onSponsor?.(sponsor.destinationUrl);
@@ -690,6 +675,8 @@ export class FarmWorld {
           }
         }
         if (pointerInfo.type === 1 /* POINTERDOWN */ && pointerInfo.pickInfo?.hit) {
+          // Symbol taps belong to the active table, not the venue entrance handler.
+          if (this.casinoScreenActive && pointerInfo.pickInfo.pickedMesh?.metadata?.casinoChoice) return;
           let node = pointerInfo.pickInfo.pickedMesh;
           while (node) {
             if (node.metadata?.remotePlayerId) {
@@ -907,7 +894,7 @@ export class FarmWorld {
     if (this.venueMeshesMap.has(kind)) return Promise.resolve();
     this.venueBuilds ||= new Map();
     if (!this.venueBuilds.has(kind)) {
-      const work = this.scheduleConstruction(createInteriorSteps(this.scene, kind, VENUES[kind], this.shadows), `interior ${kind}`, 110)
+      const work = this.scheduleConstruction(collectVenueMeshes(this.scene, kind, createInteriorSteps(this.scene, kind, VENUES[kind], this.shadows)), `interior ${kind}`, 110)
         .then(meshes => { if (meshes) this.venueMeshesMap.set(kind, meshes); })
         .finally(() => this.venueBuilds.delete(kind));
       this.venueBuilds.set(kind, work);
@@ -1917,9 +1904,10 @@ export class FarmWorld {
         // Character LOD keeps the readable face and silhouette nearby while
         // removing only high-detail fringe ribbons for distant avatars.
         const distance = Math.hypot(remote.position.x - player.root.position.x, remote.position.z - player.root.position.z);
-        const lod = distance > CHARACTER_LOD_CONFIG.lowDistance
+        const distanceLod = distance > CHARACTER_LOD_CONFIG.lowDistance
           ? 2
           : distance > CHARACTER_LOD_CONFIG.mediumDistance ? 1 : 0;
+        const lod = Math.max(distanceLod, this.isMobile ? 2 : this.remotePlayers.size > 8 ? 1 : 0);
         if (remote.metadata.characterLod !== lod) {
           remote.metadata.characterLod = lod;
           remote.metadata.human?.setLOD?.(lod);
@@ -1986,8 +1974,22 @@ export class FarmWorld {
     this.objectiveMarker?.dispose();
     this.proceduralWorld?.dispose();
     this.casinoTable?.dispose();
+    this.seasonDecorations?.dispose();
+    this.seasonRevision=(this.seasonRevision||0)+1;
     this.scene.dispose();
     this.engine.dispose();
+  }
+
+  async setSeason(season) {
+    if(!this.bootReady)return;
+    const active=season?.id==='halloween'&&season.active===true;
+    if(this.seasonEnabled===active)return;
+    this.seasonEnabled=active;const revision=(this.seasonRevision||0)+1;this.seasonRevision=revision;
+    this.seasonDecorations?.dispose();this.seasonDecorations=null;
+    if(!active)return;
+    const {SeasonDecorations}=await import('./SeasonDecorations.js');
+    if(this.disposed||this.scene.isDisposed||this.seasonRevision!==revision)return;
+    this.seasonDecorations=new SeasonDecorations(this.scene,()=>this.player?.root.position,{mobile:this.isMobile});
   }
 
   setClock(clock) {
@@ -2151,13 +2153,19 @@ export class FarmWorld {
 
   moveToTarget(target, callback, retries = 0) {
     if (!this.player || !target) return;
-    this.walkingRoute = { target, callback, retries };
+    const route = this.walkingRoute = { target, callback, retries };
+    this.player.stop();
     this.collisionSystem.flushSceneObstacles?.();
-    const start = this.player.root.position;
-    const path = findWalkingPath(start, target, (x,z) => this.collisionSystem.isColliding(x,z,this.collisionSystem.playerRadius,this.currentVenue));
-    if (!path) { this.player.stop(); this.onStatus?.('Chưa tìm được đường tới điểm này. Hãy chọn vị trí gần lối vào.'); return false; }
-    const follow = index => this.player.moveTo(path[index], index + 1 < path.length ? () => follow(index + 1) : callback);
-    follow(0);
+    const start = {x:this.player.root.position.x,z:this.player.root.position.z};
+    this.onStatus?.('Đang tìm đường tới mục tiêu…');
+    findWalkingPathAsync(start,target,(x,z)=>this.collisionSystem.isColliding(x,z,this.collisionSystem.playerRadius,this.currentVenue),{
+      cancelled:()=>this.disposed||this.walkingRoute!==route,
+    }).then(path=>{
+      if(this.disposed||this.walkingRoute!==route)return;
+      if(!path){this.walkingRoute=null;this.player.stop();this.onStatus?.('Chưa tìm được đường tới điểm này. Hãy chọn vị trí gần lối vào.');return;}
+      const follow=index=>{if(this.walkingRoute!==route)return;this.player.moveTo(path[index],index+1<path.length?()=>follow(index+1):callback);};
+      follow(0);
+    }).catch(()=>{if(this.walkingRoute===route){this.walkingRoute=null;this.onStatus?.('Chưa tìm được đường. Hãy thử lại.');}});
     return true;
   }
 
@@ -2210,6 +2218,8 @@ export class FarmWorld {
   refreshFarm() { this.farming?.refreshUnlocks(); }
 
   syncRemotePlayers(players, serverTime = Date.now()) {
+    players = selectVisiblePlayers(players, this.player?.root.position, this.remotePlayers, this.isMobile ? 8 : 16);
+    let created = 0;
     const receivedAt = performance.now();
     const offset = serverTime - receivedAt;
     // Use server timestamps instead of uneven packet arrival times.
@@ -2232,6 +2242,8 @@ export class FarmWorld {
       let remote = this.remotePlayers.get(player.playerId);
       const effectiveY = Number.isFinite(player.y) && player.y !== 0 ? player.y : (VENUES[player.venue]?.interior.y ?? getTerrainHeight(player.x, player.z));
       if (!remote) {
+        if (created >= 1) return;
+        created++;
         remote = createRemoteAvatar(this.scene, player.playerId, player.name, avatarAppearance(player.outfit, player.customization), this.shadows);
         remote.metadata ||= {};
         remote.metadata.remotePlayerId = player.playerId;
@@ -2389,10 +2401,9 @@ export class FarmWorld {
       }
       if (this.currentVenue === 'casino') {
         const tables = [
-          { kind: 'tai-xiu', label: 'Bàn Tài Xỉu Sic Bo', x: venue.interior.x - 6.5, z: venue.interior.z - 3.5 },
-          { kind: 'bau-cua', label: 'Bàn Bầu Cua Tôm Cá', x: venue.interior.x + 6.5, z: venue.interior.z - 3.5 },
-          { kind: 'bai-cao', label: 'Bàn Bài Cào 3 Lá', x: venue.interior.x - 6.5, z: venue.interior.z + 4.5 },
-          { kind: 'tien-len', label: 'Bàn Tiến Lên Miền Nam', x: venue.interior.x + 6.5, z: venue.interior.z + 4.5 },
+          { kind: 'tai-xiu', label: 'Bàn Xúc Xắc Vui', x: venue.interior.x - 6.5, z: venue.interior.z - 3.5 },
+          { kind: 'bau-cua', label: 'Bàn Vườn Linh Vật', x: venue.interior.x + 6.5, z: venue.interior.z - 3.5 },
+          { kind: 'bai-cao', label: 'Bàn Bộ Ba Kỳ Diệu', x: venue.interior.x - 6.5, z: venue.interior.z + 4.5 },
         ];
         let foundTable = null;
         for (const t of tables) {
@@ -2572,6 +2583,9 @@ export class FarmWorld {
     if (this.currentVenueMeshes) {
       this.currentVenueMeshes.forEach(mesh => mesh.setEnabled(false));
       this.currentVenueMeshes = null;
+    }
+    for (const mesh of this.scene.meshes) {
+      if (mesh.metadata?.interiorVenue && mesh.metadata.interiorVenue !== kind) mesh.setEnabled(false);
     }
     if (kind && this.venueMeshesMap?.has(kind)) {
       const venueMeshes = this.venueMeshesMap.get(kind);

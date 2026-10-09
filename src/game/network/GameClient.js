@@ -1,3 +1,4 @@
+import { applyWorldDelta } from '../../../shared/worldDelta.js';
 import { createRuntimeId } from '../runtime/BrowserRuntime.js';
 
 /**
@@ -7,7 +8,8 @@ import { createRuntimeId } from '../runtime/BrowserRuntime.js';
 export class GameClient {
   constructor(options = {}) {
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    this.url = options.url || import.meta.env?.VITE_MULTIPLAYER_URL || `${protocol}://${window.location.hostname}:8787`;
+    this.url = options.url || import.meta.env?.VITE_MULTIPLAYER_URL || `${protocol}://${window.location.hostname}:${import.meta.env?.VITE_MULTIPLAYER_PORT || 8787}`;
+    this.onSeason=options.onSeason||(()=>{});
     this.onFishingConditions=options.onFishingConditions||(()=>{});
     this.onState = options.onState || (() => {});
     this.onStatus = options.onStatus || (() => {});
@@ -76,11 +78,14 @@ export class GameClient {
     this.onStatus({ connected: false, phase: this.retryAttempt ? 'reconnecting' : 'connecting', attempt: this.retryAttempt, queued: this.pending.size });
     const socket = new WebSocket(this.url);
     this.socket = socket;
+    const worldPlayers = new Map();
     this.socket.addEventListener('open', () => {
       this.lastPongAt = Date.now();
       this.onStatus({ connected: true, phase: 'syncing', attempt: this.retryAttempt, queued: this.pending.size });
       this.sendNow({
         type: 'join',
+        worldDelta: 1,
+        presenceLimit: 48,
         playerId: profile.playerId,
         name: profile.name,
         channelId: profile.channelId,
@@ -96,6 +101,7 @@ export class GameClient {
       try {
         const message = JSON.parse(event.data);
         messageType = message.type;
+        if(message.season)this.onSeason(message.season);
         if(message.fishingConditions)this.onFishingConditions(message.fishingConditions,message.serverNow);
         if (message.type === 'welcome') {
           this.joined = true;
@@ -113,8 +119,10 @@ export class GameClient {
         } else if (message.type === 'village_error') {
           this.onVillages(message.villages || []);
           this.onVillageError(message.message || 'Không thể nhận nông trại tại làng này.');
+        } else if (message.type === 'world_delta') {
+          this.onState(applyWorldDelta(worldPlayers, message).filter(player => player.playerId !== profile.playerId), message.serverTime, message.online);
         } else if (message.type === 'world_state') {
-          this.onState(message.players.filter(player => player.playerId !== profile.playerId), message.serverTime);
+          this.onState(message.players.filter(player => player.playerId !== profile.playerId), message.serverTime, message.online);
         } else if (message.type === 'move_ack') {
           this.onMoveAck(message);
         } else if (message.type === 'farm_sync') {
@@ -144,6 +152,7 @@ export class GameClient {
         } else if (message.type === 'google_auth_result') {
           this.onGoogleAuthResult(message);
         } else if (message.type === 'action_error' || message.type === 'auth_error') {
+          if (message.type === 'auth_error') console.warn('[GameClient] Authentication failed:', message.message);
           this.acknowledge(message.requestId);
           this.onActionError(message.message || 'Chưa thể thực hiện. Hãy thử lại nhé.');
         } else if (message.type === 'pong') {
@@ -166,6 +175,7 @@ export class GameClient {
     });
     this.socket.addEventListener('close', event => {
       if (socket !== this.socket) return;
+      console.warn('[GameClient] Socket closed:', event.code, event.reason);
       this.stopHeartbeat();
       this.socket = null;
       this.joined = false;

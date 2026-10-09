@@ -10,21 +10,27 @@ export function installWorldRenderIndex(scene) {
     // boxes are not immutable: an octree inserted before that growth can hide
     // whole forests when the camera moves to the newly populated part.
     if (mesh.metadata?.spatialBoundsMutable) return true;
-    if (mesh.skeleton || mesh.animations?.length) return true;
+    if (mesh.metadata?.spatialBoundsDynamic || mesh.metadata?.lakeStatic === false || mesh.skeleton || mesh.animations?.length) return true;
+    // Shoreline batches and bridges have immutable geometry, even beneath a
+    // river/lake root whose water material animates. Material changes do not
+    // require a per-frame spatial-bounds scan.
+    if (/^(?:shore-batch-|bridge-|foliage-(?:lod|chunk)-)/.test(mesh.name || '')) return false;
     for (let node = mesh; node; node = node.parent) {
+      // Match name tokens: "bus" must not classify every "bush" as moving.
+      // Water shaders animate color/vertices within fixed bounds, not their roots.
       // Vegetation/detail batches are static after their thin-instance buffer
       // is built. They already carry spatialBoundsMutable while that buffer
       // is changing; keeping the name-based tree/foliage fallback here makes
       // thousands of immutable scenery meshes dynamic forever and forces a
       // full dynamic-content scan every frame.
-      if (node.metadata?.dynamicLivestock || node.metadata?.playerId || /player|bus|vehicle|animal|cow|alpaca|npc|elder|cloud|marker|crop|boat|river|water|lake|ocean|bridge/i.test(node.name || '')) return true;
+      if (node.metadata?.dynamicLivestock || node.metadata?.playerId || /(?:^|[-_])(?:player|bus|vehicle|animal|cow|alpaca|npc|elder|cloud|marker|crop|boat)(?:[-_]|$)/i.test(node.name || '')) return true;
     }
     return false;
   };
 
   // Build a detached octree in small slices. The previous all-at-once call
   // blocked the main thread for more than a second on a 14k-mesh world.
-  const tree = new Octree(Octree.CreationFuncForMeshes, 64, 2);
+  const tree = new Octree(Octree.CreationFuncForMeshes, 64, 5);
   tree.update(new Vector3(-4096, -512, -4096), new Vector3(4096, 512, 4096), []);
   const queue = [...scene.meshes];
   const known = new WeakSet(queue);
@@ -36,6 +42,9 @@ export function installWorldRenderIndex(scene) {
   let ready = false;
   let cancelled = false;
   let timer = null;
+  let originalCandidates;
+  let enabledCandidates;
+  const filteredCandidates = { data: [], length: 0 };
   let resolveReady;
   const readyPromise = new Promise(resolve => { resolveReady = resolve; });
 
@@ -59,6 +68,21 @@ export function installWorldRenderIndex(scene) {
     }
     tree.dynamicContent = dynamicMeshes;
     scene._selectionOctree = tree;
+    originalCandidates = scene.getActiveMeshCandidates;
+    enabledCandidates = () => {
+      const candidates = originalCandidates.call(scene);
+      let count = 0;
+      for (let i = 0; i < candidates.length; i++) {
+        const mesh = candidates.data[i];
+        // Wardrobe variants stay allocated for instant outfit changes, but
+        // disabled meshes need no LOD map/readiness work in scene evaluation.
+        if (!mesh.isDisposed() && mesh.isEnabled()) filteredCandidates.data[count++] = mesh;
+      }
+      filteredCandidates.data.length = count;
+      filteredCandidates.length = count;
+      return filteredCandidates;
+    };
+    scene.getActiveMeshCandidates = enabledCandidates;
     ready = true;
     resolveReady();
   };
@@ -166,6 +190,8 @@ export function installWorldRenderIndex(scene) {
       queue.length = 0;
       pendingAdded.length = 0;
       dynamicMeshes.length = 0;
+      if (scene.getActiveMeshCandidates === enabledCandidates) scene.getActiveMeshCandidates = originalCandidates;
+      filteredCandidates.data.length = 0;
       if (scene._selectionOctree === tree) scene._selectionOctree = null;
       resolveReady();
     },

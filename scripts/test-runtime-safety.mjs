@@ -27,7 +27,7 @@ const context = {
   performance: { now() { return now; } },
   location: { search: '', hostname: 'localhost', href: 'http://localhost/' },
   navigator: { onLine: true },
-  document: { body: null, visibilityState: 'visible', hasFocus() { return true; },
+  document: { documentElement: { dataset: {} }, body: null, visibilityState: 'visible', hasFocus() { return true; },
     addEventListener(name, handler) { documentListeners.set(name, handler); } },
   innerWidth: 1920, innerHeight: 1080, devicePixelRatio: 1,
   localStorage: { setItem(key, value) { storage.set(key, value); } },

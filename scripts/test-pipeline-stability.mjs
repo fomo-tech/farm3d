@@ -6,7 +6,7 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { createCinematicRenderingPipeline, resolveAntialiasSamples, resolveMobileAntialiasSamples } from '../src/game/rendering/CinematicRenderingPipeline.js';
 
 assert.equal(resolveAntialiasSamples('ultra', 8), 4);
-assert.equal(resolveAntialiasSamples('balanced', 8), 4);
+assert.equal(resolveAntialiasSamples('balanced', 8), 2);
 assert.equal(resolveAntialiasSamples('eco', 8), 1);
 assert.equal(resolveAntialiasSamples('ultra', 1), 1);
 

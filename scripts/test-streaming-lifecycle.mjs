@@ -23,7 +23,7 @@ FarmChunk.prototype._initMaterials = initMaterials;
 const scheduler = new FrameBudgetScheduler(0.001);
 const farming = Object.create(FarmingSystem.prototype);
 Object.assign(farming, { playerFarmId: 'farm_test', tiles: [], state: {}, crops: new Map(),
-  pendingActions: new Set(), getUnlockedPlots: () => 12, materials: { tilled: {} } });
+  pendingActions: new Set(), controls: {}, getUnlockedPlots: () => 12, materials: { tilled: {} } });
 farming.applyRemoteFarmAction({ farmId: 'farm_test', tileKey: '0:0', action: 'till' });
 assert.equal(farming.state['0:0'].state, 'tilled', 'updates are retained before meshes load');
 let registrations = 0;

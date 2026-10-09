@@ -1,6 +1,6 @@
 import { missionStats, preLandJourney } from '../../shared/preLandJourney.js';
 import { missionAvailability } from '../../shared/missionEligibility.js';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { MAIN_MISSIONS, MAIN_CHAPTERS, DAILY_MISSIONS, activeMainMission, missionProgress, normalizeMissions, dailyMissionList } from '../../shared/missions.js';
 import {
   Icon3dTrophyCup,
@@ -123,7 +123,8 @@ export function MissionBoard({ missionContext = {}, progress, legacyQuests = [],
     return () => window.clearTimeout(timer);
   }, [rewardEvent]);
 
-  const missions = normalizeMissions(progress.missions, missionStats(progress), Date.now(), {...missionContext,hasLand:progress.unlockedPlots > 0, progress});
+  const stats = useMemo(() => missionStats(progress), [progress]);
+  const missions = normalizeMissions(progress.missions, stats, clock, {...missionContext,hasLand:progress.unlockedPlots > 0, progress});
   const locked = tab === 'main' && !progress.onboarding?.completed;
   const list = tab === 'main' ? MAIN_MISSIONS : tab === 'daily' ? dailyMissionList(missions) : legacyQuests;
   const claimedCount = tab === 'legacy' ? legacyQuests.filter(mission => progress.claimedQuests?.includes(mission.id)).length : missions[tab].claimed.length;
@@ -140,12 +141,12 @@ export function MissionBoard({ missionContext = {}, progress, legacyQuests = [],
   const readyCount = list.filter(mission => {
     const claimed = tab === 'legacy' ? progress.claimedQuests?.includes(mission.id) : missions[tab].claimed.includes(mission.id);
     return !claimed && (tab === 'legacy' || !missionAvailability(mission, progress, missionContext)) && (tab !== 'main' || activeId === mission.id) &&
-      (tab === 'legacy' ? (progress.stats?.[mission.stat] || 0) >= mission.goal : missionProgress(mission, missionStats(progress), missions, tab) >= mission.goal);
+      (tab === 'legacy' ? (progress.stats?.[mission.stat] || 0) >= mission.goal : missionProgress(mission, stats, missions, tab) >= mission.goal);
   }).length;
 
   const rewardCounts = Object.fromEntries(Object.keys(TABS).map(kind=>[kind,(kind==='main'?MAIN_MISSIONS:kind==='daily'?dailyMissionList(missions):legacyQuests).filter(m=>{
     const claimed=kind==='legacy'?progress.claimedQuests?.includes(m.id):missions[kind].claimed.includes(m.id);
-    return !claimed && (kind!=='main'||(progress.onboarding?.completed&&activeId===m.id)) && (kind==='legacy'||!missionAvailability(m,progress,missionContext)) && (kind==='legacy'?(progress.stats?.[m.stat]||0):missionProgress(m,missionStats(progress),missions,kind))>=m.goal;
+    return !claimed && (kind!=='main'||(progress.onboarding?.completed&&activeId===m.id)) && (kind==='legacy'||!missionAvailability(m,progress,missionContext)) && (kind==='legacy'?(progress.stats?.[m.stat]||0):missionProgress(m,stats,missions,kind))>=m.goal;
   }).length]));
   const info = TABS[tab];
   const CurrentTabIcon = info.Icon;
@@ -321,7 +322,7 @@ export function MissionBoard({ missionContext = {}, progress, legacyQuests = [],
             {list.map((mission, index) => {
               if (tab === 'main' && Math.floor(index / 3) !== chapter) return null;
               const legacy = tab === 'legacy';
-              const current = legacy ? Math.min(mission.goal, progress.stats?.[mission.stat] || 0) : missionProgress(mission, missionStats(progress), missions, tab);
+              const current = legacy ? Math.min(mission.goal, progress.stats?.[mission.stat] || 0) : missionProgress(mission, stats, missions, tab);
               const claimed = legacy ? progress.claimedQuests?.includes(mission.id) : missions[tab].claimed.includes(mission.id);
               const gated = tab === 'main' && activeId !== mission.id && !claimed;
               const onboardingGated = locked && !legacy && !claimed;

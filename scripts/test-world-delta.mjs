@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import { applyWorldDelta } from '../shared/worldDelta.js';
+const state = new Map();
+const player = { playerId: 'a', name: 'Alice', x: 0, y: 0, z: 0, rotation: 0, fishing: { phase: 'cast' } };
+applyWorldDelta(state, { players: [player] });
+applyWorldDelta(state, { moves: [['a', 1, 0, 2, .5], ['unknown', 0, 0, 0, 0]] });
+assert.deepEqual(state.get('a'), { ...player, x: 1, z: 2, rotation: .5 });
+assert.equal(state.has('unknown'), false);
+assert.equal(player.x, 0, 'old snapshots stay immutable');
+applyWorldDelta(state, { players: [{ ...state.get('a'), name: 'New', fishing: null }] });
+assert.equal(state.get('a').name, 'New');
+assert.equal(state.get('a').fishing, null);
+assert.deepEqual(applyWorldDelta(state, { removed: ['a'] }), []);
+assert.deepEqual(applyWorldDelta(new Map(), { players: [player] }), [player], 'reconnect starts a fresh baseline');
+console.log('PASS: delta movement, metadata, removals, unknown IDs and reconnect baseline.');

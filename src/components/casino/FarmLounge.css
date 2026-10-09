@@ -3,3 +3,67 @@
 @media(max-height:500px) and (min-width:701px){.farm-lounge-header{padding:8px 18px}.farm-lounge-emblem{width:42px;height:42px}.farm-lounge-emblem img{width:35px;height:35px}.farm-lounge h2{font-size:22px}.farm-lounge-games,.farm-lounge-detail{padding:14px}.farm-lounge-art{height:68px}.farm-lounge-footer{padding:8px 18px}}
 .farm-lounge-art .cq-die-wrap{transform:none!important;display:block;width:50px!important;height:50px!important;flex:none}.farm-lounge-art .cq-die{position:relative;width:46px;height:46px;transform:rotate(-10deg)!important}.farm-lounge-art .cq-die-wrap:nth-child(2) .cq-die{transform:translateY(7px) rotate(12deg)!important}.farm-lounge-art .cq-die-face{display:none!important}.farm-lounge-art .cq-face-front{display:block!important;width:46px;height:46px;border:2px solid #fff!important;border-radius:10px!important;background:#fff9ed!important;padding:7px!important;box-shadow:4px 5px 0 #d2c5ad}.farm-lounge-art .cq-pips{display:grid!important;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:3px;width:100%!important;height:100%!important}.farm-lounge-art .cq-pip{display:block;background:#526b66!important;border-radius:50%;width:auto;height:auto}.farm-lounge-art .cq-pip-red{background:#d48a67!important}.farm-lounge-art .cq-pip-empty{background:transparent}.farm-lounge-art .cq-card{background:#fffdf6!important;border:1px solid #e5dfcb!important;padding:5px!important;color:#526b66}.farm-lounge-art .cq-card-red{color:#ce8765}
 @media(max-width:700px){.farm-lounge-art .cq-die-wrap{width:43px!important;height:43px!important}.farm-lounge-art .cq-die,.farm-lounge-art .cq-face-front{width:39px;height:39px}.farm-lounge-art .cq-face-front{padding:6px!important}}
+/* Three-game lounge: clear game selection and room availability. */
+.farm-lounge{width:min(1100px,100%);border:2px solid #fff9e8;box-shadow:0 24px 80px #162d4766;color:#354d53}
+.farm-lounge-header{background:linear-gradient(110deg,#fff6e7,#f0f4e9);padding:22px 24px}
+.farm-lounge-header h2{letter-spacing:-.7px}
+.farm-lounge-emblem{background:#e5e0f2;border:1px solid #fff;box-shadow:0 4px 0 #d7cfe8}
+.farm-lounge-body{grid-template-columns:34% minmax(0,1fr)}
+.farm-lounge-game-grid{grid-template-columns:1fr;gap:12px}
+.farm-lounge-game-grid>button{display:grid;grid-template-columns:110px 1fr;grid-template-rows:auto auto auto;text-align:left;column-gap:14px;padding:15px;min-height:123px;transition:border-color .15s,background .15s}
+.farm-lounge-game-grid>button:hover{border-color:#a3c8bc}
+.farm-lounge-game-grid>button[aria-pressed=true]{border-color:#578e84;background:#e8f2e9;color:#305e57;box-shadow:0 3px 0 #b3d0be}
+.farm-lounge-game-grid .farm-lounge-art{grid-column:1;grid-row:1/4;height:85px}
+.farm-lounge-game-grid .farm-lounge-game-count{grid-column:2;grid-row:3;justify-self:start;margin-top:6px}
+.farm-lounge-game-grid b{grid-column:2;grid-row:1;align-self:end;font-size:20px}
+.farm-lounge-game-grid small{grid-column:2;grid-row:2;font-size:11px;align-self:start;color:#687e76}
+.farm-lounge-selected{color:#3c8774}
+.farm-lounge-live{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 16px;font-size:11px;color:#718278}
+.farm-lounge-live .is-online:before,.farm-lounge-live .is-offline:before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;background:#409376}
+.farm-lounge-live .is-offline:before{background:#c66e55}
+.farm-lounge-spotlight{background:linear-gradient(120deg,#f1e9f8,#edf3e5);border-color:#e3dced;padding:20px}
+.farm-lounge-spotlight h3{font-size:30px;color:#40565a}
+.farm-lounge-room-tools{display:flex;gap:8px;margin-bottom:12px}
+.farm-lounge-room-tools input{min-width:0;flex:1;border:1px solid #d6ded0;border-radius:11px;background:#fffdf7;padding:11px 13px;color:#354d53;font-size:12px}
+.farm-lounge-room-tools button{border:1px solid #d6ded0;border-radius:11px;padding:8px 14px;background:#f0f3e6;color:#587c6c;white-space:nowrap;font-size:11px;font-weight:800}
+.farm-lounge-room-tools button[aria-pressed=true]{background:#daeee2;border-color:#67a28e;color:#2b6e59}
+.farm-lounge-rooms{max-height:320px;min-height:175px}
+.farm-lounge-rooms article{padding:15px;border-color:#dfe4d6}
+.farm-lounge-rooms h4{font-size:14px;color:#40595b}
+.farm-lounge-rooms article small{font-size:10px;color:#738576}
+.farm-lounge-rooms article>button{min-height:41px;padding:10px 15px;background:#548f83}
+.farm-lounge-primary{background:#518d80;box-shadow:0 3px 0 #397165;min-height:47px}
+.farm-lounge-status{color:#697b70;font-size:11px}
+@media(max-width:700px){
+ .farm-lounge-header{padding:13px}.farm-lounge-game-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .farm-lounge-game-grid>button{display:flex;text-align:center;gap:5px;padding:9px 5px;min-height:135px}
+ .farm-lounge-game-grid .farm-lounge-art{height:64px;order:1}.farm-lounge-game-grid b{order:2;font-size:13px;align-self:center}
+ .farm-lounge-game-grid small{order:3;font-size:8px;align-self:center}.farm-lounge-game-grid .farm-lounge-game-count{order:4;font-size:8px;align-self:center;margin-top:0}
+ .farm-lounge-selected{top:6px;right:6px;font-size:12px}.farm-lounge-tip{display:none}
+ .farm-lounge-live{font-size:10px;gap:12px;margin-bottom:12px}.farm-lounge-spotlight{padding:12px}.farm-lounge-spotlight h3{font-size:23px}
+ .farm-lounge-rooms{min-height:140px;max-height:none}.farm-lounge-rooms article{padding:11px}.farm-lounge-room-art{display:none}
+ .farm-lounge-rooms h4{font-size:12px}.farm-lounge-rooms article>button{min-height:40px;padding:9px 12px}
+}
+@media(prefers-reduced-motion:reduce){.farm-lounge-game-grid>button{transition:none}}
+@media(min-width:701px){
+ .farm-lounge-detail{display:flex;flex-direction:column;overflow:hidden;padding:16px 20px}
+ .farm-lounge-live{flex:none;margin-bottom:10px}
+ .farm-lounge-spotlight{flex:none;padding:12px 16px;min-height:108px}
+ .farm-lounge-spotlight>.farm-lounge-art{height:80px}
+ .farm-lounge-tabs{flex:none;margin:12px 0}
+ .farm-lounge-room-browser{display:flex;flex-direction:column;flex:1;min-height:0}
+ .farm-lounge-room-tools{flex:none;margin-bottom:9px}
+ .farm-lounge-rooms{flex:1;min-height:0;max-height:none;overflow:auto;align-content:start}
+ .farm-lounge-rules{flex:1;min-height:0;overflow:auto}
+ .farm-lounge-actions{flex:none;margin-top:12px}
+ .farm-lounge-status{flex:none;margin-top:10px!important}
+}
+.farm-lounge-art .cq-corner-br{display:none!important}
+@media(max-width:700px){
+ .farm-lounge-detail{padding-bottom:90px}
+ .farm-lounge-rooms{min-height:0;align-content:start}
+ .farm-lounge-actions{position:absolute;z-index:3;left:12px;right:12px;bottom:57px;margin:0;padding:10px 4px;background:#fff9ed;border-top:1px solid #e4e6d7;box-shadow:0 -6px 15px #354d5309}
+ .farm-lounge-actions button{min-height:45px}
+}
+
+.farm-lounge-pending{padding:10px 14px;border:1px solid #d8ac66;border-radius:12px;background:#fff3d7;color:#654621;display:flex;align-items:center;gap:12px}.farm-lounge-pending p{margin:0;flex:1;font-size:13px}.farm-lounge-pending button{border:0;border-radius:9px;padding:9px;background:#72543c;color:white;cursor:pointer}

@@ -44,7 +44,7 @@ try {
     }
   }
   include(resolve(root, 'server/index.js'));
-  writeFileSync(resolve(stage, '.env.example'), `MONGODB_URI=mongodb://127.0.0.1:27017\nMONGODB_DB=farm_online_3d\nMULTIPLAYER_PORT=8787\nGOOGLE_CLIENT_ID=\n`);
+  writeFileSync(resolve(stage, '.env.example'), `MONGODB_URI=mongodb://127.0.0.1:27017\nMONGODB_DB=farm_online_3d\nMULTIPLAYER_PORT=8787\nGOOGLE_CLIENT_ID=\nEVENT=halloween\n# Optional ISO dates with timezone:\n# EVENT_START=2026-10-20T00:00:00+07:00\n# EVENT_END=2026-11-03T00:00:00+07:00\n`);
   writeFileSync(resolve(stage, 'DEPLOY.txt'), `Bản đã build cho https://${domain}\n\nGiải nén trên Ubuntu, đặt thư mục vibecity tại /var/www/farm-online-3d\nđể bên trong có dist/, server/, shared/, src/ và package.json.\n\nTrong thư mục đó chạy:\n  npm ci --omit=dev\n  cp -n .env.example .env\n  nano .env\n\nĐiền MongoDB URI và GOOGLE_CLIENT_ID (nếu dùng Google login).\nFrontend Google Client ID đã được nhúng khi build từ .env trên máy Mac.\nKhông đổi frontend domain/Google Client ID bằng .env trên VPS; cần build lại.\n\nKhởi động lần đầu (Node.js 24, PM2 đã cài):\n  pm2 start server/index.js --name vibecity --node-args="--env-file=.env"\n  pm2 save\n  pm2 startup\nChạy tiếp lệnh mà pm2 startup in ra. Chỉ chạy một instance.\n\nCập nhật bản đang chạy: giữ nguyên .env cũ, thay các file ứng dụng, chạy\n  npm ci --omit=dev\n  pm2 restart vibecity\n\nNginx phục vụ dist/ và proxy /ws về http://127.0.0.1:8787 với WebSocket Upgrade.\nCần cấu hình DNS và HTTPS riêng. Không mở công khai cổng 8787 hoặc 27017.\nKiểm tra backend: curl http://127.0.0.1:8787/health\n\nGói này không chứa database, .env thật, node_modules hoặc source để build lại.\n`);
   mkdirSync(output, { recursive: true });
   run('zip', ['-qr', archive, name], { cwd: temp });

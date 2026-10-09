@@ -1,3 +1,4 @@
+import { FriendsPanel } from './components/FriendsPanel.jsx';
 import {AppleTreeHUD} from './components/AppleTreeHUD.jsx';
 import './components/FarmHudPolish.css';
 import {CropHarvestHUD} from './components/CropHarvestHUD.jsx';
@@ -254,6 +255,7 @@ export default function App() {
   recordAppRender();
   const canvasRef = useRef(null);
   const worldRef = useRef(null);
+  const seasonRef = useRef(null);
   const joystickKnobRef = useRef(null);
   const progressRef = useRef(null);
   const gameClientRef = useRef(null);
@@ -434,6 +436,7 @@ export default function App() {
           worldRef.current?.setPlayerVehicle(progressRef.current?.vehicle || 'walk');
           worldRef.current?.setPlayerHomeTier(progressRef.current?.homeTier || 1);
           worldRef.current?.setClock(clockRef.current);
+          worldRef.current?.setSeason(seasonRef.current);
           gameClientRef.current?.send({ type: 'resync' });
         },
         onFatalError: message => {
@@ -520,6 +523,11 @@ export default function App() {
         },
       });
       worldRef.current = world;
+      if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('profile') === '1') {
+        import('./game/testing/renderProfile.js').then(({ installRenderProfile }) => {
+          if (!world.scene.isDisposed) installRenderProfile(world);
+        });
+      }
     } catch (error) {
       console.error('World initialization failed', error);
       window.__farmDebug?.report(error, 'WORLD INITIALIZATION');
@@ -554,8 +562,9 @@ export default function App() {
         };
         setStatus(phaseText[state.phase] || 'Đang kiểm tra kết nối…', { silent: true });
       },
-      onState: (players, serverTime) => {
-        setNetwork(previous => previous.online === players.length + 1 ? previous : ({ ...previous, online: players.length + 1 }));
+      onState: (players, serverTime, totalOnline) => {
+        const online = Number.isInteger(totalOnline) ? totalOnline : players.length + 1;
+        setNetwork(previous => previous.online === online ? previous : ({ ...previous, online }));
         worldRef.current?.syncRemotePlayers(players, serverTime);
         if (serverTime) {
           clockRef.current = Math.floor(serverTime / 1000);
@@ -643,6 +652,7 @@ export default function App() {
         setCasinoResult(message);
         if (worldRef.current) worldRef.current.casinoLastError = message;
       },
+      onSeason: season => { seasonRef.current=season; worldRef.current?.setSeason(season); },
       onFishingConditions:(conditions,serverNow)=>{setFishingConditions(conditions);if(serverNow)fishingServerOffset.current=serverNow-Date.now();},
       onAccountState: state => {
         if(state.result?.appleHarvest){setAppleBusy(false);for(const fruit of worldRef.current?.farmChunks.get(sessionRef.current.farmId)?.appleFruits||[])if(!fruit.isDisposed())fruit.setEnabled(false);farmAudio.playPop();setStatus(`Đã cất ${state.result.appleHarvest.amount} quả táo vào kho!`);}
@@ -916,6 +926,7 @@ export default function App() {
   useEffect(() => {
     if (venueMode?.venue === 'casino') {
       if (panel === 'casino' && casinoState?.mine?.game) {
+        worldRef.current?.setCasinoScreenActive(true);
         worldRef.current?.focusCasinoTable(casinoState.mine.game);
       } else if (panel === 'casino' && chosenCasinoGame) {
         worldRef.current?.focusCasinoTable(chosenCasinoGame, true);
@@ -1165,7 +1176,9 @@ export default function App() {
     if (!network.connected || progress.fishing?.pending) return;
     if (!fishingWater) { setStatus('Hãy đứng sát bờ nước để thả câu.'); return; }
     if (!progress.fishing?.equippedRod) { setStatus('Hãy mua và trang bị cần câu trước.'); return; }
-    gameClientRef.current?.sendGameAction('fishing_cast', castInput);
+    const state=worldRef.current?.getPlayerState();
+    if(state)gameClientRef.current?.sendPosition(state);
+    gameClientRef.current?.sendGameAction('fishing_cast', {...castInput,aim:0});
     setPanel(null);
     setStatus('Đã giăng câu · chờ phao rung…');
   };
@@ -1358,7 +1371,7 @@ export default function App() {
   } : null;
 
   return (
-    <main className={`game-shell pt-game-shell compact-game-hud${venueMode ? ' in-venue' : ''}${confirmation || panel || phoneOpen || dialogueOpen || guideOpen || celebrationOpen || roadsideOpen || leaderboardOpen || plazaNoticeOpen || showCharacterCreation ? ' hud-modal-open' : ''}`}>
+    <main id="game-viewport" className={`game-shell pt-game-shell compact-game-hud${venueMode ? ' in-venue' : ''}${panel === 'casino' ? ' in-game-table' : ''}${confirmation || panel || phoneOpen || dialogueOpen || guideOpen || celebrationOpen || roadsideOpen || leaderboardOpen || plazaNoticeOpen || showCharacterCreation ? ' hud-modal-open' : ''}`}>
       <canvas ref={canvasRef} className="game-canvas" tabIndex={0} onPointerDown={event => event.currentTarget.focus({ preventScroll: true })} aria-label="Thế giới nông trại 3D" />
       {gameStarted && boot.phase === 'ready' && (!panel || progress.fishing?.pending) && <FishingHUD conditions={fishingConditions} fishing={progress.fishing} connected={network.connected} water={fishingWater} cast={fishingCast} send={(action,payload)=>gameClientRef.current?.sendGameAction(action,payload)} serverOffset={fishingServerOffset.current} caught={caughtFish} clearCaught={()=>{fishingCatchDisplayed.current=false;setCaughtFish(null);worldRef.current?.clearFishing?.();}} />}
       {/* Play Together Title & Start Screen */}
@@ -1405,14 +1418,14 @@ export default function App() {
       }
 
       {debugEnabled && <LiveWorldDebug worldRef={worldRef} />}
-      {venueMode && (
+      {venueMode && panel !== 'casino' && (
         <section className="venue-banner">
           <div className="venue-banner-content">
             <b>{venueMode.label}</b>
             {nearbyCasinoTable ? (
               <span className="venue-table-badge">Đang đứng trước <strong>{nearbyCasinoTable.label}</strong></span>
             ) : (
-              <span>{venueMode.venue === 'casino' ? 'Tiến lại gần 4 bàn 3D hoặc bấm trực tiếp vào bàn để chơi' : 'Chọn thao tác hoặc đến gần quầy rồi nhấn E'}</span>
+              <span>{venueMode.venue === 'casino' ? 'Tiến lại gần 3 bàn 3D hoặc bấm trực tiếp vào bàn để chơi' : 'Chọn thao tác hoặc đến gần quầy rồi nhấn E'}</span>
             )}
           </div>
           <div className="venue-banner-actions">
@@ -1451,7 +1464,7 @@ export default function App() {
       {gameStarted && (
         <>
       {/* PLAY TOGETHER STANDARD TOPBAR */}
-      {gameStarted && (
+      {gameStarted && panel !== 'casino' && (
         <GameHudTopbar progress={progress} name={session.name} notifications={hasPendingNotifications} dailyReward={dailyRewardAvailable}
           onProfile={() => { setProfileTarget(session.playerId); setViewedProfile(null); gameClientRef.current?.send({ type: 'get_profile', playerId: session.playerId }); }}
           onShop={() => setPanel('shop')}
@@ -1588,6 +1601,7 @@ export default function App() {
 
             {phonePage !== 'home' && <button type="button" className="pt-phone-back" onClick={() => setPhonePage('home')}>‹ Menu</button>}
             {phonePage === 'home' && <div className="pt-phone-app-grid">
+              <button type="button" className="pt-app-bubble" onClick={()=>{setPhoneOpen(false);setPanel('friends');gameClientRef.current?.send({type:'get_social_state'});}}><div className="pt-app-icon"><Icon3dFriends size={40}/></div><span>Bạn bè</span></button>
               <button type="button" className="pt-app-bubble" onClick={()=>{setPhoneOpen(false);setPanel('fortune');}}><div className="pt-app-icon"><HudIcon asset="coin" size={40}/></div><span>Vé may mắn{lotteryState?.tickets?.some(t=>t.prize>0&&!t.claimed)?' • Nhận thưởng':''}</span></button>
               <button type="button" className="pt-app-bubble" onClick={() => { setPhoneOpen(false); handleMenuClick('inventory'); }}>
                 <div className="pt-app-icon"><HudIcon asset="backpack" size={40} /></div><span>Túi đồ</span>
@@ -1741,7 +1755,7 @@ export default function App() {
           else if (mission.stat === 'animalsFed') worldRef.current?.openLivestockControls();
           else if (mission.stat === 'crafted') setPanel('factory');
         }} />}
-      {panel && panel !== 'fortune' && panel !== 'quests' && panel !== 'fishing' && panel !== 'shop' && panel !== 'vehicles' && panel !== 'orders' && panel !== 'fashion' && panel !== 'casino' && panel !== 'map' && panel !== 'inventory' && (
+      {panel && panel !== 'friends' && panel !== 'fortune' && panel !== 'quests' && panel !== 'fishing' && panel !== 'shop' && panel !== 'vehicles' && panel !== 'orders' && panel !== 'fashion' && panel !== 'casino' && panel !== 'map' && panel !== 'inventory' && (
         <div className="panel-backdrop" onClick={() => { farmAudio.playPop(); setPanel(null); }}>
           <section className={`game-panel ${panel === 'land' ? 'land-game-panel' : panel === 'upgrade' ? 'farm-upgrade-panel' : panel === 'livestock' ? 'livestock-game-panel' : ''}`} onClick={event => event.stopPropagation()} role="dialog" aria-modal="true">
             <header>
@@ -1763,7 +1777,7 @@ export default function App() {
               <i><Icon3dSprout size={28} /></i><b>Vật tư</b><small>Mua hạt giống theo cấp</small><em>Đến tiệm 3D →</em>
             </button>
             <button onClick={() => isFeatureLocked(progress, 'casino') ? setStatus('Casino mở sau khi hoàn thành hướng dẫn!') : (setPanel(null), worldRef.current?.enterVenue('casino'))}>
-              <i><Icon3dDice size={28} /></i><b>Hội quán Casino</b><small>{isFeatureLocked(progress, 'casino') ? 'Khóa tân thủ' : 'Trò chơi dân gian & xúc xắc'}</small><em>Vào sảnh 3D →</em>
+              <i><Icon3dDice size={28} /></i><b>Hội quán trò chơi</b><small>{isFeatureLocked(progress, 'casino') ? 'Khóa tân thủ' : 'Trò chơi dân gian & xúc xắc'}</small><em>Vào sảnh 3D →</em>
             </button>
             <button onClick={() => { setPanel(null); worldRef.current?.enterVenue('fashion'); }}>
               <i><Icon3dWardrobe size={28} /></i><b>Thời trang</b><small>Mua và thay trang phục Sophie</small><em>Đến tiệm 3D →</em>
@@ -1887,12 +1901,13 @@ export default function App() {
           }}
           onAddFriend={friendId => {
             gameClientRef.current?.send({ type: 'social_action', friendId, action: 'add_friend' });
-            emitReward({ text: '+1 Yêu cầu kết bạn', icon: <Icon3dFriends size={20} />, color: '#10b981' });
+            emitReward({ text: 'Đã gửi thao tác thêm bạn', icon: <Icon3dFriends size={20} />, color: '#10b981' });
           }}
           onClose={() => setLeaderboardOpen(false)}
         />
       )}
 
+      {panel==='friends' && <FriendsPanel friends={socialState.friends} residents={socialState.leaderboard} playerId={session.playerId} connected={network.connected} onClose={()=>setPanel(null)} onProfile={id=>{setPanel(null);setProfileTarget(id);setViewedProfile(null);gameClientRef.current?.send({type:'get_profile',playerId:id});}} onFriend={(id,action)=>gameClientRef.current?.sendSocialAction(action,id)}/>}
       {profileTarget && <PlayerProfileModal
         profile={viewedProfile?.requestedId === profileTarget ? viewedProfile.profile : null}
         loading={viewedProfile?.requestedId !== profileTarget}

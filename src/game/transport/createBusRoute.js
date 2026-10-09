@@ -1,3 +1,4 @@
+import { batchRigidMeshes } from '../rendering/batchRigidMeshes.js';
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
@@ -759,6 +760,10 @@ function createChibiBus(scene, shadows, config, materials) {
   if (shadows) {
     [lowerBody, frontBumper].forEach(m => shadows.addShadowCaster(m));
   }
+
+  // Seats, trim and chassis move together: hundreds of parts become a few
+  // material draws. Wheels and hazard lights retain independent animation.
+  batchRigidMeshes(root, { exclude: new Set(blinkers), shadows });
 
   // Pre-calculate segment lengths for route
   const waypoints = config.waypoints;

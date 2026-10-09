@@ -1,0 +1,124 @@
+/* One coordinate system for the scene, HUD, dialogs and nested game screens. */
+html #root {
+  position: fixed !important;
+  inset: 0 auto auto 0 !important;
+  width: var(--game-viewport-width, 100vw) !important;
+  height: var(--game-viewport-height, 100dvh) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+html #root > .game-shell {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  contain: layout;
+  isolation: isolate;
+  --viewport-gap: clamp(8px, 1.5vmin, 20px);
+  --ui-width: var(--game-viewport-width, 100vw);
+  --ui-height: var(--game-viewport-height, 100dvh);
+  --panel-width: calc(var(--ui-width) - var(--safe-left) - var(--safe-right) - 2 * var(--viewport-gap));
+  --panel-height: calc(var(--ui-height) - var(--safe-top) - var(--safe-bottom) - 2 * var(--viewport-gap));
+}
+html #root .game-shell > .game-canvas {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+.game-shell :is(.cq-root-wrapper,.pt-casino-in-game-hud,.pt-casino-lobby-hud,
+  .farm-lounge-overlay,.profile-backdrop,.ranking-overlay,.pt-phone-backdrop,
+  .pt-map-backdrop,.pt-inv-backdrop,.game-confirm-overlay,.fashion-modal-overlay,
+  .casino-overlay,.farm-map-backdrop,.pt-inv-overlay,.fashion-modal-backdrop,
+  .fortune-overlay,.farm-guide-overlay,.fishing-shop-overlay,.farm-settings-overlay,
+  .farm-supplies-overlay,.pt-onboarding-backdrop,.pt-start-screen-backdrop) {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+}
+.game-shell :is([role="dialog"],[role="alertdialog"],.game-panel,.pt-phone-device,
+  .pt-studio-card,.farm-lounge,.roadside-shop-card,.pt-guide-book-panel) {
+  max-width: var(--panel-width) !important;
+  max-height: var(--panel-height) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overscroll-behavior: contain;
+}
+.game-shell :is(input,textarea,select,button) { touch-action: manipulation; }
+.game-shell :is([role="dialog"],[role="alertdialog"]) :is(input,textarea,select) { max-width: 100%; }
+/* Lists scroll inside their own panel; the scene and document never scroll. */
+.game-shell :is(.farm-lounge-rooms,.pt-modal-body,.pt-studio-tab-content,
+  .pt-inv-items,.pt-phone-content,.shop-content-area) {
+  min-width: 0;
+  min-height: 0;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+.game-shell .farm-lounge { height: min(690px, var(--panel-height)) !important; }
+.game-shell .farm-lounge-body { min-height: 0; }
+.game-shell .farm-lounge-pending { flex-shrink: 0; }
+.game-shell .game-confirm { overflow-y: auto; touch-action: pan-y; }
+.game-shell :is(.profile-backdrop,.ranking-overlay,.pt-phone-backdrop,.pt-map-backdrop,
+  .pt-inv-backdrop,.game-confirm-overlay,.fashion-modal-overlay,.farm-lounge-overlay,
+  .farm-map-backdrop,.pt-inv-overlay,.fashion-modal-backdrop,.fortune-overlay,
+  .farm-guide-overlay,.fishing-shop-overlay,.farm-settings-overlay,.farm-supplies-overlay,
+  .pt-onboarding-backdrop,.onboarding-backdrop,.pt-dialogue-overlay,.game-auth-conflict-backdrop,
+  .bulletin-backdrop,.farm-notice-overlay,.farm-dealer-overlay,.farm-market-overlay,
+  .mission-journal-overlay) {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: max(var(--viewport-gap),var(--safe-top)) max(var(--viewport-gap),var(--safe-right)) max(var(--viewport-gap),var(--safe-bottom)) max(var(--viewport-gap),var(--safe-left)) !important;
+}
+@media (max-height: 540px) and (min-width: 600px) {
+  .game-shell .arrival-screen .pt-studio-card {height:var(--panel-height);padding:12px!important;gap:8px!important;overflow:hidden!important;display:flex;flex-direction:column;}
+  .game-shell .arrival-screen .pt-studio-header {flex:none;}
+  .game-shell .arrival-screen .pt-studio-header h2 {font-size:22px;margin:0;}
+  .game-shell .arrival-screen .pt-studio-header p,.game-shell .arrival-screen .pt-studio-badge {display:none;}
+  .game-shell .arrival-screen .pt-studio-body {flex:1;min-height:0!important;grid-template-columns:minmax(180px,.8fr) minmax(280px,1.2fr);gap:14px!important;overflow:hidden;}
+  .game-shell .arrival-screen .pt-studio-podium-wrap {min-height:0!important;padding:8px!important;}
+  .game-shell .arrival-screen .pt-studio-controls {min-height:0;gap:6px!important;overflow:hidden;}
+  .game-shell .arrival-screen .pt-studio-tab-content {min-height:0!important;flex:1;overflow-y:auto;touch-action:pan-y;}
+  .game-shell .arrival-screen .pt-studio-submit-btn {flex:none;min-height:40px;font-size:15px;margin:0!important;}
+  .game-shell .arrival-screen .pt-input-with-dice input {height:36px;font-size:14px;}
+  .game-shell .arrival-screen .pt-dice-btn {width:36px;height:36px;}
+  .game-shell .arrival-screen .pt-tab-btn {padding:5px;font-size:12px;}
+  .game-shell .arrival-screen .pt-option-card {min-height:70px;padding:4px;}
+}
+@media (max-height:540px) and (min-width:600px){
+.game-shell .arrival-screen .pt-studio-card{padding:12px!important}
+.game-shell .arrival-screen .pt-studio-header{height:32px;overflow:hidden;padding:0!important}
+.game-shell .arrival-screen .pt-studio-body{height:calc(100% - 40px)!important}
+.game-shell .arrival-screen .pt-studio-submit-btn{height:40px!important;min-height:40px!important;padding:4px!important}
+.game-shell .arrival-screen .pt-studio-podium-wrap canvas{max-height:190px!important}
+}
+/* Preserve the header and action row; only the customization list scrolls. */
+.game-shell .arrival-screen .pt-studio-card{overflow:hidden!important;display:flex;flex-direction:column}
+.game-shell .arrival-screen .pt-studio-header{flex:0 0 auto}
+.game-shell .arrival-screen .pt-studio-body{flex:1;min-height:0!important;overflow:hidden}
+.game-shell .arrival-screen .pt-studio-controls{min-height:0!important;overflow:hidden}
+.game-shell .arrival-screen .pt-studio-tab-content{min-height:0!important;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain}
+.game-shell .arrival-screen .pt-studio-submit-btn{flex-shrink:0}
+@media(max-width:599px){
+.game-shell .arrival-screen .pt-studio-card{height:var(--panel-height);padding:10px!important;gap:8px!important}
+.game-shell .arrival-screen .pt-studio-body{display:flex!important;flex-direction:column;gap:8px!important}
+.game-shell .arrival-screen .pt-studio-podium-wrap{min-height:0!important;height:145px;flex:none;padding:0!important}
+.game-shell .arrival-avatar-canvas{height:145px!important}
+.game-shell .arrival-screen .pt-studio-podium-wrap:before,.game-shell .arrival-rotate-hint,.game-shell .arrival-screen .pt-podium-name-tag{display:none}
+.game-shell .arrival-screen .pt-studio-controls{flex:1;gap:6px!important}
+.game-shell .arrival-screen .pt-studio-header h2{font-size:22px;margin:0}
+.game-shell .arrival-screen .pt-studio-header p,.game-shell .arrival-screen .pt-studio-badge{display:none}
+.game-shell .arrival-screen .pt-studio-submit-btn{min-height:44px!important;margin-top:6px!important}
+}

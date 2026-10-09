@@ -1,0 +1,14 @@
+{
+  "completed": true,
+  "seconds": 60,
+  "transitions": 11,
+  "failures": [],
+  "gapsOver1000": 0,
+  "maxGapMs": 100,
+  "longTasks": 1,
+  "fps": {
+    "min": 31,
+    "max": 61,
+    "mean": 50
+  }
+}

@@ -34,24 +34,28 @@ const measure = async (label, operation) => {
   },2500);
 };
 enter.onclick=() => measure('shop entry',async () => {
-  await world.ensureVenueBuilt(testVenue);
+  if (new URLSearchParams(location.search).has('interleaved')) {
+    await Promise.all([world.ensureVenueBuilt(testVenue),world.ensureVenueBuilt('supplies')]);
+  } else await world.ensureVenueBuilt(testVenue);
   const entrance=VENUE_LAYOUT[testVenue].entrance;
   world.player.root.position.set(entrance.x,0,entrance.z);
   world.completeVenueEntry(testVenue);
   result.position = world.getPlayerState();
+  result.foreignInteriorVisible = world.scene.meshes.filter(mesh=>mesh.metadata?.interiorVenue&&mesh.metadata.interiorVenue!==testVenue&&mesh.isEnabled()&&mesh.isVisible).length;
+  result.sharedInteriorMeshes = world.venueMeshesMap.get(testVenue)?.filter(mesh=>testVenue!=='supplies'&&world.venueMeshesMap.get('supplies')?.includes(mesh)).length;
   result.venueMeshes = world.venueMeshesMap.get(testVenue)?.length;
   result.visibleVenueMeshes = world.venueMeshesMap.get(testVenue)?.filter(mesh => mesh.isEnabled() && mesh.isVisible).length;
 });
 exit.onclick=() => measure('shop exit',() => world.exitVenue());
 if (testVenue === 'casino') {
   const testTables = document.createElement('button');
-  testTables.textContent = 'Kiểm tra tương tác 4 bàn';
+  testTables.textContent = 'Kiểm tra tương tác 3 bàn';
   report.before(testTables);
   testTables.onclick = () => {
     if (world.currentVenue !== 'casino') { status.textContent = 'Vào Hội quán trước'; return; }
     const { x, y, z } = VENUE_LAYOUT.casino.interior;
     const checks = [];
-    for (const [game, dx, dz] of [['tai-xiu', -6.5, -3.5], ['bau-cua', 6.5, -3.5], ['bai-cao', -6.5, 4.5], ['tien-len', 6.5, 4.5]]) {
+    for (const [game, dx, dz] of [['tai-xiu', -6.5, -3.5], ['bau-cua', 6.5, -3.5], ['bai-cao', -6.5, 4.5]]) {
       world.player.stop();
       world.player.root.position.set(x + dx, y, z + dz - 3.2);
       world.lastVenueTransition = 0;
@@ -61,7 +65,7 @@ if (testVenue === 'casino') {
       checks.push({ game, opened: openedTable, pass: openedTable === game });
     }
     report.textContent = JSON.stringify(checks, null, 2);
-    status.textContent = checks.every(check => check.pass) ? 'PASS: cả 4 bàn nhận tương tác mở trò chơi' : 'FAIL: có bàn không mở được';
+    status.textContent = checks.every(check => check.pass) ? 'PASS: cả 3 bàn nhận tương tác mở trò chơi' : 'FAIL: có bàn không mở được';
   };
 }
 window.addEventListener('pagehide',() => world.dispose());

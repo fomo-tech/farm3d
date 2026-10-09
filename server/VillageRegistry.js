@@ -14,7 +14,9 @@ const ICONS = ['sun', 'flower', 'river', 'wind', 'wheat', 'tree', 'blossom', 'mo
 const NAMES = ['Bình Minh', 'Hoa Mai', 'Ven Sông', 'Đồi Gió', 'An Nhiên', 'Mộc Lan', 'Thanh Hà', 'Phú Điền', 'Tân Lộc', 'Hải Vân', 'Thu Phong', 'Hướng Dương'];
 const SUFFIXES = ['Thượng', 'Hạ', 'Đông', 'Tây', 'Mới', 'Xanh', 'Bắc', 'Nam'];
 const DESCRIPTIONS = ['Đồng cỏ yên bình, phù hợp người mới.', 'Vùng quê nhiều hoa và hàng xóm nhộn nhịp.', 'Khu dân cư cạnh sông, gần tuyến xe buýt.', 'Cao nguyên thoáng đãng cạnh cối xay gió.', 'Miền đất màu mỡ dành cho những mùa vụ lớn.'];
-const mongo = new MongoClient(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017');
+const mongo = new MongoClient(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017', {
+  maxPoolSize: 10, minPoolSize: 2, waitQueueTimeoutMS: 5000, serverSelectionTimeoutMS: 5000, socketTimeoutMS: 15000,
+});
 let villages;
 let assignments;
 let players;
@@ -119,7 +121,19 @@ async function ensureSupply() {
   while (open < 3) { const value = villageAt(count); await villages.insertOne(value); count += 1; open += 1; }
 }
 
-export async function listVillages() {
+let villageListCache;
+let villageListExpires = 0;
+export function listVillages() {
+  if (!villageListCache || Date.now() >= villageListExpires) {
+    villageListExpires = Infinity;
+    villageListCache = readVillageList().then(items => {
+      villageListExpires = Date.now() + 1000;
+      return items;
+    }, error => { villageListCache = null; villageListExpires = 0; throw error; });
+  }
+  return villageListCache;
+}
+async function readVillageList() {
   await ensureSupply();
   const [items, occupancy] = await Promise.all([villages.find().sort({ order: 1 }).toArray(), assignments.aggregate([{ $group: { _id: '$villageId', count: { $sum: 1 } } }]).toArray()]);
   const counts = new Map(occupancy.map(item => [item._id, item.count]));

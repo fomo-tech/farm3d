@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import { presenceLimit, selectPresenceIndices } from '../server/PresenceSelection.js';
+const channel = Array.from({length:500}, (_,i)=>({playerId:`p${i}`,x:i/10,z:0,roomId:'town'}));
+const viewer=channel[499];
+let selected=selectPresenceIndices(channel,viewer,240,48);
+assert.equal(selected.length,48);assert.ok(selected.includes(499));assert.ok(selected.includes(498));assert.ok(!selected.includes(0));
+assert.equal(selectPresenceIndices(channel,viewer,240,null).length,500,'legacy full presence preserved');
+assert.equal(presenceLimit(10000),64);assert.equal(presenceLimit(-1),8);assert.equal(presenceLimit('48'),null);
+const rooms=[viewer,{playerId:'private',x:viewer.x,z:0,roomId:'casino'}];
+assert.deepEqual(selectPresenceIndices(rooms,viewer,240,48),[0]);
+assert.equal(selectPresenceIndices(channel,viewer,.05,48).length,1,'radius preserved');
+const retained = new Map([['p440',{}]]);
+assert.ok(selectPresenceIndices(channel,viewer,240,48,retained).includes(440),'hysteresis avoids avatar churn');
+console.log('PASS: bounded nearest presence, self, private rooms, radius, legacy and retention.');

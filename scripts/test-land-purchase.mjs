@@ -6,6 +6,7 @@ import { WebSocket } from 'ws';
 import { farmTilePosition, FARM_LOT_SPEC } from '../shared/farmLayout.js';
 import { CROPS } from '../shared/farmConfig.js';
 import { firstLandPurchasePrice, LAND_CONFIG } from '../shared/landConfig.js';
+import { TOWN_SPAWN } from '../shared/playerSpawn.js';
 
 // Only an isolated, generated test database is used; never touches live player data.
 const databaseName = `farm_land_test_${randomUUID().replaceAll('-', '')}`;
@@ -51,7 +52,7 @@ try {
   await mongo.connect(); await startServer();
   const db = mongo.db(databaseName);
   const a = await connect(); const b = await connect();
-  assert.equal(a.welcome.farmId, null); assert.equal(a.welcome.spawn.x, 0); assert.equal(a.welcome.spawn.z, 42);
+  assert.equal(a.welcome.farmId, null); assert.equal(a.welcome.spawn.x, TOWN_SPAWN.x); assert.equal(a.welcome.spawn.z, TOWN_SPAWN.z);
   assert.equal(a.account.progress.unlockedPlots, 0); assert.deepEqual(a.account.progress.ownedHomes, []);
   assert.equal(await db.collection('farm_assignments').countDocuments(), 0);
   a.socket.send(JSON.stringify({type:'land_market'}));

@@ -1,0 +1,24 @@
+import assert from 'node:assert/strict';
+import { NullEngine } from '@babylonjs/core/Engines/nullEngine.js';
+import { Scene } from '@babylonjs/core/scene.js';
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
+import { collectVenueMeshes } from '../src/game/rendering/collectVenueMeshes.js';
+const engine=new NullEngine(),scene=new Scene(engine);
+function* build(name){MeshBuilder.CreateBox(`${name}-outer`,{},scene);yield;MeshBuilder.CreateBox(`${name}-floor`,{},scene);}
+const originalAddMesh=scene.addMesh;
+const casino=collectVenueMeshes(scene,'casino',build('casino'));
+const shop=collectVenueMeshes(scene,'supplies',build('shop'));
+casino.next();shop.next();
+const outdoor=MeshBuilder.CreateBox('outdoor',{},scene);
+const casinoMeshes=casino.next().value,shopMeshes=shop.next().value;
+assert.deepEqual(casinoMeshes.map(m=>m.name),['casino-outer','casino-floor']);
+assert.deepEqual(shopMeshes.map(m=>m.name),['shop-outer','shop-floor']);
+casinoMeshes.forEach(m=>m.setEnabled(true));
+assert.ok(shopMeshes.every(m=>!m.isEnabled()),'another room cannot occlude the active room');
+assert.ok(outdoor.isEnabled());assert.equal(outdoor.metadata?.interiorVenue,undefined);
+const broken=collectVenueMeshes(scene,'broken',(function*(){MeshBuilder.CreateBox('broken',{},scene);throw new Error('test');})());
+assert.throws(()=>broken.next(),/test/);
+assert.equal(scene.getMeshByName('broken').isEnabled(),false,'failed construction stays hidden');
+assert.equal(scene.addMesh,originalAddMesh,'collector restores scene registration after errors');
+const after=MeshBuilder.CreateBox('after',{},scene);assert.equal(after.metadata?.interiorVenue,undefined);
+scene.dispose();engine.dispose();console.log('PASS: interleaved interiors stay isolated; inactive occlusion and failed builds remain hidden.');

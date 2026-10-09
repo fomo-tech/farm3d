@@ -7,7 +7,8 @@ export const FISH_FORMS = Object.freeze({
 });
 export const fishForm = fish => fish?.form || LEGACY[fish?.id] || 'oval';
 export function fishLengthClass(weight) { return weight<.3?'tiny':weight<1?'small':weight<3?'medium':weight<7?'large':'huge'; }
-export const FISH_SIZE_SCALE = Object.freeze({tiny:.5,small:.72,medium:1,large:1.38,huge:1.75});
+// Exaggerated silhouette sizes stay distinguishable from the game camera.
+export const FISH_SIZE_SCALE = Object.freeze({tiny:.65,small:1,medium:1.65,large:2.6,huge:3.9});
 export function publicFishAppearance(fishId, weight) {
  return {shadowSize:fishLengthClass(weight),shadowShape:fishForm(FISHING_CONFIG.fish[fishId])};
 }

@@ -1,0 +1,46 @@
+/* The game table owns the viewport. No outer document or stage scrolling. */
+.game-shell.in-game-table :is(.mission-hud-links,.venue-banner,.tutorial-card,.quest-hud,.game-toast){display:none!important}
+.cq-root-wrapper .pt-casino-in-game-hud{display:grid!important;grid-template-rows:64px minmax(0,1fr);padding:12px!important;gap:12px;overflow:hidden!important;contain:layout;--table-card-height:clamp(65px,16vh,145px)}
+.cq-root-wrapper .pt-ingame-top-hud{position:relative!important;inset:auto!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px!important;padding:0!important;min-height:0;width:100%;align-items:center}
+.cq-root-wrapper .pt-top-left-actions{min-width:0;gap:8px}
+.cq-root-wrapper .pt-top-right-wallet{justify-content:flex-end;gap:6px}
+.cq-root-wrapper .pt-table-info-pill{min-width:0;padding:8px 12px!important;gap:6px}
+.cq-root-wrapper .pill-table-name{display:none}
+.cq-root-wrapper .btn-leave-table{padding:10px 14px!important;min-height:44px!important;font-size:13px!important}
+.cq-root-wrapper .pt-top-center-status{position:static!important;transform:none!important}
+.cq-root-wrapper .pt-candy-action-circle-btn{width:40px!important;height:40px!important;min-width:40px}
+.cq-root-wrapper .pt-ingame-bottom-dock{position:relative!important;inset:auto!important;width:100%!important;height:100%!important;max-height:none!important;padding:0!important;display:flex!important;flex-direction:column;align-items:center!important;justify-content:center;overflow:hidden!important;min-height:0;gap:6px}
+.cq-root-wrapper .pt-hud-seats-ring{top:90px!important;left:12px!important;width:150px!important;max-height:160px;padding:6px!important}
+.cq-root-wrapper .pt-dedicated-game-stage{min-height:0;max-height:100%!important;overflow:hidden!important}
+
+/* Keep the 3D table visible; only a compact hand and action HUD remain. */
+.cq-root-wrapper .pt-stage-baicao{position:relative!important;width:100%!important;height:100%;max-height:100%!important;padding:0!important;margin:0!important;background:none!important;border:0!important;box-shadow:none!important;overflow:hidden!important;display:block!important}
+.cq-root-wrapper .pt-baicao-center-pot{display:none!important}
+.cq-root-wrapper .baicao-banker{position:absolute;top:0;left:50%;transform:translateX(-50%);background:none!important;border:0!important;box-shadow:none!important;padding:4px!important;width:auto!important;max-width:70%}
+.cq-root-wrapper .baicao-banker header{background:#fff8eddd;border-radius:20px;padding:5px 12px;font-size:11px}
+.cq-root-wrapper .baicao-banker p,.cq-root-wrapper .baicao-banker-cards{display:none!important}
+.cq-root-wrapper .pt-baicao-hand-stage{position:absolute!important;bottom:45px;left:50%;transform:translateX(-50%);margin:0!important;padding:0!important;width:auto!important;gap:6px!important;background:none!important}
+.cq-root-wrapper .pt-baicao-fanned-cards{gap:8px!important}
+.cq-root-wrapper .baicao-card-slot{animation:none!important;transform:none!important}
+.cq-root-wrapper .baicao-card-slot :is(.cq-card,.playing-card){width:58px!important;min-width:58px!important;height:82px!important;min-height:82px!important}
+.cq-root-wrapper .baicao-hand-label{display:none}
+.cq-root-wrapper .pt-baicao-score-badge{padding:4px 12px!important;font-size:11px!important}
+.cq-root-wrapper .pt-flip-cards-cta-btn{padding:6px 14px!important;font-size:12px!important;box-shadow:none}
+.cq-root-wrapper .pt-stage-baicao .pt-screen-action-dock{position:absolute!important;bottom:0;left:50%;transform:translateX(-50%);width:auto!important;min-width:180px;padding:5px 12px!important;background:#fff8eddd!important;border-radius:18px!important}
+.cq-root-wrapper .pt-stage-baicao .pt-ready-action-btn{display:none!important}
+.cq-root-wrapper .pt-baicao-waiting-cards{display:none!important}
+.cq-root-wrapper .pt-top-left-actions,.cq-root-wrapper .pt-top-right-wallet{position:static!important;transform:none!important;display:flex!important;align-items:center;min-width:0}
+.cq-root-wrapper .pt-top-right-wallet{justify-self:end}
+.cq-root-wrapper .pt-casino-in-game-hud{grid-template-columns:minmax(0,1fr)!important;width:100%!important;max-width:none!important;height:100%!important;max-height:none!important}
+@media(max-width:900px){
+.cq-root-wrapper .pt-casino-in-game-hud{padding:8px!important;grid-template-rows:48px minmax(0,1fr);gap:6px}
+.cq-root-wrapper .pt-ingame-top-hud{grid-template-columns:auto 1fr auto;gap:6px!important}
+.cq-root-wrapper .pt-table-info-pill,.cq-root-wrapper .pt-hud-seats-ring{display:none}
+.cq-root-wrapper .pt-candy-action-circle-btn{width:30px!important;height:30px!important;min-width:30px}
+.cq-root-wrapper .btn-leave-table{font-size:11px!important;padding:6px 10px!important}
+.cq-root-wrapper .pt-phase-countdown-capsule{padding:5px 8px!important;font-size:11px}
+}
+@media(max-height:450px){.cq-root-wrapper .baicao-card-slot :is(.cq-card,.playing-card){width:42px!important;min-width:42px!important;height:60px!important;min-height:60px!important}.cq-root-wrapper .pt-baicao-hand-stage{bottom:35px}.cq-root-wrapper .baicao-banker{max-width:80%}}
+
+/* Cards live on the 3D felt; the HUD only contains actions and the score. */
+.cq-root-wrapper .game-bai-cao .pt-baicao-fanned-cards{display:none!important}

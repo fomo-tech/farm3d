@@ -37,6 +37,7 @@ import { claimMission, freshDailyMissions, normalizeMissions } from '../shared/m
 
 const mongo = new MongoClient(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017', {
   serverSelectionTimeoutMS: 5000,
+  maxPoolSize: 50, minPoolSize: 2, waitQueueTimeoutMS: 15000, socketTimeoutMS: 15000,
 });
 const SESSION_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 let collections;
@@ -214,8 +215,39 @@ export async function revokeGameSession(playerId, token) {
   await collections.players.updateOne({ playerId, sessionTokenHash: hash }, { $unset: { sessionTokenHash: '', sessionIssuedAt: '' } });
 }
 
-export async function savePosition(playerId, position) {
-  await collections.players.updateOne({ playerId, deletedAt: { $exists: false } }, { $set: { position, updatedAt: Date.now() } });
+const pendingPositions = new Map();
+let positionFlushRunning = false;
+let positionFlushTimer;
+async function flushPositions() {
+  if (positionFlushRunning) return;
+  positionFlushRunning = true;
+  try {
+    while (pendingPositions.size) {
+      const batch = [...pendingPositions.entries()].slice(0, 100);
+      for (const [id] of batch) pendingPositions.delete(id);
+      try {
+        await collections.players.bulkWrite(batch.map(([playerId, item]) => ({ updateOne: {
+          filter: { playerId, deletedAt: { $exists: false } },
+          update: { $set: { position: item.position, updatedAt: Date.now() } },
+        } })), { ordered: false });
+        for (const [, item] of batch) for (const waiter of item.waiters) waiter.resolve();
+      } catch (error) {
+        for (const [, item] of batch) for (const waiter of item.waiters) waiter.reject(error);
+      }
+    }
+  } finally { positionFlushRunning = false; }
+}
+export function savePosition(playerId, position) {
+  return new Promise((resolve, reject) => {
+    const item = pendingPositions.get(playerId) || { waiters: [] };
+    item.position = position;
+    item.waiters.push({ resolve, reject });
+    pendingPositions.set(playerId, item);
+    if (!positionFlushRunning && !positionFlushTimer) positionFlushTimer = setTimeout(() => {
+      positionFlushTimer = null;
+      void flushPositions();
+    }, 25);
+  });
 }
 
 export async function loadPlayer(playerId) {
@@ -439,8 +471,8 @@ export async function performAction(playerId, action, payload = {}, context = {}
     if(!rod)return fail('Cần câu không hợp lệ.');
     let castInput;try{castInput=normalizeCastInput(payload);}catch(error){return fail(error.message);}
     const reach=Math.min(rod.castDistance,FISHING_CONFIG.zones[zone].castDistance)*(.7+.3*castInput.power);
-    const target = fishingCastTarget(context.x,context.z,zone,reach,castInput.aim);
-    if(!target)return fail('Không tìm thấy mặt nước trong tầm cần câu.');
+    const target = fishingCastTarget(context.x,context.z,zone,reach,castInput.aim,context.rotation);
+    if(!target)return fail('Hãy quay mặt về phía nước và thả câu trong tầm cần.');
     const bait = baitId ? FISHING_CONFIG.baits[baitId] : null;
     if (baitId) {
       if (!(p.fishing.bait[baitId] > 0)) return fail('Đã hết mồi câu.');
@@ -487,7 +519,7 @@ export async function performAction(playerId, action, payload = {}, context = {}
     try{const reward=claimFishingMission(p.fishing,payload.id);p.coins+=reward.coins;p.xp+=reward.xp;actionResult={fishingMission:payload.id};}
     catch(error){return fail(error.message);}
   }
-  else if (action === 'casino') return fail('Hãy tham gia bàn Tài Xỉu hoặc Bầu Cua online.');
+  else if (action === 'casino') return fail('Hãy tham gia bàn Xúc Xắc Vui hoặc Vườn Linh Vật online.');
   else if (['build_pen', 'buy_animal', 'retire_animal', 'feed_animals', 'collect_animals', 'sell_animal'].includes(action)) {
     if (!context.farmId || (await loadFarmAssignment(context.villageId, context.farmId))?.playerId !== playerId) return fail('Bạn cần sở hữu nông trại trước.');
     try { applyLivestockAction(player, action, payload); actionResult = {livestockAction: action}; } catch (error) { return fail(error.message); }
@@ -666,24 +698,45 @@ export async function updateFriend(playerId, friendId, add = true) {
   return loadSocialState(playerId);
 }
 
-export async function loadSocialState(playerId) {
+let joinLeaderboards;
+let joinLeaderboardsExpires = 0;
+async function readLeaderboards(active, projection) {
+  const result = {};
+  await Promise.all(['xp','level','home','wealth'].map(async kind => {
+    const field = kind === 'home' ? 'homeTier' : kind === 'wealth' ? 'coins' : kind;
+    const fallback = kind === 'xp' || kind === 'wealth' ? 0 : 1;
+    result[kind] = await collections.players.aggregate([
+      { $match: active }, { $project: projection },
+      { $set: { [`progress.${field}`]: { $ifNull: [`$progress.${field}`, fallback] } } },
+      { $sort: { [`progress.${field}`]: -1, playerId: 1 } }, { $limit: 20 },
+    ]).toArray();
+  }));
+  return result;
+}
+function sharedJoinLeaderboards(active, projection) {
+  if (!joinLeaderboards || Date.now() >= joinLeaderboardsExpires) {
+    joinLeaderboardsExpires = Infinity;
+    joinLeaderboards = readLeaderboards(active, projection).then(value => {
+      joinLeaderboardsExpires = Date.now() + 1000;
+      return value;
+    }, error => { joinLeaderboards = null; joinLeaderboardsExpires = 0; throw error; });
+  }
+  return joinLeaderboards;
+}
+export async function loadSocialState(playerId, { includeRanks = true } = {}) {
   const relations = await collections.friendships.find({ playerId }).toArray();
   const friendIds = relations.map(item => item.friendId);
   const active = { deletedAt: { $exists: false }, name: { $type: 'string' } };
   const projection = { _id: 0, playerId: 1, name: 1, 'progress.level': 1, 'progress.xp': 1, 'progress.homeTier': 1, 'progress.profileAvatar': 1, 'progress.coins': 1 };
   const [friends, me] = await Promise.all([
-    collections.players.find({ ...active, playerId: { $in: friendIds } }, { projection: { _id: 0, playerId: 1, name: 1, 'progress.level': 1, 'progress.outfit': 1 } }).toArray(),
-    collections.players.findOne({ ...active, playerId }, { projection }),
+    friendIds.length ? collections.players.find({ ...active, playerId: { $in: friendIds } }, { projection: { _id: 0, playerId: 1, name: 1, 'progress.level': 1, 'progress.outfit': 1 } }).toArray() : [],
+    includeRanks ? collections.players.findOne({ ...active, playerId }, { projection }) : null,
   ]);
-  const leaderboards = {}, myRanks = {};
+  const leaderboards = await (includeRanks ? readLeaderboards(active, projection) : sharedJoinLeaderboards(active, projection));
+  const myRanks = {};
   await Promise.all(['xp','level','home','wealth'].map(async kind => {
     const field = kind === 'home' ? 'homeTier' : kind === 'wealth' ? 'coins' : kind;
     const fallback = kind === 'xp' || kind === 'wealth' ? 0 : 1;
-    leaderboards[kind] = await collections.players.aggregate([
-      { $match: active }, { $project: projection },
-      { $set: { [`progress.${field}`]: { $ifNull: [`$progress.${field}`, fallback] } } },
-      { $sort: { [`progress.${field}`]: -1, playerId: 1 } }, { $limit: 20 },
-    ]).toArray();
     if (me) {
       const value = me.progress?.[field] ?? fallback;
       const stat = { $ifNull: [`$progress.${field}`, fallback] };

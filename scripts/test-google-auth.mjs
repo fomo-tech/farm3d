@@ -32,8 +32,8 @@ assert.notEqual(loadWorldSession().playerId, guest.playerId);
 assert.equal(loadWorldSession().googleLinked, undefined);
 
 const fake = `${Buffer.from(JSON.stringify({ alg: 'RS256', kid: 'fake' })).toString('base64url')}.${Buffer.from(JSON.stringify({ sub: '123456789', aud: 'other-app' })).toString('base64url')}.signature`;
-await assert.rejects(verifyGoogleCredential(fake, ''), /GOOGLE_CLIENT_ID/);
-await assert.rejects(verifyGoogleCredential('not-a-jwt', 'client-id'), /không hợp lệ/);
+await assert.rejects(verifyGoogleCredential(fake, ''), /chưa sẵn sàng/);
+await assert.rejects(verifyGoogleCredential('not-a-jwt', 'client-id'), /Chưa thể đăng nhập Google/);
 const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
 const jwk = { ...publicKey.export({ format: 'jwk' }), kid: 'test-key', use: 'sig' };
 globalThis.fetch = async () => ({ ok: true, json: async () => ({ keys: [jwk] }), headers: { get: () => 'max-age=300' } });
@@ -46,11 +46,11 @@ const makeCredential = claims => {
 const claims = { sub: '123456789012345678901', aud: 'game-client', iss: 'https://accounts.google.com',
   iat: Math.floor(Date.now() / 1000) - 10, exp: Math.floor(Date.now() / 1000) + 600 };
 assert.deepEqual(await verifyGoogleCredential(makeCredential(claims), 'game-client'), { sub: claims.sub });
-await assert.rejects(verifyGoogleCredential(makeCredential({ ...claims, aud: 'attacker-app' }), 'game-client'), /không dành cho game/);
-await assert.rejects(verifyGoogleCredential(makeCredential({ ...claims, exp: 1 }), 'game-client'), /hết hạn/);
+await assert.rejects(verifyGoogleCredential(makeCredential({ ...claims, aud: 'attacker-app' }), 'game-client'), /Chưa thể đăng nhập Google/);
+await assert.rejects(verifyGoogleCredential(makeCredential({ ...claims, exp: 1 }), 'game-client'), /Chưa thể đăng nhập Google/);
 const altered = makeCredential(claims).split('.');
 altered[1] = Buffer.from(JSON.stringify({ ...claims, sub: '999999999999' })).toString('base64url');
-await assert.rejects(verifyGoogleCredential(altered.join('.'), 'game-client'), /chữ ký/);
+await assert.rejects(verifyGoogleCredential(altered.join('.'), 'game-client'), /Chưa thể đăng nhập Google/);
 console.log('Google auth identity flow OK');
 
 const beforeLeave = loadWorldSession();

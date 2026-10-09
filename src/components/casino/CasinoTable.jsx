@@ -1,3 +1,4 @@
+import { TableHudIcon } from './TableHudIcon.jsx';
 import React, { useState, useMemo } from 'react';
 import { CASINO_CONFIG, CASINO_GAMES, CASINO_SYMBOLS, QUICK_CHAT } from '../../../shared/casino/casinoConfig.js';
 import { suggestTienLenPlay, smartSortTienLen } from '../../../shared/casino/tienLenRules.js';
@@ -9,10 +10,6 @@ import { TienLenScreen } from './screens/TienLenScreen.jsx';
 import { casinoAudio } from '../../game/casino/casinoAudio.js';
 import {
   Icon3dGoldCoin,
-  Icon3dNoticeBoard,
-  Icon3dHeartBubble,
-  Icon3dAudioOn,
-  Icon3dAudioOff,
 } from '../icons3d/GameIcons3D.jsx';
 
 const PHASES = {
@@ -140,7 +137,7 @@ export function CasinoTable({
   };
 
   return (
-    <div className={`pt-casino-in-game-hud ${isSpectator ? 'is-spectator' : 'is-seated'}`}>
+    <div className={`pt-casino-in-game-hud game-${game} ${isSpectator ? 'is-spectator' : 'is-seated'}`}>
       {/* 1. PLAY TOGETHER TOP IN-GAME HUD BAR */}
       <header className="pt-ingame-top-hud">
         <div className="pt-top-left-actions">
@@ -152,9 +149,10 @@ export function CasinoTable({
               onReturnLobby();
             }}
             title="Rời bàn về sảnh"
+            aria-label="Rời bàn về sảnh"
           >
-            <span className="btn-icon">⤺</span>
-            <span>RỜI BÀN</span>
+            <TableHudIcon name="exit"/>
+            <span className="table-exit-label">Rời bàn</span>
           </button>
 
           <div className="pt-table-info-pill">
@@ -189,9 +187,9 @@ export function CasinoTable({
               casinoAudio.playChip();
               setHistoryOpen(true);
             }}
-            title="Xem Lịch Sử & Soi Cầu"
+            title="Lịch sử ván" aria-label="Lịch sử ván"
           >
-            <Icon3dNoticeBoard size={20} />
+            <TableHudIcon name="history"/>
           </button>
 
           <button
@@ -201,9 +199,9 @@ export function CasinoTable({
               casinoAudio.playChip();
               setChatDrawerOpen(v => !v);
             }}
-            title="Chat Nhanh Biểu Cảm"
+            title="Biểu cảm" aria-label="Biểu cảm"
           >
-            <Icon3dHeartBubble size={20} />
+            <TableHudIcon name="emote"/>
           </button>
 
           <button
@@ -213,9 +211,9 @@ export function CasinoTable({
               casinoAudio.playChip();
               onToggleSound();
             }}
-            title={sound ? 'Tắt âm' : 'Bật âm'}
+            title={sound ? 'Tắt âm' : 'Bật âm'} aria-label={sound ? 'Tắt âm' : 'Bật âm'}
           >
-            {sound ? <Icon3dAudioOn size={20} /> : <Icon3dAudioOff size={20} />}
+            <TableHudIcon name="sound" muted={!sound}/>
           </button>
         </div>
       </header>
@@ -252,7 +250,7 @@ export function CasinoTable({
       {room?.chat?.length > 0 && <div className="pt-social-bubble" key={room.chat.at(-1).at} role="status"><b>{room.chat.at(-1).name}</b><span>{room.chat.at(-1).text}</span></div>}
       {/* 2. CHU VI GHẾ NGỒI XUNG QUANH BÀN 3D (PLAY TOGETHER SEAT RING) */}
       <section className="pt-hud-seats-ring" aria-label="Người chơi trong bàn">
-        <div className="pt-roster-title">BẠN CÙNG BÀN <span>{(room?.seatList || []).filter(Boolean).length}/{room?.seatList?.length || 0}</span></div>
+        <div className="pt-roster-title">CƯ DÂN <span>{(room?.seatList || []).filter(Boolean).length}/{room?.seatList?.length || 0}</span></div>
         <div className="pt-seat-picker-list">
         {(room?.seatList || []).filter(Boolean).map((seat, idx) => {
           const isMe = seat?.playerId === player;
@@ -289,7 +287,7 @@ export function CasinoTable({
         )}
         {mySeat && (!round || round.phase === 'waiting') && (
           <button type="button" className="pt-ready-action-btn" onClick={handleToggleReady} disabled={!connected || !inside}>
-            {mySeat.ready ? '✓ Đã sẵn sàng · Chờ người chơi' : 'Sẵn sàng chơi'}
+            <TableHudIcon name="ready"/>{mySeat.ready ? 'Đã sẵn sàng' : 'Sẵn sàng'}
           </button>
         )}
         {mySeat && (!round || round.phase === 'waiting') && (

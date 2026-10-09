@@ -1,0 +1,127 @@
+{
+  "fps": 30,
+  "mobile": true,
+  "boot": {
+    "playableMs": 2399,
+    "sceneryComplete": true,
+    "sceneryMs": 7887
+  },
+  "renderSize": [
+    922,
+    1056
+  ],
+  "meshTotal": 8208,
+  "active": 967,
+  "candidates": 5117,
+  "dynamic": 2096,
+  "indexed": 6112,
+  "drawCalls": 812,
+  "frameMs": 12.84,
+  "evaluateMs": 5.17,
+  "renderMs": 5.4,
+  "targetsMs": 0.16,
+  "quality": {
+    "effects": "balanced",
+    "scale": 1
+  },
+  "dynamicGroups": [
+    [
+      "foliage-lod-",
+      103
+    ],
+    [
+      "foliage-lod-#",
+      92
+    ],
+    [
+      "bus-#A-#",
+      90
+    ],
+    [
+      "bus-#B-#",
+      90
+    ],
+    [
+      "local-player-aodai",
+      68
+    ],
+    [
+      "foliage-chunk-#",
+      63
+    ],
+    [
+      "bus-#A-rigid",
+      45
+    ],
+    [
+      "bus-#B-rigid",
+      45
+    ],
+    [
+      "bus-#C-rigid",
+      45
+    ],
+    [
+      "bus-#D-rigid",
+      45
+    ],
+    [
+      "foliage-chunk-",
+      36
+    ],
+    [
+      "bus-#A-t#",
+      21
+    ]
+  ],
+  "activeGroups": [
+    [
+      "__root___inst_#",
+      66
+    ],
+    [
+      "foliage-chunk-#",
+      63
+    ],
+    [
+      "edgestone-farm-row",
+      56
+    ],
+    [
+      "flower_redA_primitive#_inst_#",
+      40
+    ],
+    [
+      "flower_yellowA_primitive#_inst_#",
+      40
+    ],
+    [
+      "village-named-gate",
+      38
+    ],
+    [
+      "road-border-batch",
+      36
+    ],
+    [
+      "foliage-chunk-",
+      36
+    ],
+    [
+      "flower_purpleA_primitive#_inst_#",
+      30
+    ],
+    [
+      "bus-#C-rigid",
+      30
+    ],
+    [
+      "cross-stone-batch",
+      21
+    ],
+    [
+      "road-bed-farm",
+      16
+    ]
+  ]
+}

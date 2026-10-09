@@ -2,7 +2,7 @@ import { cardRank, cardSuit, validCards } from './cards.js';
 
 export function baiCaoScore(cards) {
   if (!validCards(cards) || cards.length !== 3) {
-    throw new Error('Bài Cào cần ba lá khác nhau.');
+    throw new Error('Bộ Ba Kỳ Diệu cần ba lá khác nhau.');
   }
 
   const ranks = cards.map(cardRank);
@@ -41,7 +41,7 @@ export function baiCaoScore(cards) {
     rankName = '0 Điểm (Bù)';
   }
 
-  // Chuẩn Bài Cào truyền thống: Ba Tây (faces) = 10 điểm (cao nhất), còn lại là điểm (point 0-9)
+  // Chuẩn Bộ Ba Kỳ Diệu truyền thống: Ba Tây (faces) = 10 điểm (cao nhất), còn lại là điểm (point 0-9)
   const value = faces ? 10 : point;
 
   return {

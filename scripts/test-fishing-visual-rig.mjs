@@ -27,11 +27,17 @@ rig.update(.1);
 assert.ok(scene.getMeshByName('fishing-water-ripple-0').isEnabled(), 'Phao chờ có gợn nước');
 const ripple=scene.getMeshByName('fishing-water-ripple-0');const radius=ripple.scaling.x;rig.update(.2);assert.notEqual(ripple.scaling.x,radius,'Gợn nước lan rộng theo thời gian');
 assert.ok(scene.getMeshByName('fishing-float-tip').isEnabled(),'Đầu phao nổi rõ');
-assert.equal(scene.getMeshByName('fishing-fish-shadow').isEnabled(),false,'Chờ cá tìm mồi chưa hiện bóng cá');
+assert.equal(scene.getMeshByName('fishing-fish-shadow').isEnabled(),false,'Chưa tới lúc cá ăn thì chưa hiện bóng cá');
 rig.setPhase('waiting', 2800);
 rig.update(.1);
 const shadow = scene.getMeshByName('fishing-fish-shadow');
 assert.ok(shadow.isEnabled(), 'Bóng cá xuất hiện trước khi cắn');
+assert.ok(shadow.position.y>.12,'Bóng cá không bị mặt nước opaque che');
+const approachRotation=shadow.rotation.y;
+root.position.x=1;root.rotation.y=1.2;rig.update(0);
+assert.equal(shadow.rotation.y,approachRotation,'Bóng cá giữ hướng tới mồi khi nhân vật xoay');
+assert.ok(Math.abs(shadow.position.x)<3,'Bóng cá vẫn quanh phao, không theo nhân vật');
+root.position.x=0;root.rotation.y=0;
 const waitingDistance = Math.hypot(shadow.position.x, shadow.position.z - 6);
 rig.setPhase('bite', 0);
 rig.update(.1);
@@ -43,6 +49,7 @@ assert.ok(shadow.scaling.z > shadow.scaling.x * 2, 'Bóng cá dài, rõ như tha
 assert.ok(shadow.scaling.z > .7, 'Bóng cá lớn tương ứng hạng kích thước');
 const largeLength=shadow.scaling.z;
 rig.clear();
+assert.equal(shadow.isEnabled(),false,'Thu cần ẩn bóng cá');
 assert.ok(!ripple.isEnabled(),'Thu cần tắt gợn nước');
 assert.ok(!scene.getMeshByName('fishing-water-drop-0').isEnabled(),'Thu cần tắt tia nước');
 rig.startCast(6, 'basic_cast', { x: 0, y: .13, z: 6 }, 'small');
@@ -61,6 +68,15 @@ rig.setPhase('waiting',2000,{shadowShape:'eel',shadowSize:'huge'});rig.update(.1
 rig.setPhase('waiting',2000,{shadowShape:'flat',shadowSize:'huge'});rig.update(.1);assert.ok(eelRatio>shadow.scaling.z/shadow.scaling.x*4,'Bóng lươn dài, bóng cá đuối rộng');
 rig.setPhase('waiting',2000,{shadowShape:'oval',shadowSize:'tiny'});rig.update(.1);const tiny=shadow.scaling.z;
 rig.setPhase('waiting',2000,{shadowShape:'oval',shadowSize:'huge'});rig.update(.1);assert.ok(shadow.scaling.z>tiny*3,'Bóng cá lớn và nhỏ khác rõ');
+
+const sizeLengths=[];
+for(const size of ['tiny','small','medium','large','huge']){
+ rig.setPhase('waiting',2000,{shadowShape:'oval',shadowSize:size});rig.update(0);
+ sizeLengths.push(shadow.scaling.z);
+}
+assert.ok(sizeLengths.every((length,i)=>!i||length>=sizeLengths[i-1]*1.45),'Each size class is visibly at least 45% longer');
+assert.ok(sizeLengths.at(-1)>2,'Huge oval silhouette exceeds two world metres');
+assert.ok(sizeLengths.at(-1)>=sizeLengths[0]*5.9,'Huge fish is six times longer than tiny fish');
 
 for (const fish of Object.values(FISHING_CONFIG.fish)) {
   rig.finishCatch(true, fish);

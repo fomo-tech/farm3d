@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { Ray } from '@babylonjs/core/Culling/ray.js';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { NullEngine } from '@babylonjs/core/Engines/nullEngine.js';
 import { Scene } from '@babylonjs/core/scene.js';
 import { WORLD_VILLAGES } from '../shared/villageLayout.js';
@@ -37,6 +39,14 @@ assert.ok(isPointOnRoadCorridor(122, 43), 'City East connector to Highway 86 is 
 const engine = new NullEngine();
 const scene = new Scene(engine);
 
+// Test actual triangles after batching, rather than relying on mesh names/counts.
+const curbHit = (root, side, along) => {
+  root.computeWorldMatrix(true);
+  const origin = Vector3.TransformCoordinates(new Vector3(side * 2.64, 1, along), root.getWorldMatrix());
+  const ray = new Ray(origin, new Vector3(0,-1,0), 1.5);
+  return root.getChildMeshes().filter(mesh => mesh.material?.name === 'ghibli-road-curb')
+    .some(mesh => ray.intersectsMesh(mesh, false).hit);
+};
 for (const v of WORLD_VILLAGES) {
   if (v.id === 'binh-minh') continue;
 
@@ -64,11 +74,12 @@ for (const v of WORLD_VILLAGES) {
   const roadBed = scene.getMeshByName(`road-bed-test-ring-west-${v.id}`);
   assert.ok(roadBed, `Road bed exists for test-ring-west-${v.id}`);
 
-  // Check curb meshes: curb on side 1 (inner) should be divided by intersections, side -1 (outer) should be continuous
-  const innerCurbs = scene.meshes.filter(m => m.name.startsWith(`curb-test-ring-west-${v.id}-1-`));
-  const outerCurbs = scene.meshes.filter(m => m.name.startsWith(`curb-test-ring-west-${v.id}--1-`));
-  assert.ok(innerCurbs.length > 1, `Inner curb has openings for cross lanes (${innerCurbs.length} segments)`);
-  assert.equal(outerCurbs.length, 1, `Outer curb is continuous solid (${outerCurbs.length} segment)`);
+  const westRoot = step.value;
+  for (let row=0;row<6;row++) {
+    assert.equal(curbHit(westRoot, 1, -78 + row*28), false, 'inner west lane opening remains clear');
+    assert.equal(curbHit(westRoot, -1, -78 + row*28), true, 'outer west curb remains continuous');
+    assert.equal(curbHit(westRoot, 1, -64 + row*28), true, 'inner west curb remains between openings');
+  }
 
   // East ring
   const eastSteps = createCountryRoadSteps(scene, {
@@ -84,10 +95,11 @@ for (const v of WORLD_VILLAGES) {
   });
   do { step = eastSteps.next(); } while (!step.done);
 
-  const innerEastCurbs = scene.meshes.filter(m => m.name.startsWith(`curb-test-ring-east-${v.id}--1-`));
-  const outerEastCurbs = scene.meshes.filter(m => m.name.startsWith(`curb-test-ring-east-${v.id}-1-`));
-  assert.ok(innerEastCurbs.length > 1, `Inner east curb has openings (${innerEastCurbs.length} segments)`);
-  assert.equal(outerEastCurbs.length, 1, `Outer east curb is continuous solid (${outerEastCurbs.length} segment)`);
+  const eastRoot = step.value;
+  for (let row=0;row<6;row++) {
+    assert.equal(curbHit(eastRoot, -1, -78 + row*28), false, 'inner east lane opening remains clear');
+    assert.equal(curbHit(eastRoot, 1, -78 + row*28), true, 'outer east curb remains continuous');
+  }
 
   // Test lane 0 (row 0)
   const driveways = [-45, -15, 15, 45].map(dx => ({
@@ -113,8 +125,9 @@ for (const v of WORLD_VILLAGES) {
   });
   do { step = lane0Steps.next(); } while (!step.done);
 
-  const farmSideCurbs = scene.meshes.filter(m => m.name.startsWith(`curb-test-lane-${v.id}-0--1-`));
-  assert.ok(farmSideCurbs.length >= 4, `Farm-facing curb on lane-0 has driveway openings (${farmSideCurbs.length} segments)`);
+  const laneRoot = step.value;
+  for (const driveway of [-45,-15,15,45]) assert.equal(curbHit(laneRoot,-1,driveway),false,'driveway opening survives batching');
+  for (const between of [-30,30]) assert.equal(curbHit(laneRoot,-1,between),true,'curb between driveways survives batching');
 }
 
 console.log('PASS: All 11 village ring roads and lanes connect flush to highways, open to cross lanes and farm driveways, and seal exterior with zero dead ends!');

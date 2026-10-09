@@ -1,5 +1,5 @@
 import {networkWaterAt} from './waterNetwork.js';
-import { beachFishingAt } from './beachConfig.js';
+import { beachFishingAt, beachWaterAt } from './beachConfig.js';
 import { LAKE_CONFIG, lakeFishingAt, lakeWaterAt, lakeDeepWaterAt } from './lakeConfig.js';
 export {
   FISHING_CONFIG,
@@ -53,7 +53,31 @@ export function fishingWaterAt(x, z) {
 
 export const FISHING_WATER_NAMES = Object.freeze({ lake: 'Hồ Pha Lê', river: 'Ven sông', sea: 'Bờ biển', pond: 'Ao công viên' });
 
-export function fishingCastTarget(x,z,zone,distance,aimDirection=0) {
+export function fishingSurfaceAt(x,z,zone) {
+  const network=networkWaterAt(x,z);
+  if(network)return network===zone;
+  if(zone==='lake')return lakeDeepWaterAt(x,z,.5);
+  if(zone==='pond')return Math.hypot(x-84,z-68)<3.2;
+  if(zone==='sea')return beachWaterAt(x,z);
+  if(zone==='river')return RIVER.some(([ax,az,aw],i)=>{
+    if(i===RIVER.length-1)return false;
+    const [bx,bz,bw]=RIVER[i+1];
+    const t=Math.max(0,Math.min(1,((x-ax)*(bx-ax)+(z-az)*(bz-az))/((bx-ax)**2+(bz-az)**2)));
+    return Math.hypot(x-ax-(bx-ax)*t,z-az-(bz-az)*t)<(aw+(bw-aw)*t)/2-.5;
+  });
+  return false;
+}
+
+export function fishingCastTarget(x,z,zone,distance,aimDirection=0,heading) {
+  if(Number.isFinite(heading)){
+    // Shorten the cast along the facing ray; never turn it back toward water.
+    const angle=heading+aimDirection*.3;
+    for(let reach=distance;reach>=.75;reach-=.25){
+      const point={x:x+Math.sin(angle)*reach,y:.13,z:z+Math.cos(angle)*reach};
+      if(fishingSurfaceAt(point.x,point.z,zone))return point;
+    }
+    return null;
+  }
   if(networkWaterAt(x,z,6)){
     for(let radius=distance;radius>=2;radius-=1)for(let step=0;step<48;step++){
       const a=aimDirection*.3+step*Math.PI/24;

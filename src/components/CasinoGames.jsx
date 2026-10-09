@@ -3,8 +3,11 @@ import { CasinoLobby } from './casino/CasinoLobby.jsx';
 import { CasinoTable } from './casino/CasinoTable.jsx';
 import './casino.css';
 import './casino/lounge.css';
+import './casino/TableViewport.css';
+import './casino/GameTableHud.css';
 import { casinoAudio } from '../game/casino/casinoAudio.js';
 import { nextQuickPlayAction } from './casino/quickPlay.js';
+import {CASINO_CONFIG,CASINO_GAMES} from '../../shared/casino/casinoConfig.js';
 
 export function CasinoGames({
   state,
@@ -24,6 +27,7 @@ export function CasinoGames({
   const audio = useRef(null);
   const focus = useRef(null);
   const quickPlay = useRef(null);
+  const hiddenRoomLeft=useRef(null);
   const [quickPlaying, setQuickPlaying] = useState(false);
   const [visibleMessage, setVisibleMessage] = useState(message);
   useEffect(() => {
@@ -32,9 +36,17 @@ export function CasinoGames({
     return () => window.clearTimeout(timeout);
   }, [message]);
 
-  const room = state?.mine;
+  const room = state?.mine?.game==='tien-len'?null:state?.mine;
   const round = room?.round;
   const enabled = connected && inside;
+  useEffect(()=>{
+    const hidden=state?.mine?.game==='tien-len'?state.mine:null;
+    if(!hidden){hiddenRoomLeft.current=null;return;}
+    if(enabled&&hiddenRoomLeft.current!==hidden.id){
+      hiddenRoomLeft.current=hidden.id;
+      onAction({kind:'leave',roomId:hidden.id});
+    }
+  },[state?.mine?.id,state?.mine?.game,enabled,onAction]);
 
   const seconds = Math.max(
     0,
@@ -56,12 +68,17 @@ export function CasinoGames({
   };
 
   const handleQuickPlay = targetGame => {
-    if (!enabled || quickPlay.current) return;
+    if (!enabled || quickPlay.current || state?.pendingRoom) return;
     const selectedGame = targetGame || 'tai-xiu';
+    if(selectedGame==='tien-len'||!CASINO_GAMES[selectedGame])return;
+    if(coins<CASINO_CONFIG.chips[0]){
+      setVisibleMessage(`Bạn cần ít nhất ${CASINO_CONFIG.chips[0]} xu để vào bàn nhanh.`);
+      return;
+    }
     quickPlay.current = { game: selectedGame, sent: null };
     setQuickPlaying(true);
     const availableRooms = (state?.rooms || []).filter(
-      r => r.game === selectedGame && !r.private && r.phase === 'waiting' && (r.occupied || 0) < (r.seats || 4)
+      r => r.game === selectedGame && !r.private && r.stake<=coins && r.phase === 'waiting' && (r.occupied || 0) < (r.seats || 4)
     );
     if (availableRooms.length > 0) {
       act({ kind: 'join', roomId: availableRooms[0].id });
@@ -70,8 +87,8 @@ export function CasinoGames({
       act({
         kind: 'create',
         game: selectedGame,
-        name: `Bàn ${selectedGame} #1`,
-        stake: 10,
+        name: `Bàn ${CASINO_GAMES[selectedGame].name}`,
+        stake: CASINO_CONFIG.chips[0],
         password: '',
       });
     }
@@ -97,6 +114,15 @@ export function CasinoGames({
   useEffect(() => {
     if (message || !enabled) { quickPlay.current = null; setQuickPlaying(false); }
   }, [message, enabled]);
+
+  useEffect(()=>{
+    if(!quickPlaying)return;
+    const timer=window.setTimeout(()=>{
+      quickPlay.current=null;setQuickPlaying(false);
+      setVisibleMessage('Vào bàn mất nhiều thời gian. Kiểm tra kết nối rồi thử lại hoặc chọn bàn trực tiếp.');
+    },12_000);
+    return()=>window.clearTimeout(timer);
+  },[quickPlaying]);
 
   useEffect(() => { casinoAudio.enabled = sound; return () => { casinoAudio.enabled = false; }; }, [sound]);
 
@@ -159,6 +185,8 @@ export function CasinoGames({
       ) : (
         <CasinoLobby
           message={visibleMessage}
+          pendingRoom={state?.pendingRoom}
+          onResume={roomId=>act({kind:'join',roomId})}
           quickPlaying={quickPlaying}
           coins={coins}
           rooms={state?.rooms || []}

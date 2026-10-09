@@ -42,7 +42,7 @@ const styles = {
     wall: '#eee8f1', accent: '#baa9cf', roof: '#9c8bb3', glass: '#d8d0e3',
     keeper: 'CHÚ LỘC · QUẢN QUÁN DÂN GIAN',
     title: 'HỘI QUÁN DÂN GIAN',
-    subtitle: 'CỜ TƯỚNG · TRÀ QUÁN · BẦU CUA',
+    subtitle: 'CỜ TƯỚNG · TRÀ QUÁN · VƯỜN LINH VẬT',
     icon: '🎲',
     carpet: '#581c87',
     bladeIcon: 'dice',

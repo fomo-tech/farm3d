@@ -1,3 +1,4 @@
+import { applyWorldDelta } from '../shared/worldDelta.js';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
@@ -26,9 +27,14 @@ function connectPlayer(index) {
   const socket = new WebSocket(`ws://127.0.0.1:${port}`);
   sockets.push(socket);
   const messages = [];
+  const worldPlayers = new Map();
   const waiters = [];
   socket.on('message', raw => {
     const message = JSON.parse(String(raw));
+    if (message.type === 'world_delta') {
+      message.players = applyWorldDelta(worldPlayers, message);
+      message.type = 'world_state';
+    }
     messages.push(message);
     for (const waiter of [...waiters]) {
       if (!waiter.match(message)) continue;
@@ -52,7 +58,7 @@ function connectPlayer(index) {
     socket.once('error', reject);
     socket.once('open', async () => {
       try {
-        socket.send(JSON.stringify({ type: 'join', playerId, name: `Tester ${index}` }));
+        socket.send(JSON.stringify({ type: 'join', worldDelta: index === 0 ? 1 : undefined, playerId, name: `Tester ${index}` }));
         const welcome = await waitFor(message => message.type === 'welcome');
         assert.equal(welcome.playerId, playerId);
         resolve({ playerId, socket, waitFor, messages });
@@ -118,6 +124,16 @@ try {
     message.type === 'world_state' && message.players.length === 8 &&
     message.players.some(other => other.playerId === players[7].playerId && Math.abs(other.x-TOWN_SPAWN.x-.7)<.0001));
   assert.equal(synchronized.players.length, 8);
+  const persistDeadline = Date.now() + 5000;
+  let savedPositions = [];
+  do {
+    savedPositions = await mongo.db(databaseName).collection('players').find({playerId:{$in:players.map(p=>p.playerId)}}).toArray();
+    if (savedPositions.every(doc => Math.abs(doc.position?.x - (TOWN_SPAWN.x + players.findIndex(p=>p.playerId===doc.playerId)*.1)) < .0001)) break;
+    await new Promise(resolve=>setTimeout(resolve,50));
+  } while (Date.now() < persistDeadline);
+  assert.equal(savedPositions.length,8);
+  assert.ok(savedPositions.every(doc => Math.abs(doc.position?.x - (TOWN_SPAWN.x + players.findIndex(p=>p.playerId===doc.playerId)*.1)) < .0001), 'batched movement writes persist every player');
+
 
   players[7].socket.close();
   await players[0].waitFor(message => message.type === 'world_state' && message.players.length === 7);
@@ -133,7 +149,7 @@ try {
   const loggedOut = await mongo.db(databaseName).collection('players').findOne({ playerId: players[5].playerId });
   assert.equal(loggedOut.sessionTokenHash, undefined, 'private token store still supports session revocation');
 
-  console.log(`PASS: 8 clients connected together; 8-player presence without session credential disclosure; parallel movement ACK ${moveAckMs}ms; movement sync; disconnect leaves 7 clients.`);
+  console.log(`PASS: 8 clients connected together (mixed full/delta protocol); 8-player presence without session credential disclosure; parallel movement ACK ${moveAckMs}ms; movement sync; disconnect leaves 7 clients.`);
 } finally {
   sockets.forEach(socket => socket.terminate());
   if (server && server.exitCode === null) {

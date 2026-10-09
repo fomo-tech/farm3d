@@ -7,3 +7,5 @@ server/data/*.sqlite*
 .env
 
 releases/
+
+artifacts/load-tests/

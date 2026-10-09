@@ -1,0 +1,56 @@
+/* Small game controls float over the real table; no opaque page panels. */
+.cq-root-wrapper .pt-casino-in-game-hud{--hud-ink:#eaf8ff;--hud-glass:#102d43dc;--hud-line:#9fe2ef50;grid-template-rows:48px minmax(0,1fr)!important;padding:14px 18px!important;gap:8px;font-family:'Nunito',sans-serif}
+.cq-root-wrapper .pt-casino-in-game-hud :is(.pt-table-info-pill,.pt-phase-countdown-capsule,.pt-candy-wallet-pill,.pt-candy-action-circle-btn,.btn-leave-table){background:var(--hud-glass)!important;color:var(--hud-ink)!important;border:1px solid var(--hud-line)!important;box-shadow:0 3px 12px #09243935!important;border-radius:14px!important;text-shadow:none!important;min-height:38px!important}
+.cq-root-wrapper .pt-casino-in-game-hud :is(.pill-table-name,.phase-text,.pill-stake,.pt-player-nametag strong,.pt-player-nametag small){color:var(--hud-ink)!important;text-shadow:none!important}
+.cq-root-wrapper .pt-casino-in-game-hud .btn-leave-table{width:42px;height:42px;padding:0!important;display:grid;place-items:center}
+.cq-root-wrapper .pt-casino-in-game-hud .table-exit-label{display:none}
+.cq-root-wrapper .pt-casino-in-game-hud .btn-leave-table .btn-icon{font-size:25px;line-height:1}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-table-info-pill{padding:6px 10px!important;gap:8px}
+.cq-root-wrapper .pt-casino-in-game-hud .pill-badge-game{background:none!important;color:#fff!important;font-size:11px;padding:0!important;letter-spacing:.3px}
+.cq-root-wrapper .pt-casino-in-game-hud .pill-stake{font-size:10px;opacity:.7}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-phase-countdown-capsule{padding:6px 10px!important;gap:8px;min-height:36px!important}
+.cq-root-wrapper .pt-casino-in-game-hud .phase-text{font-size:11px!important;font-weight:800}
+.cq-root-wrapper .pt-casino-in-game-hud .timer-badge{background:#40c5bb!important;color:#082b38!important;border:0!important;box-shadow:none!important;border-radius:9px!important;font-size:12px!important;min-width:30px;padding:4px!important}
+.cq-root-wrapper .pt-casino-in-game-hud .is-urgent .timer-badge{background:#ffb06b!important}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-candy-wallet-pill{padding:6px 10px!important;gap:5px;font-size:13px!important}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-candy-action-circle-btn{width:36px!important;height:36px!important;min-width:36px;border-radius:12px!important}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-top-right-wallet{gap:5px}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-hud-seats-ring{top:78px!important;background:none!important;border:0!important;box-shadow:none!important;width:116px!important;padding:0!important;max-height:210px}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-roster-title{font-size:9px!important;color:#eaf8ff!important;text-shadow:0 1px 3px #123947;letter-spacing:.5px;margin:0 0 7px}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-seat-pod{background:none!important;border:0!important;padding:0!important;box-shadow:none!important}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-player-bubble{display:flex;flex-direction:row!important;gap:6px;background:#102d43b8!important;border:1px solid #9fe2ef30!important;border-radius:12px!important;padding:5px!important;box-shadow:none!important}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-player-avatar{width:29px!important;height:29px!important;box-shadow:none!important;border:1px solid #bde9f9!important;font-size:12px!important}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-player-nametag{border:0!important;background:none!important;padding:0!important;border-radius:0!important;box-shadow:none!important;text-align:left}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-player-nametag strong{font-size:10px!important}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-player-nametag small{font-size:8px!important;opacity:.7}
+.cq-root-wrapper .pt-casino-in-game-hud .baicao-banker header{background:#102d43b8!important;color:#eaf8ff!important;border:1px solid #9fe2ef30;border-radius:10px;padding:5px 10px!important;font-size:10px!important}
+.cq-root-wrapper .pt-casino-in-game-hud .baicao-banker header span{color:#9fe2ef!important}
+.cq-root-wrapper .pt-casino-in-game-hud :is(.pt-screen-action-dock,.pt-stage-baicao .pt-screen-action-dock){background:#102d43c4!important;border:1px solid #9fe2ef30!important;box-shadow:none!important;border-radius:12px!important;color:#eaf8ff!important;padding:5px 12px!important}
+.cq-root-wrapper .pt-casino-in-game-hud .table-stake-info-pill{background:none!important;border:0!important;box-shadow:none!important;color:#eaf8ff!important;font-size:11px}
+.cq-root-wrapper .pt-casino-in-game-hud .table-stake-info-pill span{font-size:9px;opacity:.7}
+.cq-root-wrapper .pt-casino-in-game-hud :is(.pt-ready-action-btn,.pt-flip-cards-cta-btn){background:linear-gradient(#55e5be,#20aa91)!important;color:#092e36!important;border:1px solid #a2ffe2!important;border-radius:12px!important;min-height:38px!important;padding:7px 18px!important;font-size:12px!important;box-shadow:0 3px 0 #116b67!important;text-shadow:none!important;font-weight:900}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-waiting-requirement{background:none!important;color:#eaf8ff!important;text-shadow:0 1px 4px #123947;font-size:10px!important;padding:2px!important}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-baicao-score-badge{background:#102d43ed!important;border:1px solid #65e7bd!important;color:#eaf8ff!important;border-radius:12px!important;box-shadow:none!important;padding:6px 10px!important}
+@media(max-width:900px){.cq-root-wrapper .pt-casino-in-game-hud{padding:8px!important;grid-template-rows:40px minmax(0,1fr)!important}.cq-root-wrapper .pt-casino-in-game-hud .pt-table-info-pill{display:none}.cq-root-wrapper .pt-casino-in-game-hud .pt-candy-action-circle-btn{width:30px!important;height:30px!important;min-width:30px}.cq-root-wrapper .pt-casino-in-game-hud .pt-candy-wallet-pill{font-size:11px!important}.cq-root-wrapper .pt-casino-in-game-hud .btn-leave-table{width:36px;height:36px}}
+.table-hud-icon{position:relative;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;pointer-events:none}
+.table-hud-icon img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 2px 2px #071d3440);display:block}
+.table-hud-icon.is-muted img{opacity:.65}
+.table-hud-mute-mark{position:absolute;left:3px;right:3px;top:15px;height:3px;background:#ff796e;border-radius:3px;transform:rotate(-42deg);box-shadow:0 0 0 1px #133047}
+.cq-root-wrapper .pt-casino-in-game-hud .pt-candy-action-circle-btn{width:44px!important;height:44px!important;min-width:44px;padding:3px!important}
+.cq-root-wrapper .pt-casino-in-game-hud .btn-leave-table{width:46px;height:46px;padding:3px!important}
+.cq-root-wrapper .pt-casino-in-game-hud :is(.pt-ready-action-btn,.pt-flip-cards-cta-btn){display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:4px 14px!important}
+.cq-root-wrapper :is(.pt-ready-action-btn,.pt-flip-cards-cta-btn) .table-hud-icon{width:28px;height:28px}
+@media(max-width:900px){.cq-root-wrapper .pt-casino-in-game-hud .pt-candy-action-circle-btn{width:36px!important;height:36px!important;min-width:36px}.table-hud-icon{width:28px;height:28px}.table-hud-mute-mark{top:13px}}
+.cq-root-wrapper .game-bau-cua .pt-baucua-tiles-grid{display:none!important}
+.cq-root-wrapper .game-bau-cua .pt-stage-baucua{position:absolute!important;bottom:0;left:50%;transform:translateX(-50%);width:auto!important;max-width:calc(100% - 20px)!important;background:none;overflow:visible!important;flex:none}
+.cq-root-wrapper .game-bau-cua .pt-screen-action-dock{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+.cq-root-wrapper .game-bau-cua .dock-label{font-size:10px!important;color:#c2edf0!important}
+.cq-root-wrapper .game-bau-cua .pt-total-bet-pill{background:none!important;border:0!important;color:#eaf8ff!important;font-size:11px}
+
+.cq-root-wrapper .game-bau-cua .pt-stage-baucua{pointer-events:none!important}
+.cq-root-wrapper .game-bau-cua .pt-screen-action-dock{pointer-events:auto!important}
+@media(max-width:600px){.cq-root-wrapper .game-bau-cua .pt-chip-selector-group{flex-wrap:wrap;justify-content:center}.cq-root-wrapper .game-bau-cua .dock-label{width:100%;text-align:center}}
+
+/* Let taps reach Babylon across the table; only visible controls capture input. */
+.cq-root-wrapper .game-bau-cua .pt-ingame-bottom-dock{pointer-events:none!important}
+.cq-root-wrapper .game-bau-cua :is(.pt-ready-action-btn,.pt-screen-action-dock button){pointer-events:auto!important}

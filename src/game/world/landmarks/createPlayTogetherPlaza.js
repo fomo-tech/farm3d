@@ -1,4 +1,4 @@
-import { Color3, Color4 } from '@babylonjs/core/Maths/math.color.js';
+import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import '@babylonjs/core/Meshes/Builders/capsuleBuilder.js';
@@ -6,7 +6,7 @@ import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
-import { ParticleSystem } from '@babylonjs/core/Particles/particleSystem.js';
+import { createToyFountain } from './createToyFountain.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData.js';
 import { VENUE_LAYOUT } from '../../../../shared/venueLayout.js';
@@ -711,112 +711,10 @@ export function* createPlayTogetherPlazaSteps(scene, shadows, foliage) {
   curbRimOuter.parent = plazaRoot;
 
   // ========================================================
-  // 2. CÔNG TRÌNH BIỂU TƯỢNG TRUNG TÂM: ĐÀI PHUN NƯỚC KAIA 3 TẦNG
+  // 2. ĐÀI PHUN NƯỚC ĐỒ CHƠI HAI TẦNG VỚI LINH VẬT VỊT VÀNG
   // ========================================================
   yield 'boot: plaza fountain';
-  const fountainRoot = new TransformNode('pt-grand-central-fountain', scene);
-  fountainRoot.position.set(0, 0, 0);
-  fountainRoot.parent = plazaRoot;
-
-  const matsFountain = {
-    marbleWhite: makeMat(scene, 'fountain-marble-white', '#dddcd0', null, 0.12, 60),
-    marbleGold: makeMat(scene, 'fountain-marble-gold', '#bba77e', null, 0.12, 64),
-    crystalWater: makeMat(scene, 'fountain-crystal-water', '#75b6c4', null, 0.20, 64),
-    dolphinGlass: makeMat(scene, 'fountain-dolphin-glass', '#8ec1c9', null, 0.20, 64),
-  };
-  matsFountain.crystalWater.alpha = 0.82;
-  matsFountain.dolphinGlass.alpha = 0.88;
-
-  // Tầng 1: Hồ chính đường kính 18m
-  const pool1 = MeshBuilder.CreateCylinder('fountain-pool-1', { diameter: 18.0, height: 0.9, tessellation: 48 }, scene);
-  pool1.position.y = 0.45;
-  pool1.material = matsFountain.marbleWhite;
-  pool1.parent = fountainRoot;
-  shadows?.addShadowCaster(pool1);
-
-  const poolRim1 = MeshBuilder.CreateTorus('fountain-rim-1', { diameter: 18.0, thickness: 0.7, tessellation: 48 }, scene);
-  poolRim1.position.y = 0.9;
-  poolRim1.material = matsFountain.marbleWhite;
-  poolRim1.parent = fountainRoot;
-
-  const water1 = MeshBuilder.CreateCylinder('fountain-water-1', { diameter: 16.8, height: 0.1, tessellation: 48 }, scene);
-  water1.position.y = 0.8;
-  water1.material = matsFountain.crystalWater;
-  water1.parent = fountainRoot;
-
-  // Tầng 2: Bồn giữa đường kính 10.5m
-  const col1 = MeshBuilder.CreateCylinder('fountain-col-1', { diameter: 3.4, height: 1.8, tessellation: 24 }, scene);
-  col1.position.y = 1.7;
-  col1.material = matsFountain.marbleGold;
-  col1.parent = fountainRoot;
-
-  const pool2 = MeshBuilder.CreateCylinder('fountain-pool-2', { diameter: 10.5, height: 0.75, tessellation: 36 }, scene);
-  pool2.position.y = 2.45;
-  pool2.material = matsFountain.marbleWhite;
-  pool2.parent = fountainRoot;
-  shadows?.addShadowCaster(pool2);
-
-  const water2 = MeshBuilder.CreateCylinder('fountain-water-2', { diameter: 9.6, height: 0.1, tessellation: 36 }, scene);
-  water2.position.y = 2.8;
-  water2.material = matsFountain.crystalWater;
-  water2.parent = fountainRoot;
-
-  // Tầng 3: Bồn đỉnh đường kính 5.2m
-  const col2 = MeshBuilder.CreateCylinder('fountain-col-2', { diameter: 2.2, height: 1.6, tessellation: 20 }, scene);
-  col2.position.y = 3.5;
-  col2.material = matsFountain.marbleGold;
-  col2.parent = fountainRoot;
-
-  const pool3 = MeshBuilder.CreateCylinder('fountain-pool-3', { diameter: 5.2, height: 0.65, tessellation: 24 }, scene);
-  pool3.position.y = 4.2;
-  pool3.material = matsFountain.marbleWhite;
-  pool3.parent = fountainRoot;
-
-  // Tượng Cá Heo Đôi Pha Lê Xanh phun nước vươn mình lên đỉnh tháp
-  const dolphinGroup = new TransformNode('fountain-dolphins', scene);
-  dolphinGroup.position.set(0, 5.0, 0);
-  dolphinGroup.parent = fountainRoot;
-
-  [-0.45, 0.45].forEach((dx, didx) => {
-    const dolphin = MeshBuilder.CreateSphere(`dolphin-${didx}`, { diameterX: 0.9, diameterY: 1.8, diameterZ: 0.9, segments: 12 }, scene);
-    dolphin.position.set(dx, 0.8, 0);
-    dolphin.rotation.z = didx === 0 ? 0.35 : -0.35;
-    dolphin.material = matsFountain.dolphinGlass;
-    dolphin.parent = dolphinGroup;
-  });
-
-  // Hạt nước phun trào lấp lánh (Particle Water Cascade)
-  const sprayEmitter = new TransformNode('fountain-spray-emitter', scene);
-  sprayEmitter.position.set(0, 6.8, 0);
-  sprayEmitter.parent = fountainRoot;
-
-  const spray = new ParticleSystem('fountain-particles', 80, scene);
-  const sprayTexture = new DynamicTexture('fountain-droplet-texture', 64, scene, false);
-  sprayTexture.hasAlpha = true;
-  const sprayContext = sprayTexture.getContext();
-  const droplet = sprayContext.createRadialGradient(32, 32, 2, 32, 32, 30);
-  droplet.addColorStop(0, 'rgba(255,255,255,0.95)');
-  droplet.addColorStop(0.45, 'rgba(175,235,250,0.75)');
-  droplet.addColorStop(1, 'rgba(175,235,250,0)');
-  sprayContext.fillStyle = droplet;
-  sprayContext.fillRect(0, 0, 64, 64);
-  sprayTexture.update();
-  spray.particleTexture = sprayTexture;
-  spray.emitter = sprayEmitter;
-  spray.minEmitBox = new Vector3(-0.3, 0, -0.3);
-  spray.maxEmitBox = new Vector3(0.3, 0.1, 0.3);
-  spray.color1 = new Color4(0.8, 0.95, 1.0, 0.85);
-  spray.color2 = new Color4(0.3, 0.85, 1.0, 0.5);
-  spray.colorDead = new Color4(0.1, 0.5, 0.9, 0.0);
-  spray.minSize = 0.06;
-  spray.maxSize = 0.18;
-  spray.minLifeTime = 1.0;
-  spray.maxLifeTime = 2.2;
-  spray.emitRate = 18;
-  spray.gravity = new Vector3(0, -9.81, 0);
-  spray.direction1 = new Vector3(-2.2, 5.5, -2.2);
-  spray.direction2 = new Vector3(2.2, 6.2, 2.2);
-  spray.start();
+  const fountainRoot = createToyFountain(scene, plazaRoot, shadows);
   yield 'boot: plaza gardens';
 
   // ========================================================

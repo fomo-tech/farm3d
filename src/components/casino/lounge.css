@@ -337,3 +337,10 @@
   .cq-root-wrapper .pt-ingame-bottom-dock { align-items: center; padding-inline: 8px; }
   .cq-root-wrapper .pt-hud-seats-ring { top: 108px; width: 145px; }
 }
+.cq-root-wrapper .baicao-banker{background:#fff9edee;border:2px solid #e1d8bd;border-radius:18px;padding:12px 16px;text-align:center;color:#40595c}
+.cq-root-wrapper .baicao-banker header{display:flex;justify-content:center;gap:12px;align-items:center;flex-wrap:wrap;font-size:12px}
+.cq-root-wrapper .baicao-banker header span{font-size:10px;color:#76806c}
+.cq-root-wrapper .baicao-banker-cards{display:flex;justify-content:center;gap:7px;margin:12px auto}
+.cq-root-wrapper .baicao-banker .cq-card{width:45px;min-width:45px;height:64px;min-height:64px;font-size:13px}
+.cq-root-wrapper .baicao-banker p{font-size:10px;line-height:1.5;margin:6px 0;color:#728271}
+.cq-root-wrapper .pt-baicao-score-badge{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px}

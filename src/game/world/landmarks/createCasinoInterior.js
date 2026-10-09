@@ -99,7 +99,7 @@ function createGameSurface(scene, parent, game, width, depth, color) {
     : game === 'tai-xiu' ? ['TÀI', 'CHẴN', 'XỈU', '11–17', 'BÃO', '4–10']
       : ['♠', '♥', '♦', '♣'];
   const columns = labels.length === 6 ? 3 : 4;
-  labels.forEach((label, index) => {
+  (game === 'bau-cua' ? [] : labels).forEach((label, index) => {
     const px = 48 + (index % columns) * (672 / columns);
     const py = labels.length === 6 ? 64 + Math.floor(index / columns) * 206 : 312;
     ctx.fillStyle = '#fff6dc';
@@ -167,9 +167,9 @@ function createArcadeCabinet(scene, parent, name, position, bodyMaterial, accent
  * Tọa độ trung tâm: interior: { x: 210, y: 32, z: -215 }
  * Bao gồm:
  * 1. Game lounge sáng màu: sàn gỗ, tường teal, đèn panel, neon và photo spot.
- * 2. Bàn 3D Tài Xỉu Sic Bo (Bán nguyệt, nỉ đỏ, bát đĩa 3D, xúc xắc ruby).
- * 3. Bàn 3D Bầu Cua Tôm Cá (Nỉ xanh ngọc, 6 ô linh vật, đĩa lắc).
- * 4. Bàn 3D Bài Cào 3 Lá (Nỉ xanh lục, phỉnh sứ, bộ bài hoàng gia).
+ * 2. Bàn 3D Xúc Xắc Vui Sic Bo (Bán nguyệt, nỉ đỏ, bát đĩa 3D, xúc xắc ruby).
+ * 3. Bàn 3D Vườn Linh Vật Tôm Cá (Nỉ xanh ngọc, 6 ô linh vật, đĩa lắc).
+ * 4. Bàn 3D Bộ Ba Kỳ Diệu 3 Lá (Nỉ xanh lục, phỉnh sứ, bộ bài hoàng gia).
  * 5. Bàn 3D Tiến Lên Miền Nam (Bàn tròn gỗ sẫm, 4 ghế da cao cấp).
  * 6. Quầy tiếp tân NPC Chú Lộc và Cửa thoát hiểm ra quảng trường.
  */
@@ -439,11 +439,11 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   };
 
   // -------------------------------------------------------------------------
-  // BÀN 1: TÀI XỈU SIC BO 3D (Tây Nam: x - 6.5, z - 3.5)
+  // BÀN 1: XÚC XẮC VUI SIC BO 3D (Tây Nam: x - 6.5, z - 3.5)
   // -------------------------------------------------------------------------
   const txTableRoot = new TransformNode('casino-table-3d-tai-xiu', scene);
   txTableRoot.position.set(x - 6.5, y, z - 3.5);
-  txTableRoot.metadata = { casinoTable: 'tai-xiu', label: 'Bàn Tài Xỉu Sic Bo 3D' };
+  txTableRoot.metadata = { casinoTable: 'tai-xiu', label: 'Bàn Xúc Xắc Vui' };
   createFloorPod(scene, txTableRoot, 'casino-pod-tai-xiu', matPodCoral, 6.8);
 
   // Khối bàn nỉ đỏ bán nguyệt
@@ -451,7 +451,7 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   txTableMesh.position.y = 0.68;
   txTableMesh.material = matDarkOak;
   txTableMesh.parent = txTableRoot;
-  txTableMesh.metadata = { casinoTable: 'tai-xiu', label: 'Bàn Tài Xỉu Sic Bo 3D' };
+  txTableMesh.metadata = { casinoTable: 'tai-xiu', label: 'Bàn Xúc Xắc Vui' };
   shadows?.addShadowCaster(txTableMesh);
   const txTrim = MeshBuilder.CreateTorus('table-trim-tx', { diameter: 4.9, thickness: 0.1, tessellation: 24 }, scene);
   txTrim.position.y = 1.38;
@@ -475,7 +475,7 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   txBowl.metadata = { spatialBoundsMutable: true };
 
   // Biển hiệu 3D nổi trên bàn
-  createTextSign(scene, 'tx-3d-sign-label', 'TÀI XỈU', txTableRoot, new Vector3(0, 2.6, 0), {
+  createTextSign(scene, 'tx-3d-sign-label', 'XÚC XẮC VUI', txTableRoot, new Vector3(0, 2.6, 0), {
     width: 2.5,
     height: 0.68,
     background: '#d95d6c',
@@ -484,25 +484,25 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
     emissive: '#ff9b8f',
   });
 
-  // Ghế ngồi xung quanh bàn Tài Xỉu
+  // Ghế ngồi xung quanh bàn Xúc Xắc Vui
   [0, Math.PI / 3, (2 * Math.PI) / 3, Math.PI, (4 * Math.PI) / 3, (5 * Math.PI) / 3].forEach((ang, i) => {
     createChair(`tx-chair-${i}`, x - 6.5 + Math.cos(ang) * 3.4, z - 3.5 + Math.sin(ang) * 3.4, ang + Math.PI / 2);
   });
   yield;
 
   // -------------------------------------------------------------------------
-  // BÀN 2: BẦU CUA TÔM CÁ 3D (Đông Nam: x + 6.5, z - 3.5)
+  // BÀN 2: VƯỜN LINH VẬT TÔM CÁ 3D (Đông Nam: x + 6.5, z - 3.5)
   // -------------------------------------------------------------------------
   const bcTableRoot = new TransformNode('casino-table-3d-bau-cua', scene);
   bcTableRoot.position.set(x + 6.5, y, z - 3.5);
-  bcTableRoot.metadata = { casinoTable: 'bau-cua', label: 'Bàn Bầu Cua Tôm Cá 3D' };
+  bcTableRoot.metadata = { casinoTable: 'bau-cua', label: 'Bàn Vườn Linh Vật' };
   createFloorPod(scene, bcTableRoot, 'casino-pod-bau-cua', matPodMint, 6.8);
 
   const bcTableMesh = MeshBuilder.CreateBox('table-mesh-bc', { width: 4.8, height: 1.35, depth: 3.6 }, scene);
   bcTableMesh.position.y = 0.68;
   bcTableMesh.material = matDarkOak;
   bcTableMesh.parent = bcTableRoot;
-  bcTableMesh.metadata = { casinoTable: 'bau-cua', label: 'Bàn Bầu Cua Tôm Cá 3D' };
+  bcTableMesh.metadata = { casinoTable: 'bau-cua', label: 'Bàn Vườn Linh Vật' };
   shadows?.addShadowCaster(bcTableMesh);
   const bcTrim = MeshBuilder.CreateBox('table-trim-bc', { width: 4.45, height: 0.1, depth: 3.25 }, scene);
   bcTrim.position.y = 1.38;
@@ -511,13 +511,13 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   createGameSurface(scene, bcTableRoot, 'bau-cua', 4.2, 3.05, '#367968').position.y = 1.44;
   yield;
 
-  // Đĩa gỗ Bầu Cua trên bàn
+  // Đĩa gỗ Vườn Linh Vật trên bàn
   const bcDish = MeshBuilder.CreateCylinder('bc-3d-dish', { diameter: 1.5, height: 0.1, tessellation: 20 }, scene);
   bcDish.position.set(0, 1.4, 0);
   bcDish.material = matDarkOak;
   bcDish.parent = bcTableRoot;
 
-  createTextSign(scene, 'bc-3d-sign-label', 'BẦU CUA', bcTableRoot, new Vector3(0, 2.6, 0), {
+  createTextSign(scene, 'bc-3d-sign-label', 'VƯỜN LINH VẬT', bcTableRoot, new Vector3(0, 2.6, 0), {
     width: 2.5,
     height: 0.68,
     background: '#4cae86',
@@ -533,18 +533,18 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   yield;
 
   // -------------------------------------------------------------------------
-  // BÀN 3: BÀI CÀO 3 LÁ (Tây Bắc: x - 6.5, z + 4.5)
+  // BÀN 3: BỘ BA KỲ DIỆU 3 LÁ (Tây Bắc: x - 6.5, z + 4.5)
   // -------------------------------------------------------------------------
   const caTableRoot = new TransformNode('casino-table-3d-bai-cao', scene);
   caTableRoot.position.set(x - 6.5, y, z + 4.5);
-  caTableRoot.metadata = { casinoTable: 'bai-cao', label: 'Bàn Bài Cào 3 Lá' };
+  caTableRoot.metadata = { casinoTable: 'bai-cao', label: 'Bàn Bộ Ba Kỳ Diệu' };
   createFloorPod(scene, caTableRoot, 'casino-pod-bai-cao', matPodSky, 6.0);
 
   const caTableMesh = MeshBuilder.CreateCylinder('table-mesh-ca', { diameter: 4.6, height: 1.35, tessellation: 24 }, scene);
   caTableMesh.position.y = 0.68;
   caTableMesh.material = matDarkOak;
   caTableMesh.parent = caTableRoot;
-  caTableMesh.metadata = { casinoTable: 'bai-cao', label: 'Bàn Bài Cào 3 Lá' };
+  caTableMesh.metadata = { casinoTable: 'bai-cao', label: 'Bàn Bộ Ba Kỳ Diệu' };
   shadows?.addShadowCaster(caTableMesh);
   const caTrim = MeshBuilder.CreateTorus('table-trim-ca', { diameter: 4.3, thickness: 0.1, tessellation: 24 }, scene);
   caTrim.position.y = 1.38;
@@ -553,7 +553,7 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   createGameSurface(scene, caTableRoot, 'bai-cao', 3.1, 2.9, '#466d8f');
   yield;
 
-  createTextSign(scene, 'ca-3d-sign-label', 'BÀI CÀO', caTableRoot, new Vector3(0, 2.6, 0), {
+  createTextSign(scene, 'ca-3d-sign-label', 'BỘ BA KỲ DIỆU', caTableRoot, new Vector3(0, 2.6, 0), {
     width: 2.5,
     height: 0.68,
     background: '#4a91c2',
@@ -568,37 +568,18 @@ export function* createCasinoLoungeInterior(scene, config, shadows) {
   yield;
 
   // -------------------------------------------------------------------------
-  // BÀN 4: TIẾN LÊN MIỀN NAM (Đông Bắc: x + 6.5, z + 4.5)
+  // The fourth corner is a social lounge while Tien Len is hidden.
   // -------------------------------------------------------------------------
-  const tlTableRoot = new TransformNode('casino-table-3d-tien-len', scene);
-  tlTableRoot.position.set(x + 6.5, y, z + 4.5);
-  tlTableRoot.metadata = { casinoTable: 'tien-len', label: 'Bàn Tiến Lên Miền Nam' };
-  createFloorPod(scene, tlTableRoot, 'casino-pod-tien-len', matPodLilac, 5.8);
-
-  const tlTableMesh = MeshBuilder.CreateCylinder('table-mesh-tl', { diameter: 4.2, height: 1.35, tessellation: 24 }, scene);
-  tlTableMesh.position.y = 0.68;
-  tlTableMesh.material = matDarkOak;
-  tlTableMesh.parent = tlTableRoot;
-  tlTableMesh.metadata = { casinoTable: 'tien-len', label: 'Bàn Tiến Lên Miền Nam' };
-  shadows?.addShadowCaster(tlTableMesh);
-  const tlTrim = MeshBuilder.CreateTorus('table-trim-tl', { diameter: 3.9, thickness: 0.1, tessellation: 24 }, scene);
-  tlTrim.position.y = 1.38;
-  tlTrim.material = matGoldTrim;
-  tlTrim.parent = tlTableRoot;
-  createGameSurface(scene, tlTableRoot, 'tien-len', 2.8, 2.6, '#71628e');
-  yield;
-
-  createTextSign(scene, 'tl-3d-sign-label', 'TIẾN LÊN', tlTableRoot, new Vector3(0, 2.6, 0), {
-    width: 2.8,
-    height: 0.68,
-    background: '#8966ce',
-    border: '#f0e7ff',
-    color: '#fff8e7',
-    emissive: '#d1b7ff',
+  const loungeRoot = new TransformNode('casino-social-lounge', scene);
+  loungeRoot.position.set(x + 6.5, y, z + 4.5);
+  createFloorPod(scene, loungeRoot, 'casino-social-pod', matPodLilac, 5.8);
+  const coffeeTable=MeshBuilder.CreateCylinder('casino-coffee-table',{diameter:1.6,height:.6,tessellation:16},scene);
+  coffeeTable.position.y=.3;coffeeTable.material=matDarkOak;coffeeTable.parent=loungeRoot;
+  createTextSign(scene,'casino-social-sign','GÓC GIAO LƯU',loungeRoot,new Vector3(0,2.6,0),{
+    width:2.8,height:.68,background:'#71628e',border:'#f0e7ff',color:'#fff8e7',emissive:'#d1b7ff',
   });
-
-  [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].forEach((ang, i) => {
-    createChair(`tl-chair-${i}`, x + 6.5 + Math.cos(ang) * 2.8, z + 4.5 + Math.sin(ang) * 2.8, ang + Math.PI / 2);
+  [0,Math.PI/2,Math.PI,Math.PI*1.5].forEach((angle,i)=>{
+    createChair(`lounge-chair-${i}`,x+6.5+Math.cos(angle)*2,z+4.5+Math.sin(angle)*2,angle+Math.PI/2);
   });
   yield;
 }

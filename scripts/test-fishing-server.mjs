@@ -8,14 +8,16 @@ const mongo=new MongoClient(process.env.MONGODB_URI||'mongodb://127.0.0.1:27017'
 let failed=false;
 try{
  await mongo.connect();const store=await import('../server/GameStore.js');await store.initGameStore();
- const db=mongo.db(databaseName),players=db.collection('players'),ctx={x:162,z:2};
+ const db=mongo.db(databaseName),players=db.collection('players'),ctx={x:162,z:2,rotation:Math.PI/2};
  await store.authenticate('angler',null);
  assert.ok((await store.performAction('angler','fishing_cast',{},ctx)).error);
  assert.ok((await store.performAction('angler','fishing_buy',{id:'rod_bamboo'},ctx)).error);
  assert.ok(!(await store.performAction('angler','fishing_buy',{id:'rod_bamboo'},{venue:'fishing'})).error);
  for(const payload of [{power:NaN},{power:2},{aim:10}])assert.ok((await store.performAction('angler','fishing_cast',payload,ctx)).error);
+ assert.ok((await store.performAction('angler','fishing_cast',{}, {...ctx,rotation:-Math.PI/2})).error,'Facing land rejects cast on server');
  const cast=await store.performAction('angler','fishing_cast',{dayKey:'2099-01-01',density:{density:'high',biteMultiplier:0}},ctx);assert.ok(!cast.error);const id=cast.player.progress.fishing.pending.id;
  const pending=cast.player.progress.fishing.pending,bounds=fishingBiteBounds('lake',null,'rod_bamboo',pending.castAt);
+ assert.ok(pending.target.x>ctx.x&&Math.abs(pending.target.z-ctx.z)<1e-8,'Server target follows character facing');
  assert.equal(pending.conditionDay,bounds.dayKey);assert.deepEqual(pending.density,bounds.condition);assert.ok(pending.biteAt-pending.castAt>=Math.floor(bounds.minMs)&&pending.biteAt-pending.castAt<=Math.ceil(bounds.maxMs));
  assert.ok((await store.performAction('angler','fishing_cast',{},ctx)).error);
  assert.ok((await store.performAction('angler','fishing_reel',{sessionId:id},ctx)).error);
