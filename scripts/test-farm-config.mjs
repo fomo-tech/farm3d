@@ -4,11 +4,11 @@ import { FARM_CONFIG, CROPS, validateFarmConfig, collectFarmProducts, farmBarnCa
 import { CROPS as CLIENT_CROPS, barnCapacity } from '../src/game/economy/GameProgress.js';
 assert.equal(CLIENT_CROPS, CROPS);
 assert.equal(CROPS.carrot.growMs, 1800000, 'minimum thirty-minute ordinary crop');
-assert.equal(farmBarnCapacity(1), 20);
-assert.equal(farmBarnCapacity(0), 20, 'a new account has usable storage before buying land');
+assert.equal(farmBarnCapacity(1), 40);
+assert.equal(farmBarnCapacity(0), 40, 'a new account has usable storage before buying land');
 assert.equal(farmBarnUpgradeCost(3), 1050);
 assert.deepEqual([0, .25, .75, 1].map(farmGrowthStage), [0, 1, 2, 3]);
-assert.equal(barnCapacity({ barnLevel: 3 }), 60);
+assert.equal(barnCapacity({ barnLevel: 3 }), 80);
 assert.ok(Object.isFrozen(FARM_CONFIG.animals.cow));
 const bad = structuredClone(FARM_CONFIG);
 bad.crops.carrot.growMs = -1;

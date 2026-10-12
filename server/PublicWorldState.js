@@ -12,7 +12,7 @@ const CUSTOMIZATION_FIELDS = Object.freeze([
 ]);
 const FISHING_FIELDS = Object.freeze([
   'id', 'phase', 'castDistance', 'biteAt', 'expiresAt', 'hookedAt',
-  'pull', 'tension', 'shadowSize', 'shadowShape',
+  'pull', 'tension', 'shadowSize', 'shadowShape', 'zone',
 ]);
 const FIGHT_FIELDS = Object.freeze([
   'pullRate', 'rushRate', 'restMs', 'rushMs', 'slackGraceMs',

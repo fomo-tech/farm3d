@@ -2271,7 +2271,7 @@ export class FarmWorld {
       if(player.fishing && remote.metadata.fishingId!==player.fishing.id) {
         remote.metadata.fishingRig ||= createFishingRig(this.scene,remote,remote.metadata.human);
         remote.metadata.fishingId=player.fishing.id;
-        remote.metadata.fishingRig.startCast(player.fishing.castDistance,'basic_cast',player.fishing.target);
+        remote.metadata.fishingRig.startCast(player.fishing.castDistance,'basic_cast',player.fishing.target,'medium',player.fishing.zone);
       }
       if(player.fishing) remote.metadata.fishingRig.setPhase(player.fishing.phase==='fighting'?'reel':serverTime>=player.fishing.biteAt?'bite':'waiting',player.fishing.biteAt-serverTime,{...player.fishing,serverOffset:serverTime-Date.now()});
       else if(remote.metadata.fishingId){remote.metadata.fishingId=null;remote.metadata.fishingRig.dispose();remote.metadata.fishingRig=null;}

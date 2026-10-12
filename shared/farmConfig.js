@@ -71,7 +71,7 @@ export const FARM_CONFIG = deepFreeze(validateFarmConfig({
     sheep: { id: 'sheep', name: 'Cừu', buyCost: 260, feedCost: 18, penCost: 240, capacity: 3, product: 'wool', productMs: 240_000, hungerMs: 360_000 },
   },
   care: { tutorialGrowMs: 8_000, feedBatchCost: 20, feedXp: 5, collectXp: 10, hungerMs: 360_000 },
-  buildings: { barn: { baseCapacity: 20, capacityPerLevel: 20, upgradeCostPerLevel: 350 } },
+  buildings: { barn: { baseCapacity: 40, capacityPerLevel: 20, upgradeCostPerLevel: 350 } },
   expansions: [{ plots: 24, cost: 500, level: 3 }, { plots: 36, cost: 1400, level: 6 }, { plots: 48, cost: 3200, level: 9 }],
   visuals: { stages: [0, 0.25, 0.75, 1], cropScale: .85 },
   livestockVisuals: { walkRadius: .12, walkSpeed: .6, segments: 6,

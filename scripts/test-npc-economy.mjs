@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { NPC_TRADING_CONFIG as config, quoteRoadsidePurchase } from '../shared/npcTradingConfig.js';
-import { FARM_CONFIG } from '../shared/farmConfig.js';
+import { FARM_CONFIG, farmBarnCapacity } from '../shared/farmConfig.js';
 import { sellFishingCatch } from '../shared/fishingSales.js';
 
 assert.deepEqual(Object.values(config.recipes).map(r=>r.sell),[72,96,288]);
@@ -20,7 +20,7 @@ for (const offer of Object.values(offers)) {
 for (const badContext of [{x:0,z:0},{...context,venue:'fishing'},{x:NaN,z:60},{}]) assert.throws(()=>quoteRoadsidePurchase(progress(),{crop:'carrot'},badContext));
 for (const crop of ['toString','__proto__','missing']) assert.throws(()=>quoteRoadsidePurchase(progress(),{crop},context));
 assert.throws(()=>quoteRoadsidePurchase({...progress(),coins:0},{crop:'carrot'},context));
-assert.throws(()=>quoteRoadsidePurchase({...progress(),inventory:{carrot:20}},{crop:'carrot'},context));
+assert.throws(()=>quoteRoadsidePurchase({...progress(),inventory:{carrot:farmBarnCapacity(1)}},{crop:'carrot'},context));
 // Fractional-pack costing is a lower bound: buying whole packs and reselling
 // leftovers at lower NPC prices cannot make the complete repeatable loop cheaper.
 const inputCost = items => Object.entries(items).reduce((sum,[id,n])=>sum+n*offers[id].price/offers[id].amount,0);

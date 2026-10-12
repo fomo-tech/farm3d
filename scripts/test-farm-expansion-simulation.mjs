@@ -4,7 +4,7 @@ import {simulateFarmExpansion} from './economy/farmExpansionSimulation.js';
 const stuck=simulateFarmExpansion({initialCoins:0,sessions:2});
 assert.equal(stuck.harvests,0);assert.equal(stuck.tiles,4);assert.equal(stuck.seedlessSessions,2);
 const first=simulateFarmExpansion({sessionMinutes:2,sessions:1,initialCoins:20,cropStrategy:'carrot',initialXp:0});
-assert.equal(first.harvests,4);assert.equal(first.sales,192);assert.equal(first.capacity,20);
+assert.equal(first.harvests,4);assert.equal(first.sales,192);assert.equal(first.capacity,40);
 assert(first.seedCost>=20);assert(first.minCoins>=0);
 const offline=simulateFarmExpansion({sessionMinutes:.3,sessions:2,initialCoins:20,initialXp:0,cropStrategy:'carrot'});
 assert(offline.harvests>0,'offline maturation survives the next session');
@@ -13,7 +13,7 @@ assert(full.tiles>=8);assert.equal(full.expansionCost,full.events.reduce((sum,e)
 assert.equal(full.coins,20+full.sales-full.seedCost-full.expansionCost);
 const keys=new Set(['0:0','1:0','2:0','3:0']);
 for(const e of full.events){assert.equal(e.tiles,keys.size+1);assert(e.level>=LAND_EXPANSION_CONFIG.tiers.find(t=>e.tiles<=t.through).level);const [x,y]=e.tileKey.split(':').map(Number);assert([...keys].some(k=>{const [a,b]=k.split(':').map(Number);return Math.abs(x-a)+Math.abs(y-b)===1;}));keys.add(e.tileKey);}
-assert(full.rows.every(r=>r.inventory<=20&&r.coins>=0));
+assert(full.rows.every(r=>r.inventory<=40&&r.coins>=0));
 assert.throws(()=>simulateFarmExpansion({occupiedTiles:2}));
 assert.deepEqual(simulateFarmExpansion(),full);
 assert.throws(()=>simulateFarmExpansion({actionMs:0}));

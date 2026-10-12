@@ -7,6 +7,7 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
+import { Constants } from '@babylonjs/core/Engines/constants.js';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode.js';
 import { PointLight } from '@babylonjs/core/Lights/pointLight.js';
 import { FARM_CONFIG } from '../config.js';
@@ -18,35 +19,46 @@ import { applyVehiclePose } from './applyVehiclePose.js';
 import { avatarAppearance } from '../../../shared/avatarAppearance.js';
 
 export function createFishingRig(scene, root, human) {
+  const visualSurfaceHeight = zone => zone === 'sea' ? .24 : .14;
+  const dynamicFishingMesh = mesh => {
+    mesh.metadata = { ...(mesh.metadata || {}), spatialBoundsDynamic: true };
+    return mesh;
+  };
   const bobberMaterial = new StandardMaterial('local-fishing-bobber-material', scene);
   bobberMaterial.diffuseColor = Color3.FromHexString('#ef4444');
   bobberMaterial.emissiveColor = Color3.FromHexString('#fb7185').scale(0.22);
   bobberMaterial.specularColor = Color3.White();
+  bobberMaterial.depthFunction = Constants.ALWAYS;
+  bobberMaterial.disableDepthWrite = true;
   const bobber = MeshBuilder.CreateSphere('local-fishing-bobber', { diameter: 0.28, segments: 12 }, scene);
   bobber.material = bobberMaterial;
+  dynamicFishingMesh(bobber);
   bobber.setEnabled(false);
 
   const floatWhite = new StandardMaterial('fishing-float-white', scene);
   floatWhite.diffuseColor = Color3.FromHexString('#fff9e8');
   floatWhite.emissiveColor = Color3.FromHexString('#fff9e8').scale(.25);
+  floatWhite.depthFunction = Constants.ALWAYS;
+  floatWhite.disableDepthWrite = true;
   const floatBand = MeshBuilder.CreateTorus('fishing-float-band', {diameter:.27, thickness:.065, tessellation:16}, scene);
-  floatBand.parent=bobber; floatBand.material=floatWhite;
+  dynamicFishingMesh(floatBand); floatBand.parent=bobber; floatBand.material=floatWhite; floatBand.renderingGroupId=2; floatBand.isPickable=false;
   const floatStem = MeshBuilder.CreateCylinder('fishing-float-stem', {height:.32, diameter:.045, tessellation:8}, scene);
-  floatStem.parent=bobber; floatStem.position.y=.23; floatStem.material=floatWhite;
+  dynamicFishingMesh(floatStem); floatStem.parent=bobber; floatStem.position.y=.23; floatStem.material=floatWhite; floatStem.renderingGroupId=2; floatStem.isPickable=false;
   const floatTip = MeshBuilder.CreateSphere('fishing-float-tip', {diameter:.085, segments:8}, scene);
-  floatTip.parent=bobber; floatTip.position.y=.40; floatTip.material=bobberMaterial;
+  dynamicFishingMesh(floatTip); floatTip.parent=bobber; floatTip.position.y=.40; floatTip.material=bobberMaterial; floatTip.renderingGroupId=2; floatTip.isPickable=false;
+  bobber.renderingGroupId=2; bobber.isPickable=false;
   const ripples = Array.from({length:3}, (_,i)=>{
     const material=new StandardMaterial(`fishing-ripple-material-${i}`,scene);
     material.diffuseColor=Color3.FromHexString('#d6faff');
     material.emissiveColor=Color3.FromHexString('#a9e9ef').scale(.35);
     material.disableLighting=true; material.alpha=.5;
     const mesh=MeshBuilder.CreateTorus(`fishing-water-ripple-${i}`,{diameter:.48,thickness:.018,tessellation:24},scene);
-    mesh.material=material;mesh.isPickable=false;mesh.setEnabled(false);
+    dynamicFishingMesh(mesh);mesh.material=material;mesh.isPickable=false;mesh.setEnabled(false);
     return mesh;
   });
   const drops=Array.from({length:6},(_,i)=>{
     const mesh=MeshBuilder.CreateSphere(`fishing-water-drop-${i}`,{diameter:.065,segments:6},scene);
-    mesh.material=floatWhite;mesh.isPickable=false;mesh.setEnabled(false);return mesh;
+    dynamicFishingMesh(mesh);mesh.material=floatWhite;mesh.isPickable=false;mesh.setEnabled(false);return mesh;
   });
   let landingTime=0;
   const hideWaterEffects=()=>{ripples.forEach(mesh=>mesh.setEnabled(false));drops.forEach(mesh=>mesh.setEnabled(false));};
@@ -82,16 +94,19 @@ export function createFishingRig(scene, root, human) {
   silhouetteMaterial.disableLighting = true;
   silhouetteMaterial.backFaceCulling = false;
   const silhouette = MeshBuilder.CreateSphere('fishing-fish-shadow', {diameter:1,segments:12}, scene);
+  dynamicFishingMesh(silhouette);
   silhouette.scaling.set(.18,.016,.52);
   silhouette.material = silhouetteMaterial;
   silhouette.setEnabled(false);
   const shadowTail = MeshBuilder.CreateSphere('fishing-shadow-tail',{diameter:1,segments:8},scene);
+  dynamicFishingMesh(shadowTail);
   shadowTail.scaling.set(.16,.012,.13);shadowTail.material=silhouetteMaterial;shadowTail.setEnabled(false);
   const splashMaterial = new StandardMaterial('fishing-bite-splash-material',scene);
   splashMaterial.diffuseColor=Color3.FromHexString('#e4fbff');
   splashMaterial.emissiveColor=Color3.FromHexString('#91edff').scale(.45);
   splashMaterial.alpha=.85;
   const splash=MeshBuilder.CreateTorus('fishing-bite-splash',{diameter:.4,thickness:.035,tessellation:20},scene);
+  dynamicFishingMesh(splash);
   splash.material=splashMaterial;splash.setEnabled(false);
   const alertMaterial=new StandardMaterial('fishing-bite-alert-material',scene);
   alertMaterial.diffuseColor=Color3.FromHexString('#ffcc49');
@@ -105,8 +120,10 @@ export function createFishingRig(scene, root, human) {
     const stem=MeshBuilder.CreateCapsule('bite-alert-rounded-stem',{
       height:outline?.47:.39,radius:outline?.105:.068,tessellation:16,subdivisions:1,capSubdivisions:4,
     },scene);
+    dynamicFishingMesh(stem);
     stem.position.set(0,.09,outline?.025:-.025);stem.scaling.z=.3;
     const dot=MeshBuilder.CreateSphere('bite-alert-round-dot',{diameter:outline?.22:.145,segments:12},scene);
+    dynamicFishingMesh(dot);
     dot.position.set(0,-.29,outline?.025:-.025);dot.scaling.z=.3;
     stem.material=dot.material=outline?alertOutline:alertMaterial;
     alertParts.push(stem,dot);
@@ -358,9 +375,39 @@ export function createFishingRig(scene, root, human) {
 
   const linePoints = [new Vector3(), new Vector3(), new Vector3()];
   const line = MeshBuilder.CreateLines('local-fishing-line', { points: linePoints, updatable: true }, scene);
+  dynamicFishingMesh(line);
   line.color = Color3.FromHexString('#f8fafc');
   line.alpha = 0.86;
+  line.renderingGroupId = 2;
+  line.alwaysSelectAsActiveMesh = true;
+  line.isPickable = false;
   line.setEnabled(false);
+  // LinesMesh is only a one-pixel primitive and can disappear behind the opaque
+  // ocean. Keep it for geometry/debugging, but render a slightly thicker overlay
+  // with depth disabled so the player can always follow the cast line.
+  const visibleLineMaterial = new StandardMaterial('local-fishing-line-visible-material', scene);
+  visibleLineMaterial.diffuseColor = Color3.FromHexString('#fff9e8');
+  visibleLineMaterial.emissiveColor = Color3.FromHexString('#fff9e8').scale(.65);
+  visibleLineMaterial.disableLighting = true;
+  visibleLineMaterial.backFaceCulling = false;
+  visibleLineMaterial.alpha = .98;
+  visibleLineMaterial.depthFunction = Constants.ALWAYS;
+  visibleLineMaterial.disableDepthWrite = true;
+  const visibleLine = MeshBuilder.CreateTube('local-fishing-line-visible', {
+    path: linePoints, radius: .014, tessellation: 6, updatable: true,
+  }, scene);
+  dynamicFishingMesh(visibleLine);
+  visibleLine.material = visibleLineMaterial;
+  visibleLine.renderingGroupId = 2;
+  visibleLine.alwaysSelectAsActiveMesh = true;
+  visibleLine.isPickable = false;
+  visibleLine.setEnabled(false);
+  // The caught fish is assembled at the scene origin and later lifted into
+  // the avatar's hands. Keep every fishing mesh in the dynamic render set so
+  // camera rotation cannot make the octree reject its old bounds.
+  scene.meshes
+    .filter(mesh => /^(?:caught-fish-|fishing-|local-fishing-|bite-alert-)/.test(mesh.name || ''))
+    .forEach(dynamicFishingMesh);
 
   const target = new Vector3();
   const baseTarget = new Vector3();
@@ -378,6 +425,12 @@ export function createFishingRig(scene, root, human) {
   const catchStart = new Vector3();
   let catchAttached = false;
 
+  const fishingLineOriginPosition = () => {
+    const origin = human.fishingLineOrigin || human.toolGrip || human.rightArm;
+    origin.computeWorldMatrix(true);
+    return origin.getAbsolutePosition();
+  };
+
   const animationDuration = (action, id = animationId) => {
     const animation = FISHING_CONFIG.animations[id] || FISHING_CONFIG.animations.basic_cast;
     const key = action === 'cast' ? 'castMs' : action === 'reel' ? 'reelMs' : 'catchMs';
@@ -390,6 +443,7 @@ export function createFishingRig(scene, root, human) {
     bobber.setEnabled(false);
     hideWaterEffects();
     line.setEnabled(false);
+    visibleLine.setEnabled(false);
     human.clearFishingPose?.();
     caughtRoot.setEnabled(false);
     silhouette.setEnabled(false);
@@ -401,7 +455,7 @@ export function createFishingRig(scene, root, human) {
   };
 
   const updateLine = () => {
-    const hand = (human.fishingLineOrigin || human.toolGrip || human.rightArm).getAbsolutePosition();
+    const hand = fishingLineOriginPosition();
     if(phase==='catch'){
       if(!catchAttached){
         const lift=Math.min(1,elapsed/animationDuration('catch'));
@@ -425,12 +479,13 @@ export function createFishingRig(scene, root, human) {
     );
     linePoints[2].copyFrom(bobber.position);
     MeshBuilder.CreateLines(null, { points: linePoints, instance: line });
+    MeshBuilder.CreateTube(null, { path: linePoints, instance: visibleLine });
   };
 
   const update = delta => {
     if (phase === 'idle') return;
     elapsed += delta;
-    const hand = (human.fishingLineOrigin || human.toolGrip || human.rightArm).getAbsolutePosition();
+    const hand = fishingLineOriginPosition();
     if (phase === 'cast') {
       const progress = Math.min(1, elapsed / animationDuration('cast'));
       Vector3.LerpToRef(hand, baseTarget, progress, bobber.position);
@@ -487,7 +542,7 @@ export function createFishingRig(scene, root, human) {
   return {
     update,
     isActive() { return phase !== 'idle'; },
-    startCast(distance = 8, nextAnimationId = 'basic_cast', waterTarget = null, nextShadowSize = 'medium') {
+    startCast(distance = 8, nextAnimationId = 'basic_cast', waterTarget = null, nextShadowSize = 'medium', nextZone = null) {
       castDistance = Math.max(3, Number(distance) || 8);
       animationId = nextAnimationId || 'basic_cast';
       const position = root.getAbsolutePosition();
@@ -495,9 +550,10 @@ export function createFishingRig(scene, root, human) {
       baseTarget.copyFrom(position).addInPlace(forward.scale(castDistance));
       baseTarget.y = position.y + 0.13;
       if(waterTarget && [waterTarget.x,waterTarget.z].every(Number.isFinite)) {
-        baseTarget.set(waterTarget.x,waterTarget.y ?? .13,waterTarget.z);
+        baseTarget.set(waterTarget.x,Math.max(waterTarget.y ?? .13,visualSurfaceHeight(nextZone)),waterTarget.z);
         root.rotation.y=Math.atan2(baseTarget.x-position.x,baseTarget.z-position.z);
       }
+      baseTarget.y = Math.max(baseTarget.y, visualSurfaceHeight(nextZone));
       target.copyFrom(baseTarget);
       fishApproachDirection=Math.atan2(baseTarget.x-position.x,baseTarget.z-position.z)+.55;
       fight = null;displayedPull=0;landingTime=0;hideWaterEffects();bobber.rotation.set(0,0,0);
@@ -510,6 +566,7 @@ export function createFishingRig(scene, root, human) {
       bobber.position.y += 0.9;
       bobber.setEnabled(true);
       line.setEnabled(true);
+      visibleLine.setEnabled(true);
       caughtRoot.setEnabled(false);
       human.playFishingAction?.('cast', () => {
         phase = 'waiting';
@@ -607,7 +664,7 @@ export function createFishingRig(scene, root, human) {
       bellyMaterial.diffuseColor = fish?.id === 'golden_carp' ? Color3.FromHexString('#fef9c3') : fish?.id === 'sea_snapper' ? Color3.FromHexString('#ffe4e6') : Color3.FromHexString('#f1f5f9');
       caughtRoot.scaling.setAll(caughtFishScale(fish));
       caughtRoot.setEnabled(true);
-      bobber.setEnabled(false);line.setEnabled(false);hideWaterEffects();splash.setEnabled(false);
+      bobber.setEnabled(false);line.setEnabled(false);visibleLine.setEnabled(false);hideWaterEffects();splash.setEnabled(false);
       silhouette.setEnabled(false);
       biteAlert.setEnabled(false);
       human.playFishingAction?.('catch', () => human.setFishingCatchPose?.(), animationDuration('catch'));
@@ -621,6 +678,7 @@ export function createFishingRig(scene, root, human) {
       silhouette.dispose();silhouetteMaterial.dispose();
       shadowTail.dispose();splash.dispose();splashMaterial.dispose();biteAlert.material?.dispose();biteAlert.dispose();alertMaterial.dispose();alertOutline.dispose();
       line.dispose();
+      visibleLine.dispose();visibleLineMaterial.dispose();
       caughtRoot.dispose(false,true);
       caughtMaterial.dispose();eyeMaterial.dispose();eyeWhiteMat.dispose();blushMaterial.dispose();mouthMat.dispose();crownMat.dispose();crownGemMat.dispose();
       bellyMaterial.dispose();stripeMaterial.dispose();whiskerMaterial.dispose();spotMaterial.dispose();
@@ -919,7 +977,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
     startFishingCast(options = {}) {
       autoTarget = null;
       onArrive = null;
-      fishingRig.startCast(options.distance || 8, options.animation || 'basic_cast', options.target, options.shadowSize);
+      fishingRig.startCast(options.distance || 8, options.animation || 'basic_cast', options.target, options.shadowSize, options.zone);
     },
     setFishingPhase(phase, timeUntilBiteMs = null, fight = null) {
       fishingRig.setPhase(phase, timeUntilBiteMs, fight);

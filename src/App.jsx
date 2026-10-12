@@ -766,7 +766,7 @@ export default function App() {
           const pending = state.progress.fishing.pending;
           if (fishingSessionId.current !== pending.id) {
             fishingSessionId.current = pending.id;
-            worldRef.current?.startFishingCast({distance:pending.castDistance,animation:FISHING_CONFIG.rods[pending.rodId]?.animation,target:pending.target,shadowSize:pending.shadowSize});
+            worldRef.current?.startFishingCast({distance:pending.castDistance,animation:FISHING_CONFIG.rods[pending.rodId]?.animation,target:pending.target,shadowSize:pending.shadowSize,zone:pending.zone});
           }
           worldRef.current?.setFishingPhase?.(pending.phase === 'fighting' ? 'reel' : Date.now()+fishingServerOffset.current >= pending.biteAt ? 'bite' : 'waiting', pending.biteAt-Date.now()-fishingServerOffset.current,{...pending,serverOffset:fishingServerOffset.current});
         } else if (state.result?.fishCaught) {
