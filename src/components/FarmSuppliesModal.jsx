@@ -1,3 +1,4 @@
+import { InventoryItemArt } from './InventoryItemArt.jsx';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { CROPS } from '../game/economy/GameProgress.js';
 import { HudIcon } from './icons3d/HudIcon.jsx';
@@ -12,7 +13,7 @@ export function FarmSuppliesModal({progress={},connected=false,onChooseCrop,onCl
   const crop=visible.find(item=>item.id===selected)||visible[0];
   const items=useMemo(()=>CATALOGUE.map(item=>({id:`produce:${item.id}`,itemId:item.id,kind:'crop',category:'produce',name:item.name,count:1})),[]);
   const images=useInventoryMeshArt(true,'produce',items);
-  const art=item=>images[`produce:${item.id}`]&&images[`produce:${item.id}`]!=='unavailable'?<img src={images[`produce:${item.id}`]} alt={item.name}/>:<HudIcon asset="seeds" size={70}/>;
+  const art=item=>images[`produce:${item.id}`]&&images[`produce:${item.id}`]!=='unavailable'?<img src={images[`produce:${item.id}`]} alt={item.name}/>:<InventoryItemArt item={item} size={70}/>;
   const locked=level<crop.level,active=progress.selectedCrop===crop.id,free=crop.id==='carrot'?(progress.freeSeeds||0):0;
   useEffect(()=>{
     const previous=document.activeElement;panel.current?.querySelector('button')?.focus();

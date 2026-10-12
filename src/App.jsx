@@ -1,3 +1,4 @@
+import { GamePhoneApps } from './components/GamePhoneApps.jsx';
 import { FriendsPanel } from './components/FriendsPanel.jsx';
 import {AppleTreeHUD} from './components/AppleTreeHUD.jsx';
 import './components/FarmHudPolish.css';
@@ -47,7 +48,7 @@ import { VehicleShowroom } from './components/VehicleShowroom.jsx';
 import { fishingMissionProgress } from '../shared/fishingSession.js';
 import { AvatarChatBar } from './components/chat/AvatarChatBar.jsx';
 import { readGraphicsQuality } from './game/rendering/GraphicsSettings.js';
-import { loadWorldSession, saveWorldSession, switchWorldIdentity, restoreGuestIdentity, leaveWorldSession } from './game/network/WorldSession.js';
+import { loadWorldSession, saveWorldSession, switchWorldIdentity, restoreGuestIdentity, leaveWorldSession, startFreshGuestSession } from './game/network/WorldSession.js';
 import { GoogleAccountConflictDialog } from './components/GameAccountUI.jsx';
 import { GameClient } from './game/network/GameClient.js';
 import { DEFAULT_VILLAGES, keepAvailableVillages } from './game/data/villages.js';
@@ -230,15 +231,6 @@ const PANEL_INFO = {
 
 function HudImageIcon({ asset, className = '', alt = '' }) {
   return <HudIcon mobile asset={asset} className={`pt-hud-img-icon ${className}`} alt={alt} />;
-}
-
-function formatCompactCurrency(val) {
-  if (val == null || !Number.isFinite(val)) return '0';
-  if (val >= 1_000_000_000) return `${(val / 1_000_000_000).toFixed(1)}B`;
-  if (val >= 10_000_000) return `${(val / 1_000_000).toFixed(1)}M`;
-  if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(2)}M`;
-  if (val >= 100_000) return `${(val / 1_000).toFixed(0)}K`;
-  return val.toLocaleString('vi-VN');
 }
 
 function playerFarmTarget(farmId) {
@@ -634,6 +626,17 @@ export default function App() {
       onVillageError: message => {
         setVillageRequired(true);
         setLotteryPending(false);setStatus(`Lỗi: ${message}`);
+      },
+      onAuthError: message => {
+        if (!session.googleLinked && !progressRef.current?.onboarding?.characterCreated) {
+          const guest = startFreshGuestSession();
+          setSession(guest);
+          setCharacterCreationError('');
+          setStatus('Đã mở phiên khách mới. Hãy đặt tên nhân vật để bắt đầu.');
+        } else {
+          setCharacterCreationError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+          setStatus(message);
+        }
       },
       onActionError: message => {
         setAppleBusy(false);
@@ -1208,7 +1211,7 @@ export default function App() {
     characterCreationRef.current = { name: data.name.trim() };
     setCharacterCreationPending(true);
     setCharacterCreationError('');
-    gameClientRef.current?.sendGameAction('character_create', { name: data.name.trim(), outfit: 'starter' });
+    gameClientRef.current?.sendGameAction('character_create', { name: data.name.trim(), outfit: 'starter', appearance: { gender: data.gender, hair: data.hair, hairColor: data.hairColor, skinTone: data.skinTone } });
   };
 
   const handleClaimSeeds = () => {
@@ -1511,7 +1514,7 @@ export default function App() {
       {/* Action Controls & Virtual Joystick */}
       {!showCharacterCreation && (
         <>
-          <div className="virtual-joystick pt-joystick" role="group" aria-label="Điều khiển di chuyển" onPointerDown={startJoystick} onPointerMove={event => event.currentTarget.hasPointerCapture(event.pointerId) && updateJoystick(event)} onPointerUp={stopJoystick} onPointerCancel={stopJoystick}>
+          <div className="virtual-joystick pt-joystick" role="group" aria-label="Điều khiển di chuyển" onPointerDown={startJoystick} onPointerMove={event => event.currentTarget.hasPointerCapture(event.pointerId) && updateJoystick(event)} onPointerUp={stopJoystick} onPointerCancel={stopJoystick} onLostPointerCapture={stopJoystick}>
             <span ref={joystickKnobRef} className="pt-joystick-knob">●</span>
           </div>
           <div className="world-action-controls pt-action-bubbles">
@@ -1522,9 +1525,10 @@ export default function App() {
             <button
               type="button"
               className="pt-action-bubble pt-run-bubble"
-              onPointerDown={() => worldRef.current?.setSprinting(true)}
+              onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); worldRef.current?.setSprinting(true); }}
               onPointerUp={() => worldRef.current?.setSprinting(false)}
               onPointerCancel={() => worldRef.current?.setSprinting(false)}
+              onLostPointerCapture={() => worldRef.current?.setSprinting(false)}
               onPointerLeave={() => worldRef.current?.setSprinting(false)}
               aria-label="Chạy nhanh"
               title="Chạy nhanh (Giữ Shift)"
@@ -1547,7 +1551,7 @@ export default function App() {
       {theftProgress && <aside className="farm-theft-progress" role="status"><b>Đang lấy nông sản</b><small>Đứng yên · di chuyển để hủy</small><div><i style={{ animationDuration: `${theftProgress.durationMs}ms` }} /></div></aside>}
       {currentFarmZone && (
         <aside className={`farm-zone-badge ${currentFarmZone.isOwner ? 'owner' : 'visitor'}`}>
-          <span className="zone-icon">{currentFarmZone.isOwner ? <Icon3dCrown size={24} /> : <Icon3dHouseCabin size={24} />}</span>
+          <span className="zone-icon">{currentFarmZone.isOwner ? <Icon3dCrown size={24} /> : <HudIcon asset="land" size={28} />}</span>
           <span className="zone-text">
             {currentFarmZone.isOwner
               ? `Nông trại của bạn · Lô ${currentFarmZone.lotNumber}`
@@ -1600,77 +1604,21 @@ export default function App() {
             </div>
 
             {phonePage !== 'home' && <button type="button" className="pt-phone-back" onClick={() => setPhonePage('home')}>‹ Menu</button>}
-            {phonePage === 'home' && <div className="pt-phone-app-grid">
-              <button type="button" className="pt-app-bubble" onClick={()=>{setPhoneOpen(false);setPanel('friends');gameClientRef.current?.send({type:'get_social_state'});}}><div className="pt-app-icon"><Icon3dFriends size={40}/></div><span>Bạn bè</span></button>
-              <button type="button" className="pt-app-bubble" onClick={()=>{setPhoneOpen(false);setPanel('fortune');}}><div className="pt-app-icon"><HudIcon asset="coin" size={40}/></div><span>Vé may mắn{lotteryState?.tickets?.some(t=>t.prize>0&&!t.claimed)?' • Nhận thưởng':''}</span></button>
-              <button type="button" className="pt-app-bubble" onClick={() => { setPhoneOpen(false); handleMenuClick('inventory'); }}>
-                <div className="pt-app-icon"><HudIcon asset="backpack" size={40} /></div><span>Túi đồ</span>
-              </button>
-              <button
-                type="button"
-                className="pt-app-bubble app-fashion"
-                onClick={() => { setPhoneOpen(false); setPanel('fashion'); }}
-                title="Tiệm Thời Trang & Tủ Đồ Play Together"
-              >
-                <div className="pt-app-icon"><HudIcon asset="wardrobe" size={40} /></div>
-                <span>Thời Trang</span>
-              </button>
-              <button
-                type="button"
-                className="pt-app-bubble app-market"
-                onClick={() => { setPhoneOpen(false); setRoadsideOpen(true); }}
-              >
-                <div className="pt-app-icon"><HudIcon asset="shop" size={40} /></div>
-                <span>Chợ</span>
-              </button>
-
-              <button
-                type="button"
-                className="pt-app-bubble app-quests"
-                onClick={() => { setPhoneOpen(false); handleMenuClick('quests'); }}
-              >
-                <div className="pt-app-icon">
-                  <HudIcon asset="quest" size={40} />
-                  {(legacyQuestReady || missionRewardsReady) && (
-                    <span className="pt-app-badge">!</span>
-                  )}
-                </div>
-                <span>Nhiệm Vụ</span>
-              </button>
-
-              <button
-                type="button"
-                className="pt-app-bubble app-map"
-                onClick={() => { setPhoneOpen(false); handleMenuClick('map'); }}
-              >
-                <div className="pt-app-icon"><HudIcon asset="map" size={40} /></div>
-                <span>Bản Đồ</span>
-              </button>
-
-              <button type="button" className="pt-app-bubble app-land" onClick={() => setPhonePage('farm')}>
-                <div className="pt-app-icon"><HudIcon asset="land" size={40} /></div><span>Nông trại</span>
-              </button>
-
-              <button
-                type="button"
-                className="pt-app-bubble app-notice"
-                onClick={() => { setPhoneOpen(false); setPlazaNoticeOpen(true); }}
-                title={dailyRewardAvailable ? `Điểm danh · Nhận ${dailyAttendance.coins} xu hôm nay` : 'Bảng tin & hoạt động thị trấn'}
-                aria-label={dailyRewardAvailable ? `Điểm danh, có quà ${dailyAttendance.coins} xu hôm nay` : 'Điểm danh'}
-              >
-                <div className="pt-app-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><HudIcon asset="quest" size={40} />{dailyRewardAvailable && <DailyRewardBadge/>}</div>
-                <span>Điểm danh</span>{dailyRewardAvailable && <small className="pt-daily-reward-hint">Nhận quà</small>}
-              </button>
-              <button type="button" className="pt-app-bubble app-guide" onClick={() => setPhonePage('settings')}>
-                <div className="pt-app-icon"><HudIcon asset="settings" size={40} /></div><span>Thiết lập</span>
-              </button>
-            </div>}
+            {phonePage === 'home' && <GamePhoneApps questReady={legacyQuestReady || missionRewardsReady} dailyReady={dailyRewardAvailable} onOpen={id => {
+              if (id === 'farm' || id === 'settings') { setPhonePage(id); return; }
+              setPhoneOpen(false);
+              if (id === 'friends') { setPanel('friends'); gameClientRef.current?.send({type:'get_social_state'}); }
+              else if (id === 'fortune' || id === 'fashion') setPanel(id);
+              else if (id === 'market') setRoadsideOpen(true);
+              else if (id === 'notice') setPlazaNoticeOpen(true);
+              else handleMenuClick(id);
+            }}/>}
 
             {phonePage === 'farm' && <div className="pt-phone-submenu" aria-label="Nông trại">
-              <button type="button" onClick={() => { setPhoneOpen(false); setFocusedLand(null); setPanel('land'); }}><Icon3dHouseCabin size={24} /> {session.farmId ? 'Đất đai' : 'Mua đất'}</button>
-              <button type="button" onClick={() => { setPhoneOpen(false); handleMenuClick('orders'); }}><Icon3dOrdersBox size={24} /> Đơn hàng {ORDERS.some(order => canFillOrder(progress, order)) ? '• Có thể giao' : ''}</button>
-              <button type="button" onClick={() => { setPhoneOpen(false); handleMenuClick('factory'); }}><Icon3dMill size={24} /> Chế biến {isFeatureLocked(progress, 'factory') ? '🔒' : ''}</button>
-              <button type="button" onClick={() => { setPhoneOpen(false); handleMenuClick('upgrade'); }}><Icon3dHammer size={24} /> Nâng cấp {isFeatureLocked(progress, 'upgrade') ? '🔒' : ''}</button>
+              <button type="button" onClick={() => { setPhoneOpen(false); setFocusedLand(null); setPanel('land'); }}><HudIcon asset="land" size={28} /> {session.farmId ? 'Đất đai' : 'Mua đất'}</button>
+              <button type="button" onClick={() => { setPhoneOpen(false); handleMenuClick('orders'); }}><HudIcon asset="basket" size={28} /> Đơn hàng {ORDERS.some(order => canFillOrder(progress, order)) ? '• Có thể giao' : ''}</button>
+              <button type="button" onClick={() => { setPhoneOpen(false); handleMenuClick('factory'); }}><HudIcon asset="seeds" size={28} /> Chế biến {isFeatureLocked(progress, 'factory') ? '🔒' : ''}</button>
+              <button type="button" onClick={() => { setPhoneOpen(false); handleMenuClick('upgrade'); }}><HudIcon asset="gate" size={28} /> Nâng cấp {isFeatureLocked(progress, 'upgrade') ? '🔒' : ''}</button>
             </div>}
 
 
@@ -1817,7 +1765,7 @@ export default function App() {
       {/* Onboarding Modals */}
       {gameStarted && showCharacterCreation && (
         <CharacterCreationModal
-          defaultName={session.name}
+          onCheckName={name => gameClientRef.current?.checkCharacterName(name) || Promise.reject(new Error('Chưa có kết nối để kiểm tra tên.'))}
           villages={villages}
           defaultVillageId={session.villageId || ''}
           onSubmit={handleCharacterCreation}

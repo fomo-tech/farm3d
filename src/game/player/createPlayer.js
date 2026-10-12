@@ -1,3 +1,4 @@
+import { resolveGroundedHeight } from './groundContact.js';
 import { fishForm, FISH_FORMS, FISH_SIZE_SCALE, caughtFishScale } from '../../../shared/fishAppearance.js';
 import {fishingNibbleState} from '../../../shared/fishingConditions.js';
 import {fishingFightState} from '../../../shared/fishingSession.js';
@@ -845,13 +846,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
           jumpGroundY = targetGroundY;
         }
       } else {
-        const diff = targetGroundY - root.position.y;
-        if (Math.abs(diff) > 0.001) {
-          // Responsive 16x frame delta lerp for seamless, stable slope movement
-          root.position.y += diff * Math.min(1.0, 16.0 * frameDelta);
-        } else {
-          root.position.y = targetGroundY;
-        }
+        root.position.y = resolveGroundedHeight(root.position.y, targetGroundY, frameDelta);
         jumpGroundY = root.position.y;
       }
 

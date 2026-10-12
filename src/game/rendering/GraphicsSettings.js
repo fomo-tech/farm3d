@@ -1,5 +1,5 @@
 export const GRAPHICS_PRESETS = {
-  auto: { maxDpr: 2.0, mobileDpr: 1.5, pixels: 9000000 },
+  auto: { maxDpr: 2.0, mobileDpr: 1.75, pixels: 9000000 },
   ultra: { maxDpr: 2.0, mobileDpr: 1.75, pixels: 12000000 },
   balanced: { maxDpr: 1.75, mobileDpr: 1.5, pixels: 7000000 },
   eco: { maxDpr: 1.0, mobileDpr: 1.0, pixels: 2000000 },
@@ -20,7 +20,7 @@ export function calculateRenderDpr({ quality = 'ultra', nativeDpr = 1, width = 1
   const preset = GRAPHICS_PRESETS[quality] || GRAPHICS_PRESETS.ultra;
   // Keep Ultra at 2x; lighter phone presets bound GPU work and framebuffer memory.
   const limit = mobile ? (quality === 'ultra' ? 2 : preset.mobileDpr) : preset.maxDpr;
-  const pixelBudget = mobile ? Math.min(preset.pixels, quality === 'eco' ? 1000000 : 1800000) : preset.pixels;
+  const pixelBudget = mobile ? Math.min(preset.pixels, quality === 'eco' ? 1000000 : quality === 'ultra' ? 2400000 : 1800000) : preset.pixels;
   const pixelLimit = Math.sqrt(pixelBudget / Math.max(1, width * height));
   // Desktop presets preserve native pixels; phone presets use their own density caps.
   const targetDpr = Math.min(Math.max(1, nativeDpr), limit, pixelLimit);

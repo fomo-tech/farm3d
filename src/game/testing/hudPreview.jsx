@@ -1,3 +1,4 @@
+import { GamePhoneApps } from '../../components/GamePhoneApps.jsx';
 import {useGameNotifications} from '../../hooks/useGameNotifications.js';
 import {LeaderboardModal} from '../../components/LeaderboardModal.jsx';
 import {GameConfirm,GameToast} from '../../components/GameFeedback.jsx';
@@ -64,6 +65,7 @@ function Preview(){
  const [accountConfirm,setAccountConfirm]=useState(null);
  const [rankingOpen,setRankingOpen]=useState(params.has('rankingDemo'));
  const [settingsOpen,setSettingsOpen]=useState(params.has('settingsDemo'));const [muted,setMuted]=useState(false);const [quality,setQuality]=useState('ultra');const [camera,setCamera]=useState('explore');
+ const [phoneDemoOpen,setPhoneDemoOpen]=useState(params.has('phoneDemo'));
  const [noticeRewards,setNoticeRewards]=useState({daily:[],codes:[]});const [noticeOpen,setNoticeOpen]=useState(params.has("noticeDemo"));const [fashionOpen,setFashionOpen]=useState(false);const [bagOpen,setBagOpen]=useState(false);const [status,setStatus]=useState('');const [mapOpen,setMapOpen]=useState(false);const [progress]=useState(initial);const world=useRef({getPlayerState:()=>mapState});
  const attendance=useDailyAttendance(noticeRewards.daily);
  const signal=label=>()=>setStatus(label);
@@ -72,6 +74,7 @@ function Preview(){
  <div aria-hidden="true" style={{position:'absolute',inset:'36% 0 auto',height:24,background:'#acaa92',borderBottom:'8px solid #666e56'}} />
  {accountConfirm && <GameConfirm title={`${accountConfirm}?`} message="Bản xem thử: không thay đổi tài khoản hoặc xoá dữ liệu." confirmLabel={accountConfirm} asset={accountConfirm === "Đăng xuất" ? "logout" : "quest"} onCancel={()=>setAccountConfirm(null)} onConfirm={()=>setAccountConfirm(null)}/> }
  {rankingOpen&&<LeaderboardModal leaderboard={params.has('rankingEmpty')?[]:Array.from({length:12},(_,i)=>({playerId:`rank-${i}`,name:['Bơ Nhỏ','Nắng Mai','Mây Trắng','An Nhiên','Nông dân Bình Minh','Gió Hạ'][i%6],progress:{level:22-i,xp:25480-i*1650,homeTier:1+i%4}}))} myPlayer={{playerId:'rank-4',name:'Nông dân Bình Minh',progress:{level:18,xp:18880,homeTier:1}}} onVisitFarm={id=>setStatus(`Xem hồ sơ thử: ${id}`)} onAddFriend={id=>setStatus(`Kết bạn thử: ${id}`)} onClose={()=>setRankingOpen(false)}/>}
+ {phoneDemoOpen && <div className="pt-phone-backdrop"><section className="pt-phone-device" role="dialog" aria-label="Điện thoại"><div className="pt-phone-status-bar"><b>VIBE CITY</b><button className="pt-phone-close" aria-label="Đóng điện thoại" onClick={()=>setPhoneDemoOpen(false)}>×</button></div><div className="pt-phone-user-strip"><div className="pt-phone-greeting"><b>Người nông dân</b><small>Cấp 5 · Làng Bình Minh</small></div></div><GamePhoneApps dailyReady questReady onOpen={id=>{setPhoneDemoOpen(false);({inventory:()=>setBagOpen(true),fashion:()=>setFashionOpen(true),market:()=>setMarketOpen(true),quests:()=>setQuestsOpen(true),map:()=>setMapOpen(true),farm:()=>setLandOpen(true),notice:()=>setNoticeOpen(true),settings:()=>setSettingsOpen(true)})[id]?.();}}/></section></div>}
  <GameHudTopbar progress={progress} name="Người chơi mới" notifications dailyReward={!attendance.claimedToday} onMissions={()=>setQuestsOpen(true)} onProfile={signal('Hồ sơ')} onShop={signal('Cửa hàng')} onInventory={()=>setBagOpen(true)} onFashion={()=>setFashionOpen(true)} onCamera={signal('Đổi góc nhìn')} onPhone={()=>params.has("settingsDemo")?setSettingsOpen(true):setNoticeOpen(true)} />
  <OnboardingHUD progress={progress} targetDistance={mapGoal?Math.round(Math.hypot(mapGoal.x-mapState.x,mapGoal.z-mapState.z)):304} onNavigateFishing={signal('Chỉ đường đến tiệm câu')} onOpenMissions={signal('Sổ nhiệm vụ')} />
  <nav className="mission-hud-links" aria-label="Nhiệm vụ"><button aria-label="Hành trình tân thủ" title="Hành trình tân thủ" aria-current="step" onClick={signal('Hành trình tân thủ')}><HudIcon asset="seeds" size={26}/><span>Tân thủ</span></button><button onClick={()=>setQuestsOpen(true)}><HudIcon asset="quest" size={26}/><span>Chính tuyến</span></button><button onClick={()=>setQuestsOpen(true)}><HudIcon asset="basket" size={26}/><span>Hằng ngày</span></button></nav>
@@ -104,3 +107,7 @@ function Preview(){
 const previewRoot=import.meta.hot?.data.previewRoot || createRoot(document.getElementById('root'));
 if(import.meta.hot)import.meta.hot.dispose(data=>{data.previewRoot=previewRoot;});
 previewRoot.render(<Preview/>);
+
+import '../../components/GameUiUpgrade.css';
+
+import '../../components/GameExperience.css';

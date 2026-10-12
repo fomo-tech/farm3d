@@ -11,7 +11,7 @@ import {resolveTravelDestination} from '../shared/travelDestinations.js';
 import { chargeTravel } from './GameStore.js';
 import { WebSocketServer, WebSocket } from 'ws';
 import { purchaseFarm, listLandMarket, getAssignment, initVillageRegistry, isAssignedFarm, listVillageAssignments, listVillages, positionForLot, villageChannel, villageForFarm } from './VillageRegistry.js';
-import { authenticate, deleteGameAccount, googleAccountLogin, linkGoogleAccount, revokeGameSession, casinoRefundStale, farmAction, initGameStore, initFarmSecurity, farmSecurity, fishingTelemetry, loadFarmAssignment, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadPublicPlayerProfile, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
+import { checkCharacterName, authenticate, deleteGameAccount, googleAccountLogin, linkGoogleAccount, revokeGameSession, casinoRefundStale, farmAction, initGameStore, initFarmSecurity, farmSecurity, fishingTelemetry, loadFarmAssignment, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadPublicPlayerProfile, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
 import { verifyGoogleCredential } from './GoogleIdentity.js';
 import { decodeFarmId } from '../shared/villageLayout.js';
 import { farmGateOpen } from '../shared/farmSecurity.js';
@@ -703,6 +703,12 @@ wss.on('connection', socket => {
     }
     if (message.type === 'get_social_state') {
       safeSend(socket, { type: 'social_state', ...(await loadSocialState(client.playerId)) });
+      return;
+    }
+    if (message.type === 'check_character_name') {
+      if (typeof message.requestId !== 'string' || message.requestId.length > 100) return;
+      const result = await checkCharacterName(message.name, client.playerId);
+      safeSend(socket, { type: 'character_name_result', requestId: message.requestId, ...result });
       return;
     }
     if (message.type === 'get_profile') {

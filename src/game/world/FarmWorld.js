@@ -1134,7 +1134,8 @@ export class FarmWorld {
     this.localNameplate = createPlayerNameplate(scene, player.root, 'local', this.callbacks.getPlayerName?.());
     yield;
     if (initialLocation) {
-      player.root.position.y = initialLocation.y ?? (this.currentVenue ? 0 : getTerrainHeight(player.root.position.x, player.root.position.z));
+      const supportY = this.currentVenue ? VENUES[this.currentVenue].interior.y : getTerrainHeight(player.root.position.x, player.root.position.z);
+      player.root.position.y = Math.max(supportY, Number.isFinite(initialLocation.y) ? initialLocation.y : supportY);
       player.root.rotation.y = initialLocation.rotation || 0;
     } else {
       player.root.position.y = getTerrainHeight(player.root.position.x, player.root.position.z);
@@ -2319,7 +2320,8 @@ export class FarmWorld {
     // errors. Partial correction repeatedly resubmitted an invalid endpoint.
     const rejected = authoritative.accepted === false;
     if (error <= (rejected ? 0.001 : 0.35)) return;
-    const targetY = (Number.isFinite(authoritative.y) && authoritative.y !== 0) ? authoritative.y : (VENUES[this.currentVenue]?.interior.y ?? getTerrainHeight(authoritative.x, authoritative.z));
+    const authoritativeSupportY = VENUES[this.currentVenue]?.interior.y ?? getTerrainHeight(authoritative.x, authoritative.z);
+    const targetY = Math.max(authoritativeSupportY, Number.isFinite(authoritative.y) ? authoritative.y : authoritativeSupportY);
     if (performance.now() - (this.lastCorrectionReportAt || 0) > 15000) {
       this.lastCorrectionReportAt = performance.now();
       window.__farmDebug?.report(`Server từ chối/correct bước di chuyển, lệch ${error.toFixed(2)}m; lý do: ${authoritative.reason || 'server không cung cấp'}. Vị trí: ${authoritative.x}, ${authoritative.z}.`, 'SERVER MOVEMENT CORRECTION');
@@ -2328,7 +2330,8 @@ export class FarmWorld {
       this.player.root.position.set(authoritative.x, targetY, authoritative.z);
     } else {
       this.player.root.position.x += dx * 0.35;
-      this.player.root.position.y += (targetY - this.player.root.position.y) * 0.35;
+      const supportY = this.currentVenue ? VENUES[this.currentVenue].interior.y : getTerrainHeight(this.player.root.position.x, this.player.root.position.z + dz * 0.35);
+      this.player.root.position.y = Math.max(supportY, this.player.root.position.y + (targetY - this.player.root.position.y) * 0.35);
       this.player.root.position.z += dz * 0.35;
     }
     if (Number.isFinite(authoritative.rotation)) this.player.root.rotation.y = authoritative.rotation;
@@ -2887,6 +2890,8 @@ export class FarmWorld {
     this.player.root.position.set(position.x, position.y || 0, position.z);
     this.player.root.rotation.y = Number(position.rotation) || 0;
     this.syncVenueFromPosition(position);
+    const supportY = VENUES[this.currentVenue]?.interior.y ?? getTerrainHeight(position.x, position.z);
+    this.player.root.position.y = Math.max(supportY, this.player.root.position.y);
   }
 
   ensureDetailedFarm(farmId, isOwner = true, ownerName = null, homeTier = 1, barnLevel = 1) {

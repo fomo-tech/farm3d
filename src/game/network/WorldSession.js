@@ -100,3 +100,12 @@ export function leaveWorldSession({ deleted = false } = {}) {
   try { sessionStore?.removeItem(SESSION_KEY); } catch {}
   return loadWorldSession();
 }
+
+// Keep the old profile saved; a rejected, unfinished guest can start a new session.
+export function startFreshGuestSession() {
+  const localStore = getBrowserStorage('localStorage');
+  const playerId = createRuntimeId('player');
+  safeStorageSet(localStore, PLAYER_ID_KEY, playerId);
+  safeStorageSet(localStore, GUEST_ID_KEY, playerId);
+  return saveWorldSession({ playerId, name: 'Nông dân mới', farmId: null, villageId: null, channelId: null, registrationIndex: 0, googleLinked: false, signedOut: false });
+}

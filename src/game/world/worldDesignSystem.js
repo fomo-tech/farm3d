@@ -23,22 +23,22 @@ export const WORLD_PALETTE = Object.freeze({
   grassShade: ART.grassMid,
   roadWarm: ART.pathLight,
   roadStone: ART.path,
-  sidewalkCream: '#c5b8a6',     // Đá phiến kem ngà êm dịu, ấm áp, sáng trong
+  sidewalkCream: '#dfd5bd',     // Đá phiến kem ngà êm dịu, ấm áp, sáng trong
   waterShallow: ART.shallows,
   waterDeep: ART.water,
   // 1. Tường & Bệ móng
-  wallPlaster: '#eee7d9',       // Cream toy-town walls.
-  wallPlasterWarm: '#e6dbc2',   // Warm pastel frontage.
-  wallTimberStucco: '#ded4b5',  // Warm muted stucco.
-  stoneFoundation: '#a8aac2',   // Soft lavender foundations.
-  stonePlinth: '#c6c4d8',       // Light lavender plinths.
+  wallPlaster: '#fff1d6',       // Cream toy-town walls.
+  wallPlasterWarm: '#f8e3bf',   // Warm pastel frontage.
+  wallTimberStucco: '#efdcb3',  // Warm muted stucco.
+  stoneFoundation: '#bbc4dc',   // Soft lavender foundations.
+  stonePlinth: '#d8daeb',       // Light lavender plinths.
 
   // 2. Mái nhà & Hiên
-  roofTerracotta: '#bd8b73',    // Muted clay roofs.
-  roofRidge: '#9b7774',
-  roofWarmTile: '#c9a085',
-  roofThatch: '#b8a077',
-  awningCaramel: '#ba9a76',
+  roofTerracotta: '#dc9c82',    // Muted clay roofs.
+  roofRidge: '#b9837c',
+  roofWarmTile: '#e4b395',
+  roofThatch: '#cfb581',
+  awningCaramel: '#dbb78b',
 
   // 3. Gỗ cấu trúc & Trang trí
   woodOakDark: '#94715e',       // Warm readable structural wood.
@@ -48,9 +48,9 @@ export const WORLD_PALETTE = Object.freeze({
   woodPlankWeathered: '#8d6e53',// Ván gỗ bến nước mộc mạc
 
   // 4. Đường dạo & Quảng trường
-  plazaMarbleWhite: '#ded5c6',   // Cream plaza tiles.
-  plazaMarbleCream: '#dfd9eb',   // Lavender paving border.
-  pathCobblestone: '#c0b39f',   // Lối đi sỏi nhẵn màu kem bơ
+  plazaMarbleWhite: '#ede4ce',   // Cream plaza tiles.
+  plazaMarbleCream: '#e7def5',   // Lavender paving border.
+  pathCobblestone: '#d4c7af',   // Lối đi sỏi nhẵn màu kem bơ
   roadHoneyEarth: '#c7a391',    // Đất nện hồng cát sáng
   curbStone: '#a39584',         // Viền đá bó vỉa hè ấm áp
 

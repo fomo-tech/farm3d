@@ -1,36 +1,227 @@
-.arrival-screen.pt-onboarding-backdrop{background:radial-gradient(ellipse at 22% 65%,#b7f1e7,transparent 50%),linear-gradient(135deg,#8bd7ff,#d9eaff 62%,#eee5ff);backdrop-filter:none;padding:24px;color:#263958}
-.arrival-screen .pt-studio-card{width:1080px;max-width:100%;max-height:calc(100dvh - 48px);padding:24px;background:#ffffffeb;border:3px solid white;border-radius:32px;box-shadow:0 18px 0 #589bc121,0 30px 80px #256aa82b;gap:20px}
-.arrival-screen .pt-studio-header{text-align:left;padding:0 10px;position:relative}
-.arrival-screen .pt-studio-badge{background:none;border:0;box-shadow:none;padding:0;color:#258cc5;font-size:11px;letter-spacing:2px}
-.arrival-screen .pt-studio-header h2{font-size:30px;color:#263958;margin:5px 0}
-.arrival-screen .pt-studio-header p{font-size:14px}
-.arrival-screen .pt-studio-body{grid-template-columns:minmax(260px,.9fr) minmax(340px,1.1fr);gap:26px;align-items:stretch}
-.arrival-screen .pt-studio-podium-wrap{position:relative;min-height:420px;border-radius:26px;background:radial-gradient(circle at 50% 42%,#fff 0,#e4f8ff 42%,#bfeaff 100%);overflow:hidden;justify-content:flex-end;padding:20px}
-.arrival-screen .pt-studio-podium-wrap:before{content:'VIBE CITY';position:absolute;top:22px;left:24px;font-size:12px;font-weight:900;letter-spacing:3px;color:#4aa3cf}
-.arrival-avatar-canvas{width:100%;height:330px;min-height:220px;display:block;touch-action:none;outline:none;position:relative;z-index:2}
-.arrival-screen .pt-studio-podium-wrap:after{content:'';position:absolute;bottom:94px;width:62%;height:34px;background:#fff;border-radius:50%;box-shadow:0 9px 0 #8cd1ed,0 16px 25px #4b9ac735}
-.arrival-screen .pt-podium-name-tag{z-index:3;margin:0;box-shadow:none;background:#ffffffbd;border:0;padding:9px 28px}
-.arrival-screen .pt-tag-role{color:#388bb3;font-size:10px;letter-spacing:1.5px}
-.arrival-screen .pt-tag-name{color:#263958;font-size:20px}
-.arrival-rotate-hint{z-index:3;color:#5d91ab;font-size:11px;margin:8px 0 0}
-.arrival-screen .pt-studio-controls{gap:16px;min-width:0;display:flex;flex-direction:column}
-.arrival-screen .pt-input-block label{font-size:11px;letter-spacing:1px;color:#71859a}
-.arrival-screen .pt-input-with-dice input{height:48px;border:2px solid #dce8f2;border-radius:15px;font-size:17px;color:#263958}
-.arrival-screen .pt-dice-btn{width:48px;height:48px;border-radius:15px;box-shadow:0 3px 0 #d99d31}
-.arrival-screen .pt-studio-tabs{background:#edf4fa;padding:5px;border-radius:16px;gap:4px}
-.arrival-screen .pt-tab-btn{font-size:14px;padding:10px 8px;border-radius:12px}
-.arrival-screen .pt-tab-btn.active{color:#188dce;box-shadow:0 3px 8px #80a9c422}
-.arrival-screen .pt-options-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.arrival-screen .pt-option-card{min-height:108px;padding:12px 6px;border:2px solid #e3edf5;border-radius:18px;box-shadow:none;background:#fff}
-.arrival-screen .pt-option-card b{font-size:11px;line-height:1.35;color:#344a65}
-.arrival-screen .pt-option-card small{display:none}
-.arrival-screen .pt-option-card.selected{border-color:#35b6ee;background:#eaf9ff;box-shadow:0 3px 0 #c5eafa}
-.arrival-screen .pt-option-icon{transform:scale(1.2);margin:5px 0 10px}
-.arrival-screen .pt-studio-tab-content{min-height:225px}
-.arrival-screen .pt-studio-submit-btn{margin-top:auto;font-size:18px;min-height:54px;border-radius:18px;background:linear-gradient(#ffdd67,#ffc139);color:#62411f;border:3px solid white;box-shadow:0 5px 0 #e4a328,0 8px 16px #e8b94b30}
-.arrival-screen button:focus-visible,.arrival-screen input:focus-visible{outline:3px solid #248fd3;outline-offset:3px}
-.arrival-screen .pt-studio-submit-btn:disabled{opacity:.5}
-@media(max-width:700px){.arrival-screen.pt-onboarding-backdrop{padding:10px}.arrival-screen .pt-studio-card{padding:14px;max-height:calc(100dvh - 20px);border-radius:24px;gap:12px}.arrival-screen .pt-studio-header h2{font-size:23px}.arrival-screen .pt-studio-header p{font-size:12px}.arrival-screen .pt-studio-body{grid-template-columns:1fr;gap:14px}.arrival-screen .pt-studio-podium-wrap{min-height:240px;padding:10px}.arrival-avatar-canvas{height:230px}.arrival-screen .pt-studio-podium-wrap:after{bottom:73px}.arrival-screen .pt-studio-tab-content{min-height:0}.arrival-screen .pt-option-card{min-height:90px}.arrival-screen .pt-podium-name-tag{position:absolute;bottom:24px}.arrival-rotate-hint{margin:0}.arrival-screen .pt-studio-podium-wrap:before{top:12px;left:14px}}
-@media(max-height:550px) and (min-width:701px){.arrival-screen.pt-onboarding-backdrop{padding:8px}.arrival-screen .pt-studio-card{padding:12px;max-height:calc(100dvh - 16px);gap:8px}.arrival-screen .pt-studio-header p{display:none}.arrival-screen .pt-studio-header h2{font-size:22px}.arrival-screen .pt-studio-podium-wrap{min-height:290px}.arrival-avatar-canvas{height:220px}.arrival-screen .pt-studio-tab-content{min-height:0}.arrival-screen .pt-option-card{min-height:74px;padding:4px}.arrival-screen .pt-studio-controls{gap:8px}.arrival-screen .pt-studio-submit-btn{min-height:44px}}
+/* First arrival: warm paper, garden green and a sunny character stage. */
+.arrival-screen.pt-onboarding-backdrop{background:radial-gradient(ellipse at 15% 20%,#f5e9bd 0,transparent 45%),radial-gradient(ellipse at 90% 90%,#c1dcc7 0,transparent 48%),#e7eee2;backdrop-filter:blur(8px);padding:24px;color:#294c3e;display:flex;align-items:center;justify-content:center}
+.arrival-screen,.arrival-screen *{box-sizing:border-box}
+.arrival-screen .pt-studio-card{width:1050px;max-width:100%;max-height:calc(100dvh - 48px);padding:28px;background:#fffcf4;border:1px solid #fff;border-radius:28px;box-shadow:0 24px 80px #294c3e26;display:flex;flex-direction:column;gap:24px;overflow:auto}
+.arrival-screen .pt-studio-header{text-align:left;padding:0 4px}
+.arrival-screen .pt-studio-badge{display:inline-flex;padding:0;background:none;border:0;box-shadow:none;color:#718c61;font-size:10px;font-weight:800;letter-spacing:2px}
+.arrival-screen .pt-studio-header h2{font-size:30px;font-weight:900;letter-spacing:-.8px;color:#294c3e;margin:8px 0}
+.arrival-screen .pt-studio-header p{font-size:13px;color:#7b8776;margin:0;line-height:1.6}
+.arrival-screen .pt-studio-body{display:grid;grid-template-columns:minmax(260px,.95fr) minmax(320px,1.05fr);gap:30px;align-items:stretch;min-height:0}
+.arrival-screen .pt-studio-podium-wrap{position:relative;min-height:440px;border:1px solid #dae7ce;border-radius:22px;background:radial-gradient(ellipse at 50% 40%,#fffbe3 0,#edf2d7 45%,#d3e5c9 100%);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:24px 14px 18px}
+.arrival-screen .pt-studio-podium-wrap:before{content:'VIBE CITY  /  CƯ DÂN 001';position:absolute;top:22px;left:24px;font-size:9px;font-weight:800;letter-spacing:2px;color:#668268}
+.arrival-screen .pt-studio-podium-wrap:after{content:'';position:absolute;bottom:112px;width:65%;height:32px;background:#fff9dc;border:1px solid #e3dab6;border-radius:50%;box-shadow:0 8px 0 #becb9f,0 16px 24px #52774a26}
+.arrival-avatar-canvas{width:100%;height:330px;min-height:180px;display:block;touch-action:none;outline:none;position:relative;z-index:2}
+.arrival-screen .pt-podium-name-tag{z-index:3;margin:14px 0 0;box-shadow:none;background:#fffdf0db;border:1px solid #fff;border-radius:14px;padding:10px 28px;max-width:100%;display:flex;flex-direction:column;align-items:center}
+.arrival-screen .pt-tag-role{color:#7a8a61;font-size:9px;font-weight:800;letter-spacing:2px}
+.arrival-screen .pt-tag-name{color:#294c3e;font-size:20px;line-height:1.5;overflow-wrap:anywhere}
+.arrival-rotate-hint{z-index:3;color:#658365;font-size:10px;margin:6px 0 0}
+.arrival-screen .pt-studio-podium-wrap:has(svg.arrival-avatar-canvas) .arrival-rotate-hint{display:none}
+.arrival-screen .pt-studio-controls{gap:12px;min-width:0;display:flex;flex-direction:column}
+.arrival-screen fieldset{display:flex;flex-direction:column;gap:18px;padding:0;margin:0;min-width:0;border:0}
+.arrival-screen fieldset:disabled{opacity:.65}
+.arrival-screen .pt-input-block label,.arrival-screen .pt-gender-select>label{display:block;font-size:10px;font-weight:800;letter-spacing:1.2px;color:#60725d;margin-bottom:8px}
+.arrival-screen .pt-input-with-dice{display:flex;gap:8px}
+.arrival-screen .pt-input-with-dice input{width:100%;min-width:0;height:48px;padding:0 14px;background:#fff;border:1px solid #d4ddcc;border-radius:12px;font-family:inherit;font-size:16px;font-weight:700;color:#294c3e;box-shadow:none}
+.arrival-screen .pt-input-with-dice input:focus{border-color:#739763}
+.arrival-screen .pt-dice-btn{display:grid;place-items:center;flex-shrink:0;width:48px;height:48px;background:#f4e7b5;color:#82713d;border:1px solid #e4d7a2;border-radius:12px;box-shadow:none;cursor:pointer;transition:transform .18s}
+.arrival-screen .pt-dice-btn.is-rolling svg{transform:rotate(150deg);transition:transform .18s}
+.arrival-name-help{display:flex;justify-content:space-between;gap:10px;color:#87917f;font-size:10px;margin-top:7px}
+.arrival-screen .pt-gender-buttons{display:flex;gap:10px}
+.arrival-screen .pt-gender-btn{position:relative;width:50%;height:40px;border:1px solid #d4ddcc;border-radius:10px;background:#fff;color:#7b8776;font-family:inherit;font-size:12px;font-weight:800;box-shadow:none;cursor:pointer;display:flex;justify-content:center;align-items:center;gap:10px}
+.arrival-screen .pt-gender-btn.selected{color:#3a634a;background:#eaf1e1;border-color:#739763}
+.arrival-screen .pt-check-badge{position:static;background:none;color:#4b7a53;padding:0}
+.arrival-screen .pt-studio-tabs{display:flex;background:#eeeee3;padding:4px;border:0;border-radius:12px;gap:4px;margin:0}
+.arrival-screen .pt-tab-btn{flex:1;font-family:inherit;font-size:12px;font-weight:800;padding:10px 6px;border:0;border-radius:9px;color:#85907e;background:transparent;cursor:pointer}
+.arrival-screen .pt-tab-btn.active{background:#fffdf5;color:#3a634a;box-shadow:0 2px 5px #44563812}
+.arrival-screen .pt-studio-tab-content{min-height:230px;padding:0;background:none;border:0}
+.arrival-option-heading{margin:0 0 12px}
+.arrival-option-heading h3{margin:0;color:#3f5946;font-size:13px;font-weight:800}
+.arrival-option-heading p{margin:4px 0 0;color:#8a9381;font-size:10px;line-height:1.5}
+.arrival-screen .pt-shirt-colors-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.arrival-screen .pt-shirt-card,.arrival-screen .pt-hair-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 5px;border:1px solid #e0e4d6;border-radius:12px;background:#fffef9;box-shadow:none;font-family:inherit;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+.arrival-screen .pt-shirt-card:hover,.arrival-screen .pt-hair-card:hover{transform:translateY(-2px);border-color:#9bb78d}
+.arrival-screen .pt-shirt-card.selected,.arrival-screen .pt-hair-card.selected{border-color:#739763;background:#eaf1e1;box-shadow:inset 0 0 0 1px #739763}
+.arrival-screen .pt-shirt-swatch{width:54px;height:44px;display:block;border:0;border-radius:0;box-shadow:none;background:none}
+.arrival-screen .pt-shirt-swatch svg{width:100%;height:100%}
+.arrival-screen .pt-shirt-name{font-size:10px;font-weight:700;color:#687b60;text-align:center}
+.arrival-screen .pt-card-check{position:absolute;top:5px;right:5px;display:grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#739763;color:#fff;border:2px solid #fff}
+.arrival-screen .pt-hairs-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.arrival-screen .pt-hair-preview-dot{width:55px;height:49px;border:0;background:none;border-radius:0;box-shadow:none}
+.arrival-screen .pt-hair-preview-dot svg{width:100%;height:100%}
+.arrival-screen .pt-hair-info{display:flex;flex-direction:column;gap:2px;text-align:center}
+.arrival-screen .pt-hair-info strong{font-size:11px;color:#687b60}
+.arrival-screen .pt-hair-info span{font-size:9px;color:#95a08c}
+.arrival-screen .pt-colors-container{display:flex;flex-direction:column;gap:22px;padding:8px 0}
+.arrival-screen .pt-section-title{display:block;font-size:10px;font-weight:800;color:#718266;letter-spacing:1px;margin-bottom:12px}
+.arrival-screen .pt-colors-grid{display:flex;flex-wrap:wrap;gap:14px}
+.arrival-screen .pt-color-bubble{display:grid;place-items:center;width:42px;height:42px;border:3px solid #fff;border-radius:50%;color:#fff;box-shadow:0 0 0 1px #ddd;cursor:pointer}
+.arrival-screen .pt-color-bubble.selected{outline:2px solid #739763;outline-offset:3px}
+.arrival-screen .pt-color-bubble svg{filter:drop-shadow(0 1px 2px #0008)}
+.arrival-screen .pt-studio-submit-btn{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding:0 20px;font-family:inherit;font-size:15px;font-weight:800;min-height:52px;border-radius:13px;background:#47704c;color:#fffef2;border:1px solid #355b3b;box-shadow:0 4px 0 #294d33;cursor:pointer;transition:background .15s,transform .15s}
+.arrival-screen .pt-studio-submit-btn>span:last-child{font-size:24px;font-weight:400}
+.arrival-screen .pt-studio-submit-btn:hover{background:#365e3d;transform:translateY(-1px)}
+.arrival-screen .pt-studio-submit-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #294d33}
+.arrival-screen .pt-studio-submit-btn:disabled{opacity:.5;cursor:default;transform:none}
+.arrival-footer-note{text-align:center;font-size:10px;color:#929984;margin:4px 0 0}
+.arrival-screen .pt-creation-error-banner{background:#fff0e9;border:1px solid #e8b8a0;color:#a44729;padding:10px 14px;border-radius:10px;font-size:12px}
+.arrival-screen button:focus-visible,.arrival-screen input:focus-visible{outline:3px solid #528d73;outline-offset:3px}
+@media(max-width:700px){.arrival-screen.pt-onboarding-backdrop{padding:10px}.arrival-screen .pt-studio-card{padding:18px;max-height:calc(100dvh - 20px);border-radius:22px;gap:16px}.arrival-screen .pt-studio-header h2{font-size:24px}.arrival-screen .pt-studio-header p{font-size:11px}.arrival-screen .pt-studio-body{grid-template-columns:1fr;gap:20px}.arrival-screen .pt-studio-podium-wrap{min-height:230px;padding:14px}.arrival-avatar-canvas{height:210px;min-height:160px}.arrival-screen .pt-studio-podium-wrap:before{top:14px;left:16px;font-size:8px}.arrival-screen .pt-studio-podium-wrap:after{bottom:46px;width:50%}.arrival-screen .pt-podium-name-tag{position:absolute;right:14px;bottom:14px;padding:6px 14px;max-width:60%;background:#fffdf0eb}.arrival-screen .pt-tag-name{font-size:15px}.arrival-screen .pt-tag-role{font-size:8px}.arrival-screen .pt-studio-tab-content{min-height:0}.arrival-screen fieldset{gap:16px}}
+@media(max-height:600px) and (min-width:701px){.arrival-screen .pt-studio-card{padding:18px;gap:14px}.arrival-screen .pt-studio-header h2{font-size:24px}.arrival-screen .pt-studio-podium-wrap{min-height:350px}.arrival-avatar-canvas{height:270px}.arrival-screen fieldset{gap:12px}.arrival-screen .pt-studio-tab-content{min-height:0}}
+@media(prefers-reduced-motion:reduce){.arrival-screen button,.arrival-screen svg{transition:none!important}}
+.arrival-screen{line-height:1.45}
+.arrival-screen .pt-input-block{display:block}
+.arrival-screen .pt-hair-card,.arrival-screen .pt-shirt-card{line-height:1.3}
+.arrival-screen .pt-studio-header{flex-shrink:0}
+.arrival-screen .pt-studio-tab-content{min-height:218px}
+@media(min-width:701px){.arrival-screen .pt-studio-podium-wrap:has(canvas.arrival-avatar-canvas):after{bottom:170px}}
+/* Game lobby: open sky, landscape and a character stage rather than a paper form. */
+.arrival-screen.pt-onboarding-backdrop{background:linear-gradient(#91d9f8 0%,#c9f1fb 60%,#9ed787 60%,#68ad67);isolation:isolate;color:#30577b}
+.arrival-world-scenery{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1}
+.arrival-cloud{position:absolute;width:210px;height:55px;border-radius:60px;background:#ffffffb3;box-shadow:35px -20px 0 -4px #ffffffb3,-22px -13px 0 -8px #ffffffb3}
+.cloud-one{top:12%;left:4%}.cloud-two{top:22%;right:-30px;transform:scale(.7)}
+.arrival-hill{position:absolute;border-radius:50% 50% 0 0;bottom:-10%;width:110%;height:40%;background:#83c681}.hill-back{left:-35%;bottom:0;transform:rotate(9deg);background:#a8dba0}.hill-front{right:-30%;transform:rotate(-7deg)}
+.arrival-screen .pt-studio-card{position:relative;width:1080px;background:#ffffffec;border:4px solid #fff;border-radius:30px;box-shadow:0 8px 0 #62a1bb66,0 24px 60px #24537a38;padding:24px;gap:18px}
+.arrival-screen .pt-studio-header{text-align:center}
+.arrival-screen .pt-studio-badge{font-size:12px;letter-spacing:4px;color:#39a1c7}
+.arrival-screen .pt-studio-header h2{color:#295a7a;font-size:32px;text-shadow:0 3px 0 #d5ebf4;letter-spacing:0;margin:5px 0}
+.arrival-screen .pt-studio-header p{color:#7e9aaa}
+.arrival-screen .pt-studio-body{grid-template-columns:minmax(280px,1.1fr) minmax(320px,1fr);gap:24px}
+.arrival-screen .pt-studio-podium-wrap{background:radial-gradient(ellipse at 50% 45%,#fff8cb,#d8f3ed 60%,#b9e4ee);border:2px solid #e4faff;min-height:465px;border-radius:24px;padding-top:50px}
+.arrival-screen .pt-studio-podium-wrap:before{content:'VIBE CITY';color:#7bb4c5;letter-spacing:5px;left:0;right:0;text-align:center;top:22px;font-size:10px}
+.arrival-player-level{position:absolute;left:16px;top:55px;font-size:11px;font-weight:800;border-radius:20px;color:#54889d;background:#ffffff9e;padding:6px 12px}.arrival-player-level>span{padding:0 4px;color:#a1c9d4}
+.arrival-screen .pt-studio-podium-wrap:after{background:linear-gradient(#ffffff,#daeff2);border:2px solid #fff;box-shadow:0 9px 0 #7fc7dc,0 16px 0 #55a6c1,0 24px 25px #539ab547;height:36px;width:66%}
+.arrival-screen .pt-podium-name-tag{background:#fff;border:2px solid #d3ecf2;box-shadow:0 4px 0 #b5d9e4;border-radius:12px}
+.arrival-screen .pt-tag-name{color:#305b7b}.arrival-screen .pt-tag-role{color:#82acbc}.arrival-rotate-hint{color:#6899aa}
+.arrival-screen .pt-studio-controls{background:#f6fbff;border:2px solid #e5f1f8;border-radius:20px;padding:18px;gap:12px}
+.arrival-screen fieldset{gap:14px}
+.arrival-screen .pt-input-block label,.arrival-screen .pt-gender-select>label{color:#5d86a0;font-size:11px}
+.arrival-screen .pt-input-with-dice input{border:2px solid #d5e7f1;color:#315b7b;background:#fff}
+.arrival-screen .pt-dice-btn{background:#ffe7a3;border:2px solid #fff1c5;color:#b78028;box-shadow:0 3px 0 #e9bc5a}
+.arrival-name-help{color:#7793a5;min-height:16px}
+.arrival-screen .pt-gender-btn{border:2px solid #dcebf3;color:#7590a4;background:#fff}
+.arrival-screen .pt-gender-btn.selected{border-color:#54b7e0;color:#2685b2;background:#e5f7ff}.arrival-screen .pt-check-badge{color:#3094be}
+.arrival-screen .pt-studio-tabs{background:#e1eff7;border-radius:12px}.arrival-screen .pt-tab-btn{color:#7d9bb0}.arrival-screen .pt-tab-btn.active{background:#fff;color:#258bb9;box-shadow:0 3px 0 #bbdce9}
+.arrival-option-heading h3{color:#46728e}.arrival-option-heading p{color:#8aa6b7}
+.arrival-screen .pt-hair-card{border:2px solid #dcebf3;background:#fff;border-radius:14px;padding:9px 5px;gap:3px;box-shadow:0 3px 0 #e0edf4}
+.arrival-screen .pt-hair-card.selected{border-color:#50b9e2;background:#e8f9ff;box-shadow:0 3px 0 #98d4e9}
+.arrival-screen .pt-hair-info strong{color:#48728c}.arrival-screen .pt-hair-info span{color:#90aaba}.arrival-screen .pt-card-check{background:#42b1dd}
+.arrival-screen .pt-section-title{color:#668ba1}.arrival-screen .pt-color-bubble.selected{outline-color:#45afe0}
+.arrival-screen .pt-studio-submit-btn{background:linear-gradient(#ffdb69,#ffbf3e);color:#875723;border:2px solid #fff5d6;box-shadow:0 5px 0 #dda137;font-size:17px;border-radius:14px}
+.arrival-screen .pt-studio-submit-btn:hover{background:linear-gradient(#ffe480,#ffca53)}
+.arrival-footer-note{color:#91aabb;font-size:9px}
+@media(max-width:700px){.arrival-screen .pt-studio-card{padding:14px;gap:14px}.arrival-screen .pt-studio-header h2{font-size:26px}.arrival-screen .pt-studio-body{grid-template-columns:1fr;gap:14px}.arrival-screen .pt-studio-podium-wrap{min-height:255px;padding-top:38px}.arrival-screen .pt-studio-podium-wrap:before{top:14px}.arrival-player-level{top:36px;left:12px;font-size:9px;padding:4px 8px}.arrival-screen .pt-studio-controls{padding:14px}.arrival-screen .pt-podium-name-tag{max-width:55%}}
+@media(max-height:650px) and (min-width:701px){.arrival-screen .pt-studio-card{padding:16px;gap:12px}.arrival-screen .pt-studio-header h2{font-size:26px}.arrival-screen .pt-studio-controls{padding:12px}.arrival-screen .pt-studio-podium-wrap{min-height:380px}}
+@media(min-width:701px){.arrival-screen .pt-studio-controls{padding:14px;gap:10px}.arrival-screen fieldset{gap:10px}.arrival-screen .pt-input-with-dice input,.arrival-screen .pt-dice-btn{height:44px}.arrival-screen .pt-input-block label,.arrival-screen .pt-gender-select>label{margin-bottom:6px}.arrival-screen .pt-studio-tab-content{min-height:0}.arrival-screen .pt-hair-card{height:88px;padding:6px 4px}.arrival-screen .pt-hair-preview-dot{height:40px;width:46px}.arrival-screen .pt-hair-info{line-height:1.2}.arrival-screen .pt-studio-podium-wrap{min-height:465px}.arrival-screen .pt-studio-header p{font-size:12px}.arrival-screen .arrival-option-heading{margin-bottom:8px}}
+/* Open character lobby, with a floating customization panel. */
+.arrival-screen .pt-studio-card{width:1160px;background:transparent;border:0;border-radius:0;box-shadow:none;padding:16px 24px;gap:16px;overflow:auto}
+.arrival-screen .pt-studio-header{text-align:left;padding-left:20px}
+.arrival-screen .pt-studio-badge{color:#fff;font-size:13px;font-weight:900;letter-spacing:4px;text-shadow:0 2px 0 #5da6c0}
+.arrival-screen .pt-studio-header h2{font-size:38px;color:#fff;text-shadow:0 3px 0 #5598b6,0 6px 16px #3f8ab340;margin:6px 0}
+.arrival-screen .pt-studio-header p{color:#377999;font-weight:700}
+.arrival-screen .pt-studio-body{grid-template-columns:minmax(320px,1.4fr) minmax(320px,1fr);gap:36px}
+.arrival-screen .pt-studio-podium-wrap{background:radial-gradient(ellipse at 50% 55%,#fff8c04d,transparent 67%);border:0;border-radius:0;overflow:visible;min-height:480px;padding:15px 12px 20px;justify-content:flex-end}
+.arrival-screen .pt-studio-podium-wrap:before{content:none}
+.arrival-screen .arrival-player-level{left:50%;top:12px;transform:translateX(-50%);background:#fff;border:2px solid #d8f5fa;box-shadow:0 3px 0 #73b7c7;font-size:12px;white-space:nowrap;padding:8px 18px;color:#3784a1}
+.arrival-screen .arrival-avatar-canvas{height:380px;z-index:2}
+.arrival-screen .pt-podium-name-tag{min-width:170px;background:#fff8df;border:3px solid #fff;border-radius:18px;box-shadow:0 5px 0 #669ba9;padding:10px 24px;margin-top:14px}
+.arrival-screen .pt-tag-name{font-size:22px;color:#4d7683}.arrival-screen .pt-tag-role{color:#aa9a67}
+.arrival-screen .arrival-rotate-hint{color:#3f7994;background:#ffffff7a;border-radius:20px;padding:5px 14px}
+.arrival-screen .pt-studio-controls{background:#fffdf5;border:4px solid #fff;border-radius:24px;box-shadow:0 7px 0 #70adc1,0 18px 35px #31799830;padding:18px}
+.arrival-screen .pt-studio-tabs{background:#e5f0f5}.arrival-screen .pt-input-with-dice input{background:#f8fcff}
+.arrival-screen .pt-studio-submit-btn{border:3px solid #fff5c9;box-shadow:0 5px 0 #d49a35;font-size:18px;min-height:56px}
+@media(min-width:701px){.arrival-screen .pt-studio-podium-wrap:has(canvas.arrival-avatar-canvas):after{bottom:169px;width:60%;height:42px}.arrival-screen .pt-studio-controls{padding:16px}}
+@media(max-width:700px){.arrival-screen .pt-studio-card{padding:12px 6px;gap:10px}.arrival-screen .pt-studio-header{padding-left:8px}.arrival-screen .pt-studio-header h2{font-size:29px}.arrival-screen .pt-studio-header p{font-size:11px}.arrival-screen .pt-studio-body{grid-template-columns:1fr;gap:16px}.arrival-screen .pt-studio-podium-wrap{min-height:275px;padding-top:32px}.arrival-screen .arrival-avatar-canvas{height:240px}.arrival-screen .arrival-player-level{top:0;left:20%;font-size:9px;padding:5px 10px}.arrival-screen .pt-podium-name-tag{right:8px;bottom:6px;min-width:0;padding:8px 15px}.arrival-screen .pt-tag-name{font-size:16px}.arrival-screen .pt-studio-controls{padding:14px;border-radius:22px}}
+@media(max-width:700px){.arrival-screen .pt-studio-podium-wrap:has(canvas.arrival-avatar-canvas):after{bottom:82px}}
+/* Viewport layout: one scrolling options area and an always reachable CTA. */
+.arrival-screen.pt-onboarding-backdrop{overflow:hidden!important;padding:clamp(8px,2vw,24px)!important}
+.arrival-screen .pt-studio-card{width:min(1160px,100%);max-width:100%!important;height:100%;max-height:100%!important;min-height:0;overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr);padding:8px 12px;gap:12px}
+.arrival-screen .pt-studio-body{min-width:0;min-height:0;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:clamp(12px,3vw,36px)}
+.arrival-screen .pt-studio-podium-wrap{min-width:0;min-height:0;overflow:hidden;justify-content:center;padding:30px 8px 16px}
+.arrival-screen .arrival-avatar-canvas{height:clamp(180px,42dvh,380px);min-height:0;flex-shrink:1}
+.arrival-screen .pt-studio-controls{min-width:0;min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto auto;gap:10px;overflow:hidden;padding:14px}
+.arrival-screen fieldset{min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;padding:4px 4px 8px;overscroll-behavior:contain;scrollbar-width:thin}
+.arrival-screen .pt-studio-submit-btn{width:100%;margin:0;flex-shrink:0}
+.arrival-screen .pt-studio-tab-content{min-height:0}
+.arrival-screen .pt-podium-name-tag{flex-shrink:0;max-width:90%;min-width:0}
+.arrival-screen .pt-studio-podium-wrap:after{display:none}
+.arrival-screen .arrival-player-level{top:5px}
+.arrival-screen .pt-studio-header h2{font-size:clamp(23px,3.5vw,38px)}
+@media(max-width:820px) and (orientation:portrait){
+ .arrival-screen .pt-studio-card{padding:4px;gap:8px}
+ .arrival-screen .pt-studio-header{padding:0 8px}
+ .arrival-screen .pt-studio-header h2{font-size:25px;margin:2px 0}
+ .arrival-screen .pt-studio-header p{font-size:10px;margin:0}
+ .arrival-screen .pt-studio-badge{font-size:9px}
+ .arrival-screen .pt-studio-body{grid-template-columns:minmax(0,1fr);grid-template-rows:clamp(130px,23dvh,210px) minmax(0,1fr);gap:10px}
+ .arrival-screen .pt-studio-podium-wrap{padding:0 8px;justify-content:center}
+ .arrival-screen .arrival-avatar-canvas{height:100%;max-height:210px;width:100%}
+ .arrival-screen .arrival-player-level{top:8px;left:8px;transform:none;font-size:9px;padding:4px 8px}
+ .arrival-screen .pt-podium-name-tag{position:absolute;right:8px;bottom:8px;padding:5px 12px;margin:0;max-width:45%;border-radius:12px}
+ .arrival-screen .pt-tag-name{font-size:14px}
+ .arrival-screen .arrival-rotate-hint{display:none}
+ .arrival-screen .pt-studio-controls{padding:10px;gap:8px;border-radius:18px;grid-template-rows:minmax(0,1fr) auto}
+ .arrival-screen .arrival-footer-note{display:none}
+ .arrival-screen .pt-studio-submit-btn{min-height:48px;font-size:15px}
+ .arrival-screen fieldset{gap:12px}
+ .arrival-screen .pt-hairs-grid{gap:6px}
+ .arrival-screen .pt-hair-card{padding:6px 4px}
+}
+@media(max-height:560px) and (orientation:landscape){
+ .arrival-screen .pt-studio-card{padding:2px;gap:6px}
+ .arrival-screen .pt-studio-header h2{font-size:21px;margin:0}
+ .arrival-screen .pt-studio-header p,.arrival-screen .pt-studio-badge{display:none}
+ .arrival-screen .pt-studio-body{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);grid-template-rows:minmax(0,1fr);gap:12px}
+ .arrival-screen .pt-studio-podium-wrap{padding:18px 2px 0}
+ .arrival-screen .arrival-avatar-canvas{height:65dvh;max-height:290px}
+ .arrival-screen .pt-podium-name-tag{position:static;padding:4px 14px;margin:0;max-width:95%}
+ .arrival-screen .pt-tag-name{font-size:14px}
+ .arrival-screen .arrival-rotate-hint,.arrival-screen .arrival-footer-note{display:none}
+ .arrival-screen .pt-studio-controls{padding:8px;gap:6px;grid-template-rows:minmax(0,1fr) auto}
+ .arrival-screen .pt-studio-submit-btn{min-height:42px;font-size:14px}
+ .arrival-screen .arrival-player-level{font-size:9px;padding:3px 8px}
+}
+@media(max-width:359px){.arrival-screen .pt-hairs-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.arrival-screen .pt-colors-grid{gap:10px}.arrival-screen .pt-color-bubble{width:36px;height:36px}}
 
-.arrival-screen .pt-studio-podium-wrap:has(svg.arrival-avatar-canvas) .arrival-rotate-hint { display: none; }
+@media(max-width:820px) and (orientation:portrait) and (max-height:560px){.arrival-screen .pt-studio-body{grid-template-rows:clamp(70px,18dvh,110px) minmax(0,1fr)}.arrival-screen .pt-studio-header p,.arrival-screen .pt-studio-badge{display:none}.arrival-screen .pt-studio-header h2{font-size:20px}.arrival-screen .pt-podium-name-tag{display:none}}
+/* Three compact screens replace every scrollable form. */
+.arrival-screen [hidden]{display:none!important}
+.arrival-screen fieldset{display:flex;flex-direction:column;overflow:hidden!important;padding:4px;gap:14px}
+.arrival-screen .pt-studio-tabs{order:-1;flex-shrink:0}
+.arrival-screen .arrival-identity-panel{display:flex;flex:1;min-height:0;flex-direction:column;justify-content:center;gap:24px}
+.arrival-screen .pt-studio-tab-content{min-height:0;flex:1;display:flex;flex-direction:column;justify-content:center}
+.arrival-screen .arrival-option-heading{display:none}
+.arrival-screen .pt-hairs-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.arrival-screen .pt-hair-card{min-height:0;height:auto;padding:8px 4px}
+.arrival-screen .pt-hair-info span{display:none}
+.arrival-screen .pt-hair-preview-dot{height:clamp(32px,7dvh,55px);width:55px}
+.arrival-screen .pt-colors-container{padding:4px;gap:18px}
+.arrival-screen .pt-studio-controls{grid-template-rows:minmax(0,1fr) auto!important}
+.arrival-screen .arrival-footer-note{display:none}
+@media(max-height:560px){.arrival-screen fieldset{gap:6px}.arrival-screen .arrival-identity-panel{gap:12px}.arrival-screen .pt-hair-card{padding:4px}.arrival-screen .pt-hair-preview-dot{height:28px;width:38px}.arrival-screen .pt-hair-info strong{font-size:10px}.arrival-screen .pt-tab-btn{font-size:10px;padding:7px 3px}.arrival-screen .pt-colors-container{gap:10px}.arrival-screen .pt-section-title{margin-bottom:7px}.arrival-screen .pt-color-bubble{width:32px;height:32px}.arrival-screen .pt-colors-grid{gap:10px}.arrival-screen .pt-input-with-dice input,.arrival-screen .pt-dice-btn{height:40px}}
+.arrival-screen .pt-tab-btn{min-height:0!important;min-width:0;line-height:1.2}
+.arrival-screen .pt-hair-card{min-height:0!important}
+.arrival-screen .pt-color-bubble{min-height:0!important;min-width:0}
+@media(max-width:359px){.arrival-screen .pt-studio-header p,.arrival-screen .pt-studio-badge{display:none}.arrival-screen .pt-studio-body{grid-template-rows:100px minmax(0,1fr)}.arrival-screen .pt-tab-btn{font-size:9px;padding:8px 2px}.arrival-screen .pt-colors-container{gap:12px}.arrival-screen .pt-color-bubble{width:36px;height:36px}.arrival-screen .pt-hair-preview-dot{height:32px;width:42px}.arrival-screen .arrival-identity-panel{gap:14px}}
+/* Final lobby treatment, scoped against the global HUD button theme. */
+.arrival-screen.pt-onboarding-backdrop{background:radial-gradient(ellipse at 28% 35%,#e5f9ff 0,transparent 42%),linear-gradient(#75c9ec 0%,#b9eafa 62%,#a9d788 62%,#6fad6c)}
+.arrival-screen .arrival-cloud{opacity:.55}
+.arrival-screen .pt-studio-header{position:relative}
+.arrival-screen .pt-studio-badge{letter-spacing:5px;font-size:11px}
+.arrival-screen .pt-studio-header h2{font-weight:900;letter-spacing:-.5px;text-shadow:0 3px 0 #3787a6,0 5px 14px #29748f30}
+.arrival-screen .arrival-step-label{font-size:12px;color:#377993;letter-spacing:.5px}
+.arrival-screen .pt-studio-controls{background:#f8fcffeF;border-color:#e4f7ff;border-radius:24px;box-shadow:0 6px 0 #4f99b5,0 16px 40px #286f8b24}
+.arrival-screen .pt-studio-tabs{background:#dceef6;border-radius:14px;padding:4px;gap:3px}
+.arrival-screen .pt-tab-btn{font-size:11px;font-weight:900;color:#698ea3;border-radius:10px}
+.arrival-screen .pt-tab-btn.active{color:#217fa4;background:#fff;box-shadow:0 3px 0 #a5d6e9}
+.arrival-screen .arrival-identity-panel{padding:0 8px}
+.arrival-screen .pt-input-block label,.arrival-screen .pt-gender-select>label{letter-spacing:1.5px;color:#487b94}
+.arrival-screen .pt-input-with-dice input{background:#fff;border-color:#bedeea;border-radius:13px}
+.arrival-screen .pt-hair-card{border-radius:16px;background:#fff;border-color:#d3e6ef;box-shadow:0 4px 0 #bfd9e5}
+.arrival-screen .pt-hair-card.selected{background:#e0f5ff;border-color:#35addb;box-shadow:0 4px 0 #71bfdd}
+.arrival-screen.pt-onboarding-backdrop .pt-studio-submit-btn{background:linear-gradient(#ffe679,#ffc346)!important;color:#87521c!important;border:3px solid #fff2b9!important;border-radius:15px;box-shadow:0 5px 0 #c88e27!important;font-size:16px;letter-spacing:.2px}
+.arrival-screen.pt-onboarding-backdrop .pt-studio-submit-btn:disabled{opacity:.55}
+.arrival-screen .pt-colors-container{background:#fff;border:2px solid #dcecf5;border-radius:18px;padding:18px;gap:22px}
+.arrival-screen .pt-color-section{display:flex;flex-direction:column;align-items:center}
+.arrival-screen .pt-section-title{font-size:11px;letter-spacing:1.5px;color:#54839b}
+@media(max-width:820px) and (orientation:portrait) and (min-height:700px){.arrival-screen .pt-studio-body{grid-template-rows:minmax(0,29dvh) minmax(0,1fr)}.arrival-screen .arrival-avatar-canvas{max-height:none}.arrival-screen .pt-hair-preview-dot{height:65px;width:72px}.arrival-screen .pt-hair-card{padding:10px 4px}.arrival-screen .pt-hair-info strong{font-size:12px}}
+@media(max-height:560px){.arrival-screen .pt-colors-container{padding:8px;gap:10px}.arrival-screen .pt-section-title{font-size:9px}.arrival-screen .pt-tab-btn{font-size:10px}}

@@ -18,7 +18,7 @@ try {
     server.stderr.on('data', chunk => process.stderr.write(chunk));
     server.once('exit', code => { clearTimeout(timeout); reject(new Error(`Server exited: ${code}`)); });
   });
-  const connect = async (name) => {
+  const connect = async (name, identity = null) => {
     const socket = new WebSocket(`ws://127.0.0.1:${port}`);
     sockets.push(socket);
     const messages = [];
@@ -41,8 +41,8 @@ try {
       });
     };
     await new Promise((resolve, reject) => { socket.once('open', resolve); socket.once('error', reject); });
-    const playerId = `player_${randomUUID()}`;
-    socket.send(JSON.stringify({ type: 'join', playerId, name, villageId: 'binh-minh' }));
+    const playerId = identity?.playerId || `player_${randomUUID()}`;
+    socket.send(JSON.stringify({ type: 'join', playerId, name, villageId: 'binh-minh', sessionToken: identity?.sessionToken }));
     await wait(msg => msg.type === 'welcome');
     const action = (actionName, payload) => {
       const requestId = randomUUID();
@@ -53,13 +53,31 @@ try {
       socket.send(JSON.stringify({ type: 'get_profile', playerId: target }));
       return wait(msg => msg.type === 'profile_state' && msg.requestedId === target);
     };
-    return { socket, playerId, action, profile, wait };
+    const checkName = name => {
+      const requestId = randomUUID();
+      socket.send(JSON.stringify({ type: 'check_character_name', name, requestId }));
+      return wait(msg => msg.type === 'character_name_result' && msg.requestId === requestId);
+    };
+    return { socket, playerId, action, profile, wait, checkName };
   };
   const a = await connect('Hồ Sơ A');
   const b = await connect('Hồ Sơ B');
   assert.equal((await a.profile(b.playerId)).profile, null, 'unfinished character must not have a public profile');
   assert.equal((await a.action('character_create', { name: 'Minh Một' })).type, 'account_state');
-  assert.equal((await b.action('character_create', { name: 'Minh Hai' })).type, 'account_state');
+  assert.equal((await b.checkName('An')).available, false, 'short name rejected live');
+  assert.equal((await b.checkName('  minh một  ')).available, false, 'live uniqueness ignores case and outer whitespace');
+  assert.equal((await b.checkName('Minh Hai')).available, true, 'unused name available before creation');
+  assert.equal((await b.action('character_create', { name: 'Minh Hai', appearance: {gender:'female',skinTone:'caramel',hair:'bob',hairColor:'#d97096',topId:'top_royal_prince'} })).type, 'account_state');
+  assert.equal((await a.checkName('Minh Hai')).available, false, 'created name becomes unavailable');
+  const stored = await mongo.db(databaseName).collection('players').findOne({ playerId: b.playerId });
+  assert.equal(stored.progress.customization.skinTone, 'caramel');
+  assert.equal(stored.progress.customization.skinColor, '#9a6547');
+  assert.equal(stored.progress.customization.hairColor, '#d97096');
+  assert.equal(stored.progress.customization.hairStyle, 'hair_chic_bob');
+  assert.equal(stored.progress.customization.gender, 'female');
+  assert.equal(stored.progress.customization.topId, 'top_tee_white', 'client cannot grant an unrelated outfit');
+  assert.ok(stored.progress.ownedCustomization.includes('dye_pink'));
+
   assert.equal((await a.action('profile_update', { name: 'Minh Mới', bio: 'Trồng cà rốt và câu cá' })).type, 'account_state');
   const visible = (await b.profile(a.playerId)).profile;
   assert.equal(visible.name, 'Minh Mới');
@@ -71,6 +89,11 @@ try {
   b.socket.send(JSON.stringify({ type: 'social_action', action: 'add_friend', friendId: a.playerId }));
   const social = await b.wait(msg => msg.type === 'social_state' && msg.friends?.some(friend => friend.playerId === a.playerId));
   assert.equal(social.friends[0].name, 'Minh Mới');
+  const credentials = await b.wait(msg => msg.type === 'account_state' && msg.sessionToken);
+  b.socket.close();
+  const reloaded = await connect('Minh Hai', { playerId: b.playerId, sessionToken: credentials.sessionToken });
+  const reloadedState = await reloaded.wait(msg => msg.type === 'account_state' && msg.progress);
+  assert.deepEqual(reloadedState.progress.customization, stored.progress.customization, 'saved appearance survives reconnect/reload');
   console.log('PASS: two-account public profile, private-field filtering, name uniqueness, bio limit, friend state.');
 } finally {
   for (const socket of sockets) socket.close();

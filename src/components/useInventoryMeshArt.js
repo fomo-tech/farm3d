@@ -96,10 +96,11 @@ export function useInventoryMeshArt(isOpen, category, items) {
             avatar.applyCustomization(getDefaultCustomization());
             const type = applyFashionInventoryItem(avatar, item);
             if (!type) throw new Error('Fashion item has no mesh mapping');
-            camera.target.set(0, 1.08, 0);
-            camera.radius = 2.9;
+            camera.target.set(0, item.previewHeadShot ? 1.85 : 1.08, 0);
+            camera.radius = item.previewHeadShot ? 1.85 : 2.9;
             camera.alpha = item.itemId.includes('backpack') || item.itemId.includes('wings') ? Math.PI * 1.35 : Math.PI / 2;
-            camera.beta = 1.52;
+            if (item.previewHeadShot) camera.alpha = Math.PI * 0.67;
+            camera.beta = item.previewHeadShot ? 1.4 : 1.52;
           } else {
             objectRoot?.dispose(false, true);
             objectRoot = null;

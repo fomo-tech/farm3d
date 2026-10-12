@@ -52,7 +52,7 @@ export function createCinematicRenderingPipeline(scene, camera, options = {}) {
     pipeline.samples = resolveSamples(quality);
 
     // Tắt hoàn toàn FXAA để giữ trọn vẹn độ phân giải cao và viền texture siêu sắc nét (FXAA làm mờ hình)
-    pipeline.fxaaEnabled = false;
+    pipeline.fxaaEnabled = pipeline.samples < 2;
 
     // Babylon's sharpen is an edge filter, not CAS. Native pixels and MSAA
     // provide clarity without enhancing aliasing or adding a full-screen pass.

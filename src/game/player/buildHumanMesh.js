@@ -3342,18 +3342,25 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   fishingRodGrip.material = toolMatRod;
   fishingRodGrip.parent = fishingRodNode;
   const fishingRodShaft = MeshBuilder.CreateCylinder(`${idPrefix}-fishing-rod-shaft`, {
-    height: 1.45, diameterTop: 0.018, diameterBottom: 0.048, tessellation: 8,
+    height: 1.45, diameterTop: 0.045, diameterBottom: 0.075, tessellation: 10,
   }, scene);
   fishingRodShaft.position.set(0, 0.58, 0.04);
   fishingRodShaft.rotation.z = -0.02;
   fishingRodShaft.material = toolMatRod;
   fishingRodShaft.parent = fishingRodNode;
   const fishingRodTip = MeshBuilder.CreateCylinder(`${idPrefix}-fishing-rod-tip`, {
-    height: 0.16, diameterTop: 0.012, diameterBottom: 0.022, tessellation: 8,
+    height: 0.16, diameterTop: 0.035, diameterBottom: 0.045, tessellation: 10,
   }, scene);
   fishingRodTip.position.set(0, 1.37, 0.04);
   fishingRodTip.material = toolMatRodTip;
   fishingRodTip.parent = fishingRodNode;
+  const fishingRodReel = MeshBuilder.CreateCylinder(`${idPrefix}-fishing-rod-reel`, {
+    height: 0.10, diameter: 0.18, tessellation: 12,
+  }, scene);
+  fishingRodReel.parent = fishingRodNode;
+  fishingRodReel.position.set(0.09, -0.04, 0.04);
+  fishingRodReel.rotation.z = Math.PI / 2;
+  fishingRodReel.material = toolMatRodTip;
   const fishingLineOrigin = new TransformNode(`${idPrefix}-fishing-line-origin`, scene);
   fishingLineOrigin.parent = fishingRodNode;
   fishingLineOrigin.position.set(0, 1.45, 0.04);

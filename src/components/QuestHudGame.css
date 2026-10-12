@@ -39,19 +39,19 @@
   .compact-game-hud .pt-candy-quest-tracker.pt-quest-ribbon-dock .pt-quest-card {
     position:relative;min-height:64px !important;padding:8px 8px 14px 58px !important;
     border:1px solid #b5e4e7 !important;border-left:0 !important;border-radius:10px 22px 22px 10px !important;
-    background:linear-gradient(100deg,#244b64f2,#32617ce8) !important;
-    box-shadow:0 4px 0 #16394e,0 6px 12px #14394d35 !important;
+    background:linear-gradient(100deg,#fffbedf5,#e5f6eaf0) !important;
+    box-shadow:0 4px 0 #a0cabc,0 6px 12px #14394d35 !important;
   }
   .compact-game-hud .pt-quest-card .pt-quest-avatar-pod {position:absolute !important;left:-4px;top:0;transform:rotate(-6deg);width:54px !important;height:61px !important}
   .compact-game-hud .pt-quest-card .pt-quest-avatar-inner {width:54px !important;height:61px !important;border:2px solid #fff5c4 !important;border-radius:16px !important;box-shadow:0 4px 0 #b07324 !important}
-  .compact-game-hud .pt-quest-card .pt-quest-title {color:#fff9e6 !important;font-size:13px !important;text-shadow:0 1px 1px #17374c}
-  .compact-game-hud .pt-quest-card .pt-quest-dist-badge {background:transparent !important;color:#a9dcea !important;padding:0 !important;font-size:10px !important}
+  .compact-game-hud .pt-quest-card .pt-quest-title {color:#4c756f !important;font-size:13px !important;text-shadow:none}
+  .compact-game-hud .pt-quest-card .pt-quest-dist-badge {background:transparent !important;color:#739d96 !important;padding:0 !important;font-size:10px !important}
   .compact-game-hud .pt-quest-card .pt-quest-step-badge {display:none !important}
   .compact-game-hud .pt-quest-card .pt-quest-action-btn {width:38px !important;min-width:38px !important;height:38px !important;border-radius:50% !important;background:linear-gradient(#ffe88a,#ffbb43) !important;color:#774411 !important;border:2px solid #fff7c8 !important;box-shadow:0 3px 0 #b16b20 !important}
   .compact-game-hud .pt-quest-action-btn>span {display:none}
   .quest-route-arrow {display:block}
   .quest-stage-pips {position:absolute;left:59px;bottom:7px;display:flex;gap:5px}
-  .quest-stage-pips span {width:14px;height:4px;border-radius:3px;background:#16394f;border:1px solid #5d8395}
+  .quest-stage-pips span {width:14px;height:4px;border-radius:3px;background:#c7e4d7;border:1px solid #5d8395}
   .quest-stage-pips .is-lit {background:#ffd163;border-color:#ffedb0}
   .compact-game-hud .mission-hud-links {top:158px !important;left:20px !important;width:auto !important;gap:9px !important}
   .compact-game-hud .mission-hud-links button {flex:none !important;width:42px !important;height:42px !important;border-radius:50% !important;background:linear-gradient(#fcfffb,#d4e6ed) !important;border:2px solid #fff !important;box-shadow:0 3px 0 #456c83 !important}

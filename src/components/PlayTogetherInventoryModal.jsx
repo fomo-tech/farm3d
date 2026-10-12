@@ -14,6 +14,14 @@ const CATEGORIES = [
 export function PlayTogetherInventoryModal({ isOpen = false, onClose, onOpenFashion, progress, onUseItem, farmAudio, connected = true }) {
   const [category, setCategory] = useState('produce');
   const [query, setQuery] = useState('');
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(8);
+  useEffect(() => {
+    const update = () => setPageSize(window.innerHeight < 500 ? 4 : window.innerWidth < 701 ? 6 : 8);
+    update(); window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  useEffect(() => setPage(0), [category, query, pageSize]);
   const [selectedId, setSelectedId] = useState(null);
   const dialogRef = useRef(null);
   const closeRef = useRef(onClose);
@@ -38,8 +46,11 @@ export function PlayTogetherInventoryModal({ isOpen = false, onClose, onOpenFash
   const inventory = useMemo(() => buildInventoryView(progress), [progress]);
   const visible = useMemo(() => inventory.entries.filter(item => item.category === category &&
     normalize(item.name).includes(normalize(query.trim()))), [inventory, category, query]);
-  const meshImages = useInventoryMeshArt(isOpen, category, visible);
-  const selected = visible.find(item => item.id === selectedId) || visible[0] || null;
+  const pageCount = Math.max(1, Math.ceil(visible.length / pageSize));
+  const currentPage = Math.min(page, pageCount - 1);
+  const pageItems = visible.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+  const meshImages = useInventoryMeshArt(isOpen, category, pageItems);
+  const selected = pageItems.find(item => item.id === selectedId) || pageItems[0] || null;
   const equipped = selected && (progress?.fishing?.equippedRod === selected.itemId || progress?.fishing?.equippedBait === selected.itemId);
   const price = selected?.kind === 'crop' ? FARM_CONFIG.crops[selected.itemId]?.sellPrice : selected?.itemId==='apple'?FARM_CONFIG.products.apple.sellPrice:null;
   const art = (item, size) => meshImages[item.id] && meshImages[item.id] !== 'unavailable' ? <img src={meshImages[item.id]} alt={item.name}/> : <InventoryItemArt item={item} size={size}/>;
@@ -63,7 +74,7 @@ export function PlayTogetherInventoryModal({ isOpen = false, onClose, onOpenFash
       <div className="pt-inv-search"><strong>{categoryLabel}</strong><small>{visible.length} loại</small><input aria-label="Tìm vật phẩm" placeholder="Tìm vật phẩm" value={query} onChange={event => setQuery(event.target.value)}/></div>
       <div className="pt-inv-body">
         <div className="pt-inv-grid-container">
-          {visible.length ? <div className="pt-inv-grid">{visible.map(item => {
+          {visible.length ? <div className="pt-inv-grid">{pageItems.map(item => {
             return <button type="button" key={item.id} className={`pt-inv-slot ${selected?.id === item.id ? 'selected' : ''}`}
               onClick={() => { setSelectedId(item.id); farmAudio?.playPop?.(); }} aria-pressed={selected?.id === item.id} aria-label={`${item.name}, số lượng ${item.count}`}>
               <span className="pt-inv-slot-art">{art(item, 64)}</span><span className="pt-slot-badge">{item.count}</span><small>{item.name}</small>
@@ -85,6 +96,7 @@ export function PlayTogetherInventoryModal({ isOpen = false, onClose, onOpenFash
           </> : <div className="pt-inv-empty">Chọn vật phẩm để xem chi tiết.</div>}
         </aside>
       </div>
+      <footer className="game-bag-pagination" aria-label="Trang túi đồ"><span>Chọn vật phẩm để trang bị hoặc sử dụng</span><div><button aria-label="Trang trước" disabled={currentPage === 0} onClick={() => {setPage(currentPage - 1); setSelectedId(null);}}>‹</button><b>{currentPage + 1} / {pageCount}</b><button aria-label="Trang sau" disabled={currentPage + 1 >= pageCount} onClick={() => {setPage(currentPage + 1); setSelectedId(null);}}>›</button></div></footer>
     </section>
   </div>;
 }

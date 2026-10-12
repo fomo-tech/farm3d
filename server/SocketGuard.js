@@ -7,7 +7,7 @@ export class SocketGuard {
   prune(){const now=this.clock();for(const [ip,e] of this.addresses)if(!e.active&&now-e.start>=60000)this.addresses.delete(ip);}
 }
 export function allowSocketOperation(client,type,now=Date.now()){
-  const policies={chat:[4,5000],get_social_state:[2,10000],social_action:[6,10000],get_profile:[8,10000],land_market:[2,10000],resync:[2,10000],travel:[3,10000],google_login:[2,60000],google_link:[2,60000]};
+  const policies={check_character_name:[15,10000],chat:[4,5000],get_social_state:[2,10000],social_action:[6,10000],get_profile:[8,10000],land_market:[2,10000],resync:[2,10000],travel:[3,10000],google_login:[2,60000],google_link:[2,60000]};
   const [limit,windowMs]=policies[type]||[20,1000];
   client.operationWindows||=new Map();const key=Object.hasOwn(policies,type)?type:'other';
   let bucket=client.operationWindows.get(key);if(!bucket||now-bucket.start>=windowMs){bucket={start:now,count:0};client.operationWindows.set(key,bucket);}

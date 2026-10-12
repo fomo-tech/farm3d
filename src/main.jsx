@@ -47,3 +47,7 @@ createRoot(document.getElementById('root')).render(
 );
 
 window.__farmDebug?.mark('React mounted');
+
+import './components/GameUiUpgrade.css';
+
+import './components/GameExperience.css';

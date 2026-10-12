@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { getDefaultCustomization } from '../../shared/fashionConfig.js';
+import { useInventoryMeshArt } from './useInventoryMeshArt.js';
+import { STARTER_HAIR_IDS, STARTER_HAIR_COLORS } from '../../shared/starterAppearance.js';
 import { ArrivalAvatar } from './ArrivalAvatar.jsx';
 import './CharacterArrival.css';
-import './CharacterGameStyle.css';
+
 
 function CheckIcon({ size = 16, className = '' }) {
   return (
@@ -70,17 +72,6 @@ const CUTE_NICKNAMES = [
   'Bơ Sáp',
 ];
 
-const STARTER_SHIRT_COLORS = [
-  { hex: '#f8fafc', name: 'Trắng Tinh' },
-  { hex: '#fef08a', name: 'Vàng Kem' },
-  { hex: '#fbbf24', name: 'Cam Nắng' },
-  { hex: '#38bdf8', name: 'Xanh Biển' },
-  { hex: '#f472b6', name: 'Hồng Phấn' },
-  { hex: '#4ade80', name: 'Xanh Bơ' },
-  { hex: '#a78bfa', name: 'Tím Nhạt' },
-  { hex: '#334155', name: 'Xám Than' },
-];
-
 const HAIR_STYLES = [
   { id: 'hair_buzzcut', label: 'Đầu Đinh', desc: 'Gọn gàng' },
   { id: 'hair_high_ponytail', label: 'Đuôi Gà', desc: 'Buộc cao' },
@@ -90,13 +81,7 @@ const HAIR_STYLES = [
   { id: 'wavy', label: 'Gợn Sóng', desc: 'Mềm mại' },
 ];
 
-const HAIR_COLORS = [
-  { hex: '#76503b', name: 'Nâu Hạt Dẻ' },
-  { hex: '#f59e0b', name: 'Vàng Mơ' },
-  { hex: '#262626', name: 'Đen Tuyền' },
-  { hex: '#f472b6', name: 'Hồng Pastel' },
-  { hex: '#38bdf8', name: 'Xanh Bạc Hà' },
-];
+const HAIR_COLORS = STARTER_HAIR_COLORS;
 
 const SKIN_SWATCHES = [
   { id: 'peach', hex: '#e6b08f', name: 'Đào Sáng' },
@@ -105,21 +90,47 @@ const SKIN_SWATCHES = [
   { id: 'caramel', hex: '#9a6547', name: 'Bánh Mật' },
 ];
 
-export function CharacterCreationModal({ defaultName = '', onSubmit, pending = false, error = '' }) {
-  const [name, setName] = useState(defaultName || 'Bắp Non');
+export function CharacterCreationModal({ onSubmit, onCheckName, pending = false, error = '' }) {
+  const [name, setName] = useState('');
   const [gender, setGender] = useState(() => getDefaultCustomization().gender); // 'female' | 'male'
-  const [shirtColor, setShirtColor] = useState('#f8fafc');
+  const shirtColor = '#f8fafc';
   const [selectedHair, setSelectedHair] = useState(() => getDefaultCustomization().hairStyle);
   const [selectedHairColor, setSelectedHairColor] = useState('#76503b');
   const [selectedSkinTone, setSelectedSkinTone] = useState('peach');
-  const [activeTab, setActiveTab] = useState('shirt'); // 'shirt' | 'hair' | 'color'
+  const [activeTab, setActiveTab] = useState('identity'); // 'identity' | 'hair' | 'color'
   const [diceRolling, setDiceRolling] = useState(false);
+  const hairItems = useMemo(() => HAIR_STYLES.map(h => ({id:`starter-hair:${h.id}:${gender}:${selectedHairColor}`, itemId:STARTER_HAIR_IDS[h.id] || h.id, previewGender:gender, previewHairColor:selectedHairColor, previewHeadShot:true})), [gender, selectedHairColor]);
+  const hairImages = useInventoryMeshArt(activeTab === 'hair', 'fashion', hairItems);
+
+  const trimmedName = name.trim();
+  const validName = trimmedName.length >= 3 && trimmedName.length <= 18;
+  const [nameCheck, setNameCheck] = useState(null);
+  const checker = useRef(onCheckName);
+  checker.current = onCheckName;
+  useEffect(() => {
+    let cancelled = false;
+    if (!validName || !checker.current) return;
+    const timer = setTimeout(async () => {
+      try {
+        const result = await checker.current(trimmedName);
+        if (!cancelled) setNameCheck({ name: trimmedName, ...result });
+      } catch (error) {
+        if (!cancelled) setNameCheck({ name: trimmedName, available: false, message: error.message });
+      }
+    }, 300);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [trimmedName, validName]);
+  const checkedName = nameCheck?.name === trimmedName ? nameCheck : null;
+  const canSubmit = validName && (!onCheckName || checkedName?.available);
+  const nameMessage = !trimmedName ? 'Tên cần từ 3 đến 18 ký tự' : !validName ? 'Tên cần từ 3 đến 18 ký tự' : onCheckName ? checkedName?.message || 'Đang kiểm tra tên…' : 'Tên hợp lệ';
+  const tabTitle = { hair: 'Chọn kiểu tóc bạn yêu thích', color: 'Hoàn thiện diện mạo của bạn' }[activeTab];
 
   const handleRollDice = () => {
     setDiceRolling(true);
     setTimeout(() => {
       const randomName = CUTE_NICKNAMES[Math.floor(Math.random() * CUTE_NICKNAMES.length)];
       setName(randomName);
+      setNameCheck(null);
       setDiceRolling(false);
     }, 180);
   };
@@ -135,7 +146,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
 
   const handleSubmit = (e) => {
     e?.preventDefault();
-    if (!name.trim() || pending) return;
+    if (!canSubmit || pending) return;
     onSubmit({
       name: name.trim(),
       avatarIcon: 'starter',
@@ -150,21 +161,23 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
 
   return (
     <div className="pt-onboarding-backdrop arrival-screen">
-      <section className="pt-studio-card" role="dialog" aria-modal="true" aria-label="Tạo nhân vật Play Together">
+      <div className="arrival-world-scenery" aria-hidden="true"><div className="arrival-cloud cloud-one"/><div className="arrival-cloud cloud-two"/><div className="arrival-hill hill-back"/><div className="arrival-hill hill-front"/></div>
+      <section className="pt-studio-card" role="dialog" aria-modal="true" aria-labelledby="arrival-title" aria-busy={pending}>
         {/* Header */}
         <header className="pt-studio-header">
           <div className="pt-studio-badge">
-            <span>KHỞI ĐẦU HÀNH TRÌNH</span>
+            <span>VIBE CITY</span>
           </div>
-          <h2>Tạo Nhân Vật</h2>
-          <p>Tùy chỉnh diện mạo ban đầu trước khi bước vào thị trấn</p>
+          <h2 id="arrival-title">Tạo nhân vật</h2>
+          <p className="arrival-step-label">{activeTab === 'identity' ? '01 · Đặt tên cư dân' : activeTab === 'hair' ? '02 · Chọn kiểu tóc' : '03 · Hoàn thiện diện mạo'}</p>
         </header>
 
-        {error && <div className="pt-creation-error-banner">{error}</div>}
+        {error && <div className="pt-creation-error-banner" role="alert">{error}</div>}
 
         <div className="pt-studio-body">
           {/* Cột trái: Sân khấu 3D Podium */}
           <div className="pt-studio-podium-wrap">
+            <span className="arrival-player-level">Lv. 1 <span>•</span> Nông dân mới</span>
             <ArrivalAvatar
               outfit="starter"
               color={shirtColor}
@@ -175,13 +188,15 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
             />
             <p className="arrival-rotate-hint">Kéo chuột hoặc vuốt để xoay nhân vật</p>
             <div className="pt-podium-name-tag">
-              <span className="pt-tag-role">Tân Cư Dân</span>
-              <strong className="pt-tag-name">{name || 'Chưa đặt tên'}</strong>
+              <span className="pt-tag-role">NÔNG DÂN VIBE CITY</span>
+              <strong className="pt-tag-name">{name.trim() || 'Tên của bạn'}</strong>
             </div>
           </div>
 
           {/* Cột phải: Bảng điều khiển tùy chọn phong cách */}
-          <div className="pt-studio-controls">
+          <form className="pt-studio-controls" onSubmit={handleSubmit}>
+            <fieldset disabled={pending}>
+            <div className="arrival-identity-panel" hidden={activeTab !== 'identity'}>
             {/* 1. Nhập tên nhân vật & Xúc xắc */}
             <div className="pt-input-block">
               <label htmlFor="chibi-name-input">TÊN NHÂN VẬT</label>
@@ -191,8 +206,11 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
                   type="text"
                   required
                   maxLength={18}
+                  minLength={3}
+                  autoComplete="off"
+                  aria-describedby="arrival-name-help"
                   value={name}
-                  onChange={e => setName(e.target.value)}
+                  onChange={e => { setName(e.target.value); setNameCheck(null); }}
                   placeholder="Nhập tên riêng của bạn..."
                 />
                 <button
@@ -205,6 +223,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
                   <DiceIcon size={24} />
                 </button>
               </div>
+              <small id="arrival-name-help" className="arrival-name-help"><span role="status" aria-live="polite">{nameMessage}</span><span>{name.length}/18</span></small>
             </div>
 
             {/* 2. Chọn Giới Tính Nhanh (Clean UI, không dùng emoji) */}
@@ -214,6 +233,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
                 <button
                   type="button"
                   className={`pt-gender-btn pt-gender-female ${gender === 'female' ? 'selected' : ''}`}
+                  aria-pressed={gender === 'female'}
                   onClick={() => handleGenderSelect('female')}
                 >
                   <span className="pt-gender-label">NỮ</span>
@@ -222,6 +242,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
                 <button
                   type="button"
                   className={`pt-gender-btn pt-gender-male ${gender === 'male' ? 'selected' : ''}`}
+                  aria-pressed={gender === 'male'}
                   onClick={() => handleGenderSelect('male')}
                 >
                   <span className="pt-gender-label">NAM</span>
@@ -230,18 +251,14 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
               </div>
             </div>
 
+            </div>
             {/* 3. Tab chuyển đổi: Áo Phông | Kiểu Tóc | Màu Sắc (Không dùng emoji) */}
-            <div className="pt-studio-tabs">
-              <button
-                type="button"
-                className={`pt-tab-btn ${activeTab === 'shirt' ? 'active' : ''}`}
-                onClick={() => setActiveTab('shirt')}
-              >
-                Áo Phông
-              </button>
+            <div className="pt-studio-tabs" aria-label="Tạo nhân vật">
+              <button type="button" className={`pt-tab-btn ${activeTab === 'identity' ? 'active' : ''}`} aria-pressed={activeTab === 'identity'} onClick={() => setActiveTab('identity')}>Nhân vật</button>
               <button
                 type="button"
                 className={`pt-tab-btn ${activeTab === 'hair' ? 'active' : ''}`}
+                aria-pressed={activeTab === 'hair'}
                 onClick={() => setActiveTab('hair')}
               >
                 Kiểu Tóc
@@ -249,6 +266,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
               <button
                 type="button"
                 className={`pt-tab-btn ${activeTab === 'color' ? 'active' : ''}`}
+                aria-pressed={activeTab === 'color'}
                 onClick={() => setActiveTab('color')}
               >
                 Màu Sắc
@@ -256,29 +274,8 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
             </div>
 
             {/* 4. Nội dung từng Tab */}
-            <div className="pt-studio-tab-content">
-              {/* Tab 1: Màu Áo Phông Tân Thủ (Chỉ có Áo Phông, không bán đồ thời trang tại bước tạo nhân vật) */}
-              {activeTab === 'shirt' && (
-                <div className="pt-shirt-colors-grid">
-                  {STARTER_SHIRT_COLORS.map(item => (
-                    <button
-                      key={item.hex}
-                      type="button"
-                      className={`pt-shirt-card ${shirtColor === item.hex ? 'selected' : ''}`}
-                      onClick={() => setShirtColor(item.hex)}
-                    >
-                      <div className="pt-shirt-swatch" style={{ backgroundColor: item.hex }} />
-                      <span className="pt-shirt-name">{item.name}</span>
-                      {shirtColor === item.hex && (
-                        <span className="pt-card-check">
-                          <CheckIcon size={12} />
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-
+            <div className="pt-studio-tab-content" hidden={activeTab === 'identity'}>
+              <div className="arrival-option-heading"><h3>{activeTab === 'hair' ? 'Kiểu tóc' : 'Da & màu tóc'}</h3><p>{tabTitle}</p></div>
               {/* Tab 2: Kiểu Tóc Tân Thủ */}
               {activeTab === 'hair' && (
                 <div className="pt-hairs-grid">
@@ -287,9 +284,10 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
                       key={h.id}
                       type="button"
                       className={`pt-hair-card ${selectedHair === h.id ? 'selected' : ''}`}
+                      aria-pressed={selectedHair === h.id}
                       onClick={() => setSelectedHair(h.id)}
                     >
-                      <div className="pt-hair-preview-dot" style={{ backgroundColor: selectedHairColor }} />
+                      <div className="pt-hair-preview-dot">{hairImages[`starter-hair:${h.id}:${gender}:${selectedHairColor}`] && hairImages[`starter-hair:${h.id}:${gender}:${selectedHairColor}`] !== 'unavailable' ? <img src={hairImages[`starter-hair:${h.id}:${gender}:${selectedHairColor}`]} alt=""/> : <span className="arrival-thumbnail-loading">{hairImages[`starter-hair:${h.id}:${gender}:${selectedHairColor}`] === 'unavailable' ? 'Xem trên nhân vật' : 'Đang tải…'}</span>}</div>
                       <div className="pt-hair-info">
                         <strong>{h.label}</strong>
                         <span>{h.desc}</span>
@@ -308,7 +306,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
               {activeTab === 'color' && (
                 <div className="pt-colors-container">
                   <div className="pt-color-section">
-                    <span className="pt-section-title">MÀU DA CHIBI</span>
+                    <span className="pt-section-title">MÀU DA</span>
                     <div className="pt-colors-grid">
                       {SKIN_SWATCHES.map(s => (
                         <button
@@ -316,6 +314,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
                           type="button"
                           className={`pt-color-bubble ${selectedSkinTone === s.id ? 'selected' : ''}`}
                           style={{ backgroundColor: s.hex }}
+                          aria-pressed={selectedSkinTone === s.id}
                           onClick={() => setSelectedSkinTone(s.id)}
                           title={s.name}
                           aria-label={`Màu da: ${s.name}`}
@@ -335,6 +334,7 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
                           type="button"
                           className={`pt-color-bubble ${selectedHairColor === c.hex ? 'selected' : ''}`}
                           style={{ backgroundColor: c.hex }}
+                          aria-pressed={selectedHairColor === c.hex}
                           onClick={() => setSelectedHairColor(c.hex)}
                           title={c.name}
                           aria-label={`Màu tóc: ${c.name}`}
@@ -348,16 +348,18 @@ export function CharacterCreationModal({ defaultName = '', onSubmit, pending = f
               )}
             </div>
 
+            </fieldset>
             {/* 5. Nút Khởi Hành Bắt Đầu Chơi (Thuần typography game, không emoji tên lửa) */}
             <button
-              type="button"
               className="pt-studio-submit-btn"
-              disabled={!name.trim() || pending}
-              onClick={handleSubmit}
+              type={activeTab === 'identity' ? 'button' : 'submit'}
+              onClick={activeTab === 'identity' ? () => setActiveTab('hair') : undefined}
+              disabled={!canSubmit || pending}
             >
-              {pending ? 'Đang chuẩn bị vào thị trấn…' : 'VÀO THỊ TRẤN'}
+              <span>{pending ? 'Đang chuẩn bị…' : activeTab === 'identity' ? 'Chọn diện mạo' : 'Bắt đầu hành trình'}</span><span aria-hidden="true">→</span>
             </button>
-          </div>
+            <p className="arrival-footer-note">Khám phá · Kết bạn · Xây dựng nông trại</p>
+          </form>
         </div>
       </section>
     </div>

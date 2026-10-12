@@ -13,7 +13,7 @@ export function applyFashionInventoryItem(avatar, item) {
   }
   const spec = getFashionItem(id);
   if (!spec) return null;
-  const look = { ...defaults, gender: item.previewGender || defaults.gender };
+  const look = { ...defaults, gender: item.previewGender || defaults.gender, hairColor: item.previewHairColor || defaults.hairColor };
   let type;
   if (spec.customization) { Object.assign(look, spec.customization); type = 'outfit'; }
   else if (id.startsWith('top_')) { look.topId = id; look.topColor = spec.color; type = 'top'; }

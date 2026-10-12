@@ -16,9 +16,9 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
   let blushColor = options.blushColor || '#ef9e94';
   let smileColor = options.smileColor || '#55302b';
 
-  // Spend the extra texture resolution on the local avatar, not every remote
+  // Spend the extra texture resolution on the local avatar and creation preview, not every remote
   // player in a crowded square. Keep mipmaps for clean distant faces.
-  const textureSize = idPrefix === 'local-player' ? 1024 : CHARACTER_RENDER_CONFIG.geometryBudget.faceTextureSize;
+  const textureSize = ['local-player', 'arrival-avatar'].includes(idPrefix) ? 1024 : CHARACTER_RENDER_CONFIG.geometryBudget.faceTextureSize;
   const texture = new DynamicTexture(
     `${idPrefix}-face-deluxe-tex`,
     { width: textureSize, height: textureSize },

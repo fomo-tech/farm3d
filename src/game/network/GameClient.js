@@ -27,6 +27,7 @@ export class GameClient {
     this.onAccountState = options.onAccountState || (() => {});
     this.onLotteryState = options.onLotteryState || (() => {});
     this.onGoogleAuthResult = options.onGoogleAuthResult || (() => {});
+    this.onAuthError = options.onAuthError || (() => {});
     this.onActionError = options.onActionError || (() => {});
     this.onSocialState = options.onSocialState || (() => {});
     this.onProfileState = options.onProfileState || (() => {});
@@ -40,6 +41,7 @@ export class GameClient {
     this.retryAttempt = 0;
     this.lastPongAt = 0;
     this.pending = new Map();
+    this.nameChecks = new Map();
     this.joined = false;
     this.closed = false;
     this.listening = false;
@@ -103,7 +105,9 @@ export class GameClient {
         messageType = message.type;
         if(message.season)this.onSeason(message.season);
         if(message.fishingConditions)this.onFishingConditions(message.fishingConditions,message.serverNow);
-        if (message.type === 'welcome') {
+        if (message.type === 'character_name_result') {
+          this.nameChecks.get(message.requestId)?.(message);
+        } else if (message.type === 'welcome') {
           this.joined = true;
           this.retryAttempt = 0;
           this.onWelcome(message);
@@ -152,7 +156,14 @@ export class GameClient {
         } else if (message.type === 'google_auth_result') {
           this.onGoogleAuthResult(message);
         } else if (message.type === 'action_error' || message.type === 'auth_error') {
-          if (message.type === 'auth_error') console.warn('[GameClient] Authentication failed:', message.message);
+          if (message.type === 'auth_error') {
+            console.warn('[GameClient] Authentication failed:', message.message);
+            if (message.message !== 'Quá nhiều lần đăng nhập. Vui lòng thử lại sau một phút.') {
+              this.closed = true;
+              this.onStatus({ connected: false, phase: 'auth_failed', attempt: 0, queued: this.pending.size });
+              this.onAuthError(message.message);
+            }
+          }
           this.acknowledge(message.requestId);
           this.onActionError(message.message || 'Chưa thể thực hiện. Hãy thử lại nhé.');
         } else if (message.type === 'pong') {
@@ -189,6 +200,17 @@ export class GameClient {
       }
     });
     this.socket.addEventListener('error', () => this.socket?.close());
+  }
+
+  checkCharacterName(name) {
+    return new Promise((resolve, reject) => {
+      const requestId = createRuntimeId('name');
+      const timer = window.setTimeout(() => { this.nameChecks.delete(requestId); reject(new Error('Chưa kiểm tra được tên. Vui lòng thử lại.')); }, 5000);
+      this.nameChecks.set(requestId, result => { window.clearTimeout(timer); this.nameChecks.delete(requestId); resolve(result); });
+      if (!this.joined || !this.sendNow({ type: 'check_character_name', name, requestId })) {
+        window.clearTimeout(timer); this.nameChecks.delete(requestId); reject(new Error('Chưa có kết nối để kiểm tra tên.'));
+      }
+    });
   }
 
   sendNow(payload) {

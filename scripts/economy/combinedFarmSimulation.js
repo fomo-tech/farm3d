@@ -5,7 +5,7 @@ import {claimLegacyQuest} from '../../shared/questRewards.js';
 import {ECONOMY_REWARD_CONFIG} from '../../shared/economyRewardConfig.js';
 import {MAIN_MISSIONS,DAILY_MISSIONS,claimMission,normalizeMissions,dailyMissionList} from '../../shared/missions.js';
 import {applyCommunityReward} from '../../server/CommunityRewards.js';
-import {FARM_CONFIG,farmBarnCapacity} from '../../shared/farmConfig.js';
+import {FARM_CONFIG,farmBarnCapacity,collectFarmProducts} from '../../shared/farmConfig.js';
 import {applyLivestockAction} from '../../shared/livestockActions.js';
 import {NPC_TRADING_CONFIG} from '../../shared/npcTradingConfig.js';
 import {LAND_EXPANSION_CONFIG,farmTileKeys,landUnlockQuote,unlockFarmTile,validateLandExpansionConfig} from '../../shared/landExpansionConfig.js';
@@ -61,7 +61,7 @@ export function simulateCombinedFarm({sessionMinutes=30,sessions=14,actionMs=250
     if(recipe){const [id,r]=recipe;consume(r.inputs);p.inventory[id]=(p.inventory[id]||0)+1;p.xp+=r.xp;crafts++;p.stats.crafted++;act();continue;}
    }
    const mature=[...plots.values()].find(t=>t.state==='watered'&&t.readyAt<=now);
-   const animalReady=mode==='combined'?player.livestock.filter(a=>!FARM_CONFIG.animals[a.species].saleOnly&&a.productReadyAt>0&&a.productReadyAt<=now).length:0;
+   const animalReady=mode==='combined'?collectFarmProducts(player.livestock,now).count:0;
    const sale=Object.entries(p.inventory).find(([id,n])=>n>hold(id));
    if(sale&&(!mature||inventoryCount()+cropYield>capacity||animalReady&&inventoryCount()+animalReady>capacity)){
     const [id,n]=sale,isCrop=!!FARM_CONFIG.crops[id],amount=isCrop?Math.min(99,n-hold(id)):1,coins=goodsValue(id)*amount;

@@ -109,20 +109,20 @@ export function addShopFacade(scene, parent, kind, glazeHex, accentHex, mats) {
   glazeHex = style?.glass || glazeHex;
   accentHex = style?.accent || accentHex;
 
-  // === VẬT LIỆU KIẾN TRÚC NHÀ RƯỜNG & CHỢ QUÊ NÔNG THÔN VIỆT NAM ===
-  const matLimDark = makeMat(scene, `${kind}-lim-dark`, '#3a2314', '#1f130b', 0.28, 48); // Gỗ lim sẫm bóng dầu
+  // === VẬT LIỆU MẶT TIỀN THỐNG NHẤT VỚI WORLD_PALETTE ===
+  const matLimDark = makeMat(scene, `${kind}-lim-dark`, WORLD_PALETTE.woodOakWarm, WORLD_PALETTE.woodOakDark, 0.28, 48); // Gỗ màu mật ong, cùng bảng màu thế giới
   matLimDark.alpha = 1;
-  const matLimWarm = makeMat(scene, `${kind}-lim-warm`, '#68432b', '#3d2516', 0.20, 40); // Gỗ lim nâu đỏ ấm cúng
+  const matLimWarm = makeMat(scene, `${kind}-lim-warm`, WORLD_PALETTE.woodTeak, WORLD_PALETTE.woodOakWarm, 0.20, 40); // Gỗ sáng cho mặt tiền
   matLimWarm.alpha = 1;
-  const matStonePlinth = makeMat(scene, `${kind}-stone-plinth`, '#78716c', '#57534e', 0.15, 30); // Đá tảng xanh cổ truyền
+  const matStonePlinth = makeMat(scene, `${kind}-stone-plinth`, WORLD_PALETTE.stonePlinth, WORLD_PALETTE.stoneFoundation, 0.15, 30); // Bệ đá pastel
   matStonePlinth.alpha = 1;
   const matBamboo = makeMat(scene, `${kind}-bamboo-rattan`, '#d4a373', '#b48356', 0.15, 24); // Tre nứa tự nhiên
   matBamboo.alpha = 1;
-  const matTerracottaEaves = makeMat(scene, `${kind}-terracotta-eaves`, '#c2410c', '#9a3412', 0.25, 40); // Ngói mũi hài đất nung
+  const matTerracottaEaves = makeMat(scene, `${kind}-terracotta-eaves`, WORLD_PALETTE.roofTerracotta, WORLD_PALETTE.roofRidge, 0.25, 40); // Ngói mũi hài đất nung
   matTerracottaEaves.alpha = 1;
-  const matTerracottaEavesAccent = makeMat(scene, `${kind}-terracotta-accent`, '#ea580c', '#c2410c', 0.28, 50); // Viền gờ ngói đất nung
+  const matTerracottaEavesAccent = makeMat(scene, `${kind}-terracotta-accent`, WORLD_PALETTE.roofWarmTile, WORLD_PALETTE.roofTerracotta, 0.28, 50); // Viền gờ ngói đất nung
   matTerracottaEavesAccent.alpha = 1;
-  const matClayUrn = makeMat(scene, `${kind}-clay-urn`, '#7c2d12', '#451a03', 0.40, 60); // Gốm sành da lươn Bát Tràng
+  const matClayUrn = makeMat(scene, `${kind}-clay-urn`, '#d8aa80', '#b88d68', 0.40, 60); // Gốm sành da lươn Bát Tràng
   matClayUrn.alpha = 1;
   const matLanternSilk = makeMat(scene, `${kind}-hoian-lantern-silk`, '#dc2626', '#b91c1c', 0.60, 60); // Lụa đỏ thắm Hội An
   matLanternSilk.emissiveColor = Color3.FromHexString('#7f1d1d');
@@ -134,7 +134,7 @@ export function addShopFacade(scene, parent, kind, glazeHex, accentHex, mats) {
   matWarmPaperGlow.alpha = 1;
   const matJuteSack = makeMat(scene, `${kind}-jute-sack`, '#d6c7a1', '#a89874', 0.10, 16); // Bao đay / bao cói nông sản
   matJuteSack.alpha = 1;
-  const matBrickFloor = makeMat(scene, `${kind}-brick-floor`, '#9a3412', '#7c2d12', 0.18, 30); // Gạch Bát Tràng đỏ gạch
+  const matBrickFloor = makeMat(scene, `${kind}-brick-floor`, '#dca58b', '#b78b79', 0.18, 30); // Gạch Bát Tràng đỏ gạch
   matBrickFloor.alpha = 1;
 
   // 1. TƯỜNG VÁCH GỖ LIM MỘC MẠC MẶT TIỀN (TRADITIONAL TIMBER PARTITION WALL)

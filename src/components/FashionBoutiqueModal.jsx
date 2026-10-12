@@ -99,7 +99,7 @@ function FashionItemTile({
       <div className="fashion-tile-thumb" >
         {customThumb ? (
           customThumb
-        ) : thumbnailRef && field !== 'set' ? (
+        ) : thumbnailRef ? (
           <FashionMeshThumbnail item={item} field={field} capture={thumbnailRef}/>
         ) : (
           <InventoryItemArt

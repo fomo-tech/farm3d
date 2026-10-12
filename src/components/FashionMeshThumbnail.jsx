@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { InventoryItemArt } from './InventoryItemArt.jsx';
 
 const cache = new Map();
 let queue = Promise.resolve();
@@ -23,6 +24,6 @@ export function FashionMeshThumbnail({ item, field, capture }) {
   }, [key, item, field, capture]);
   return src
     ? <img className="fashion-mesh-thumbnail" src={src} alt={item.name || item.label || ''} width="160" height="160" loading="lazy" decoding="async" />
-    : <div className="fashion-slot-shimmer" aria-hidden="true" />;
+    : <InventoryItemArt item={item} size={80}/>;
 }
 

@@ -1,3 +1,4 @@
+import { starterAppearance } from '../shared/starterAppearance.js';
 import {APPLE_ORCHARD,appleTreePosition,harvestApples} from '../shared/appleOrchard.js';
 import { isValidProfileAvatar } from '../shared/profileAvatar.js';
 import {applyLotteryAction} from './LotteryStore.js';
@@ -123,6 +124,15 @@ function tokensMatch(provided, expectedHash) {
   const providedHash = Buffer.from(hashSessionToken(provided), 'hex');
   const expected = Buffer.from(expectedHash, 'hex');
   return providedHash.length === expected.length && timingSafeEqual(providedHash, expected);
+}
+
+export async function checkCharacterName(rawName, playerId) {
+  if (typeof rawName !== 'string' || rawName.trim().length < 3 || rawName.trim().length > 18) return { available: false, message: 'Tên nhân vật cần từ 3 đến 18 ký tự.' };
+  const name = sanitizeName(rawName.normalize('NFC')).replace(/\s+/g, ' ').trim();
+  if (name.length < 3 || name.length > 18) return { available: false, message: 'Tên nhân vật cần từ 3 đến 18 ký tự.' };
+  const existing = await collections.players.findOne({ playerId: { $ne: playerId }, 'progress.onboarding.characterCreated': true,
+    $or: [{ 'progress.nameKey': name.toLocaleLowerCase('vi') }, { name }] }, { collation: { locale: 'vi', strength: 2 }, projection: { _id: 1 } });
+  return { available: !existing, message: existing ? 'Tên này đã được sử dụng. Hãy chọn tên khác.' : 'Tên này có thể sử dụng.' };
 }
 
 function sanitizeName(name) {
@@ -362,7 +372,9 @@ export async function performAction(playerId, action, payload = {}, context = {}
       $or: [{ 'progress.nameKey': nameKey }, { name }] }, { collation: { locale: 'vi', strength: 2 } });
     if (existing) return fail('Tên nhân vật đã được sử dụng. Hãy chọn tên khác.');
     player.name = name; p.nameKey = nameKey;
-    p.customization = normalizeCustomization(p.customization || {});
+    const starter = starterAppearance(payload.appearance);
+    p.customization = starter.customization;
+    p.ownedCustomization = [...new Set([...(p.ownedCustomization || []), ...starter.ownedIds])];
     player.customization = p.customization;
     p.outfit = 'starter'; p.onboarding.characterCreated = true; p.onboarding.step = 1;
   }

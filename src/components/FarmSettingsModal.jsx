@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { GameAccountSettings } from './GameAccountUI.jsx';
 import { HudIcon } from './icons3d/HudIcon.jsx';
 import './FarmSettings.css';
@@ -11,6 +11,7 @@ const QUALITY = [
 ];
 export function FarmSettingsModal({ name, level, googleLinked, onCredential, onLogout, onDelete, error,
   isMuted, onToggleAudio, graphicsQuality, onGraphicsChange, cameraViewMode, onCameraChange, onGuide, onClose }) {
+  const [tab, setTab] = useState('play');
   const panel = useRef(null);
   const close = useRef(onClose); close.current = onClose;
   useEffect(() => {
@@ -35,11 +36,12 @@ export function FarmSettingsModal({ name, level, googleLinked, onCredential, onL
         <div><small>NÔNG TRẠI BÌNH MINH</small><h2 id="farm-settings-title">Thiết lập</h2></div>
         <button className="farm-settings-close" onClick={onClose} aria-label="Đóng thiết lập">×</button>
       </header>
+      <nav className="play-settings-tabs" aria-label="Nhóm thiết lập"><button aria-pressed={tab === 'play'} onClick={()=>setTab('play')}>Trò chơi</button><button aria-pressed={tab === 'account'} onClick={()=>setTab('account')}>Tài khoản</button></nav>
       <div className="farm-settings-body">
-        <aside className="farm-settings-account"><h3>Tài khoản</h3><GameAccountSettings name={name} level={level} googleLinked={googleLinked} onCredential={onCredential} onLogout={onLogout} onDelete={onDelete} error={error}/>
+        <aside className="farm-settings-account" hidden={tab !== 'account'}><h3>Tài khoản</h3><GameAccountSettings name={name} level={level} googleLinked={googleLinked} onCredential={onCredential} onLogout={onLogout} onDelete={onDelete} error={error}/>
           <button className="farm-settings-guide" onClick={onGuide}><HudIcon asset="quest" size={40}/><span><b>Sổ tay nông dân</b><small>Hướng dẫn chơi & khám phá</small></span><span aria-hidden="true">›</span></button>
         </aside>
-        <div className="farm-settings-options">
+        <div className="farm-settings-options" hidden={tab !== 'play'}>
           <section className="farm-settings-card"><div className="farm-settings-row"><div><h3>Âm thanh</h3><p>Âm thanh trong trò chơi</p></div><button className="farm-settings-switch" role="switch" aria-checked={!isMuted} aria-label="Âm thanh trò chơi" onClick={onToggleAudio}><span>{isMuted ? 'Tắt' : 'Bật'}</span><i aria-hidden="true"/></button></div></section>
           <section className="farm-settings-card"><div className="farm-settings-section-title"><HudIcon asset="camera" size={36}/><div><h3>Chất lượng hình ảnh</h3><p>Chọn chế độ phù hợp với thiết bị</p></div></div>
             <div className="farm-settings-quality" role="group" aria-label="Chất lượng đồ họa">{QUALITY.map(([value, label, hint]) => <button key={value} aria-pressed={graphicsQuality === value} onClick={() => onGraphicsChange(value)}><b>{label}</b><small>{hint}</small><span aria-hidden="true">{graphicsQuality === value ? '✓' : ''}</span></button>)}</div>
