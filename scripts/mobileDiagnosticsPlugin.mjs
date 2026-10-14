@@ -25,6 +25,7 @@ export function mobileDiagnosticsPlugin() {
             for (const key of ['buildRevision','time','fps','meshes','textures','materials','geometries','activeMeshes','bootStageCode','foliagePlacements','foliageDetailBatches','foliageLodBatches','schedulerPending','renderWidth','renderHeight','renderDpr','layoutWidth','layoutHeight','rootX','rootY','rootWidth','rootHeight','canvasX','canvasY','canvasWidth','canvasHeight','viewportWidth','viewportHeight','viewportLeft','viewportTop','viewportScale','nativeDpr','pending','maxStepMs']) {
               if (Number.isFinite(input[key])) sample[key] = input[key];
             }
+            for (const key of ['sharedGeometries', 'geometryQueue']) if (Number.isFinite(input[key])) sample[key] = input[key];
             sample.previousSession = input.previousSession === true;
             sample.ready = input.ready === true;
             sample.contextLost = input.contextLost === true;

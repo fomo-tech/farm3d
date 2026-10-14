@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ATTENDANCE_REWARDS } from '../../shared/dailyAttendance.js';
 import { HudIcon } from './icons3d/HudIcon.jsx';
 import './FarmNotice.css';
+import './AttendanceViewport.css';
 import { useDailyAttendance } from '../hooks/useDailyAttendance.js';
 import { DailyRewardBadge } from './DailyRewardBadge.jsx';
 
@@ -62,10 +63,10 @@ export function PlazaEventNoticeModal({ connected = false, serverOffset = 0, rew
   };
 
   return <div className="farm-notice-overlay" onClick={onClose}>
-    <section ref={dialogRef} className="farm-notice" onClick={event => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="farm-notice-title">
+    <section ref={dialogRef} className={`farm-notice ${activeTab === 'daily' ? 'attendance-mode' : ''}`} onClick={event => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="farm-notice-title">
       <header className="farm-notice-header">
         <HudIcon asset="quest" size={46}/>
-        <div><h2 id="farm-notice-title">Bảng tin Bình Minh</h2><p>Quà mỗi ngày · Hoạt động trong thị trấn</p></div>
+        <div><h2 id="farm-notice-title">{activeTab === 'daily' ? 'Điểm danh 7 ngày' : 'Bảng tin Bình Minh'}</h2><p>{activeTab === 'daily' ? 'Ghé chơi hôm nay, mang quà về nhà' : 'Quà mỗi ngày · Hoạt động trong thị trấn'}</p></div>
         <button type="button" className="farm-notice-close" onClick={onClose} aria-label="Đóng bản tin"><span aria-hidden="true">×</span></button>
       </header>
       <nav className="farm-notice-tabs" aria-label="Danh mục bảng tin">
@@ -73,17 +74,17 @@ export function PlazaEventNoticeModal({ connected = false, serverOffset = 0, rew
       </nav>
       <div className="farm-notice-content">
         {activeTab === 'daily' && <div className="farm-attendance">
-          <div className="farm-attendance-banner"><div className="farm-attendance-art"><HudIcon asset="basket" size={82}/></div><div><span className="farm-notice-eyebrow">HẸN BẠN MỖI NGÀY</span><h3>7 ngày, 7 phần quà</h3><p>Ghé thị trấn mỗi ngày để nhận xu. Giữ chuỗi điểm danh để mở quà ngày 7.</p></div><div className="farm-attendance-streak"><strong>{attendance.streak}</strong><span>ngày liên tiếp</span></div></div>
+          <div className="farm-attendance-banner"><div className="farm-attendance-art"><HudIcon asset="basket" size={82}/></div><div><span className="farm-notice-eyebrow">QUÀ TẶNG CƯ DÂN</span><h3>Một tuần đầy quà</h3><p>Điểm danh liên tiếp để nhận quà lớn ngày 7.</p></div><div className="farm-attendance-streak"><strong>{attendance.streak}</strong><span>ngày liên tiếp</span></div></div>
+          <div className="attendance-progress" aria-label={`Đã nhận ${claimedDay ? attendance.day : attendance.day - 1} trên 7 phần quà`}><span style={{width: `${(claimedDay ? attendance.day : attendance.day - 1) / 7 * 100}%`}} /></div>
           <div className="farm-attendance-grid" aria-label="Quà điểm danh 7 ngày">{ATTENDANCE_REWARDS.map((coins, index) => {
             const day = index + 1;
             const completed = claimedDay ? day <= attendance.day : day < attendance.day;
             const today = day === attendance.day;
             return <div key={day} className={`farm-day ${completed ? 'received' : today ? 'today' : 'upcoming'} ${day === 7 ? 'milestone' : ''}`} aria-label={`Ngày ${day}: ${coins} xu, ${completed ? 'đã nhận' : today ? 'hôm nay' : 'chưa mở'}`}>
-              <span className="farm-day-label">Ngày {day}</span><HudIcon asset={day === 7 ? 'basket' : 'coin'} size={day === 7 ? 66 : 48}/><strong>{coins.toLocaleString('vi-VN')} <small>xu</small></strong><span className="farm-day-state">{completed ? '✓ Đã nhận' : today ? 'Hôm nay' : 'Chưa mở'}</span>
+              <span className="farm-day-label">Ngày {day}</span>{day === 7 && <span className="attendance-jackpot">QUÀ TUẦN</span>}<HudIcon asset={day === 7 ? 'basket' : 'coin'} size={day === 7 ? 66 : 48}/><strong>{coins.toLocaleString('vi-VN')} <small>xu</small></strong><span className="farm-day-state">{completed ? '✓ Đã nhận' : today ? 'Hôm nay' : 'Chưa mở'}</span>
             </div>;
           })}</div>
-          <div className="farm-attendance-footer"><div><h4>{claimedDay ? 'Hẹn bạn vào ngày mai!' : `Quà hôm nay: ${attendance.coins} xu`}</h4><p>{claimedDay ? 'Bạn đã nhận phần quà của hôm nay.' : 'Bỏ lỡ một ngày, chuỗi điểm danh sẽ bắt đầu lại.'}</p></div><button type="button" className="farm-notice-primary" disabled={!connected || claimedDay || !onClaimDailyReward} onClick={() => { if (connected && !claimedDay) onClaimDailyReward?.(); }}><HudIcon asset="coin" size={24}/>{claimedDay ? 'Đã nhận hôm nay' : `Nhận ${attendance.coins} xu`}</button></div>
-          {!connected && <p className="farm-notice-status" role="status">Đang mất kết nối. Kết nối lại để nhận quà.</p>}
+          <div className="farm-attendance-footer"><div><h4>{claimedDay ? 'Hẹn bạn vào ngày mai!' : `Quà hôm nay: ${attendance.coins} xu`}</h4><p role={!connected ? 'status' : undefined}>{!connected ? 'Kết nối lại để nhận quà.' : claimedDay ? 'Bạn đã nhận phần quà của hôm nay.' : 'Nhận quà và tiếp tục chuyến phiêu lưu!'}</p></div><button type="button" className="farm-notice-primary" disabled={!connected || claimedDay || !onClaimDailyReward} onClick={() => { if (connected && !claimedDay) onClaimDailyReward?.(); }}><HudIcon asset="coin" size={24}/>{claimedDay ? 'Đã nhận hôm nay' : `Nhận ${attendance.coins} xu`}</button></div>
           <p className="farm-notice-footnote">Ngày điểm danh đổi lúc 07:00, giờ Việt Nam.</p>
         </div>}
 

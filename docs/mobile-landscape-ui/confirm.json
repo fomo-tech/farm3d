@@ -1,0 +1,28 @@
+[
+  {
+    "size": {
+      "width": 844,
+      "height": 290
+    },
+    "result": [
+      {
+        "class": "game-confirm",
+        "inViewportRoot": true,
+        "outside": false
+      }
+    ]
+  },
+  {
+    "size": {
+      "width": 390,
+      "height": 700
+    },
+    "result": [
+      {
+        "class": "game-confirm",
+        "inViewportRoot": true,
+        "outside": false
+      }
+    ]
+  }
+]

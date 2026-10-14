@@ -1,20 +1,11 @@
+import { canvasOverlayViewport } from './canvasOverlayViewport.js';
 import { Matrix, Vector3 } from '@babylonjs/core/Maths/math.vector.js';
-
-const canvasRects = new WeakMap();
-function cachedCanvasRect(canvas, now) {
-  let entry = canvasRects.get(canvas);
-  if (!entry || now - entry.at > 100) {
-    entry = { at: now, rect: canvas.getBoundingClientRect() };
-    canvasRects.set(canvas, entry);
-  }
-  return entry.rect;
-}
 
 export function createScreenNameplate(scene, parent, initialName, { local = true } = {}) {
   const canvas = scene.getEngine().getRenderingCanvas();
   const label = document.createElement('span');
   label.className = `player-name-label player-name-label--${local ? 'local' : 'remote'}`;
-  label.style.cssText = 'position:fixed;z-index:5;pointer-events:none;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;font:700 14px/20px "Segoe UI",system-ui,sans-serif;background:transparent;padding:2px;border:0;text-shadow:-1px -1px 0 #34434e,1px -1px 0 #34434e,-1px 1px 0 #34434e,1px 1px 0 #34434e,0 1px 0 #34434e;';
+  label.style.cssText = 'position:absolute;z-index:5;pointer-events:none;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;font:700 14px/20px "Segoe UI",system-ui,sans-serif;background:transparent;padding:2px;border:0;text-shadow:-1px -1px 0 #34434e,1px -1px 0 #34434e,-1px 1px 0 #34434e,1px 1px 0 #34434e,0 1px 0 #34434e;';
   label.style.transform = 'translate(-50%, -100%)';
   label.style.willChange = 'transform';
   label.style.color = local ? '#ffe58a' : '#ffffff';
@@ -35,7 +26,7 @@ export function createScreenNameplate(scene, parent, initialName, { local = true
     lastUpdate = now;
     const camera = scene.activeCamera;
     if (!camera || !parent.isEnabled()) { label.hidden = true; return; }
-    const rect = cachedCanvasRect(canvas, now);
+    const rect = canvasOverlayViewport(canvas);
     const world = Vector3.TransformCoordinates(anchor, parent.computeWorldMatrix(true));
     // Keep distant players from filling the screen with full-size labels.
     if (!local && Vector3.DistanceSquared(camera.globalPosition, world) > 45 * 45) {

@@ -21,6 +21,8 @@ export function useInventoryMeshArt(isOpen, category, items) {
     setImages(previous => ({ ...previous, ...cached }));
     const pending = items.filter(item => !imageCache.has(item.id));
     if (!pending.length) return;
+    // Mobile lists use their existing item art instead of another WebGL engine.
+    if (document.documentElement.classList.contains('is-mobile-device') || window.matchMedia('(pointer: coarse)').matches) return;
 
     let cancelled = false;
     let timer;

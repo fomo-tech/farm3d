@@ -15,7 +15,7 @@ import { FISHING_CONFIG } from '../../../shared/fishingConfig.js';
 import { buildHumanMesh } from './buildHumanMesh.js';
 import { createVehicleRigs } from './createVehicleRigs.js';
 import { VEHICLE_MOTION, approachVehicleSpeed } from './vehicleMotion.js';
-import { applyVehiclePose } from './applyVehiclePose.js';
+import { applyVehiclePose, clearVehiclePose } from './applyVehiclePose.js';
 import { avatarAppearance } from '../../../shared/avatarAppearance.js';
 
 export function createFishingRig(scene, root, human) {
@@ -577,6 +577,7 @@ export function createFishingRig(scene, root, human) {
     },
     setPhase(nextPhase, nextTimeUntilBiteMs = null, nextFight = null) {
       if (phase === 'idle') return;
+      human.setFishingReeling?.(nextPhase === 'reel');
       fight = nextFight;
       if(nextFight?.shadowShape)shadowShape=nextFight.shadowShape;
       if(nextFight?.shadowSize)shadowSize=nextFight.shadowSize;
@@ -587,6 +588,7 @@ export function createFishingRig(scene, root, human) {
     },
     playReel() {
       if (phase === 'idle') return;
+      human.setFishingReeling?.(true);
       phase = 'reel';
       elapsed = 0;
       human.playFishingAction?.('reel', () => human.setFishingPose?.(true), animationDuration('reel'));
@@ -774,19 +776,26 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       const frameDelta = Math.min(Math.max(Number(delta) || 0, 0), 0.1);
       if (controls.isRidingBus?.()) {
         diagnostics.ridingBus = true;
+        vehicleRigs.setVisible(false);
+        vehicleSpeed = 0;
+        clearVehiclePose(human);
+        human.torsoNode.position.z = 0;
+        human.root.rotation.z = 0;
         autoTarget = null;
         onArrive = null;
         airborne = false;
         // Open-Top Convertible Sightseeing Bus: Player stands tall on the observation deck!
         human.animate(frameDelta, false, 0);
-        human.torsoNode.position.y = 0.60;
+        human.joints.knees.forEach(joint => joint.rotation.set(0, 0, 0));
         human.leftLeg.rotation.set(0, 0, 0);
         human.rightLeg.rotation.set(0, 0, 0);
         // Stylized standing sightseeing pose: hands resting on/holding the front safety rail
         human.leftArm.rotation.set(-0.35, 0.10, -0.12);
         human.rightArm.rotation.set(-0.35, -0.10, 0.12);
+        human.groundFeet();
         return;
       }
+      vehicleRigs.setVisible(true);
       if (fishingRig.isActive() || human.isFishingBusy?.()) {
         diagnostics.input = false;
         diagnostics.speed = 0;
@@ -914,12 +923,13 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
         human.animate(frameDelta, false, 0);
         vehicleRigs.update(frameDelta, visiblyMoving, actualSpeed, turn);
         pedalPhase += actualSpeed * frameDelta * 2.4;
-        applyVehiclePose(human, vehicleRigs.getVehicleId(), visiblyMoving, pedalPhase, vehicleRigs.getRiderOffset());
+        applyVehiclePose(human, vehicleRigs.getVehicleId(), visiblyMoving, pedalPhase, vehicleRigs.getRiderOffset(), frameDelta);
       } else {
+        clearVehiclePose(human);
         human.torsoNode.position.z = 0;
         human.root.rotation.z = 0;
         // Procedural walking / breathing animation
-        human.animate(frameDelta, visiblyMoving, actualSpeed);
+        human.animate(frameDelta, visiblyMoving, actualSpeed, {airborne,verticalSpeed:jumpVelocity,turn:frameDelta>0?turn/frameDelta:0});
       }
       fishingRig.update(frameDelta);
     },

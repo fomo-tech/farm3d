@@ -287,7 +287,7 @@ export function CharacterCreationModal({ onSubmit, onCheckName, pending = false,
                       aria-pressed={selectedHair === h.id}
                       onClick={() => setSelectedHair(h.id)}
                     >
-                      <div className="pt-hair-preview-dot">{hairImages[`starter-hair:${h.id}:${gender}:${selectedHairColor}`] && hairImages[`starter-hair:${h.id}:${gender}:${selectedHairColor}`] !== 'unavailable' ? <img src={hairImages[`starter-hair:${h.id}:${gender}:${selectedHairColor}`]} alt=""/> : <span className="arrival-thumbnail-loading">{hairImages[`starter-hair:${h.id}:${gender}:${selectedHairColor}`] === 'unavailable' ? 'Xem trên nhân vật' : 'Đang tải…'}</span>}</div>
+                      <div className="pt-hair-preview-dot">{hairImages[`starter-hair:${h.id}:${gender}:${selectedHairColor}`] && hairImages[`starter-hair:${h.id}:${gender}:${selectedHairColor}`] !== 'unavailable' ? <img src={hairImages[`starter-hair:${h.id}:${gender}:${selectedHairColor}`]} alt=""/> : <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="25" r="11" fill="#f4cfb3"/><path d="M9 25V18a11 11 0 0 1 22 0v7l-7-8-7 5-5-4z" fill={selectedHairColor}/></svg>}</div>
                       <div className="pt-hair-info">
                         <strong>{h.label}</strong>
                         <span>{h.desc}</span>

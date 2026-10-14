@@ -1,3 +1,4 @@
+import { canvasOverlayViewport } from './canvasOverlayViewport.js';
 import { Matrix, Vector3 } from '@babylonjs/core/Maths/math.vector.js';
 import './CharacterChatBubble.css';
 
@@ -5,32 +6,32 @@ import './CharacterChatBubble.css';
  * Bản đồ ánh xạ mã emote thành emoji chuẩn TeaMobi Avatar siêu sống động
  */
 const EMOTE_MAP = {
-  smile: '😄',
-  happy: '😄',
-  ':)': '😄',
-  ':d': '😄',
-  heart: '💖',
-  love: '💖',
-  '<3': '💖',
-  like: '👍',
-  thumbsup: '👍',
-  '(y)': '👍',
-  party: '🎉',
-  celebrate: '🎉',
-  trophy: '🏆',
-  top1: '🏆',
-  sad: '😭',
-  cry: '😭',
-  ':(': '😭',
-  't_t': '😭',
-  wheat: '🌾',
-  nongsan: '🌾',
-  farm: '🌾',
-  fish: '🐟',
-  cauca: '🐟',
-  wave: '👋',
-  hello: '👋',
-  hi: '👋',
+  smile: 'Cười',
+  happy: 'Cười',
+  ':)': 'Cười',
+  ':d': 'Cười',
+  heart: 'Tim',
+  love: 'Tim',
+  '<3': 'Tim',
+  like: 'Thích',
+  thumbsup: 'Thích',
+  '(y)': 'Thích',
+  party: 'Ăn mừng',
+  celebrate: 'Ăn mừng',
+  trophy: 'Cúp',
+  top1: 'Cúp',
+  sad: 'Buồn',
+  cry: 'Buồn',
+  ':(': 'Buồn',
+  't_t': 'Buồn',
+  wheat: 'Lúa',
+  nongsan: 'Lúa',
+  farm: 'Lúa',
+  fish: 'Cá',
+  cauca: 'Cá',
+  wave: 'Chào',
+  hello: 'Chào',
+  hi: 'Chào',
 };
 
 function resolveEmoteIcon(emote) {
@@ -89,6 +90,7 @@ export function showCharacterChatBubble(scene, targetRoot, { text = '', emote = 
   // 3. Tạo các phần tử DOM cho Khung Thoại Play Together Chuẩn Đẹp
   const anchorEl = document.createElement('div');
   anchorEl.className = 'avatar-speech-bubble-anchor';
+  anchorEl.style.position = 'absolute';
 
   const scalerEl = document.createElement('div');
   scalerEl.className = 'avatar-speech-bubble-scaler';
@@ -149,7 +151,7 @@ export function showCharacterChatBubble(scene, targetRoot, { text = '', emote = 
       return;
     }
 
-    const rect = canvas.getBoundingClientRect();
+    const rect = canvasOverlayViewport(canvas);
     const worldMatrix = targetRoot.computeWorldMatrix ? targetRoot.computeWorldMatrix(true) : Matrix.Identity();
     const worldPos = Vector3.TransformCoordinates(anchorOffset, worldMatrix);
 

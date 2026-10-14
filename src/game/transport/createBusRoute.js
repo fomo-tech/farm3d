@@ -1,3 +1,5 @@
+import { routePlacement, trafficSpeedLimits } from './busTraffic.js';
+import { findBusExit } from './findBusExit.js';
 import { batchRigidMeshes } from '../rendering/batchRigidMeshes.js';
 import { Color3 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
@@ -8,6 +10,7 @@ import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTextur
 import { PLAY_TOGETHER_PALETTE, createToyMaterial } from '../rendering/PlayTogetherTheme.js';
 import { MODEL_PATHS, spawnModelSync } from '../rendering/ModelAssetManager.js';
 import { getScenicPoiDescriptor } from '../world/createScenicLandscapes.js';
+import { BUS_ROUTES, LOCAL_BUS_ROUTES, BACKBONE_BUS_ROUTE, PORT_BUS_ROUTE, BUS_PASSENGER_OFFSET_Z } from '../../../shared/busRoutes.js';
 import { COASTAL_BUS_CONFIG } from '../../../shared/beachConfig.js';
 import { getTerrainHeight } from '../world/TerrainHeightSystem.js';
 import { LAKE_CONFIG } from '../../../shared/lakeConfig.js';
@@ -754,7 +757,7 @@ function createChibiBus(scene, shadows, config, materials) {
   // 18. Passenger Sightseeing Deck Node (Player stands upright on the open observation deck)
   // Đặt tại Z = 2.8: Đứng sát thanh vịn mạ vàng đầu xe tầng 2, tầm nhìn 360° bao la lộng gió!
   const passengerSeatNode = new TransformNode(`${config.id}-seat`, scene);
-  passengerSeatNode.position.set(0.0, 2.14, 2.8);
+  passengerSeatNode.position.set(0.0, 2.14, BUS_PASSENGER_OFFSET_Z);
   passengerSeatNode.parent = root;
 
   if (shadows) {
@@ -777,15 +780,24 @@ function createChibiBus(scene, shadows, config, materials) {
   // Initial placement offset so buses are spaced out nicely
   let currentSegment = config.initialSegment || 0;
   let segmentProgress = config.initialProgress || 0;
-  root.position.copyFrom(waypoints[currentSegment]);
+  Vector3.LerpToRef(waypoints[currentSegment], waypoints[(currentSegment + 1) % waypoints.length], segmentProgress, root.position);
+
+  root.position.y = getTerrainHeight(root.position.x, root.position.z);
+  const initialEnd = waypoints[(currentSegment + 1) % waypoints.length];
+  root.rotation.y = Math.atan2(initialEnd.x - waypoints[currentSegment].x, initialEnd.z - waypoints[currentSegment].z);
+  const localRoute = config.id.startsWith('bus-L');
+  root.scaling.x = localRoute ? .70 : .85;
+  const laneOffset = localRoute ? 1.25 : 1.6;
+  const lanePosition = new Vector3(Math.cos(root.rotation.y) * laneOffset, 0, -Math.sin(root.rotation.y) * laneOffset);
+  root.position.addInPlace(lanePosition);
 
   // Bus FSM State
   // 'CRUISING' | 'BRAKING' | 'DWELLING' | 'ACCELERATING'
   let state = 'CRUISING';
-  const CRUISE_SPEED = config.cruiseSpeed || 48.0; // 48 m/s (~173 km/h express speed)
+  const CRUISE_SPEED = config.cruiseSpeed || 22;
   let currentSpeed = CRUISE_SPEED;
   let dwellTimer = 0;
-  const maxDwellTime = 2.4; // 2.4s dwell at stations for rapid transit & minimal waiting
+  const maxDwellTime = 8; // Leave enough time to approach, board, and alight.
   let currentStation = null;
   let nextStation = config.stops[0] || null;
   let blinkerPulse = 0;
@@ -804,7 +816,8 @@ function createChibiBus(scene, shadows, config, materials) {
     getDwellRemaining: () => Math.max(0, maxDwellTime - dwellTimer),
     isDwelling: () => state === 'DWELLING',
 
-    update(delta) {
+    update(delta, speedLimit = Infinity) {
+      const previousSpeed = currentSpeed;
       const segLen = segmentLengths[currentSegment] || 1;
 
       // Check upcoming station along route
@@ -846,24 +859,52 @@ function createChibiBus(scene, shadows, config, materials) {
         }
       }
 
+      if (state !== 'DWELLING') {
+        const end = waypoints[(currentSegment + 1) % waypoints.length];
+        const after = waypoints[(currentSegment + 2) % waypoints.length];
+        const start = waypoints[currentSegment];
+        const ax = end.x - start.x, az = end.z - start.z;
+        const bx = after.x - end.x, bz = after.z - end.z;
+        const dot = (ax * bx + az * bz) / (Math.hypot(ax,az) * Math.hypot(bx,bz) || 1);
+        const distanceToCorner = (1 - segmentProgress) * segLen;
+        const turnLimit = dot < .8 ? Math.sqrt(6 * 6 + 2 * 8 * distanceToCorner) : CRUISE_SPEED;
+        currentSpeed = Math.min(currentSpeed, turnLimit, speedLimit);
+        currentSpeed = Math.min(currentSpeed, previousSpeed + delta * 4);
+        // Traffic may require a complete halt to preserve the physical gap.
+        if (speedLimit > 0) currentSpeed = Math.max(currentSpeed, previousSpeed - delta * 8);
+        currentSpeed = Math.min(currentSpeed, speedLimit);
+      }
+
+      if (state !== 'DWELLING') {
+        const start = waypoints[currentSegment], end = waypoints[(currentSegment + 1) % waypoints.length];
+        const yaw = Math.atan2(end.x - start.x, end.z - start.z);
+        // Do not translate backwards or sideways while the body is turning.
+        currentSpeed *= Math.max(0, Math.cos(yaw - root.rotation.y));
+      }
+
       // Progress along route
       if (state !== 'DWELLING') {
-        const moveDist = currentSpeed * delta;
-        segmentProgress += moveDist / segLen;
-
-        if (segmentProgress >= 1.0) {
+        let remaining = currentSpeed * delta;
+        // Carry distance through corners instead of dropping the frame's overshoot.
+        for (let crossed = 0; remaining > 0 && crossed <= waypoints.length; crossed++) {
+          const length = segmentLengths[currentSegment] || 1;
+          const toEnd = (1 - segmentProgress) * length;
+          if (remaining < toEnd) {
+            segmentProgress += remaining / length;
+            break;
+          }
+          remaining -= toEnd;
           segmentProgress = 0;
           currentSegment = (currentSegment + 1) % waypoints.length;
-
-          // Check if arrived at a station stop
           const arrivedStop = config.stops.find(s => s.waypointIndex === currentSegment);
-          if (arrivedStop && state === 'BRAKING') {
+          if (arrivedStop) {
             state = 'DWELLING';
+            currentSpeed = 0;
             dwellTimer = 0;
             currentStation = arrivedStop;
-            // Update next station target
             const stopIdx = config.stops.findIndex(s => s.id === arrivedStop.id);
             nextStation = config.stops[(stopIdx + 1) % config.stops.length];
+            break;
           }
         }
       }
@@ -879,7 +920,16 @@ function createChibiBus(scene, shadows, config, materials) {
       let diff = targetYaw - root.rotation.y;
       while (diff < -Math.PI) diff += Math.PI * 2;
       while (diff > Math.PI) diff -= Math.PI * 2;
-      root.rotation.y += diff * Math.min(1, delta * 12);
+      // Keep the incoming heading while boarding; turn only after departure.
+      if (state !== 'DWELLING') {
+        root.rotation.y += Math.max(-delta * 2.5, Math.min(delta * 2.5, diff * (1 - Math.exp(-delta * 8))));
+      }
+      const laneYaw = state === 'DWELLING' ? root.rotation.y : targetYaw;
+      const laneBlend = state === 'DWELLING' ? 0 : 1 - Math.exp(-delta * 5);
+      lanePosition.x += (Math.cos(laneYaw) * laneOffset - lanePosition.x) * laneBlend;
+      lanePosition.z += (-Math.sin(laneYaw) * laneOffset - lanePosition.z) * laneBlend;
+      root.position.addInPlace(lanePosition);
+      root.position.y = getTerrainHeight(root.position.x, root.position.z);
 
       // Rotate wheels with actual transit speed
       if (currentSpeed > 0.1) {
@@ -892,7 +942,7 @@ function createChibiBus(scene, shadows, config, materials) {
 }
 
 /**
- * Creates the entire 8-bus inter-village fleet and 16 correctly oriented shelters.
+ * Creates the inter-village, local, and northern backbone fleet.
  */
 export function createBusRoute(scene, shadows) {
   const steps = createBusRouteSteps(scene, shadows);
@@ -931,7 +981,7 @@ export function* createBusRouteSteps(scene, shadows) {
   materials.glass.alpha = 0.55;
   materials.tintedGlass.alpha = 0.85;
 
-  // 19 Chibi Ghibli Bus Stop Shelters - 100% CORRECTLY FACING ROADS:
+  // Gateway and inter-village shelters:
   // 4 Trạm cuối (Gateway Terminals) tại 4 cửa ngõ giáp Quảng trường trung tâm (Bắc, Nam, Đông, Tây)
   // Xe buýt từ các làng chạy đến các trạm này dừng đón/trả khách rồi quay đầu, tuyệt đối không vào quảng trường.
   const shelters = [
@@ -973,376 +1023,44 @@ export function* createBusRouteSteps(scene, shadows) {
     yield;
   }
 
-  // Fleet Waypoints & Stops:
-  // Tốc độ Siêu Tốc Express: 48.0 m/s (~173 km/h - di chuyển cực nhanh qua các làng mà vẫn 100% vật lý 3D)
-  const CRUISE_SPEED = 48.0;
+  const buses = [];
+  const fleetSizes = { '01': 4, '02': 4, '03': 4, '04A': 2, '04B': 2, '05': 2, '06': 2 };
+  const colors = { '01': '#dc2626', '02': '#0284c7', '03': '#ea580c', '04A': '#d97706', '04B': '#06b6d4', '05': '#7c3aed', '06': '#0891b2' };
+  const names = { '01': 'Hoa Mai Express', '02': 'Biển Xanh Coastal', '03': 'Cao Nguyên Highland', '04A': 'Phố Chợ', '04B': 'Hồ Pha Lê' };
 
-  // ROUTE 01: Hoa Mai Express - Highway 86 (Bến cuối tại Trạm Cửa Nam z = 54, quay đầu tại z = 50)
-  const route01Waypoints = [
-    new Vector3(0, 0, 54),    // 0: Trạm Cửa Nam - Quảng Trường
-    new Vector3(0, 0, 50),    // 1: Quay đầu Cửa Nam
-    new Vector3(0, 0, 86),    // 2: Trạm Bình Minh
-    new Vector3(-300, 0, 86), // 3: Trạm Hoa Mai
-    new Vector3(-594, 0, 86), // 4: Trạm Đồi Gió
-    new Vector3(-612, 0, 86), // 5: Turnaround Tây
-    new Vector3(-594, 0, 86), // 6: Trạm Đồi Gió
-    new Vector3(-300, 0, 86), // 7: Trạm Hoa Mai
-    new Vector3(0, 0, 86),    // 8: Trạm Bình Minh
-    new Vector3(300, 0, 86),  // 9: Trạm Ven Sông
-    new Vector3(594, 0, 86),  // 10: Trạm An Nhiên
-    new Vector3(612, 0, 86),  // 11: Turnaround Đông
-    new Vector3(594, 0, 86),  // 12: Trạm An Nhiên
-    new Vector3(300, 0, 86),  // 13: Trạm Ven Sông
-    new Vector3(0, 0, 86),    // 14: Trạm Bình Minh
-  ];
-  const route01Stops = [
-    { id: 'stop-south-gate', name: 'Trạm Cửa Nam - Quảng Trường', waypointIndex: 0 },
-    { id: 'stop-bm', name: 'Làng Bình Minh', waypointIndex: 2 },
-    { id: 'stop-hm', name: 'Làng Hoa Mai', waypointIndex: 3 },
-    { id: 'stop-dg', name: 'Làng Đồi Gió', waypointIndex: 4 },
-    { id: 'stop-vs', name: 'Làng Ven Sông', waypointIndex: 9 },
-    { id: 'stop-an', name: 'Làng An Nhiên', waypointIndex: 10 },
-  ];
+  // Compact signs use one texture per route instead of a shelter per farm row.
+  for (const route of [...LOCAL_BUS_ROUTES, BACKBONE_BUS_ROUTE, PORT_BUS_ROUTE]) {
+    const signMaterial = new StandardMaterial(`local-stop-${route.code}`, scene);
+    signMaterial.diffuseTexture = createLedSignTexture(scene, `stop-${route.code}`, route.name, route.code, '#34d399');
+    for (const stop of route.stops) {
+      const [x,z] = route.points[stop.waypointIndex];
+      const groundY = getTerrainHeight(x + 5, z + 3.4);
+      const pole = MeshBuilder.CreateCylinder(`local-stop-pole-${stop.id}`, {height: 2.2, diameter: .10, tessellation: 6}, scene);
+      pole.position.set(x + 5, groundY + 1.1, z + 3.4);
+      pole.material = materials.chrome; pole.isPickable = false;
+      const sign = MeshBuilder.CreateBox(`local-stop-sign-${stop.id}`, {width: 1.6, height: .4, depth: .08}, scene);
+      sign.position.set(x + 5, groundY + 2.1, z + 3.4);
+      sign.material = signMaterial; sign.isPickable = false;
+    }
+    yield;
+  }
 
-  // ROUTE 02: Biển Xanh Coastal - Highway 406 (Bến cuối tại Trạm Cửa Nam z = 54, quay đầu tại z = 50)
-  const route02Waypoints = COASTAL_BUS_CONFIG.waypoints.map(([x,z])=>new Vector3(x,0,z));
-  const route02Stops = [
-    { id: 'stop-south-gate', name: 'Trạm Cửa Nam - Quảng Trường', waypointIndex: 0 },
-    { id: 'stop-bm', name: 'Làng Bình Minh', waypointIndex: 2 },
-    { id: 'stop-beach', name: 'Bãi Biển Bình Minh', waypointIndex: COASTAL_BUS_CONFIG.stops.beach },
-    { id: 'stop-tp', name: 'Làng Thu Phong', waypointIndex: COASTAL_BUS_CONFIG.stops.thuPhong },
-    { id: 'stop-hd', name: 'Làng Hướng Dương', waypointIndex: COASTAL_BUS_CONFIG.stops.huongDuong },
-  ];
-
-  // ROUTE 03: Cao Nguyên Highland - Northern Highway -234 & Phu Dien (Bến cuối tại Trạm Cửa Bắc z = -54, quay đầu tại z = -50)
-  const route03Waypoints = [
-    new Vector3(0, 0, -54),    // 0: Trạm Cửa Bắc - Tòa Thị Chính
-    new Vector3(0, 0, -50),    // 1: Quay đầu Cửa Bắc
-    new Vector3(0, 0, -90),    // 2: Tòa Thị Chính
-    new Vector3(0, 0, -234),   // 3: Ngã tư QL -234
-    new Vector3(-300, 0, -234),// 4: Trạm Thanh Hà
-    new Vector3(-594, 0, -234),// 5: Trạm Mộc Lan
-    new Vector3(-612, 0, -234),// 6: Turnaround Tây
-    new Vector3(-300, 0, -234),// 7: Trạm Thanh Hà
-    new Vector3(0, 0, -234),   // 8: Ngã tư QL -234
-    new Vector3(0, 0, -394),   // 9: Trạm Phú Điền
-    new Vector3(0, 0, -408),   // 10: Turnaround Phú Điền
-    new Vector3(0, 0, -234),   // 11: Ngã tư QL -234
-    new Vector3(300, 0, -234), // 12: Trạm Tân Lộc
-    new Vector3(594, 0, -234), // 13: Trạm Hải Vân
-    new Vector3(612, 0, -234), // 14: Turnaround Đông
-    new Vector3(300, 0, -234), // 15: Trạm Tân Lộc
-    new Vector3(0, 0, -234),   // 16: Ngã tư QL -234
-    new Vector3(0, 0, -90),    // 17: Tòa Thị Chính
-  ];
-  const route03Stops = [
-    { id: 'stop-north-gate', name: 'Trạm Cửa Bắc - Tòa Thị Chính', waypointIndex: 0 },
-    { id: 'stop-th', name: 'Làng Thanh Hà', waypointIndex: 4 },
-    { id: 'stop-ml', name: 'Làng Mộc Lan', waypointIndex: 5 },
-    { id: 'stop-pd', name: 'Làng Phú Điền', waypointIndex: 9 },
-    { id: 'stop-tl', name: 'Làng Tân Lộc', waypointIndex: 12 },
-    { id: 'stop-hv', name: 'Làng Hải Vân', waypointIndex: 13 },
-  ];
-
-  // ROUTE 04A: Phố Chợ Phía Tây Shuttle (Bến cuối tại Trạm Cửa Tây x = -54, quay đầu tại x = -50)
-  const route04AWaypoints = [
-    new Vector3(-54, 0, 0),    // 0: Trạm Cửa Tây - Phố Chợ
-    new Vector3(-50, 0, 0),    // 1: Quay đầu Cửa Tây
-    new Vector3(-84, 0, 0),    // 2: Đại lộ Tây
-    new Vector3(-118, 0, 0),   // 3: Trạm Phố Chợ Phía Tây
-    new Vector3(-130, 0, 0),   // 4: Turnaround Chợ Tây
-    new Vector3(-118, 0, 0),   // 5: Trạm Phố Chợ Phía Tây
-    new Vector3(-84, 0, 0),    // 6: Đại lộ Tây
-  ];
-  const route04AStops = [
-    { id: 'stop-west-gate', name: 'Trạm Cửa Tây - Phố Chợ', waypointIndex: 0 },
-    { id: 'stop-market', name: 'Phố Chợ Phía Tây', waypointIndex: 3 },
-  ];
-
-  // ROUTE 04B: Hồ Pha Lê & Bến Câu Cá Shuttle (Bến cuối tại Trạm Cửa Đông x = 54, quay đầu tại x = 50)
-  const route04BWaypoints = [
-    new Vector3(54, 0, 0),     // 0: Trạm Cửa Đông - Hồ Pha Lê
-    new Vector3(50, 0, 0),     // 1: Quay đầu Cửa Đông
-    new Vector3(84, 0, 0),     // 2: Đại lộ Đông
-    new Vector3(LAKE_CONFIG.busStop.x, 0, 0), // 3: Trạm trên đất liền
-    new Vector3(LAKE_CONFIG.busStop.turnX, 0, 0), // 4: Quay đầu trước lối bộ hành
-    new Vector3(LAKE_CONFIG.busStop.x, 0, 0), // 5: Trạm Hồ Pha Lê
-    new Vector3(84, 0, 0),     // 6: Đại lộ Đông
-  ];
-  const route04BStops = [
-    { id: 'stop-east-gate', name: 'Trạm Cửa Đông - Hồ Pha Lê', waypointIndex: 0 },
-    { id: 'stop-lake', name: 'Hồ Pha Lê', waypointIndex: 3 },
-  ];
-
-  // === ĐỘI HÌNH 16 XE BUÝT CHIBI VIỆT NAM CHẠY LIÊN TỤC SONG SONG (SLA CHỜ 5S - 10S) ===
-  // Tuyến 01: 4 xe chia đều 25% lộ trình trục QL 86 (Hà Nội City Tour Đỏ Cờ)
-  const bus1A = createChibiBus(scene, shadows, {
-    id: 'bus-01A',
-    routeCode: '01A',
-    routeName: 'Hoa Mai Express',
-    plateNumber: '29B - 018.88',
-    bodyColor: '#dc2626',
-    accentColor: '#fef08a',
-    ledColor: '#facc15',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route01Waypoints,
-    stops: route01Stops,
-    initialSegment: 0,
-    initialProgress: 0.1,
-  }, materials);
-
-  yield;
-  const bus1B = createChibiBus(scene, shadows, {
-    id: 'bus-01B',
-    routeCode: '01B',
-    routeName: 'Hoa Mai Express',
-    plateNumber: '29B - 019.99',
-    bodyColor: '#b91c1c',
-    accentColor: '#fef08a',
-    ledColor: '#fbbf24',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route01Waypoints,
-    stops: route01Stops,
-    initialSegment: 4,
-    initialProgress: 0.2,
-  }, materials);
-
-  yield;
-  const bus1C = createChibiBus(scene, shadows, {
-    id: 'bus-01C',
-    routeCode: '01C',
-    routeName: 'Hoa Mai Express',
-    plateNumber: '29B - 018.11',
-    bodyColor: '#dc2626',
-    accentColor: '#fef08a',
-    ledColor: '#facc15',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route01Waypoints,
-    stops: route01Stops,
-    initialSegment: 8,
-    initialProgress: 0.4,
-  }, materials);
-
-  yield;
-  const bus1D = createChibiBus(scene, shadows, {
-    id: 'bus-01D',
-    routeCode: '01D',
-    routeName: 'Hoa Mai Express',
-    plateNumber: '29B - 018.22',
-    bodyColor: '#b91c1c',
-    accentColor: '#fef08a',
-    ledColor: '#fbbf24',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route01Waypoints,
-    stops: route01Stops,
-    initialSegment: 12,
-    initialProgress: 0.3,
-  }, materials);
-
-  // Tuyến 02: 4 xe chia đều 25% lộ trình trục Biển & Làng Nam (Sài Gòn Coastal Xanh Ngọc Biển)
-  yield;
-  const bus2A = createChibiBus(scene, shadows, {
-    id: 'bus-02A',
-    routeCode: '02A',
-    routeName: 'Biển Xanh Coastal',
-    plateNumber: '51B - 028.68',
-    bodyColor: '#0284c7',
-    accentColor: '#ffffff',
-    ledColor: '#38bdf8',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route02Waypoints,
-    stops: route02Stops,
-    initialSegment: 0,
-    initialProgress: 0.1,
-  }, materials);
-
-  yield;
-  const bus2B = createChibiBus(scene, shadows, {
-    id: 'bus-02B',
-    routeCode: '02B',
-    routeName: 'Biển Xanh Coastal',
-    plateNumber: '51B - 029.86',
-    bodyColor: '#0891b2',
-    accentColor: '#ffffff',
-    ledColor: '#22d3ee',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route02Waypoints,
-    stops: route02Stops,
-    initialSegment: 5,
-    initialProgress: 0.2,
-  }, materials);
-
-  yield;
-  const bus2C = createChibiBus(scene, shadows, {
-    id: 'bus-02C',
-    routeCode: '02C',
-    routeName: 'Biển Xanh Coastal',
-    plateNumber: '51B - 029.33',
-    bodyColor: '#0284c7',
-    accentColor: '#ffffff',
-    ledColor: '#38bdf8',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route02Waypoints,
-    stops: route02Stops,
-    initialSegment: 10,
-    initialProgress: 0.3,
-  }, materials);
-
-  yield;
-  const bus2D = createChibiBus(scene, shadows, {
-    id: 'bus-02D',
-    routeCode: '02D',
-    routeName: 'Biển Xanh Coastal',
-    plateNumber: '51B - 029.77',
-    bodyColor: '#0891b2',
-    accentColor: '#ffffff',
-    ledColor: '#22d3ee',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route02Waypoints,
-    stops: route02Stops,
-    initialSegment: 15,
-    initialProgress: 0.4,
-  }, materials);
-
-  // Tuyến 03: 4 xe chia đều 25% lộ trình trục Cao Nguyên & Phú Điền (VinBus Xanh Lục Bảo)
-  yield;
-  const bus3A = createChibiBus(scene, shadows, {
-    id: 'bus-03A',
-    routeCode: '03A',
-    routeName: 'Cao Nguyên Line',
-    plateNumber: '43B - 036.78',
-    bodyColor: '#16a34a',
-    accentColor: '#ffffff',
-    ledColor: '#4ade80',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route03Waypoints,
-    stops: route03Stops,
-    initialSegment: 0,
-    initialProgress: 0.1,
-  }, materials);
-
-  yield;
-  const bus3B = createChibiBus(scene, shadows, {
-    id: 'bus-03B',
-    routeCode: '03B',
-    routeName: 'Cao Nguyên Line',
-    plateNumber: '43B - 038.99',
-    bodyColor: '#15803d',
-    accentColor: '#ffffff',
-    ledColor: '#86efac',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route03Waypoints,
-    stops: route03Stops,
-    initialSegment: 4,
-    initialProgress: 0.2,
-  }, materials);
-
-  yield;
-  const bus3C = createChibiBus(scene, shadows, {
-    id: 'bus-03C',
-    routeCode: '03C',
-    routeName: 'Cao Nguyên Line',
-    plateNumber: '43B - 036.11',
-    bodyColor: '#16a34a',
-    accentColor: '#ffffff',
-    ledColor: '#4ade80',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route03Waypoints,
-    stops: route03Stops,
-    initialSegment: 9,
-    initialProgress: 0.3,
-  }, materials);
-
-  yield;
-  const bus3D = createChibiBus(scene, shadows, {
-    id: 'bus-03D',
-    routeCode: '03D',
-    routeName: 'Cao Nguyên Line',
-    plateNumber: '43B - 038.22',
-    bodyColor: '#15803d',
-    accentColor: '#ffffff',
-    ledColor: '#86efac',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route03Waypoints,
-    stops: route03Stops,
-    initialSegment: 13,
-    initialProgress: 0.4,
-  }, materials);
-
-  // Tuyến 04A: 2 xe chạy con thoi đối xứng Phố Chợ Phía Tây
-  yield;
-  const bus4A_1 = createChibiBus(scene, shadows, {
-    id: 'bus-04A-1',
-    routeCode: '04A',
-    routeName: 'Phố Chợ Tây',
-    plateNumber: '29B - 046.88',
-    bodyColor: '#ea580c',
-    accentColor: '#fef08a',
-    ledColor: '#fb923c',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route04AWaypoints,
-    stops: route04AStops,
-    initialSegment: 0,
-    initialProgress: 0.1,
-  }, materials);
-
-  yield;
-  const bus4A_2 = createChibiBus(scene, shadows, {
-    id: 'bus-04A-2',
-    routeCode: '04A',
-    routeName: 'Phố Chợ Tây',
-    plateNumber: '29B - 046.99',
-    bodyColor: '#c2410c',
-    accentColor: '#fef08a',
-    ledColor: '#fb923c',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route04AWaypoints,
-    stops: route04AStops,
-    initialSegment: 3,
-    initialProgress: 0.5,
-  }, materials);
-
-  // Tuyến 04B: 2 xe chạy con thoi đối xứng Hồ Pha Lê & Bến Câu Cá
-  yield;
-  const bus4B_1 = createChibiBus(scene, shadows, {
-    id: 'bus-04B-1',
-    routeCode: '04B',
-    routeName: 'Hồ Pha Lê',
-    plateNumber: '51B - 048.66',
-    bodyColor: '#4f46e5',
-    accentColor: '#ffffff',
-    ledColor: '#818cf8',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route04BWaypoints,
-    stops: route04BStops,
-    initialSegment: 0,
-    initialProgress: 0.1,
-  }, materials);
-
-  yield;
-  const bus4B_2 = createChibiBus(scene, shadows, {
-    id: 'bus-04B-2',
-    routeCode: '04B',
-    routeName: 'Hồ Pha Lê',
-    plateNumber: '51B - 048.88',
-    bodyColor: '#4338ca',
-    accentColor: '#ffffff',
-    ledColor: '#818cf8',
-    cruiseSpeed: CRUISE_SPEED,
-    waypoints: route04BWaypoints,
-    stops: route04BStops,
-    initialSegment: 3,
-    initialProgress: 0.5,
-  }, materials);
-
-  yield;
-  const buses = [
-    bus1A, bus1B, bus1C, bus1D,
-    bus2A, bus2B, bus2C, bus2D,
-    bus3A, bus3B, bus3C, bus3D,
-    bus4A_1, bus4A_2,
-    bus4B_1, bus4B_2,
-  ];
+  for (const [code, route] of Object.entries(BUS_ROUTES)) {
+    const waypoints = route.points.map(([x,z]) => new Vector3(x,0,z));
+    const fleetSize = fleetSizes[code] || 1;
+    for (let index = 0; index < fleetSize; index++) {
+      const suffix = code.startsWith('04') ? `-${index + 1}` : String.fromCharCode(65 + index);
+      buses.push(createChibiBus(scene, shadows, {
+        id: `bus-${code}${suffix}`, routeCode: code,
+        routeName: route.name || names[code],
+        plateNumber: `29B - ${code.replace('L','1')}${index}.88`,
+        bodyColor: colors[code] || '#059669', accentColor: '#fef08a', ledColor: '#facc15',
+        cruiseSpeed: route.speed, waypoints, stops: route.stops,
+        ...routePlacement(waypoints, (index + .15) / fleetSize),
+      }, materials));
+      yield;
+    }
+  }
 
   // Transit Management State
   let activeRidingBusId = null;
@@ -1374,31 +1092,31 @@ export function* createBusRouteSteps(scene, shadows) {
       if (!bus || !playerRoot || activeRidingBusId || !bus.isDwelling() || Vector3.Distance(bus.root.position, playerRoot.position) > 6.5) return false;
       boardingPosition = playerRoot.position.clone();
       activeRidingBusId = busId;
-      // Snap player into bus cabin
+      // Read the seat after updating its parent transform in this frame.
+      bus.root.computeWorldMatrix(true);
+      bus.passengerSeatNode.computeWorldMatrix(true);
       playerRoot.position.copyFrom(bus.passengerSeatNode.getAbsolutePosition());
       playerRoot.rotation.y = bus.root.rotation.y;
       return true;
     },
 
-    alightBus(playerRoot, force = false) {
+    alightBus(playerRoot, force = false, isBlocked = () => false) {
       if (!activeRidingBusId) return false;
       const bus = buses.find(b => b.id === activeRidingBusId);
       if (!force && !bus?.isDwelling()) return false;
-      activeRidingBusId = null;
       if (bus && playerRoot) {
         if (force && boardingPosition) {
           playerRoot.position.copyFrom(boardingPosition);
           boardingPosition = null;
+          activeRidingBusId = null;
           return true;
         }
-        // Drop player safely onto the sidewalk platform beside the bus door
-        const forward = bus.root.forward;
-        const right = new Vector3(forward.z, 0, -forward.x);
-        const exitPos = bus.root.position.add(right.scale(3.4));
-        exitPos.y = getTerrainHeight(exitPos.x, exitPos.z);
+        const exitPos = findBusExit(bus.root, isBlocked);
+        if (!exitPos) return false;
         playerRoot.position.copyFrom(exitPos);
       }
       boardingPosition = null;
+      activeRidingBusId = null;
       return true;
     },
 
@@ -1427,8 +1145,9 @@ export function* createBusRouteSteps(scene, shadows) {
     },
 
     update(delta, playerPos) {
-      // Update each bus in the 8-bus fleet
-      buses.forEach(b => b.update(delta));
+      // Update each bus in the shared transit network.
+      const speedLimits = trafficSpeedLimits(buses);
+      buses.forEach((bus, i) => bus.update(delta, speedLimits[i]));
 
       const activeRide = this.getActiveRide();
       const nearbyBoardable = playerPos ? this.getNearbyBoardableBus(playerPos) : null;

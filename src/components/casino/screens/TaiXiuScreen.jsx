@@ -49,7 +49,7 @@ export function TaiXiuScreen({
             <div className="dish-inner-ring" />
           </div>
 
-          {isShaking && <div className="pt-shaker-capsule" aria-label="Đang lắc">🎲<span>Đang lắc…</span></div>}
+          {isShaking && <div className="pt-shaker-capsule" aria-label="Đang lắc"><span>Đang lắc…</span></div>}
           {dice && isReveal && (
             <div className={`pt-dice-trio ${squeezing ? 'squeezing' : 'revealed'}`}>
               {dice.map((d, i) => (

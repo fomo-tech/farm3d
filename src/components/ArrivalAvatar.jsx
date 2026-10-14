@@ -1,3 +1,4 @@
+import { installRotatedPointer } from '../game/input/rotatedPointer.js';
 import { useEffect, useRef, useState } from 'react';
 import { Engine } from '@babylonjs/core/Engines/engine.js';
 import { Scene } from '@babylonjs/core/scene.js';
@@ -12,8 +13,8 @@ import { getSkinTone } from '../../shared/characterConfig.js';
 import { buildHumanMesh } from '../game/player/buildHumanMesh.js';
 
 export function ArrivalAvatar({ outfit, color, gender = 'male', hair = 'hair_buzzcut', hairColor = '#76503b', skinTone = 'peach' }) {
-  const mobile = useRef(window.matchMedia('(pointer: coarse)').matches).current;
-  const [failed, setFailed] = useState(false);
+  const mobile = useRef(document.documentElement.classList.contains('is-mobile-device') || window.matchMedia('(pointer: coarse)').matches).current;
+  const [failed, setFailed] = useState(mobile);
   const canvas = useRef(null);
   const model = useRef(null);
   const latest = useRef({ outfit, color, gender, hair, hairColor, skinTone });
@@ -36,6 +37,7 @@ export function ArrivalAvatar({ outfit, color, gender = 'male', hair = 'hair_buz
     };
     try {
       engine = new Engine(canvas.current, true, { antialias: true, stencil: false, alpha: true, preserveDrawingBuffer: false });
+      installRotatedPointer(engine, canvas.current);
       // The small studio canvas can supersample at 1.5× on standard screens;
       // cap Retina rendering at 2× rather than scaling the entire game.
       const updateResolution = () => {
@@ -126,8 +128,8 @@ export function ArrivalAvatar({ outfit, color, gender = 'male', hair = 'hair_buz
     <path d="M76 210h68v22H76z" fill="#38689b" />
     <ellipse cx="110" cy="104" rx="47" ry="50" fill={skin.hex} stroke={skin.shadow} strokeWidth="2" />
     {hair === 'hair_high_ponytail' && <path d="M117 54q-16-36 16-40 35 0 39 35l-24 45-13-40z" fill={hairColor} />}
-    {hair === 'twintails' && <g fill={hairColor}><path d="M66 77q-38-6-29 76l30-16 7-52z" /><path d="M154 77q38-6 29 76l-30-16-7-52z" /></g>}
-    <path d={hairShape[hair] || (gender === 'female' ? hairShape.bob : 'M64 103q-8-66 51-60 54 0 42 65l-20-31-30 16-29-7z')} fill={hairColor} />
+    {(hair === 'twintails' || hair === 'hair_twintails') && <g fill={hairColor}><path d="M66 77q-38-6-29 76l30-16 7-52z" /><path d="M154 77q38-6 29 76l-30-16-7-52z" /></g>}
+    <path d={hairShape[hair] || hairShape[hair.replace(/^hair_/, '')] || (gender === 'female' ? hairShape.bob : 'M64 103q-8-66 51-60 54 0 42 65l-20-31-30 16-29-7z')} fill={hairColor} />
     <ellipse cx="93" cy="109" rx="4" ry="6" fill="#28303c" /><ellipse cx="127" cy="109" rx="4" ry="6" fill="#28303c" />
     <path d="M100 130q10 10 20 0" fill="none" stroke="#9c583c" strokeWidth="3" strokeLinecap="round" />
     <path d="M77 272h24m19 0h24" stroke="#f8fafc" strokeWidth="14" strokeLinecap="round" />

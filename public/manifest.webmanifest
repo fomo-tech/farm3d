@@ -3,7 +3,7 @@
   "short_name": "Vibe City",
   "start_url": "/",
   "display": "fullscreen",
-  "orientation": "any",
+  "orientation": "landscape",
   "background_color": "#0277bd",
   "theme_color": "#0277bd",
   "description": "Game nông trại online 3D: trồng cây, chăn nuôi, câu cá và kết bạn.",

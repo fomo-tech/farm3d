@@ -1,0 +1,62 @@
+[
+  {
+    "screen": "bagDemo",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "pt-inv-modal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "phoneDemo",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "pt-phone-device",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "landDemo",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "game-panel land-game-panel",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "mapDemo",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-map-dialog",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "settingsDemo",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-settings",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "arrivalDemo",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "pt-studio-card",
+        "outside": false
+      }
+    ]
+  }
+]

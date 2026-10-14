@@ -43,33 +43,41 @@ export class OwnedHerd {
         // Quỹ đạo di chuyển hình elip tự nhiên quanh vị trí trung tâm của từng bé
         const dx = feeding ? 0 : Math.sin(angle) * member.rx;
         const dz = feeding ? 0 : Math.cos(angle * 1.1) * member.rz;
-        member.root.position.x = member.baseX + dx;
-        member.root.position.z = member.baseZ + dz;
+        const previousX=member.root.position.x,previousZ=member.root.position.z;
+        const follow=1-Math.exp(-dt*6);
+        member.root.position.x+=(member.baseX+dx-member.root.position.x)*follow;
+        member.root.position.z+=(member.baseZ+dz-member.root.position.z)*follow;
+        const actualSpeed=dt>0?Math.hypot(member.root.position.x-previousX,member.root.position.z-previousZ)/dt:0;
+        member.motionWeight=(member.motionWeight||0)+(Math.min(1,actualSpeed/.5)-(member.motionWeight||0))*(1-Math.exp(-dt*12));
+        member.stridePhase=(member.stridePhase??member.phase)+actualSpeed*dt*(member.isBird?10:7);
+        member.feedWeight=(member.feedWeight||0)+((feeding?1:0)-(member.feedWeight||0))*(1-Math.exp(-dt*9));
 
         // Xoay hướng nhìn theo chiều chuyển động mượt mà
         const vx = Math.cos(angle) * member.rx;
         const vz = -Math.sin(angle * 1.1) * 1.1 * member.rz;
         if (!feeding && Math.hypot(vx, vz) > 0.01) {
-          member.root.rotation.y = Math.atan2(-vx, -vz);
+          const target=Math.atan2(-vx,-vz),difference=target-member.root.rotation.y;
+          member.root.rotation.y+=Math.atan2(Math.sin(difference),Math.cos(difference))*(1-Math.exp(-dt*8));
         }
 
         // Nhấp nhô bước chân / lạch bạch waddle đáng yêu
         const bounceFreq = member.isBird ? 5.5 : 3.8;
-        const bounce = Math.abs(Math.sin(this.time * bounceFreq + member.phase)) * (member.isBird ? 0.045 : 0.025);
+        const bounce = Math.abs(Math.sin(member.stridePhase)) * (member.isBird ? 0.025 : 0.012)*member.motionWeight;
         member.root.position.y = member.baseY + bounce;
 
         // Chim/vịt lắc lư hai bên (waddle roll) & vỗ cánh nhẹ
         if (member.isBird) {
-          member.root.rotation.z = Math.sin(this.time * bounceFreq + member.phase) * 0.12;
+          member.root.rotation.z = Math.sin(member.stridePhase) * 0.08 * member.motionWeight;
           if (member.wings) {
-            member.wings[0].rotation.z = -0.15 - Math.abs(Math.sin(this.time * bounceFreq + member.phase)) * 0.22;
-            member.wings[1].rotation.z = 0.15 + Math.abs(Math.sin(this.time * bounceFreq + member.phase)) * 0.22;
+            member.wings[0].rotation.z = -0.15 - Math.abs(Math.sin(member.stridePhase)) * 0.16 * member.motionWeight;
+            member.wings[1].rotation.z = 0.15 + Math.abs(Math.sin(member.stridePhase)) * 0.16 * member.motionWeight;
           }
         }
 
         // Gật gù đầu
         if (member.head) {
-          member.head.rotation.x = feeding ? -.35 + Math.sin(this.time * 7) * .09 : Math.sin(this.time * (member.isBird ? 3.5 : 2.2) + member.phase) * (member.isBird ? 0.15 : 0.08);
+          const idleHead=Math.sin(this.time*(member.isBird?3.5:2.2)+member.phase)*(member.isBird?.15:.08);
+          member.head.rotation.x=idleHead*(1-member.feedWeight)+(-.35+Math.sin(this.time*7)*.09)*member.feedWeight;
         }
 
         // Đuôi ngoe nguẩy (đuôi heo xoắn lắc tít, đuôi bò phe phẩy)
@@ -79,7 +87,7 @@ export class OwnedHerd {
         }
 
         member.legs?.forEach((leg, i) => {
-          leg.rotation.x = feeding ? 0 : Math.sin(this.time * (member.isBird ? 5.5 : 3.8) + member.phase + (i === 0 || i === 3 ? 0 : Math.PI)) * (member.isBird ? .22 : .16);
+          leg.rotation.x=Math.sin(member.stridePhase+(i===0||i===3?0:Math.PI))*(member.isBird?.22:.16)*member.motionWeight;
         });
 
         // Nhịp thở phập phồng nhẹ nhàng

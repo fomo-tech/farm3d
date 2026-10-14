@@ -2,7 +2,7 @@ import {stealLivestock,recoverLivestockClaim} from './LivestockTheft.js';
 import { unlockedFarmTiles } from '../shared/landExpansionConfig.js';
 import { randomUUID } from 'node:crypto';
 import { FARM_CONFIG, farmBarnCapacity } from '../shared/farmConfig.js';
-import { farmGatePosition, insideFarm, theftPolicy, farmBoundaryBlocked, farmGateOpen, cropYield } from '../shared/farmSecurity.js';
+import { farmGatePosition, nearFarmGate, insideFarm, theftPolicy, farmBoundaryBlocked, farmGateOpen, cropYield } from '../shared/farmSecurity.js';
 import { WORLD_VILLAGES, worldFarmId } from '../shared/villageLayout.js';
 
 // A per-farm queue serializes gate changes, watering, harvesting and stealing.
@@ -53,7 +53,7 @@ export class FarmSecurity {
     return withFarmLock(farmId, async () => {
       if (assignment.playerId !== playerId || typeof open !== 'boolean') return { error: 'Chỉ chủ đất được đóng/mở cổng.' };
       const gate = farmGatePosition(farmId);
-      if (position.venue || Math.hypot(position.x - gate.x, position.z - gate.z) > FARM_CONFIG.security.gate.interactionDistance) return { error: 'Hãy đứng gần cổng.' };
+      if (!nearFarmGate(farmId, position)) return { error: 'Hãy đứng gần cổng.' };
       if (!open && occupants.some(p => !p.venue && Math.abs(p.x - gate.x) < 3.2 && Math.abs(p.z - gate.z) < 1)) return { error: 'Có người đứng trong vùng cổng. Hãy tránh ra trước khi đóng.' };
       const updated = await this.assignments.updateOne({ _id: assignment._id, playerId }, { $set: { gateOpen: open, gateUpdatedAt: this.now() } });
       if (!updated.matchedCount) return { error: 'Quyền sở hữu đã thay đổi.' };

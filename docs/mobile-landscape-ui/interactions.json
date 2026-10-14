@@ -1,0 +1,354 @@
+[
+  {
+    "screen": "bag",
+    "tab": "Đồ câu",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "pt-inv-modal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "bag",
+    "tab": "Trang phục",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "pt-inv-modal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "bag",
+    "tab": "Cá",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "pt-inv-modal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "bag",
+    "tab": "Nông sản",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "pt-inv-modal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "arrival",
+    "tab": "Màu Sắc",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "pt-studio-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "arrival",
+    "tab": "Kiểu Tóc",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "pt-studio-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "noticeDemo&noticeConnected",
+    "tab": "Điểm danh1",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-notice attendance-mode",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "noticeDemo&noticeConnected",
+    "tab": "Hoạt động",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-notice ",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "noticeDemo&noticeConnected",
+    "tab": "Giftcode",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-notice ",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "noticeDemo&noticeConnected",
+    "tab": "Đối tác",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-notice ",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "questsDemo",
+    "tab": "Chính tuyến1",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "mission-journal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "questsDemo",
+    "tab": "Hằng ngày",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "mission-journal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "questsDemo",
+    "tab": "Thành tích1",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "mission-journal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "settingsDemo",
+    "tab": "Trò chơi",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-settings",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "settingsDemo",
+    "tab": "Tài khoản",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-settings",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "rankingDemo",
+    "tab": "Độ giàu",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "ranking-panel",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "rankingDemo",
+    "tab": "Kinh nghiệm",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "ranking-panel",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "rankingDemo",
+    "tab": "Cấp độ",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "ranking-panel",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "rankingDemo",
+    "tab": "Nhà đẹp",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "ranking-panel",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "landDemo",
+    "tab": "Chọn mua đất",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "game-panel land-game-panel",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "landDemo",
+    "tab": "Quyền sử dụng đất",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "game-panel land-game-panel",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "guideDemo",
+    "tab": "Bắt đầu›",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-guide",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "guideDemo",
+    "tab": "Trồng trọt›",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-guide",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "guideDemo",
+    "tab": "Kho đồ›",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-guide",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "guideDemo",
+    "tab": "Đơn hàng›",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-guide",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "guideDemo",
+    "tab": "Khám phá›",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-guide",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "fishingShopDemo",
+    "tab": "Đồ câu",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "fishing-shop",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "fishingShopDemo",
+    "tab": "Trang bị",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "fishing-shop",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "fishingShopDemo",
+    "tab": "Thùng cá0",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "fishing-shop",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "fishingShopDemo",
+    "tab": "Bộ sưu tập",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "fishing-shop",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "marketDemo",
+    "tab": "Nông sản bổ sung4",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-market",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "screen": "marketDemo",
+    "tab": "Hàng trong kho3",
+    "clipped": [],
+    "panels": [
+      {
+        "cls": "farm-market",
+        "outside": false
+      }
+    ]
+  }
+]

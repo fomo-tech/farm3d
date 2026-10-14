@@ -18,7 +18,9 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
 
   // Spend the extra texture resolution on the local avatar and creation preview, not every remote
   // player in a crowded square. Keep mipmaps for clean distant faces.
-  const textureSize = ['local-player', 'arrival-avatar'].includes(idPrefix) ? 1024 : CHARACTER_RENDER_CONFIG.geometryBudget.faceTextureSize;
+  const mobile = scene.metadata?.mobile || (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches);
+  const detailedFace = ['local-player', 'arrival-avatar'].includes(idPrefix);
+  const textureSize = mobile ? (detailedFace ? 512 : 256) : detailedFace ? 1024 : CHARACTER_RENDER_CONFIG.geometryBudget.faceTextureSize;
   const texture = new DynamicTexture(
     `${idPrefix}-face-deluxe-tex`,
     { width: textureSize, height: textureSize },
@@ -27,7 +29,7 @@ export function createFaceTexture(scene, idPrefix, options = {}) {
     Texture.TRILINEAR_SAMPLINGMODE
   );
   texture.hasAlpha = true;
-  texture.anisotropicFilteringLevel = 16;
+  texture.anisotropicFilteringLevel = mobile ? 4 : 16;
 
   let currentExpression = 'happy';
   let isBlinking = false;

@@ -6,6 +6,7 @@ import {StandardMaterial} from '@babylonjs/core/Materials/standardMaterial.js';
 import {FarmChunk} from '../src/game/farming/FarmChunk.js';
 import {createFarmPlot} from '../src/game/farming/createFarmPlot.js';
 import {stabilizeSunShadow} from '../src/game/rendering/stabilizeSunShadow.js';
+import {smoothSunDirection} from '../src/game/rendering/smoothSunDirection.js';
 const engine=new NullEngine(),scene=new Scene(engine);
 new StandardMaterial('mat-soil-base-rich',scene);new StandardMaterial('mat-estate-meadow-grass',scene);
 const chunk=new FarmChunk(scene,{id:'stability',x:0,z:0});
@@ -30,5 +31,15 @@ for(const size of [512,1024,2048]){
  stabilizeSunShadow(light,right.scale(texel*.8),size);
  assert.ok(Math.abs(Vector3.Dot(light.position.subtract(before),right)-texel)<1e-10,'Larger motion advances exactly one texel');
 }
+const target = new Vector3(.85, -.22, .22);
+const start = new Vector3(-.45, -.85, -.32);
+const at30 = start.clone(), at60 = start.clone();
+smoothSunDirection(at60, target, 1 / 60);
+assert.ok(Vector3.Distance(at60, start) < Vector3.Distance(target, start) * .15, 'Clock ticks must not jump the sun to its target');
+at60.copyFrom(start);
+for (let i=0;i<30;i++) smoothSunDirection(at30,target,1/30);
+for (let i=0;i<60;i++) smoothSunDirection(at60,target,1/60);
+assert.ok(Vector3.Distance(at30,at60)<1e-10,'Sun smoothing is frame-rate independent');
+assert.ok(Vector3.Distance(at60,target)<.001,'Sun converges to the requested time');
 scene.dispose();engine.dispose();
 console.log('PASS farm lighting: real path junctions separated, shadow texel stability at 512/1024/2048');

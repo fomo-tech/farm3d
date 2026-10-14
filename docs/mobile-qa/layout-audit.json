@@ -1,0 +1,884 @@
+[
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "gameplay",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": []
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "phoneDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "pt-phone-device",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "noticeDemo&noticeConnected",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-notice attendance-mode",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "bagDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "pt-inv-modal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "mapDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-map-dialog",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "questsDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "mission-journal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "suppliesDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-supplies",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "fishingShopDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "fishing-shop",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "dealerDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-dealer",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "marketDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-market",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "settingsDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-settings",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "guideDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-guide",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "rankingDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "ranking-panel",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "landDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "game-panel land-game-panel",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "loungeDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-lounge",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "fashionDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "fashion-modal-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "arrivalDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "pt-studio-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "profileDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "profile-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "friendsDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "profile-card friends-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "fishHudDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "fish-hud  fish-state-ready",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "herdDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "herd-action-hud",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "cropDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "crop-harvest-hud ready",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 844,
+    "height": 290,
+    "screen": "busDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "pt-transit-dashboard-root",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "gameplay",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": []
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "phoneDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "pt-phone-device",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "noticeDemo&noticeConnected",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-notice attendance-mode",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "bagDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "pt-inv-modal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "mapDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-map-dialog",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "questsDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "mission-journal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "suppliesDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-supplies",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "fishingShopDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "fishing-shop",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "dealerDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-dealer",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "marketDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-market",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "settingsDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-settings",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "guideDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-guide",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "rankingDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "ranking-panel",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "landDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "game-panel land-game-panel",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "loungeDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-lounge",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "fashionDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "fashion-modal-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "arrivalDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "pt-studio-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "profileDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "profile-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "friendsDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "profile-card friends-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "fishHudDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "fish-hud  fish-state-ready",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "herdDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "herd-action-hud",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "cropDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "crop-harvest-hud ready",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 667,
+    "height": 375,
+    "screen": "busDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "pt-transit-dashboard-root",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "gameplay",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": []
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "phoneDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "pt-phone-device",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "noticeDemo&noticeConnected",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-notice attendance-mode",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "bagDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "pt-inv-modal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "mapDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-map-dialog",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "questsDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "mission-journal",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "suppliesDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-supplies",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "fishingShopDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "fishing-shop",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "dealerDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-dealer",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "marketDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-market",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "settingsDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-settings",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "guideDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-guide",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "rankingDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "ranking-panel",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "landDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "game-panel land-game-panel",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "loungeDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "farm-lounge",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "fashionDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "fashion-modal-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "arrivalDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "pt-studio-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "profileDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "profile-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "friendsDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "profile-card friends-card",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "fishHudDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "fish-hud  fish-state-ready",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "herdDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "herd-action-hud",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "cropDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "crop-harvest-hud ready",
+        "outside": false
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "height": 667,
+    "screen": "busDemo",
+    "hardClipped": [],
+    "overflows": [],
+    "panels": [
+      {
+        "class": "pt-transit-dashboard-root",
+        "outside": false
+      }
+    ]
+  }
+]

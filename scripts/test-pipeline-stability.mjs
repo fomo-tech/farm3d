@@ -63,7 +63,7 @@ const mobileUpdates = [];
 mobileConfig.onUpdateParameters.add(() => mobileUpdates.push(1));
 for (const quality of ['balanced', 'ultra', 'eco']) {
   mobile.setQuality(quality);
-  assert.equal(mobile.fxaa.samples, quality === 'eco' ? 1 : 2);
+  assert.equal(mobile.fxaa.samples, quality === 'ultra' ? 2 : 1);
   mobile.setCinematicPreset('night');
   assert.equal(mobile.pipeline, null);
   assert.equal(mobile.fxaa, mobileAA);
@@ -73,7 +73,7 @@ assert.equal(mobileUpdates.length, 0, 'mobile quality/day-night updates must not
 mobileScene.dispose(); mobileEngine.dispose();
 console.log('PASS: mobile uses direct grading with one stable FXAA pass and no recurring material invalidation');
 
-assert.equal(resolveMobileAntialiasSamples('balanced', 4), 2);
+assert.equal(resolveMobileAntialiasSamples('balanced', 4), 1);
 assert.equal(resolveMobileAntialiasSamples('ultra', 4), 2);
 assert.equal(resolveMobileAntialiasSamples('eco', 4), 1);
 assert.equal(resolveMobileAntialiasSamples('balanced', 1), 1);

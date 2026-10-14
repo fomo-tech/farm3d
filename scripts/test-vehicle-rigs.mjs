@@ -10,6 +10,9 @@ const engine = new NullEngine();
 const scene = new Scene(engine);
 const parent = new TransformNode('vehicle-test', scene);
 const counts = () => [scene.meshes.length, scene.transformNodes.length, scene.materials.length];
+// Babylon creates this scene-owned material lazily during mesh merging.
+// Initialize it before counting; it is not owned or leaked by a vehicle rig.
+void scene.defaultMaterial;
 const baseline = counts();
 for (let cycle = 0; cycle < 3; cycle++) {
   const rigs = createVehicleRigs(scene, parent);

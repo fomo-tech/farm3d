@@ -1,0 +1,80 @@
+/* Mobile uses logical landscape axes, whether native or CSS-rotated. */
+html.is-mobile-device.mobile-landscape body #root .game-shell .pt-inv-header{height:48px!important;min-height:48px!important;box-sizing:border-box!important;padding:4px 10px!important;flex:none!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-header-title h1{font-size:20px!important;margin:0!important;line-height:1.1!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-header-title>span{display:none!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-header-title img{width:32px!important;height:32px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-capacity{padding:4px 8px!important;width:120px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-tabs{height:40px!important;min-height:40px!important;padding:2px 8px!important;box-sizing:border-box!important;flex:none!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-tabs button{flex-direction:row!important;min-height:34px!important;height:34px!important;padding:3px 6px!important;gap:5px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-tabs img{width:24px!important;height:24px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-tab-label small{display:none!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-search{height:36px!important;min-height:36px!important;padding:2px 10px!important;box-sizing:border-box!important;flex:none!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-search input{min-height:30px!important;height:30px!important;font-size:16px!important;padding:2px 8px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-body{flex:1!important;min-height:0!important;padding:6px 10px!important;gap:8px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-auto-rows:92px!important;align-content:start!important;gap:6px!important;height:auto!important;min-height:0!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-slot{height:92px!important;min-height:92px!important;padding:5px!important;flex:none!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-slot-art{height:54px!important;min-height:54px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-slot-art :is(img,svg){max-height:50px!important}
+html.is-mobile-device.mobile-landscape body #root .game-bag-pagination{height:36px!important;min-height:36px!important;flex:none!important;padding:3px 10px!important;box-sizing:border-box!important}
+html.is-mobile-device.mobile-landscape body #root .game-bag-pagination>span{font-size:10px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-detail-card{display:block!important;padding:8px!important;overflow-y:auto!important}
+html.is-mobile-device.mobile-landscape body #root .pt-detail-preview{height:54px!important;min-height:54px!important;margin:0 0 5px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-detail-card h2{font-size:17px!important;margin:4px 0!important}
+html.is-mobile-device.mobile-landscape body #root .arrival-screen .arrival-identity-panel{flex:none!important;justify-content:flex-start!important;min-height:max-content!important;gap:10px!important;padding:8px!important}
+html.is-mobile-device.mobile-landscape body #root .arrival-screen .pt-studio-tabs{position:static!important;flex:none!important;min-height:34px!important;order:-1!important}
+html.is-mobile-device.mobile-landscape body #root .arrival-screen fieldset{justify-content:flex-start!important;gap:8px!important;scroll-padding-top:8px}
+html.is-mobile-device.mobile-landscape body #root .arrival-screen .pt-studio-tab-content{flex:none!important;justify-content:flex-start!important}
+html.is-mobile-device.mobile-landscape body #root .game-shell:has(.fish-hud) .pt-action-bubbles{display:none!important}
+html.is-mobile-device.mobile-landscape body #root .game-shell:has(.pt-transit-dashboard-root) :is(.pt-action-bubbles,.pt-joystick,.vehicle-quick-menu,.pt-context-action-wrap){display:none!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-grid{align-content:start!important;grid-auto-rows:minmax(100px,auto)!important;overflow-y:auto!important;min-height:0!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-grid>button{min-height:100px!important;height:auto!important;flex-shrink:0!important}
+html.is-mobile-device.mobile-landscape body #root .pt-phone-device button[aria-label*="Đóng"]{min-width:44px!important;min-height:44px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-grid{grid-auto-rows:68px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-slot{height:68px!important;min-height:68px!important;padding:4px!important;gap:2px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-slot-art{height:36px!important;min-height:36px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-slot-art :is(img,svg){height:34px!important;max-height:34px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-detail-card{display:flex!important;flex-direction:column!important;gap:2px!important;padding:5px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-detail-card :is(.pt-detail-preview,.pt-detail-category){display:none!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-detail-card h2{font-size:16px!important;line-height:18px!important;margin:0!important;flex:none!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-detail-card p{padding:0!important;margin:0!important;font-size:11px!important;line-height:14px!important;flex:none!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-detail-card p:nth-of-type(2){display:none!important}
+html.is-mobile-device.mobile-landscape body #root .pt-inv-detail-card .pt-btn-use{min-height:34px!important;padding:3px 8px!important;margin:0!important;font-size:12px!important;flex:none!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:none!important;grid-auto-rows:78px!important;height:auto!important;flex:1!important;gap:6px!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-grid>button{display:grid!important;grid-template-columns:36px minmax(0,1fr)!important;grid-template-rows:repeat(3,auto)!important;min-height:78px!important;height:78px!important;padding:7px!important;gap:2px 6px!important;box-sizing:border-box!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-level{display:none!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-slot-art{grid-column:1!important;grid-row:1/span 3!important;width:36px!important;height:42px!important;min-height:0!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-slot-art img{width:36px!important;height:36px!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-grid>button :is(b,small,.farm-supplies-slot-status){grid-column:2!important;margin:0!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-tip{display:none!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-detail{padding:6px!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-preview{display:none!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-detail-copy{display:flex!important;flex-direction:column!important;gap:5px!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-detail-copy h3{order:-2!important;margin:0!important;font-size:16px!important;line-height:20px!important;flex:none!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-primary{order:-1!important;min-height:44px!important;flex:none!important;margin:0!important}
+html.is-mobile-device.mobile-landscape body #root .farm-supplies-detail-copy>small{display:none!important}
+html.is-mobile-device.mobile-landscape body #root .game-shell .pt-phone-device{position:relative!important;inset:auto!important;transform:none!important;margin:0!important;width:min(640px,calc(var(--game-viewport-width) - 24px))!important;height:calc(var(--game-viewport-height) - 24px)!important;max-width:calc(var(--game-viewport-width) - 24px)!important;max-height:calc(var(--game-viewport-height) - 24px)!important;min-height:0!important;display:flex!important;flex-direction:column!important;padding:10px!important;box-sizing:border-box!important}
+html.is-mobile-device.mobile-landscape body #root .pt-phone-status-bar{min-height:44px!important;height:44px!important;flex:none!important;padding:0 4px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-phone-user-strip{flex:none!important;padding:4px!important;margin:0!important}
+html.is-mobile-device.mobile-landscape body #root .pt-phone-app-grid{flex:1!important;min-height:0!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(0,1fr))!important;gap:4px 8px!important;overflow-y:auto!important;padding:4px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-phone-app-grid button{min-height:60px!important;gap:2px!important;padding:3px!important}
+html.is-mobile-device.mobile-landscape body #root .pt-phone-app-grid img{width:40px!important;height:40px!important}
+html.is-mobile-device.mobile-landscape body #root .game-shell>.panel-backdrop{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;box-sizing:border-box!important;padding:12px!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}
+html.is-mobile-device.mobile-landscape body #root .game-shell .land-game-panel{position:relative!important;inset:auto!important;transform:none!important;margin:0!important;display:flex!important;flex-direction:column!important;width:min(900px,calc(var(--game-viewport-width) - 24px))!important;height:calc(var(--game-viewport-height) - 24px)!important;max-width:calc(var(--game-viewport-width) - 24px)!important;max-height:calc(var(--game-viewport-height) - 24px)!important;min-height:0!important;overflow:hidden!important}
+html.is-mobile-device.mobile-landscape body #root .land-game-panel>header{padding:6px 10px!important;flex:none!important;min-height:44px!important;box-sizing:border-box!important}
+html.is-mobile-device.mobile-landscape body #root .land-game-panel>header h2{font-size:18px!important;line-height:1.2!important;margin:0!important}
+html.is-mobile-device.mobile-landscape body #root .land-game-panel>header small{display:none!important}
+html.is-mobile-device.mobile-landscape body #root .land-market{flex:1!important;min-height:0!important;overflow-y:auto!important;touch-action:pan-y}
+html.is-mobile-device.mobile-landscape body #root .game-confirm{display:grid!important;grid-template-columns:80px minmax(0,1fr)!important;gap:6px 12px!important;width:min(580px,calc(var(--game-viewport-width) - 24px))!important;max-width:calc(var(--game-viewport-width) - 24px)!important;max-height:calc(var(--game-viewport-height) - 24px)!important;box-sizing:border-box!important;padding:14px!important;overflow-y:auto!important;text-align:left!important}
+html.is-mobile-device.mobile-landscape body #root .game-confirm-art{grid-column:1!important;grid-row:1/span 4!important;width:80px!important;height:80px!important;margin:0!important}
+html.is-mobile-device.mobile-landscape body #root .game-confirm>:is(small,h2,p,.game-confirm-cost){grid-column:2!important;margin:0!important}
+html.is-mobile-device.mobile-landscape body #root .game-confirm h2{font-size:18px!important;line-height:1.2!important}
+html.is-mobile-device.mobile-landscape body #root .game-confirm p{font-size:12px!important;line-height:1.4!important}
+html.is-mobile-device.mobile-landscape body #root .game-confirm-cost{padding:6px 10px!important}
+html.is-mobile-device.mobile-landscape body #root .game-confirm-actions{grid-column:1/-1!important;margin:3px 0 0!important}
+html.is-mobile-device.mobile-landscape body #root .game-confirm-actions button{min-height:44px!important;padding:6px 12px!important}
+html.is-mobile-device body #root :is(.game-confirm-overlay,.panel-backdrop,.pt-phone-backdrop){backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+html.is-mobile-device.mobile-landscape body #root .profile-body{display:grid!important;grid-template-columns:130px minmax(0,1fr)!important;gap:12px!important;min-height:0!important;overflow-y:auto!important;padding:10px!important}
+html.is-mobile-device.mobile-landscape body #root .profile-avatar{width:96px!important;height:96px!important;min-height:0!important;margin:0 auto!important}
+html.is-mobile-device.mobile-landscape body #root .profile-identity{min-width:0!important;padding:0!important;gap:6px!important}
+html.is-mobile-device.mobile-landscape body #root .profile-info h3{font-size:20px!important;line-height:1.2!important}
+html.is-mobile-device.mobile-landscape body #root .profile-identity-label{font-size:9px!important}

@@ -1,7 +1,7 @@
 export const GRAPHICS_PRESETS = {
-  auto: { maxDpr: 2.0, mobileDpr: 1.75, pixels: 9000000 },
+  auto: { maxDpr: 2.0, mobileDpr: 2.0, pixels: 9000000 },
   ultra: { maxDpr: 2.0, mobileDpr: 1.75, pixels: 12000000 },
-  balanced: { maxDpr: 1.75, mobileDpr: 1.5, pixels: 7000000 },
+  balanced: { maxDpr: 1.75, mobileDpr: 1.75, pixels: 7000000 },
   eco: { maxDpr: 1.0, mobileDpr: 1.0, pixels: 2000000 },
 };
 
@@ -20,13 +20,13 @@ export function calculateRenderDpr({ quality = 'ultra', nativeDpr = 1, width = 1
   const preset = GRAPHICS_PRESETS[quality] || GRAPHICS_PRESETS.ultra;
   // Keep Ultra at 2x; lighter phone presets bound GPU work and framebuffer memory.
   const limit = mobile ? (quality === 'ultra' ? 2 : preset.mobileDpr) : preset.maxDpr;
-  const pixelBudget = mobile ? Math.min(preset.pixels, quality === 'eco' ? 1000000 : quality === 'ultra' ? 2400000 : 1800000) : preset.pixels;
+  const pixelBudget = mobile ? Math.min(preset.pixels, quality === 'eco' ? 1000000 : 1600000) : preset.pixels;
   const pixelLimit = Math.sqrt(pixelBudget / Math.max(1, width * height));
   // Desktop presets preserve native pixels; phone presets use their own density caps.
   const targetDpr = Math.min(Math.max(1, nativeDpr), limit, pixelLimit);
-  const minDpr = mobile ? (quality === 'eco' ? 0.75 : Math.min(nativeDpr, 1.25)) : (quality === 'eco' && allowBelowNative ? 0.75 : 1.0);
-  // Auto adapts after reducing effects; manual desktop presets retain their density.
-  const effectiveScale = mobile || quality === 'auto' || quality === 'eco' ? scale : 1;
+  const minDpr = mobile ? (quality === 'eco' ? 0.75 : Math.min(nativeDpr, 1.0)) : (quality === 'eco' && allowBelowNative ? 0.75 : 1.0);
+  // Keep Auto/Balanced sharp on phones too; only explicit Eco scales pixels.
+  const effectiveScale = quality === 'eco' ? scale : 1;
   const resolved = Math.max(minDpr, targetDpr * effectiveScale);
   return mobile ? Math.min(resolved, pixelLimit) : resolved;
 }
@@ -64,10 +64,9 @@ export class AutoGraphicsController {
     const average = this.elapsed / this.frames;
     this.elapsed = 0; this.frames = 0;
     const previous = `${this.level}:${this.scale}`;
-    if (average > (this.mobile ? 40 : 36)) {
-      if (this.level < 1) this.level++;
-      else this.scale = Math.max(.7, this.scale - (this.mobile && average > 50 ? .1 : .05));
-    } else if (average < (this.mobile ? 35 : 27)) {
+    if (average > (this.mobile ? 24 : 19)) {
+      if (this.level < 2) this.level++;
+    } else if (average < (this.mobile ? 18 : 17)) {
       if (this.scale < 1) this.scale = Math.min(1, this.scale + .05);
       else if (this.level > 0) this.level--;
     }
@@ -77,6 +76,6 @@ export class AutoGraphicsController {
 
 // Engine-level pacing skips CPU simulation and GPU submission together.
 export function applyWorldPowerPolicy(engine, mobile) {
-  engine.maxFPS = mobile ? 30 : 60;
+  engine.maxFPS = 60;
   engine.renderEvenInBackground = false;
 }

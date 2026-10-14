@@ -207,17 +207,20 @@ human.setLOD(0);
 human.animate(0.016, false, 1.0);
 human.animate(0.016, true, 4.0);
 
+for (let frame = 0; frame < 120; frame++) human.animate(1 / 60, false, 0);
+const restingHipHeight = human.torsoNode.position.y;
+
 // Action transitions must keep the longer rig finite and must not accumulate
 // the hip offset over repeated frames (including wave and fishing early returns).
 for (const action of ['wave', 'hoe', 'water', 'seed', 'harvest', 'celebrate']) {
   human.playAction(action);
   for (let frame = 0; frame < 120; frame++) human.animate(1 / 60, false, 0);
-  assert.ok(Math.abs(human.torsoNode.position.y - CHARACTER_RENDER_CONFIG.proportions.hipHeight) < 0.03, action);
+  assert.ok(Math.abs(human.torsoNode.position.y - restingHipHeight) < 0.03, action);
 }
 for (const action of ['cast', 'reel', 'catch']) {
   human.playFishingAction(action);
   for (let frame = 0; frame < 120; frame++) human.animate(1 / 60, false, 0);
-  assert.ok(Math.abs(human.torsoNode.position.y - CHARACTER_RENDER_CONFIG.proportions.hipHeight) < 0.03, action);
+  assert.ok(Math.abs(human.torsoNode.position.y - restingHipHeight) < 0.03, action);
 }
 assert.equal(human.joints.elbows.length, 2);
 assert.equal(human.joints.knees.length, 2);

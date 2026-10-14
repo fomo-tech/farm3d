@@ -1,4 +1,5 @@
 import { stabilizeSunShadow } from '../rendering/stabilizeSunShadow.js';
+import { smoothSunDirection } from '../rendering/smoothSunDirection.js';
 import { Color3, Color4 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3, Matrix, Quaternion } from '@babylonjs/core/Maths/math.vector.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
@@ -451,9 +452,20 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
 
   let lastGradFactor = -999;
   let lastPhaseName = '';
+  const targetSunDirection = sunLight.direction.clone();
+  let sunDirectionInitialized = false;
+  let particleScale = 1;
+  let currentClock = 60;
 
   const atmosphere = {
+    setPerformanceLevel(level = 0) {
+      const next = level >= 2 ? .25 : level === 1 ? .5 : 1;
+      if (next === particleScale) return;
+      particleScale = next;
+      this.setTime(currentClock);
+    },
     setTime(clockSeconds) {
+      currentClock = clockSeconds;
       const trace = (label, action) => typeof window !== 'undefined' && window.__farmDebug
         ? window.__farmDebug.measure(`clock: ${label}`, action) : action();
       const cycleTime = clockSeconds % 240;
@@ -546,7 +558,11 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
 
       sunLight.intensity = k1.sunIntensity + (k2.sunIntensity - k1.sunIntensity) * s;
       sunLight.diffuse = Color3.Lerp(k1.sunColor, k2.sunColor, s);
-      sunLight.direction = Vector3.Lerp(k1.sunDir, k2.sunDir, s);
+      Vector3.LerpToRef(k1.sunDir, k2.sunDir, s, targetSunDirection);
+      if (!sunDirectionInitialized) {
+        sunLight.direction.copyFrom(targetSunDirection);
+        sunDirectionInitialized = true;
+      }
 
       if (shadows) {
         shadows.darkness = k1.shadowDarkness + (k2.shadowDarkness - k1.shadowDarkness) * s;
@@ -613,18 +629,20 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
 
       // Hạt khí quyển
       const curDustRate = Math.round(k1.sunDustRate + (k2.sunDustRate - k1.sunDustRate) * s);
-      sunDust.emitRate = curDustRate;
+      sunDust.emitRate = Math.round(curDustRate * particleScale);
 
       const curPetalRate = Math.round(k1.petalRate + (k2.petalRate - k1.petalRate) * s);
-      fallingPetals.emitRate = curPetalRate;
+      fallingPetals.emitRate = Math.round(curPetalRate * particleScale);
 
       const curFireflyRate = Math.round(k1.fireflyRate + (k2.fireflyRate - k1.fireflyRate) * s);
-      firefliesFarm.emitRate = curFireflyRate;
-      firefliesPlaza.emitRate = Math.round(curFireflyRate * 0.75);
-      firefliesFountain.emitRate = Math.round(curFireflyRate * 0.85);
+      firefliesFarm.emitRate = Math.round(curFireflyRate * particleScale);
+      firefliesPlaza.emitRate = Math.round(curFireflyRate * 0.75 * particleScale);
+      firefliesFountain.emitRate = Math.round(curFireflyRate * 0.85 * particleScale);
     },
 
     update(dt = 0.016) {
+      // Update direction and snapped shadow position together before rendering.
+      smoothSunDirection(sunLight.direction, targetSunDirection, dt);
       const cam = scene.activeCamera;
       if (cam) {
         // Vòm trời bám theo camera để luôn bao bọc thế giới không bao giờ bị cắt

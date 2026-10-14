@@ -4,15 +4,16 @@ const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 // Phase is integrated, never derived from time * speed: changing pace must
 // not teleport the limbs into a different point in their stride.
 export function createLocomotionGait() {
-  const pose={phase:0,weight:0,run:0,hips:[0,0],knees:[0,0],arms:[0,0],elbows:[-.08,-.08],bob:0,sway:0,roll:0,twist:0,lean:0};
+  const pose={phase:0,weight:0,run:0,turn:0,hips:[0,0],knees:[0,0],arms:[0,0],elbows:[-.08,-.08],bob:0,sway:0,roll:0,twist:0,lean:0};
   return {
-    update(delta,moving,speed) {
+    update(delta,moving,speed,turn=0) {
       const dt=clamp(Number(delta)||0,0,.1);
       const velocity=moving?clamp(Number(speed)||0,0,15):0;
       const weight=velocity>.05?1:0;
       pose.weight+=(weight-pose.weight)*(1-Math.exp(-dt*18));
       const targetRun=clamp((velocity-7.2)/2.0,0,1);
       pose.run+=(targetRun-pose.run)*(1-Math.exp(-dt*10));
+      pose.turn+=(clamp(Number(turn)||0,-1,1)*pose.weight-pose.turn)*(1-Math.exp(-dt*12));
       const cadence=(1.65+.45*pose.run)*clamp(velocity/7,.25,1.2);
       pose.phase=(pose.phase+TAU*cadence*dt*pose.weight)%TAU;
       const stride=(.44+.30*pose.run)*pose.weight*clamp(velocity/7,.35,1.15);
@@ -29,8 +30,8 @@ export function createLocomotionGait() {
       // buildHumanMesh. A positive sine lift here made both feet hover.
       pose.bob=0;
       pose.sway=Math.sin(pose.phase)*.014*pose.weight;
-      pose.roll=Math.sin(pose.phase)*.023*pose.weight;
-      pose.twist=Math.sin(pose.phase)*(.045+.035*pose.run)*pose.weight;
+      pose.roll=Math.sin(pose.phase)*.023*pose.weight-pose.turn*.045;
+      pose.twist=Math.sin(pose.phase)*(.045+.035*pose.run)*pose.weight+pose.turn*.06;
       pose.lean=(.025+.12*pose.run)*pose.weight;
       return pose;
     },

@@ -1,3 +1,5 @@
+import { isPointOnRoadCorridor } from '../world/RoadSafetyZone.js';
+import { APPLE_ORCHARD } from '../../../shared/appleOrchard.js';
 import {networkWaterAt,networkBridgeAt} from '../../../shared/waterNetwork.js';
 /**
  * WorldCollisionSystem.js
@@ -169,6 +171,8 @@ export class WorldCollisionSystem {
     WORLD_LAYOUT.farms.forEach(farm => {
       const fx = farm.x;
       const fz = farm.z;
+
+      this.addCircle(`farm-tree-${farm.id}`, fx + APPLE_ORCHARD.x, fz + APPLE_ORCHARD.z, .275);
 
       // 1. Nhà chính nông dân (x: -4.8, z: 5.2, width: 5.8, depth: 5.2)
       this.farmColliders.push({
@@ -369,8 +373,11 @@ export class WorldCollisionSystem {
       }
     }
 
+    // The distant mountain boundary must not block the built northern roads.
+    // All water, building, and farm checks still apply inside these corridors.
+    const onBuiltRoad = !venue && isPointOnRoadCorridor(cx, cz, -r);
     // 2b. Check mountain base colliders
-    if (this.mountainColliders) {
+    if (!onBuiltRoad && this.mountainColliders) {
       for (let i = 0; i < this.mountainColliders.length; i++) {
         const m = this.mountainColliders[i];
         const dsq = (cx - m.x) * (cx - m.x) + (cz - m.z) * (cz - m.z);
@@ -402,7 +409,7 @@ export class WorldCollisionSystem {
 
       const distSq = cx * cx + cz * cz;
       // Procedural mountain inner boundary (radius 820m with harmonic undulations)
-      if (distSq > 790 * 790) {
+      if (!onBuiltRoad && distSq > 790 * 790) {
         const angle = Math.atan2(cz, cx);
         const sinA = Math.sin(angle);
         // North, East, and West are bordered by the procedural alpine mountain range

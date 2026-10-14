@@ -1,3 +1,4 @@
+import { BUS_PASSENGER_OFFSET_Z } from '../shared/busRoutes.js';
 import { WorldCollisionSystem } from '../src/game/physics/WorldCollisionSystem.js';
 import { vehicleCollisionRadius } from '../shared/vehicleCollision.js';
 import { busRouteForId, nearBusRoute } from '../shared/busAuthorityConfig.js';
@@ -16,7 +17,13 @@ export class MovementAuthority {
     this.budgets.get(client).credit=9;return true;
   }
   isBoarding(client) { return Boolean(this.rides.get(client)?.boarding); }
-  maxSpeed(client) { return this.rides.has(client)?48:(Object.hasOwn(VEHICLES,client.vehicle)?VEHICLES[client.vehicle].speed:7)*1.35; }
+  maxSpeed(client) { return this.rides.has(client)?this.rides.get(client).route.speed:(Object.hasOwn(VEHICLES,client.vehicle)?VEHICLES[client.vehicle].speed:7)*1.35; }
+  maxStepDistance(client, elapsedSeconds) {
+    // A passenger moves around the bus pivot during a turn. Keep the speed
+    // budget unchanged; allow its bounded seat displacement for a single packet.
+    return 1.5 + Math.max(0, elapsedSeconds) * this.maxSpeed(client)
+      + (this.rides.has(client) ? 2 * BUS_PASSENGER_OFFSET_Z : 0);
+  }
   accepts(client, target, now=Date.now()) {
     let budget=this.budgets.get(client);
     if(!budget){this.reset(client,now);budget=this.budgets.get(client);}

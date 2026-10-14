@@ -4,17 +4,17 @@ import './AvatarChatBar.css';
 
 const QUICK_CHAT_CATEGORIES = [
   {
-    category: '🌾 Nông Trại & Chợ Quê',
+    category: 'Lúa Nông Trại & Chợ Quê',
     items: [
       { text: 'Chào cả nhà Làng Bình Minh!', emote: 'smile' },
       { text: 'Vườn mình vừa chín, qua chơi nhé!', emote: 'wheat' },
       { text: 'Ai mua nông sản sạch không nè?', emote: 'wheat' },
       { text: 'Mùa màng bội thu quá bà con ơi!', emote: 'party' },
-      { text: 'Đang chăm chỉ tưới nước cho cây 💧', emote: 'wheat' },
+      { text: 'Đang chăm chỉ tưới nước cho cây Nước', emote: 'wheat' },
     ],
   },
   {
-    category: '🎣 Giao Lưu & Dạo Phố',
+    category: 'Câu cá Giao Lưu & Dạo Phố',
     items: [
       { text: 'Ai đi câu cá Hồ Pha Lê không?', emote: 'fish' },
       { text: 'Vào Hội Quán làm ván cờ đi!', emote: 'party' },
@@ -24,7 +24,7 @@ const QUICK_CHAT_CATEGORIES = [
     ],
   },
   {
-    category: '💬 Cảm Xúc Avatar',
+    category: 'Trò chuyện Cảm Xúc Avatar',
     items: [
       { text: 'Haha vui quá xá!', emote: 'smile' },
       { text: 'Cảm ơn bạn nhiều nha! <3', emote: 'heart' },
@@ -36,14 +36,14 @@ const QUICK_CHAT_CATEGORIES = [
 ];
 
 const AVATAR_EMOJIS = [
-  { id: 'smile', label: 'Cười tươi', icon: '😄' },
-  { id: 'heart', label: 'Thả tim', icon: '💖' },
-  { id: 'like', label: 'Thích (Like)', icon: '👍' },
-  { id: 'party', label: 'Ăn mừng', icon: '🎉' },
-  { id: 'trophy', label: 'Cúp vàng', icon: '🏆' },
-  { id: 'sad', label: 'Khóc ròng', icon: '😭' },
-  { id: 'wheat', label: 'Bông lúa', icon: '🌾' },
-  { id: 'fish', label: 'Con cá', icon: '🐟' },
+  { id: 'smile', label: 'Cười tươi', asset: 'chat' },
+  { id: 'heart', label: 'Thả tim', asset: 'gem' },
+  { id: 'like', label: 'Thích (Like)', asset: 'hand' },
+  { id: 'party', label: 'Ăn mừng', asset: 'gem' },
+  { id: 'trophy', label: 'Cúp vàng', asset: 'coin' },
+  { id: 'sad', label: 'Khóc ròng', asset: 'chat' },
+  { id: 'wheat', label: 'Bông lúa', asset: 'seeds' },
+  { id: 'fish', label: 'Con cá', asset: 'fishing' },
 ];
 
 export function AvatarChatBar({ onSendChat, disabled = false }) {
@@ -109,7 +109,7 @@ export function AvatarChatBar({ onSendChat, disabled = false }) {
       {quickMenuOpen && (
         <div className="avatar-quick-chat-popover" role="dialog" aria-label="Bảng câu nói nhanh">
           <div className="popover-header">
-            <span>💬 CÂU NÓI NHANH AVATAR</span>
+            <span>Trò chuyện CÂU NÓI NHANH AVATAR</span>
             <button type="button" className="close-btn" onClick={() => setQuickMenuOpen(false)}>✕</button>
           </div>
           <div className="popover-scroll-body">
@@ -136,9 +136,9 @@ export function AvatarChatBar({ onSendChat, disabled = false }) {
 
       {/* 2. Popover Bảng Biểu Cảm Emoji Chibi Avatar */}
       {emojiMenuOpen && (
-        <div className="avatar-emoji-popover" role="dialog" aria-label="Bảng biểu cảm Chibi">
+        <div className="avatar-emoji-popover" role="dialog" aria-label="Biểu cảm">
           <div className="popover-header">
-            <span>😄 BIỂU CẢM CHIBI</span>
+            <span>Cười BIỂU CẢM CHIBI</span>
             <button type="button" className="close-btn" onClick={() => setEmojiMenuOpen(false)}>✕</button>
           </div>
           <div className="emoji-grid">
@@ -150,7 +150,7 @@ export function AvatarChatBar({ onSendChat, disabled = false }) {
                 title={emo.label}
                 onClick={() => handleSelectEmoji(emo)}
               >
-                <span className="emoji-icon">{emo.icon}</span>
+                <span className="emoji-icon"><HudIcon asset={emo.asset} size={28}/></span>
                 <span className="emoji-label">{emo.label}</span>
               </button>
             ))}
@@ -177,7 +177,7 @@ export function AvatarChatBar({ onSendChat, disabled = false }) {
         <button
           type="button"
           className={`chat-addon-btn ${emojiMenuOpen ? 'active' : ''}`}
-          title="Thả biểu cảm (Emoji Chibi)"
+          title="Biểu cảm"
           onClick={() => {
             setEmojiMenuOpen(v => !v);
             setQuickMenuOpen(false);

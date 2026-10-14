@@ -66,7 +66,7 @@ const coastalRoadSegments=(()=>{
     {id:'coast-landward',x:0,z:r.z,length:2*r.detourX,isNorthSouth:false},
     {id:'coast-east-turn',x:r.detourX,z:358,length:96,isNorthSouth:true},
     {id:'coast-east',x:(620+r.detourX)/2,z:406,length:620-r.detourX,isNorthSouth:false},
-    {id:'coast-city-link',x:0,z:294,length:32,isNorthSouth:true},
+    {id:'coast-city-link',x:0,z:300,length:44,isNorthSouth:true},
   ]);
 })();
 export function beachRoadSegments() { return coastalRoadSegments; }

@@ -1,3 +1,5 @@
+import { installRotatedPointer } from '../input/rotatedPointer.js';
+import { installSharedStaticGeometry } from '../rendering/SharedStaticGeometry.js';
 import { collectVenueMeshes } from '../rendering/collectVenueMeshes.js';
 import { selectVisiblePlayers } from '../network/visiblePlayers.js';
 import {createFortuneNPC} from '../npc/FortuneNPC.js';
@@ -8,7 +10,7 @@ import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera.js';
 import { sampleMovement } from '../network/sampleMovement.js';
 import { cameraMovementBasis } from '../player/cameraMovementBasis.js';
 import { createVehicleRigs } from '../player/createVehicleRigs.js';
-import { applyVehiclePose } from '../player/applyVehiclePose.js';
+import { applyVehiclePose, clearVehiclePose } from '../player/applyVehiclePose.js';
 import { CasinoTableView } from '../casino/CasinoTableView.js';
 import { Color3, Color4 } from '@babylonjs/core/Maths/math.color.js';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector.js';
@@ -72,8 +74,7 @@ import { createVietnameseCountrysideSteps, createVietnameseCountryside } from '.
 import { FARM_LOT_SPEC } from '../../../shared/farmLayout.js';
 import { SHOP_CONFIG } from '../../../shared/shopConfig.js';
 import { VenueVisibility } from '../rendering/VenueVisibility.js';
-import { FARM_CONFIG as SHARED_FARM_CONFIG } from '../../../shared/farmConfig.js';
-import { farmGatePosition } from '../../../shared/farmSecurity.js';
+import { nearFarmGate } from '../../../shared/farmSecurity.js';
 import { isPointOnRoadCorridor, isRoadFootprintBlocked } from './RoadSafetyZone.js';
 import { isPointInsideAnyFarmLot } from './FarmSafetyZone.js';
 import { isPointInLakeOrRiver } from './WaterSafetyZone.js';
@@ -159,8 +160,10 @@ function createSign(scene, label, position, color) {
   board.parent = root;
   board.metadata = { destination: label };
 
-  const textTexture = new DynamicTexture(`dest-sign-text-${label}`, { width: 1024, height: 320 }, scene, true);
+  const signScale = scene.metadata?.mobile ? .5 : 1;
+  const textTexture = new DynamicTexture(`dest-sign-text-${label}`, { width: 1024 * signScale, height: 320 * signScale }, scene, true);
   const ctx = textTexture.getContext();
+  ctx.scale(signScale, signScale);
   ctx.fillStyle = '#fff7e8';
   ctx.fillRect(0, 0, 1024, 320);
   ctx.strokeStyle = '#715849';
@@ -307,9 +310,11 @@ function* createInteriorSteps(scene, kind, config, shadows) {
   yield;
   const shopkeepers = { supplies: 'CHỊ MẦM · VẬT TƯ', fashion: 'CÔ SOPHIE · THỜI TRANG', vehicles: 'ANH BẢO · ĐẠI LÝ XE', fishing: 'LÃO NGƯ · ĐỒ CÂU', casino: 'CHÚ LỘC · HỘI QUÁN' };
   yield;
-  const nameTexture = new DynamicTexture(`${kind}-keeper-name`, { width: 1024, height: 224 }, scene, true);
+  const labelScale = scene.metadata?.mobile ? .5 : 1;
+  const nameTexture = new DynamicTexture(`${kind}-keeper-name`, { width: 1024 * labelScale, height: 224 * labelScale }, scene, true);
   yield;
   const nameContext = nameTexture.getContext();
+  nameContext.scale(labelScale, labelScale);
   yield;
   nameContext.fillStyle = '#fff9e8';
   yield; nameContext.fillRect(0, 0, 1024, 224);
@@ -457,14 +462,18 @@ export class FarmWorld {
     this.onStatus = onStatus;
     this.callbacks = callbacks;
     this.callbacks.initialLocation = recoverTownSpawn(normalizeVenuePosition(callbacks.initialLocation));
-    this.isMobile = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
+    this.isMobile = document.documentElement.classList.contains('is-mobile-device') || window.matchMedia('(pointer: coarse)').matches;
     this.graphicsQuality = ['auto', 'ultra', 'balanced', 'eco'].includes(callbacks.graphicsQuality)
       ? callbacks.graphicsQuality : readGraphicsQuality();
+    if (this.isMobile) {
+      try { this.mobileRecovery = sessionStorage.getItem('farm.mobile.gpu-recovery') === 'true'; } catch {}
+    }
     // 16x Anisotropic filtering trên Desktop giúp bề mặt đường, hoa văn cỏ và cảnh vật ở xa nét căng 100%
     this.textureAnisotropy = this.isMobile ? 4 : 16;
     Texture.DEFAULT_ANISOTROPIC_FILTERING_LEVEL = this.textureAnisotropy;
     this.resolutionController = new RenderResolutionController();
     this.autoGraphics = new AutoGraphicsController(this.isMobile);
+    if (this.mobileRecovery) this.autoGraphics.level = 2;
     this.engine = new Engine(canvas, false, {
       preserveDrawingBuffer: false,
       stencil: !this.isMobile,
@@ -472,9 +481,10 @@ export class FarmWorld {
       // default framebuffer MSAA enabled as well duplicates raster/resolve
       // work on the full-size canvas.
       antialias: false,
-      powerPreference: this.graphicsQuality === 'eco' ? 'low-power' : 'high-performance',
+      powerPreference: this.isMobile ? 'default' : this.graphicsQuality === 'eco' ? 'low-power' : 'high-performance',
     });
 
+    installRotatedPointer(this.engine, canvas);
     applyWorldPowerPolicy(this.engine, this.isMobile);
 
     this.getQualityDpr = () => {
@@ -567,9 +577,11 @@ export class FarmWorld {
     this.setGraphicsQuality = (preset = 'ultra') => {
       if (!GRAPHICS_PRESETS[preset]) return;
       this.graphicsQuality = preset;
+      this.scene.shadowsEnabled = true;
       saveGraphicsQuality(preset);
       this.resolutionController = new RenderResolutionController();
       this.autoGraphics = new AutoGraphicsController(this.isMobile);
+      this.atmosphere?.setPerformanceLevel(preset === 'eco' ? 2 : 0);
       this.resize();
       if (this.cinematic?.setQuality) {
         // An explicit preset switch may change AA once. Subsequent Auto
@@ -602,7 +614,7 @@ export class FarmWorld {
 
     this.alightBus = (force = false) => {
       if (this.busRoute && this.player) {
-        const res = this.busRoute.alightBus(this.player.root, force);
+        const res = this.busRoute.alightBus(this.player.root, force, (x,z) => this.collisionSystem.isColliding(x,z,vehicleCollisionRadius(this.player.getVehicleId())));
         if (res) this.onStatus?.('Đã xuống xe buýt');
         return res;
       }
@@ -722,41 +734,45 @@ export class FarmWorld {
         // The opaque loading screen leaves the frame free for construction.
         // Keep a small budget again as soon as gameplay becomes visible.
         this.scheduler.update(this.bootReady ? (this.isMobile ? 1 : 2.5) : (this.bootFrameRequested ? 3 : 12));
+        // Loading deliberately skips scene.render; release duplicate buffers
+        // during boot too, before their peak accumulates behind the title.
+        if (!this.bootReady) this.sharedGeometry?.drain();
         // The opaque start screen covers this canvas. Rendering thousands of
         // half-built meshes here starves construction and keeps boot at 7fps.
         // Only draw once the pipeline explicitly requests its first frame.
         if (!this.bootReady && !this.bootFrameRequested) {
-          if (performance.now() - (this.lastDiagnosticsAt || 0) > 1000) {
+          if (window.__farmDebug?.enabled && performance.now() - (this.lastDiagnosticsAt || 0) > 2500) {
             this.lastDiagnosticsAt = performance.now();
             window.__farmDebug?.snapshot(this.getDebugState());
           }
           return;
         }
         window.__farmDebug?.stage('scene.render');
+        // A phone with a 3D menu open otherwise draws two live scenes at once.
+        // Keep the world responsive at 30fps behind menus, including construction.
+        const renderNow = performance.now();
+        const covered = this.isMobile && this.bootReady && this.canvas.closest('.hud-modal-open');
+        if (covered && renderNow - (this.lastCoveredRenderAt || 0) < 1000 / 30) return;
+        this.lastCoveredRenderAt = renderNow;
         this.frameResize.flush();
         this.scene.render();
-        if (this.bootReady && (this.graphicsQuality === 'auto' || this.graphicsQuality === 'ultra' || (this.isMobile && this.graphicsQuality !== 'eco')) &&
+        if (!covered && this.bootReady && (this.graphicsQuality === 'auto' || this.graphicsQuality === 'ultra' || (this.isMobile && this.graphicsQuality !== 'eco')) &&
           !document.hidden && this.autoGraphics.sample(this.engine.getDeltaTime())) {
-          if (this.graphicsQuality === 'auto') this.cinematic?.setQuality(this.autoGraphics.effects, false);
-          if (this.graphicsQuality === 'ultra' && !this.isMobile && this.cinematic?.pipeline) {
-            // Preserve native pixels. Under sustained load, reduce full-screen
-            // multisampling before compromising image resolution.
-            const supported = Math.max(1, this.engine.getCaps().maxMSAASamples || 1);
-            const samples = Math.min(this.autoGraphics.level > 0 ? 2 : 4, supported);
-            if (this.cinematic.pipeline.samples !== samples) this.cinematic.pipeline.samples = samples;
-          }
-          // Apply Auto scale on desktop too; mobile also adapts manual presets.
+          if (this.graphicsQuality === 'auto') this.cinematic?.setQuality(this.autoGraphics.effects, true);
+          this.atmosphere?.setPerformanceLevel(this.autoGraphics.level);
+          if (this.isMobile) this.scene.shadowsEnabled = this.autoGraphics.level < 2;
+          // Desktop preserves density; phones retain their memory safety budget.
           if (this.isMobile || this.graphicsQuality === 'auto') this.resize();
           if (this.shadows && (this.isMobile || this.graphicsQuality === 'ultra' || this.graphicsQuality === 'auto')) {
             const targetSize = this.isMobile
-              ? 512
-              : (this.graphicsQuality === 'auto' ? (this.autoGraphics.level > 0 ? 512 : 1024) : (this.autoGraphics.level > 0 ? 1024 : 2048));
+              ? (this.autoGraphics.level > 0 ? 256 : 512)
+              : (this.graphicsQuality === 'auto' ? 1024 : 2048);
             if (this.shadows.mapSize !== targetSize) this.shadows.mapSize = targetSize;
             if (this.shadows.filteringQuality !== ShadowGenerator.QUALITY_MEDIUM) this.shadows.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
           }
         }
         if (this.bootReady && this.graphicsQuality === 'eco' && !document.hidden && this.resolutionController.sample(this.engine.getDeltaTime())) this.resize();
-        if (performance.now() - (this.lastDiagnosticsAt || 0) > 1000) {
+        if (window.__farmDebug?.enabled && performance.now() - (this.lastDiagnosticsAt || 0) > 2500) {
           this.lastDiagnosticsAt = performance.now();
           window.__farmDebug?.snapshot({ ...this.getDebugState(), movement: this.player?.getDiagnostics?.() });
         }
@@ -774,6 +790,9 @@ export class FarmWorld {
     });
     this.engine.onContextLostObservable.add(() => {
       this.contextLost = true;
+      if (this.isMobile) {
+        try { sessionStorage.setItem('farm.mobile.gpu-recovery', 'true'); } catch {}
+      }
       window.__farmRuntimeAudit?.record('context-lost');
       window.__farmDebug?.stopFrames();
       window.__farmDebug?.report(new Error('WebGL context lost'), 'WEBGL');
@@ -855,10 +874,10 @@ export class FarmWorld {
         if (this.scene.isDisposed) return;
       }
       await new Promise(resolve => setTimeout(resolve, 0));
-      await this.scheduleConstruction(createScenicLandscapesSteps(this.scene, this.foliage, this.shadows, this.foliageInstancing), 'scenic landscape');
+      if (!this.isMobile) await this.scheduleConstruction(createScenicLandscapesSteps(this.scene, this.foliage, this.shadows, this.foliageInstancing), 'scenic landscape');
       window.__farmDebug?.mark(`Scenic landscapes: ${this.scene.meshes.length} meshes`);
       await new Promise(resolve => setTimeout(resolve, 0));
-      await this.scheduleConstruction(createVillageAmenitiesAndGreenbeltsSteps(this.scene, this.foliage, this.shadows, this.foliageInstancing), 'village amenities');
+      if (!this.isMobile) await this.scheduleConstruction(createVillageAmenitiesAndGreenbeltsSteps(this.scene, this.foliage, this.shadows, this.foliageInstancing), 'village amenities');
       window.__farmDebug?.mark(`Village amenities: ${this.scene.meshes.length} meshes`);
       if (this.isMobile) {
         // Keep authored town landmarks and the playable district; these broad
@@ -915,11 +934,13 @@ export class FarmWorld {
   *createSceneSteps() {
     const scene = new Scene(this.engine);
     scene.metadata = { ...(scene.metadata || {}), textureAnisotropy: this.textureAnisotropy, mobile: this.isMobile };
+    scene.shadowsEnabled = !(this.isMobile && this.autoGraphics.level >= 2);
     installMaterialDirtyIndex(scene);
     // Several setup helpers (player home/corral) run before createScene()
     // returns. Publish the scene immediately so those helpers never receive
     // undefined through this.scene during a synchronized owned-farm boot.
     this.scene = scene;
+    if (this.isMobile) this.sharedGeometry = installSharedStaticGeometry(scene);
     this.collisionSystem.attachSceneObstacles(scene);
     // Tăng tốc độ khởi tạo: Khóa cờ kiểm tra material dirty khi tạo hàng ngàn mesh ban đầu
     scene.clearColor = new Color4(0.85, 0.93, 0.99, 1);
@@ -1022,9 +1043,9 @@ export class FarmWorld {
     yield;
     shadows.filteringQuality = ShadowGenerator.QUALITY_MEDIUM;
     yield;
-    shadows.bias = 0.0005;
+    shadows.bias = 0.001;
     yield;
-    shadows.normalBias = 0.02;
+    shadows.normalBias = 0.04;
     yield; // Triệt tiêu răng cưa và sọc rách trên mặt nghiêng
     shadows.autoCalcDepthBounds = false;
     yield; // Frustum đã cố định theo shadowFrustumSize
@@ -1036,7 +1057,7 @@ export class FarmWorld {
     // Limit shadow draw calls during construction too, not only after boot.
     this.getNearbyShadowCount = installNearbyShadows(shadows, () => this.player?.root.position, {
       radius: this.isMobile ? 24 : 36,
-      maxCasters: this.isMobile ? 16 : 48,
+      maxCasters: () => this.isMobile ? (this.autoGraphics.level > 0 ? 6 : 12) : (this.autoGraphics.level === 2 ? 16 : this.autoGraphics.level === 1 ? 32 : 48),
     });
     yield;
     this.rimLight = rimLight;
@@ -1062,10 +1083,10 @@ export class FarmWorld {
       getStreamingStats: () => this.chunkStreamer?.getStats?.(),
       getFps: () => this.engine.getFps(),
       presets: {
-        performance: { start: this.isMobile ? 65 : 100, end: this.isMobile ? 150 : 220, clip: this.isMobile ? 180 : 260 },
-        streaming: { start: this.isMobile ? 80 : 220, end: this.isMobile ? 180 : 560, clip: this.isMobile ? 210 : 600 },
-        recovering: { start: this.isMobile ? 95 : 250, end: this.isMobile ? 210 : 620, clip: this.isMobile ? 240 : 660 },
-        clear: { start: this.isMobile ? 110 : 280, end: this.isMobile ? 240 : 720, clip: this.isMobile ? 270 : 760 },
+        performance: { start: this.isMobile ? 65 : 100, end: this.isMobile ? 110 : 220, clip: this.isMobile ? 130 : 260 },
+        streaming: { start: this.isMobile ? 80 : 220, end: this.isMobile ? 130 : 560, clip: this.isMobile ? 150 : 600 },
+        recovering: { start: this.isMobile ? 95 : 250, end: this.isMobile ? 150 : 620, clip: this.isMobile ? 170 : 660 },
+        clear: { start: this.isMobile ? 110 : 280, end: this.isMobile ? 170 : 720, clip: this.isMobile ? 190 : 760 },
       },
     });
     yield;
@@ -1735,6 +1756,8 @@ export class FarmWorld {
     yield;
 
     let busStatusElapsed = 0;
+    let proximityElapsed = 0;
+    let audioElapsed = 0;
     yield;
     scene.onBeforeRenderObservable.add(() => {
       const dt = Math.min(0.1, Math.max(0, this.engine.getDeltaTime() / 1000));
@@ -1747,12 +1770,18 @@ export class FarmWorld {
       if (!this.currentVenue) this.fogStreaming?.update(dt);
       this.livingMeadow?.update(dt, player.root.position);
       this.grandRiver?.update(dt);
-      farmAudio.updateWaterfrontPosition(player.root.position.x, player.root.position.z);
+      audioElapsed += dt;
+      if (!this.isMobile || audioElapsed >= .1) {
+        audioElapsed = 0;
+        farmAudio.updateWaterfrontPosition(player.root.position.x, player.root.position.z);
+      }
 
       const isRiding = this.busRoute?.isPlayerRiding();
       const busTransitStatus = this.busRoute?.update(dt, player.root.position);
       if (isRiding && busTransitStatus?.activeRide) {
         const ride = busTransitStatus.activeRide;
+        ride.busRoot.computeWorldMatrix(true);
+        ride.passengerSeatNode.computeWorldMatrix(true);
         player.root.position.copyFrom(ride.passengerSeatNode.getAbsolutePosition());
         player.root.rotation.y = ride.busRoot.rotation.y;
       }
@@ -1878,15 +1907,20 @@ export class FarmWorld {
       this.villageElder?.update(performance.now());
       this.fortuneNPC?.update(performance.now());
       this.objectiveMarker?.update(performance.now());
-      this.updateVenueProximity();
-      this.updateFarmZoneProximity();
-      this.openWorld?.update(performance.now(), dt);
+      proximityElapsed += dt;
+      if (!this.isMobile || proximityElapsed >= .1) {
+        proximityElapsed = 0;
+        this.updateVenueProximity();
+        this.updateFarmZoneProximity();
+      }
+      this.openWorld?.update(performance.now(), dt, player.root.position);
       const renderAt = performance.now() + (this.remoteClockOffset || 0) - 180;
       window.__farmDebug?.stage('remote player interpolation');
       this.remotePlayers.forEach(remote => {
         const snapshots = remote.metadata.snapshots || [];
         let sample = remote.metadata.target;
         if (snapshots.length) sample = sampleMovement(snapshots, renderAt);
+        const previousRemoteY=remote.position.y;
         const dx = sample.x - remote.position.x;
         const dz = sample.z - remote.position.z;
         const isMoving = (dx * dx + dz * dz) > 0.005;
@@ -1919,10 +1953,16 @@ export class FarmWorld {
           remote.metadata.pedalPhase = (remote.metadata.pedalPhase || 0) + speed * dt * 2.4;
           remote.metadata.human?.animate(dt, false, 0);
           rigs.update(dt, isMoving, speed, rotationDelta);
-          applyVehiclePose(remote.metadata.human, rigs.getVehicleId(), isMoving, remote.metadata.pedalPhase, rigs.getRiderOffset());
+          applyVehiclePose(remote.metadata.human, rigs.getVehicleId(), isMoving, remote.metadata.pedalPhase, rigs.getRiderOffset(), dt);
         } else {
-          if (remote.metadata.human) { remote.metadata.human.torsoNode.position.z = 0; remote.metadata.human.root.rotation.z = 0; }
-          remote.metadata.human?.animate(dt, isMoving, 4.0);
+          if (remote.metadata.human) { clearVehiclePose(remote.metadata.human); remote.metadata.human.torsoNode.position.z = 0; remote.metadata.human.root.rotation.z = 0; }
+          const speed=dt>0?Math.hypot(dx,dz)*follow/dt:0;
+          const supportY=VENUES[remote.metadata.venue]?.interior.y ?? getTerrainHeight(remote.position.x,remote.position.z);
+          remote.metadata.human?.animate(dt, speed>.05, speed, {
+            airborne: remote.position.y-supportY>.12,
+            verticalSpeed: dt>0?(remote.position.y-previousRemoteY)/dt:0,
+            turn:dt>0?rotationDelta*follow/dt:0,
+          });
         }
         remote.metadata.fishingRig?.update(dt);
       });
@@ -2474,8 +2514,7 @@ export class FarmWorld {
   }
   getNearbyFarmGate() {
     if (!this.player || this.currentVenue || !this.playerFarmId) return null;
-    const p = farmGatePosition(this.playerFarmId);
-    if (!p || Math.hypot(this.player.root.position.x - p.x, this.player.root.position.z - p.z) > SHARED_FARM_CONFIG.security.gate.interactionDistance) return null;
+    if (!nearFarmGate(this.playerFarmId, this.player.root.position)) return null;
     const state = this.farmGateStates?.get(this.playerFarmId);
     return state ? { farmId: this.playerFarmId, open: state.open } : null;
   }
@@ -2766,6 +2805,7 @@ export class FarmWorld {
       textures: this.scene.textures.length,
       materials: this.scene.materials.length,
       geometries: this.scene.geometries.length,
+      sharedGeometry: this.sharedGeometry?.getStats(),
       activeMeshes: this.scene.getActiveMeshes().length,
       nearbyShadowCasters: this.getNearbyShadowCount?.() ?? null,
       streamingScheduler: this.scheduler?.getStats(),

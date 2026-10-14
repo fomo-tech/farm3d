@@ -48,7 +48,7 @@ export function BauCuaScreen({
             <div className="wood-grain-rim" />
           </div>
 
-          {isShaking && <div className="pt-shaker-capsule" aria-label="Đang lắc">🎲<span>Đang lắc…</span></div>}
+          {isShaking && <div className="pt-shaker-capsule" aria-label="Đang lắc"><span>Đang lắc…</span></div>}
           {symbols && isReveal && (
             <div className="pt-baucua-trio-results">
               {symbols.map((sym, i) => (

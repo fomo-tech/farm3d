@@ -37,7 +37,7 @@ assert.equal(authority.board(rider,'fake-bus',0),false);
 assert.equal(authority.board(rider,'bus-01A',0),true);
 assert.equal(authority.board(rider,'bus-02A',0),false,'cannot switch buses mid-ride');
 assert.equal(authority.isBoarding(rider),true);
-assert.equal(authority.maxSpeed(rider),48);
+assert.equal(authority.maxSpeed(rider),22,'inter-village bus uses the reduced traffic speed');
 assert.equal(authority.accepts(rider,{x:0,z:58,y:1.35},100),true);
 assert.equal(authority.isBoarding(rider),false);
 Object.assign(rider,{x:0,z:58,y:1.35});

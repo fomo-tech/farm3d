@@ -1,3 +1,4 @@
+import { installRotatedPointer } from '../game/input/rotatedPointer.js';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Engine } from '@babylonjs/core/Engines/engine.js';
 import { Scene } from '@babylonjs/core/scene.js';
@@ -225,8 +226,10 @@ export function FashionBoutiqueModal({
   useEffect(() => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
-    const engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
-    engine.setHardwareScalingLevel(1 / Math.min(window.devicePixelRatio || 1, 2));
+    const engine = new Engine(canvas, false, { preserveDrawingBuffer: false, stencil: false });
+    installRotatedPointer(engine, canvas);
+    const mobilePreview = window.matchMedia('(pointer: coarse)').matches;
+    engine.setHardwareScalingLevel(1 / Math.min(window.devicePixelRatio || 1, mobilePreview ? 1.25 : 2));
     const scene = new Scene(engine);
     scene.clearColor = new Color4(0.94, 0.95, 0.88, 1);
 

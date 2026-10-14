@@ -9,6 +9,7 @@ import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
 import { buildHumanMesh } from '../player/buildHumanMesh.js';
 import { createFishingRig } from '../player/createPlayer.js';
+import { CHARACTER_ANIMATION_CONFIG } from '../../../shared/characterConfig.js';
 import { FISHING_CONFIG } from '../../../shared/fishingConfig.js';
 import { createPlayerNameplate } from '../player/createPlayerNameplate.js';
 import { DefaultRenderingPipeline } from '@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline.js';
@@ -45,7 +46,8 @@ if (params.get('bottom')) avatar.setBottom(params.get('bottom'));
 if (params.get('shoes')) avatar.setShoes(params.get('shoes')); 
 if (params.get('mouth')) avatar.setFaceFeatures({mouthType:params.get('mouth')});
 if (params.get('lod')) avatar.setLOD(Number(params.get('lod')));
-if (params.get('action')) avatar.playAction(params.get('action'));
+let previewElapsed=0, actionRestartAt=0;
+const previewAction=params.get('action');
 const previewFish = FISHING_CONFIG.fish[params.get('fish')];
 const fishingRig = previewFish ? createFishingRig(scene, avatar.root, avatar) : null;
 const shadowPreview = Boolean(fishingRig && ['bite','waiting'].includes(params.get('phase')));
@@ -78,13 +80,23 @@ if (params.get('crowd') === '1') {
 document.querySelector('#status').textContent = `Avatar v3 · ${params.get('gender') || 'male'} · ${params.get('outfit') || 'starter'} · ${params.get('angle') || 'front'} · ${params.get('light') || 'day'}`;
 engine.runRenderLoop(() => {
   const delta = Math.min(engine.getDeltaTime() / 1000, 0.05);
-  avatar.animate(delta, params.get('motion') === 'run', 4);
+  previewElapsed+=delta;
+  if (previewAction && previewElapsed>=actionRestartAt && !fishingRig) {
+    if (['cast','reel','catch'].includes(previewAction)) avatar.playFishingAction(previewAction);
+    else avatar.playAction(previewAction);
+    actionRestartAt=previewElapsed+(CHARACTER_ANIMATION_CONFIG.actionDurations[previewAction]||1)+.8;
+  }
+  const motion=params.get('motion'), jumping=motion==='jump';
+  const jumpTime=previewElapsed%2, airborne=jumping&&jumpTime<.8;
+  avatar.root.position.y=airborne?Math.max(0,4*jumpTime-5*jumpTime*jumpTime):0;
+  const moving=motion==='walk'||motion==='run';
+  avatar.animate(delta,moving,motion==='run'?9.45:7,{airborne,verticalSpeed:airborne?4-10*jumpTime:0});
   if (shadowPreview) {
     shadowPreviewElapsed+=delta;
     if(shadowPreviewElapsed>1)fishingRig.setPhase(params.get('phase') === 'bite' ? 'bite' : 'waiting',params.get('phase') === 'bite' ? 0 : 2500);
   }
   fishingRig?.update(delta);
-  crowd.forEach(remote => remote.animate(delta, params.get('motion') === 'run', 4));
+  crowd.forEach(remote => remote.animate(delta, params.get('motion') === 'run', 9.45));
   scene.render();
 });
 const stats = avatar.getRenderStats();

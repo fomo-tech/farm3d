@@ -14,6 +14,6 @@ for(let i=0;i<config.waypoints.length;i++) {
 }
 assert.equal(beachWaterAt(config.shelter.x,config.shelter.z,4),false);
 for(const index of Object.values(config.stops)) assert.ok(config.waypoints[index]);
-const source=await readFile(new URL('../src/game/transport/createBusRoute.js',import.meta.url),'utf8');
+const source=await readFile(new URL('../shared/busRoutes.js',import.meta.url),'utf8');
 assert.match(source,/COASTAL_BUS_CONFIG.waypoints.map/);
 console.log(`PASS: ${samples} coastal bus route samples, full bus footprint outside sea, stops match new route`);

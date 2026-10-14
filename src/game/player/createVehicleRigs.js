@@ -51,6 +51,7 @@ export function createVehicleRigs(scene, parentNode, shadows) {
   const riderOffset = { height: 0, lean: 0 };
 
   return {
+    setVisible(visible) { rigContainer.setEnabled(Boolean(visible)); },
     setVehicle(vehicleId) {
       vehicleId = Object.hasOwn(VEHICLES, vehicleId) ? vehicleId : 'walk';
       if (currentVehicleId === vehicleId) return;

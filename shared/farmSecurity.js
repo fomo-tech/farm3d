@@ -19,6 +19,14 @@ export function farmGatePosition(farmId) {
   const p = farmOrigin(farmId);
   return p && { x: p.x, z: p.z - FARM_LOT_SPEC.estateDepth / 2 };
 }
+export function nearFarmGate(farmId, position) {
+  const origin = farmOrigin(farmId);
+  if (!origin || !position || position.venue) return false;
+  const gate = FARM_LOT_SPEC.anchors.gate;
+  const dx = Math.max(0, Math.abs(position.x - origin.x - gate.x) - gate.width / 2);
+  const dz = position.z - origin.z - gate.z;
+  return Math.hypot(dx, dz) <= FARM_CONFIG.security.gate.interactionDistance;
+}
 export function insideFarm(farmId, p, padding = 0) {
   const o = farmOrigin(farmId);
   return Boolean(o && p && Math.abs(p.x - o.x) < FARM_LOT_SPEC.estateWidth / 2 + padding && Math.abs(p.z - o.z) < FARM_LOT_SPEC.estateDepth / 2 + padding);

@@ -14,7 +14,7 @@ export function mobileBuildPlugin() {
         let pathname, url;
         try { url = new URL(req.url, 'http://localhost'); pathname = decodeURIComponent(url.pathname); } catch { return next(); }
         const mobile = /iPhone|iPad|iPod|Android/i.test(req.headers['user-agent'] || '');
-        const entry = (mobile || url.searchParams.get('bundled') === '1') && ['/', '/index.html', '/performance.html'].includes(pathname);
+        const entry = (mobile || url.searchParams.get('bundled') === '1') && ['/', '/index.html', '/performance.html', '/hud-preview.html'].includes(pathname);
         if (!entry && !pathname.startsWith('/assets/')) return next();
         const file = resolve(root, entry && pathname === '/' ? 'index.html' : pathname.slice(1));
         if (!file.startsWith(root + sep) || !existsSync(file)) return next();

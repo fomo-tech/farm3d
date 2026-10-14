@@ -17,7 +17,11 @@ export function PlayTogetherInventoryModal({ isOpen = false, onClose, onOpenFash
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(8);
   useEffect(() => {
-    const update = () => setPageSize(window.innerHeight < 500 ? 4 : window.innerWidth < 701 ? 6 : 8);
+    const update = () => {
+      const height = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--game-viewport-height')) || window.innerHeight;
+      const width = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--game-viewport-width')) || window.innerWidth;
+      setPageSize(height < 500 ? 6 : width < 701 ? 6 : 8);
+    };
     update(); window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);

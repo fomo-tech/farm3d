@@ -1,3 +1,4 @@
+import { installRotatedPointer } from '../game/input/rotatedPointer.js';
 import React from 'react';
 import { HudIcon } from './icons3d/HudIcon.jsx';
 import { useEffect, useRef, useState } from 'react';
@@ -24,7 +25,7 @@ function captureCatalogue(items, receive, isCancelled) {
     if (!missing.length || isCancelled()) { if (!isCancelled()) receive(Object.fromEntries(catalogueArt)); return; }
     const canvas = document.createElement('canvas');
     canvas.width = 256; canvas.height = 192;
-    const engine = new Engine(canvas, true, { preserveDrawingBuffer: true });
+    const engine = new Engine(canvas, true, { preserveDrawingBuffer: false });
     const scene = new Scene(engine);
     scene.clearColor = new Color4(0,0,0,0);
     const camera = new ArcRotateCamera('catalogue-camera', .85, 1.1, 5, new Vector3(0,.6,0), scene);
@@ -65,7 +66,8 @@ export function VehiclePreview({ id }) {
   const [playing, setPlaying] = useState(true);
   useEffect(() => { selection.current = id; rig.current?.setVehicle(id); dirty.current = true; }, [id]);
   useEffect(() => {
-    const engine = new Engine(canvas.current, true, { preserveDrawingBuffer: true });
+    const engine = new Engine(canvas.current, true, { preserveDrawingBuffer: false });
+    installRotatedPointer(engine, canvas.current);
     engine.setHardwareScalingLevel(1 / Math.min(window.devicePixelRatio || 1, 1.5));
     const scene = new Scene(engine);
     scene.clearColor = Color4.FromHexString('#edf2e4ff');

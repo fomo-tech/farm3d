@@ -1,16 +1,6 @@
+import { farmSurfaceHeight } from '../../../shared/farmSurface.js';
 import {shoreTerrainHeight} from './nature/ShoreTerrain.js';
-/**
- * TerrainHeightSystem.js
- * High-Performance Analytical 3D Terrain Height & Elevation Engine.
- * 
- * Provides instantaneous O(1) mathematical terrain elevation sampling for:
- * - Local player (smooth hill climbing, panoramic views, zero clipping under ground)
- * - Vehicles (bikes, tractors, scooters riding along natural slopes)
- * - Remote multiplayer avatars & farm animals
- * - Camera target elevation tracking
- * 
- * Pure analytical calculation: 0 Raycasting overhead, solid 60 FPS guaranteed.
- */
+// Analytical support sampling shared by local motion and server validation.
 
 import { isPointOnRoadCorridor } from './RoadSafetyZone.js';
 import { beachGroundHeight } from '../../../shared/beachConfig.js';
@@ -41,6 +31,9 @@ export function getTerrainHeight(x, z) {
 
   const lakeHeight = lakeGroundHeight(x, z);
   if (lakeHeight !== null) return lakeHeight;
+
+  const farmHeight = farmSurfaceHeight(x, z);
+  if (farmHeight !== null) return Math.max(farmHeight, shoreTerrainHeight(x, z) ?? 0);
 
   // 5. Siêu Quảng Trường Play Together (bán kính 46m, mặt trên đĩa cẩm thạch y = 0.12m)
   const dCenter = Math.hypot(x, z);

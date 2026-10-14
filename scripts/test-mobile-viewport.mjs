@@ -34,8 +34,9 @@ viewport.scale = 2; viewport.height = 175; viewportEvents.get('resize')(); frame
 assert.equal(properties.get('--game-viewport-height'), '350px', 'pinch zoom does not resize the game');
 context.window.innerWidth = 390; context.window.innerHeight = 700; viewport.scale = 1; viewport.width = 390; viewport.height = 700; events.get('orientationchange')(); frame();
 assert.ok(classes.has('mobile-portrait'));
-assert.equal(properties.get('--game-viewport-width'), '390px');
-assert.equal(properties.get('--game-viewport-height'), '700px');
+assert.equal(properties.get('--game-viewport-width'), '700px');
+assert.ok(classes.has('mobile-rotated'));
+assert.equal(properties.get('--game-viewport-height'), '390px');
 context.window.innerWidth = 844; context.window.innerHeight = 290; viewport.width = 844; viewport.height = 290; events.get('orientationchange')(); frame();
 assert.ok(classes.has('mobile-landscape'));
 assert.equal(properties.get('--game-viewport-width'), '844px');
@@ -69,7 +70,8 @@ root.clientWidth = undefined;
 classes.clear(); viewportContent = undefined;
 context.navigator.standalone = true; viewport.height = 650; context.window.innerWidth = 390; context.window.innerHeight = 844; viewport.width = 390;
 vm.runInNewContext(readFileSync(new URL('../public/orientation.js', import.meta.url), 'utf8'), context);
-assert.equal(properties.get('--game-viewport-height'), '844px', 'standalone canvas fills layout viewport including home indicator');
+assert.equal(properties.get('--game-viewport-width'), '844px', 'rotated standalone canvas fills layout viewport');
+assert.equal(properties.get('--game-viewport-height'), '390px');
 assert.ok(!classes.has('chrome-ios-contained'), 'installed PWA keeps cover even with a Chrome user agent');
 assert.equal(viewportContent, undefined);
 console.log('PASS: PWA uses the full layout viewport');
@@ -80,3 +82,12 @@ vm.runInNewContext(readFileSync(new URL('../public/orientation.js', import.meta.
 assert.equal(properties.get('--game-viewport-width'), '844px', 'Safari retains its edge-to-edge viewport');
 assert.ok(!classes.has('chrome-ios-contained'));
 console.log('PASS: Chrome contained width, stale rotation metrics and Safari isolation');
+
+// A portrait keyboard can make the visual viewport wider than it is tall.
+context.window.innerWidth=390;context.window.innerHeight=844;
+viewport.width=390;viewport.height=320;viewport.scale=1;root.clientWidth=390;
+context.document.activeElement={matches:()=>true};
+vm.runInNewContext(readFileSync(new URL('../public/orientation.js',import.meta.url),'utf8'),context);
+assert.equal(properties.get('--game-viewport-height'),'320px','keyboard uses the remaining visible height');
+assert.ok(classes.has('mobile-portrait'),'keyboard never flips the mobile orientation class');
+console.log('PASS: keyboard viewport shrinks the game while retaining portrait orientation');

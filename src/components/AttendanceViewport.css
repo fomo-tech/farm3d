@@ -1,0 +1,93 @@
+/* The daily board fits the available game viewport; other notice tabs retain scroll. */
+.game-shell .farm-notice.attendance-mode{width:min(980px,calc(100vw - 24px))!important;height:min(590px,calc(100dvh - 24px));padding:0!important;border:4px solid #fffaf0!important;border-radius:26px!important;background:linear-gradient(145deg,#ecf8f4,#fff7de)!important;box-shadow:0 6px 0 #6e9f91,0 24px 80px #153b5355!important}
+.attendance-mode .farm-notice-header{padding:14px 20px;gap:10px;background:linear-gradient(110deg,#d5eee4,#f7edc8);border-bottom:1px solid #fff9ed}
+.attendance-mode .farm-notice-header h2{font-size:24px;color:#315e58}
+.attendance-mode .farm-notice-tabs{padding:10px 18px;gap:8px}
+.attendance-mode .farm-notice-tabs button{padding:6px 10px;flex-direction:row;font-size:12px}
+.attendance-mode .farm-notice-tabs img{width:25px;height:25px}
+.attendance-mode .farm-notice-content{display:flex;overflow:hidden;padding:14px 18px 16px;min-height:0}
+.attendance-mode .farm-attendance{display:flex;flex-direction:column;gap:12px;width:100%;min-height:0}
+.attendance-mode .farm-attendance-banner{flex:none;padding:10px 16px;gap:14px;border:1px solid #c5e1d6;background:#ffffff85;border-radius:17px}
+.attendance-mode .farm-attendance-art img{width:62px!important;height:62px!important;filter:drop-shadow(0 5px 0 #8ca99525)}
+.attendance-mode .farm-notice-eyebrow{font-size:9px;letter-spacing:1.5px;margin-bottom:4px;color:#9a8046}
+.attendance-mode .farm-attendance-banner h3{font-size:23px;color:#3e6b5b}
+.attendance-mode .farm-attendance-banner p{font-size:11px;margin:4px 0 0;color:#6b8378}
+.attendance-mode .farm-attendance-streak{margin-left:auto;border:0;padding:8px 14px;border-radius:13px;background:#e5f3dc;gap:2px}
+.attendance-mode .farm-attendance-streak strong{color:#418862;font-size:27px}
+.attendance-mode .farm-attendance-streak span{font-size:10px}
+.attendance-progress{height:5px;flex:none;border-radius:9px;background:#d5e5d8;overflow:hidden}
+.attendance-progress>span{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,#72c99f,#efbf60);transition:width .3s ease}
+.attendance-mode .farm-attendance-grid{flex:1;min-height:0;margin:0;grid-template-columns:repeat(6,minmax(0,1fr)) minmax(0,1.35fr);gap:9px;align-items:stretch}
+.game-shell .attendance-mode .farm-day{justify-content:center;min-height:0;gap:9px;padding:12px 5px;border:2px solid #d8e2d5;border-radius:15px;background:linear-gradient(#fffefa,#f7f4e4);box-shadow:0 4px 0 #c7d7bf}
+.attendance-mode .farm-day>img{width:clamp(34px,8dvh,58px)!important;height:clamp(34px,8dvh,58px)!important;object-fit:contain;filter:drop-shadow(0 4px 3px #a6935a25)}
+.attendance-mode .farm-day-label{font-size:11px;letter-spacing:.3px;color:#6d857b}
+.attendance-mode .farm-day strong{font-size:19px;color:#816633}
+.attendance-mode .farm-day-state{font-size:9px;line-height:1.3}
+.game-shell .attendance-mode .farm-day.today{border-color:#e9a945;background:linear-gradient(#fff4c5,#ffe7a1);box-shadow:0 4px 0 #ce9b46,inset 0 0 0 2px #fff8e0}
+.attendance-mode .farm-day.today .farm-day-state{background:#df9b38;color:white;border-radius:6px;padding:4px 8px;font-weight:900}
+.game-shell .attendance-mode .farm-day.received{background:#e6f3e8;border-color:#b8d9bf;box-shadow:0 4px 0 #a9caaa}
+.game-shell .attendance-mode .farm-day.milestone{grid-column:auto;display:flex;background:linear-gradient(145deg,#daeaf9,#f1e4ff);border-color:#b3b9df;box-shadow:0 4px 0 #969fc8;gap:7px;text-align:center}
+.attendance-mode .farm-day.milestone>img{width:clamp(40px,10dvh,78px)!important;height:clamp(40px,10dvh,78px)!important}
+.attendance-jackpot{font-size:8px;font-weight:900;letter-spacing:.8px;color:#746b9e}
+.attendance-mode .farm-attendance-footer{flex:none;margin:0;flex-direction:row;align-items:center;gap:10px;padding:11px 14px;background:#fffdf1;border:1px solid #e6dcbf;border-radius:15px}
+.attendance-mode .farm-attendance-footer h4{font-size:16px;color:#486b57}
+.attendance-mode .farm-attendance-footer p{font-size:10px;margin-top:3px}
+.game-shell .attendance-mode .farm-notice-primary{min-height:46px;padding:8px 22px;border:2px solid #f8ffe7;background:linear-gradient(#87ce98,#55b57e);box-shadow:0 4px 0 #398959;color:#fff;font-size:14px}
+.attendance-mode .farm-notice-footnote{flex:none;margin:0;font-size:9px;color:#7f8b7c}
+.attendance-mode .farm-notice-status{flex:none;margin:0;padding:5px 10px;font-size:10px}
+@media(max-width:560px) and (orientation:portrait){
+ .game-shell .farm-notice.attendance-mode{height:calc(100dvh - 20px);width:calc(100vw - 20px)!important}
+ .attendance-mode .farm-notice-header{padding:12px;gap:8px}.attendance-mode .farm-notice-header h2{font-size:21px}.attendance-mode .farm-notice-header p{font-size:9px}
+ .attendance-mode .farm-notice-tabs{padding:8px;gap:5px}.attendance-mode .farm-notice-tabs button{flex-direction:column;gap:3px;padding:5px 2px;font-size:10px}
+ .attendance-mode .farm-notice-content{padding:10px}.attendance-mode .farm-attendance{gap:10px}
+ .attendance-mode .farm-attendance-banner{display:grid;grid-template-columns:45px minmax(0,1fr);padding:10px;gap:7px}.attendance-mode .farm-attendance-art img{width:45px!important;height:45px!important}.attendance-mode .farm-attendance-banner h3{font-size:19px}.attendance-mode .farm-attendance-banner p{font-size:10px}
+ .attendance-mode .farm-attendance-streak{grid-column:1/-1;display:flex;flex-direction:row;justify-content:center;width:100%;gap:6px;margin:0;padding:4px 8px}.attendance-mode .farm-attendance-streak strong{font-size:16px}
+ .attendance-mode .farm-attendance-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:1fr 1fr .8fr;gap:9px}
+ .game-shell .attendance-mode .farm-day{gap:6px;padding:6px 3px}.attendance-mode .farm-day>img{width:clamp(30px,7dvh,56px)!important;height:clamp(30px,7dvh,56px)!important}
+ .game-shell .attendance-mode .farm-day.milestone{grid-column:1/-1;display:grid;grid-template-columns:60px 1fr auto;grid-template-rows:auto auto;gap:2px 8px;text-align:left;padding:8px 12px}.attendance-mode .farm-day.milestone>img{grid-column:1;grid-row:1/3;width:50px!important;height:50px!important}.attendance-mode .milestone .farm-day-label{grid-column:2;grid-row:1}.attendance-mode .milestone strong{grid-column:2;grid-row:2}.attendance-mode .milestone .farm-day-state{grid-column:3;grid-row:2}.attendance-mode .attendance-jackpot{grid-column:3;grid-row:1}
+ .attendance-mode .farm-attendance-footer{flex-direction:column;text-align:center;padding:9px;gap:8px}.attendance-mode .farm-notice-primary{width:100%}
+}
+@media(max-height:500px) and (orientation:landscape){
+ .game-shell .farm-notice.attendance-mode{height:calc(100dvh - 16px);max-height:calc(100dvh - 16px)!important;width:min(940px,calc(100vw - 16px))!important;border-width:3px!important;border-radius:19px!important}
+ .attendance-mode .farm-notice-header{padding:7px 13px;gap:8px}.attendance-mode .farm-notice-header>img{width:30px!important;height:30px!important}.attendance-mode .farm-notice-header h2{font-size:19px}.attendance-mode .farm-notice-header p{display:none}.attendance-mode .farm-notice-close{width:32px;height:32px}
+ .attendance-mode .farm-notice-tabs{padding:5px 12px!important}.attendance-mode .farm-notice-tabs button{flex-direction:row;padding:4px 7px;gap:5px;font-size:10px}.attendance-mode .farm-notice-tabs img{width:20px!important;height:20px!important}
+ .attendance-mode .farm-notice-content{padding:7px 12px 9px}.attendance-mode .farm-attendance{gap:7px}
+ .attendance-mode .farm-attendance-banner{padding:6px 11px;gap:9px}.attendance-mode .farm-attendance-art img{width:36px!important;height:36px!important}.attendance-mode .farm-notice-eyebrow{font-size:8px;margin-bottom:2px}.attendance-mode .farm-attendance-banner h3{font-size:17px}.attendance-mode .farm-attendance-banner p{display:none}.attendance-mode .farm-attendance-streak{padding:4px 10px}.attendance-mode .farm-attendance-streak strong{font-size:18px}.attendance-mode .farm-attendance-streak span{font-size:9px}
+ .game-shell .attendance-mode .farm-day{gap:5px;padding:6px 3px;border-radius:12px}.attendance-mode .farm-day-label{font-size:9px}.attendance-mode .farm-day strong{font-size:16px}.attendance-mode .farm-day-state{font-size:8px}.attendance-mode .farm-day.today .farm-day-state{padding:3px 5px}.attendance-mode .attendance-jackpot{font-size:7px}
+ .attendance-mode .farm-attendance-footer{padding:7px 11px}.attendance-mode .farm-attendance-footer h4{font-size:13px}.attendance-mode .farm-attendance-footer p{font-size:9px}.game-shell .attendance-mode .farm-notice-primary{min-height:40px;padding:6px 15px;font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){.attendance-progress>span{transition:none}}
+.attendance-mode .farm-day-label,.attendance-mode .farm-day strong,.attendance-mode .farm-attendance-streak strong,.attendance-mode .farm-attendance-streak span{line-height:1.2}
+@media(max-height:500px) and (orientation:landscape){
+ .game-shell .attendance-mode .farm-notice-header{padding:6px 13px!important}
+ .attendance-mode .farm-attendance-streak{line-height:1.2}
+ .attendance-mode .attendance-jackpot{display:none}
+ .game-shell .attendance-mode .farm-day{gap:4px;padding:5px 3px}
+ .attendance-mode .farm-day.today .farm-day-state{padding:2px 5px}
+}
+@media(max-height:500px) and (orientation:landscape){
+ .attendance-mode .farm-attendance-banner{display:flex}
+ .attendance-mode .farm-attendance-streak{width:auto;flex-direction:column;grid-column:auto;margin-left:auto;border-top:0}
+}
+@media(max-width:560px) and (orientation:portrait){
+ .game-shell .attendance-mode .farm-day{gap:4px;padding:5px 3px}
+ .attendance-mode .farm-day>img{width:clamp(26px,5dvh,40px)!important;height:clamp(26px,5dvh,40px)!important}
+ .attendance-mode .farm-day.today .farm-day-state{padding:2px 6px}
+}
+@media(max-width:560px) and (orientation:portrait) and (max-height:740px){
+ .game-shell .attendance-mode .farm-notice-header{padding:8px 12px!important}.attendance-mode .farm-notice-header p{display:none}
+ .attendance-mode .farm-notice-tabs img{width:20px!important;height:20px!important}
+ .attendance-mode .farm-attendance-banner p{display:none}.attendance-mode .farm-attendance-art img{width:34px!important;height:34px!important}
+ .attendance-mode .farm-attendance-banner{grid-template-columns:34px 1fr;padding:7px}.attendance-mode .farm-attendance-banner h3{font-size:17px}
+ .attendance-mode .farm-attendance-footer p{display:none}.attendance-mode .farm-day>img{width:26px!important;height:26px!important}
+ .game-shell .attendance-mode .farm-day{gap:2px;padding:4px 2px}.attendance-mode .farm-day strong{font-size:16px}.attendance-mode .farm-day-label{font-size:10px}
+}
+@media(max-height:400px) and (orientation:landscape){
+ .game-shell .attendance-mode .farm-day{gap:2px;padding:3px}
+ .attendance-mode .farm-day>img{width:26px!important;height:26px!important}
+ .attendance-mode .farm-day.milestone>img{width:30px!important;height:30px!important}
+}
+
+.game-shell .attendance-mode .farm-day.milestone.today{border-color:#e9a945;box-shadow:0 4px 0 #ce9b46,inset 0 0 0 2px #fff8e0}
+.attendance-mode .farm-attendance-footer p[role=status]{display:block;color:#a36a42}
+@media(max-height:400px) and (orientation:landscape){.game-shell .attendance-mode .farm-day.milestone{gap:2px;padding:3px}}

@@ -822,7 +822,7 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
     skatePark,
     directoryKiosk,
     skateboardRack,
-    update(time, delta) {
+    update(time, delta, playerPosition) {
       windmill?.update(time, delta);
       lighthouse?.update(time, delta);
       lakeDistrict?.update(time);
@@ -831,6 +831,8 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
       // Animation sinh động cho toàn bộ cư dân thị trấn
       if (townCitizens) {
         townCitizens.forEach((c, idx) => {
+          if (scene.metadata?.mobile && playerPosition && c.root &&
+              Math.hypot(c.root.position.x - playerPosition.x, c.root.position.z - playerPosition.z) > 55) return;
           c.animate(delta, false, 0);
           // Thỉnh thoảng vẫy tay chào người chơi
           if (!c.isPerformingAction() && Math.sin(time * 0.0008 + idx * 2.3) > 0.98) {

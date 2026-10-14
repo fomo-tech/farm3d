@@ -2,13 +2,7 @@ import { Component, Profiler } from 'react';
 import { recordReactCommit } from './game/rendering/HudRuntime.js';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
-import './styles.css';
-import './game-ui.css';
-import './components/CompactGameHud.css';
-import './components/MobileViewport.css';
-import './components/GameButtonStates.css';
-import './components/QuestHudGame.css';
-import './components/GameViewport.css';
+import './gameStyles.js';
 import './game/rendering/RuntimeAudit.js';
 
 window.__farmDebug?.mark('React entry executing');
@@ -47,7 +41,3 @@ createRoot(document.getElementById('root')).render(
 );
 
 window.__farmDebug?.mark('React mounted');
-
-import './components/GameUiUpgrade.css';
-
-import './components/GameExperience.css';

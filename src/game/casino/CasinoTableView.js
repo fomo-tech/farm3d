@@ -177,7 +177,7 @@ export class CasinoTableView {
     const tileSignature=JSON.stringify([room?.game,room?.round?.phase,room?.round?.bets,result?.symbols]);
     if(tileSignature!==this.tileSignature){
       this.tileSignature=tileSignature;
-      const emoji={bau:'🎃',cua:'🦀',tom:'🦐',ca:'🐟',ga:'🐓',nai:'🦌'};
+      const emoji={bau:'Bầu',cua:'Cua',tom:'Tôm',ca:'Cá',ga:'Gà',nai:'Nai'};
       for(const {tile,rim,texture,choice,material} of this.symbolTiles){
         tile.setEnabled(room?.game==='bau-cua');rim.setEnabled(room?.game==='bau-cua');
         const amount=room?.round?.bets?.[choice]||0;
@@ -223,7 +223,7 @@ export class CasinoTableView {
           }
         } else {
           const symbol=values?.[i];
-          const icons={bau:'🎃',cua:'🦀',tom:'🦐',ca:'🐟',ga:'🐓',nai:'🦌'};
+          const icons={bau:'Bầu',cua:'Cua',tom:'Tôm',ca:'Cá',ga:'Gà',nai:'Nai'};
           ctx.font='112px sans-serif';ctx.fillText(icons[symbol]||'✦',128,108);
           ctx.fillStyle='#34565e';ctx.font='bold 32px sans-serif';ctx.fillText(CASINO_SYMBOLS[symbol]||'',128,200);
         }

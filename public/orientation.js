@@ -13,7 +13,8 @@
     return (isMobileUA || isMobileClientHint || isIPadOS) && isTouch && isMobileFormFactor;
   }
 
-  const isMobile = detectIsMobileDevice();
+  const reviewMobile = typeof location !== 'undefined' && location.hostname === 'localhost' && new URLSearchParams(location.search).has('mobileRenderReview');
+  const isMobile = reviewMobile || detectIsMobileDevice();
   const doc = document.documentElement;
 
   if (!isMobile) {
@@ -42,7 +43,7 @@
   let viewportFrame = null;
   function isGuardDismissed() {
     try {
-      return typeof sessionStorage !== 'undefined' && sessionStorage.getItem('vibe_city_dismissed_guard') === 'true';
+      return typeof sessionStorage !== 'undefined' && sessionStorage.getItem('vibe_city_portrait_opt_in_v2') === 'true';
     } catch {
       return false;
     }
@@ -56,7 +57,10 @@
     if (viewport && Math.abs(viewport.scale - 1) > 0.01) return;
     const layoutPortrait = (window.innerHeight || 0) > (window.innerWidth || 0);
     const viewportPortrait = Boolean(viewport && viewport.height > viewport.width);
-    const useVisualViewport = Boolean(!standalone && viewport && (layoutPortrait === viewportPortrait || !window.innerWidth));
+    const editing = document.activeElement?.matches?.('input, textarea, [contenteditable="true"]') === true;
+    const keyboardOpen = Boolean(viewport && editing && Math.abs(viewport.width - window.innerWidth) < 30
+      && viewport.height < window.innerHeight * .8);
+    const useVisualViewport = Boolean(keyboardOpen || (!standalone && viewport && (layoutPortrait === viewportPortrait || !window.innerWidth)));
     let width = useVisualViewport ? (viewport?.width || window.innerWidth) : (window.innerWidth || viewport?.width);
     const height = useVisualViewport ? (viewport?.height || window.innerHeight) : (window.innerHeight || viewport?.height);
 
@@ -72,8 +76,10 @@
       width = Math.min(...candidates);
     }
 
-    const roundedW = `${Math.round(width)}px`;
-    const roundedH = `${Math.round(height)}px`;
+    const rotate = layoutPortrait && !editing;
+    doc.classList.toggle('mobile-rotated', rotate);
+    const roundedW = `${Math.round(rotate ? height : width)}px`;
+    const roundedH = `${Math.round(rotate ? width : height)}px`;
     if (lastW !== roundedW) {
       lastW = roundedW;
       doc.style.setProperty('--game-viewport-width', roundedW);
@@ -83,9 +89,9 @@
       doc.style.setProperty('--game-viewport-height', roundedH);
     }
 
-    const portrait = height > width;
+    const portrait = keyboardOpen ? layoutPortrait : height > width;
     doc.classList.toggle('mobile-portrait', portrait);
-    doc.classList.toggle('mobile-landscape', !portrait);
+    doc.classList.toggle('mobile-landscape', rotate || !portrait);
 
     if (isGuardDismissed()) {
       doc.classList.add('guard-dismissed');
@@ -104,21 +110,38 @@
     }
   }
 
-  async function enterLandscape() {
+  let locking = false;
+  let enteringFullscreen = false;
+  async function lockLandscape() {
+    if (locking || isGuardDismissed() || !screen.orientation?.lock) return;
+    locking = true;
     try {
-      if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-        await document.documentElement.requestFullscreen({ navigationUI: 'hide' });
-      }
-    } catch { /* Fullscreen is unavailable in iOS browsers. */ }
-
-    try {
-      if (screen.orientation?.lock) {
-        await screen.orientation.lock('landscape');
-      }
-    } catch { /* iOS requires the user to rotate the physical device. */ }
-
-    update();
+      await screen.orientation.lock('landscape');
+    } catch { /* Unsupported browsers retain the physical-rotation hint. */ }
+    finally { locking = false; update(); }
   }
+
+  async function enterLandscape() {
+    if (enteringFullscreen || isGuardDismissed()) return;
+    enteringFullscreen = true;
+    try {
+      if (doc.requestFullscreen && !document.fullscreenElement) {
+        try { await doc.requestFullscreen({ navigationUI: 'hide' }); }
+        catch { /* Native landscape locking can still work in an installed app. */ }
+      }
+      await lockLandscape();
+    } finally { enteringFullscreen = false; update(); }
+  }
+
+  // Installed apps may allow locking immediately. Browser tabs typically need
+  // a gesture to enter fullscreen, so retry on the first touch without a menu.
+  void lockLandscape();
+  document.addEventListener('pointerdown', event => {
+    if (event.target?.closest?.('#landscape-dismiss, input, textarea, select, [contenteditable="true"]')) return;
+    void enterLandscape();
+  }, { once: true, passive: true });
+  document.addEventListener('fullscreenchange', () => { void lockLandscape(); queueUpdate(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) void lockLandscape(); });
 
   function queueUpdate() {
     if (viewportFrame !== null) return;
@@ -144,6 +167,8 @@
     }
   }
 
+  document.addEventListener('focusin', queueUpdate);
+  document.addEventListener('focusout', queueUpdate);
   addEventListener('resize', queueUpdate, { passive: true });
   addEventListener('orientationchange', handleOrientationShift, { passive: true });
   window.visualViewport?.addEventListener('resize', queueUpdate, { passive: true });
@@ -177,7 +202,7 @@
       }
       try {
         if (typeof sessionStorage !== 'undefined') {
-          sessionStorage.setItem('vibe_city_dismissed_guard', 'true');
+          sessionStorage.setItem('vibe_city_portrait_opt_in_v2', 'true');
         }
       } catch { /* storage restricted */ }
     });

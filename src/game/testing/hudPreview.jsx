@@ -19,8 +19,6 @@ import { FarmSettingsModal } from '../../components/FarmSettingsModal.jsx';
 import { useDailyAttendance } from '../../hooks/useDailyAttendance.js';
 import React, {useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import '../../styles.css';
-import '../../components/CompactGameHud.css';
 import {GameHudTopbar} from '../../components/GameHudTopbar.jsx';
 import {OnboardingHUD} from '../../components/OnboardingHUD.jsx';
 import {FarmMinimap} from '../../components/FarmMinimap.jsx';
@@ -33,14 +31,27 @@ import PlayTogetherWorldMapModal from '../../components/PlayTogetherWorldMapModa
 import {PlayTogetherInventoryModal} from '../../components/PlayTogetherInventoryModal.jsx';
 import {FashionBoutiqueModal} from '../../components/FashionBoutiqueModal.jsx';
 import {PlazaEventNoticeModal} from '../../components/PlazaEventNoticeModal.jsx';
+import BusTransitHUD from '../../components/BusTransitHUD.jsx';
+import {FishingHUD} from '../../components/FishingHUD.jsx';
+import {LivestockActionHUD} from '../../components/LivestockActionHUD.jsx';
+import {CropHarvestHUD} from '../../components/CropHarvestHUD.jsx';
+import {FriendsPanel} from '../../components/FriendsPanel.jsx';
+import {PlayerProfileModal} from '../../components/PlayerProfileModal.jsx';
+import {CharacterCreationModal} from '../../components/CharacterArrivalModal.jsx';
+import '../../gameStyles.js';
 const initial=loadProgress(); initial.onboarding.characterCreated=true; initial.onboarding.step=1;initial.coins=1248;initial.gems=15;
-import '../../components/QuestHudGame.css';
 const params=new URLSearchParams(location.search);
 if(params.has('mobileReview')) {
  const syncReviewOrientation = () => {
   document.documentElement.classList.add('is-mobile-device');
   document.documentElement.classList.toggle('mobile-portrait', innerHeight > innerWidth);
-  document.documentElement.classList.toggle('mobile-landscape', innerHeight <= innerWidth);
+  const rotated = params.has('rotateReview') && innerHeight > innerWidth;
+  document.documentElement.classList.toggle('mobile-rotated', rotated);
+  document.documentElement.classList.toggle('mobile-landscape', rotated || innerHeight <= innerWidth);
+  if (params.has('rotateReview')) {
+   document.documentElement.style.setProperty('--game-viewport-width', `${rotated ? innerHeight : innerWidth}px`);
+   document.documentElement.style.setProperty('--game-viewport-height', `${rotated ? innerWidth : innerHeight}px`);
+  }
  };
  syncReviewOrientation(); window.addEventListener('resize', syncReviewOrientation);
  if(import.meta.hot) import.meta.hot.dispose(() => window.removeEventListener('resize', syncReviewOrientation));
@@ -51,6 +62,9 @@ const mapState={x:number('mapX',0),z:number('mapZ',320),yaw:number('mapYaw',0)};
 const mapHome=params.has('mapHome')?{id:'preview-home',label:'Nông trại của bạn',x:300,z:182}:null;
 const mapGoal=params.has('mapGoal')?{id:'preview-goal',label:'Tiệm đồ câu',x:116.9,z:-16}:null;
 function Preview(){
+ const [extraOpen,setExtraOpen]=useState(true);
+ const cropWorld=useRef({farming:{getSelectedCropInfo:()=>({name:'Cà rốt',ready:true,isOwner:true,progress:1}),interactTile:()=>setStatus('Thu hoạch thử')}});
+
  const notices=useGameNotifications(params.has('notificationDemo'));
  const [questsOpen,setQuestsOpen]=useState(params.has('questsDemo'));const [questsTracked,setQuestsTracked]=useState(null);const [questsProgress,setQuestsProgress]=useState({...initial,onboarding:{...initial.onboarding,completed:!params.has('questsLocked')},unlockedPlots:params.has('questsLocked')?0:4,stats:{...initial.stats,harvested:3,planted:2,watered:1},missions:undefined});const [questsReward,setQuestsReward]=useState(null);
  const [feedbackConfirm,setFeedbackConfirm]=useState(params.has('feedbackDemo'));const [feedbackToast,setFeedbackToast]=useState(params.has('feedbackDemo')?'Sẵn sàng chọn nơi xây dựng nông trại.':'');
@@ -66,10 +80,11 @@ function Preview(){
  const [rankingOpen,setRankingOpen]=useState(params.has('rankingDemo'));
  const [settingsOpen,setSettingsOpen]=useState(params.has('settingsDemo'));const [muted,setMuted]=useState(false);const [quality,setQuality]=useState('ultra');const [camera,setCamera]=useState('explore');
  const [phoneDemoOpen,setPhoneDemoOpen]=useState(params.has('phoneDemo'));
- const [noticeRewards,setNoticeRewards]=useState({daily:[],codes:[]});const [noticeOpen,setNoticeOpen]=useState(params.has("noticeDemo"));const [fashionOpen,setFashionOpen]=useState(false);const [bagOpen,setBagOpen]=useState(false);const [status,setStatus]=useState('');const [mapOpen,setMapOpen]=useState(false);const [progress]=useState(initial);const world=useRef({getPlayerState:()=>mapState});
+ const [noticeRewards,setNoticeRewards]=useState(()=>({daily:Array.from({length:Math.min(6,Math.max(0,Number(params.get('noticeDay')||1)-1))},(_,i)=>new Date(Date.now()-(i+1)*86400000).toISOString().slice(0,10)),codes:[]}));const [noticeOpen,setNoticeOpen]=useState(params.has("noticeDemo"));const [fashionOpen,setFashionOpen]=useState(params.has('fashionDemo'));const [bagOpen,setBagOpen]=useState(params.has('bagDemo'));const [status,setStatus]=useState('');const [mapOpen,setMapOpen]=useState(params.has('mapDemo'));const [progress]=useState(initial);const world=useRef({getPlayerState:()=>mapState});
  const attendance=useDailyAttendance(noticeRewards.daily);
  const signal=label=>()=>setStatus(label);
- return <main className={`game-shell pt-game-shell compact-game-hud ${mapOpen||bagOpen||fashionOpen||noticeOpen||settingsOpen||guideOpen||dealerOpen||marketOpen||loungeOpen||suppliesOpen||fishingOpen||questsOpen?'hud-modal-open':''}`} style={{height:'100dvh',background:'linear-gradient(#a5d4e5 0 24%,#77b3c9 24% 29%,#cfbe88 29% 36%,#789451 36% 100%)'}}>
+ const extraModal=extraOpen&&['profileDemo','friendsDemo','arrivalDemo'].some(flag=>params.has(flag));
+ return <main id="game-viewport" className={`game-shell pt-game-shell compact-game-hud ${feedbackConfirm||extraModal||mapOpen||bagOpen||fashionOpen||noticeOpen||settingsOpen||guideOpen||dealerOpen||marketOpen||loungeOpen||suppliesOpen||fishingOpen||questsOpen?'hud-modal-open':''}`} style={{height:'100dvh',background:'linear-gradient(#a5d4e5 0 24%,#77b3c9 24% 29%,#cfbe88 29% 36%,#789451 36% 100%)'}}>
  <div aria-hidden="true" style={{position:"absolute",inset:0,background:"linear-gradient(#a5d4e5 0 24%,#77b3c9 24% 29%,#cfbe88 29% 36%,#789451 36% 100%)"}} />
  <div aria-hidden="true" style={{position:'absolute',inset:'36% 0 auto',height:24,background:'#acaa92',borderBottom:'8px solid #666e56'}} />
  {accountConfirm && <GameConfirm title={`${accountConfirm}?`} message="Bản xem thử: không thay đổi tài khoản hoặc xoá dữ liệu." confirmLabel={accountConfirm} asset={accountConfirm === "Đăng xuất" ? "logout" : "quest"} onCancel={()=>setAccountConfirm(null)} onConfirm={()=>setAccountConfirm(null)}/> }
@@ -95,6 +110,13 @@ function Preview(){
  {landOpen&&<div className="panel-backdrop"><section className="game-panel land-game-panel" role="dialog" aria-modal="true" aria-label="Đất đai"><header><div><small>VĂN PHÒNG ĐẤT ĐAI</small><h2>Mua đất & Quyền sử dụng</h2></div><button aria-label="Đóng đất đai" onClick={()=>setLandOpen(false)}>×</button></header><LandMarket lots={demoLots} playerId="demo-owner" ownsLand={params.has('landOwned')} coins={7200} pending={false} onBuy={()=>setStatus('Mua thử · không ghi tài khoản')} onVisit={()=>setStatus('Đến làng thử')}/></section></div>}
  {fishingOpen && <FishingShopModal conditions={getFishingConditions()} progress={fishingProgress} connected={!params.has('fishingOffline')} onClose={()=>setFishingOpen(false)} onSellAll={()=>setStatus('Bán cá thử')} onAction={(action,{id})=>{setStatus(`Thử ${action}: ${id||'không mồi'}`);if(action==='fishing_equip')setFishingProgress(p=>({...p,fishing:{...p.fishing,...(id?.startsWith('rod_')?{equippedRod:id}:{equippedBait:id})}}));}}/>}
  {suppliesOpen && <FarmSuppliesModal progress={suppliesProgress} connected={!params.has("suppliesOffline")} onChooseCrop={crop=>setSuppliesProgress(p=>({...p,selectedCrop:crop.id}))} onClose={()=>setSuppliesOpen(false)}/> }
+ {params.has('busDemo')&&<BusTransitHUD busTransit={{activeRide:{routeCode:'L01',routeName:'Nội làng Bình Minh',bodyColor:'#059669',isDwelling:true,currentStation:'Đường nông trại 3',nextStation:'Đường nông trại 4',dwellRemaining:8,speed:0}}} onAlight={signal('Xuống xe thử')} onToggleCinematicTour={signal('Góc nhìn thử')}/>}
+ {params.has('fishHudDemo')&&<FishingHUD conditions={getFishingConditions()} fishing={fishingProgress.fishing} connected water={{zone:'lake'}} send={signal('Câu cá thử')} cast={signal('Quăng cần thử')} clearCaught={()=>{}}/>}
+ {params.has('herdDemo')&&<LivestockActionHUD target={{species:'chicken',isOwner:true}} animals={[]} progress={progress} connected onAction={signal('Chăm nuôi thử')} onClose={signal('Đóng chuồng')}/>}
+ {params.has('cropDemo')&&<CropHarvestHUD worldRef={cropWorld}/>}
+ {extraOpen&&params.has('friendsDemo')&&<FriendsPanel friends={Array.from({length:8},(_,i)=>({playerId:`demo-${i}`,name:`Cư dân ${i+1}`,progress:{level:i+1}}))} connected playerId="preview" onClose={()=>setExtraOpen(false)} onProfile={signal('Hồ sơ thử')} onFriend={signal('Kết bạn thử')}/>}
+ {extraOpen&&params.has('profileDemo')&&<PlayerProfileModal profile={{playerId:'preview',name:'Nông dân Bình Minh',level:5,coins:1248,xp:500,joinedAt:Date.now(),bio:'Một ngày vui ở nông trại',stats:{}}} own connected onClose={()=>setExtraOpen(false)} onSave={signal('Lưu thử')}/>}
+ {extraOpen&&params.has('arrivalDemo')&&<CharacterCreationModal onSubmit={signal('Tạo nhân vật thử')} onCheckName={async()=>({available:true})}/>}
  <VehicleQuickMenu vehicles={[{id:'walk',name:'Đi bộ',speed:4,icon:<HudIcon mobile asset="sprint"/>},{id:'bike',name:'Xe đạp',speed:8,icon:<HudIcon asset="bike"/>}]} owned={['bike']} current="walk" connected onSelect={signal('Chọn phương tiện')} />
  <HudContextAction action={{label:'Chọn đất nông trại',hint:'Xem các lô đất đang bán',onClick:signal('Mở chợ đất')}} />
  <div className="world-action-controls pt-action-bubbles"><button className="pt-action-bubble pt-jump-bubble" aria-label="Nhảy" onClick={signal('Nhảy')}><HudIcon mobile asset="jump"/><b>Nhảy</b></button><button className="pt-action-bubble pt-run-bubble" aria-label="Chạy" onClick={signal('Chạy')}><HudIcon mobile asset="sprint"/><b>Chạy</b></button></div>

@@ -1,0 +1,152 @@
+/* Final mobile layout rules: fixed window chrome, reachable scrollable content.
+   Width-only portrait rules must never collapse a short landscape body. */
+@media (orientation:landscape) and (max-height:600px) {
+ html.is-mobile-device body .game-shell :is(.farm-dealer-header,.farm-market-header,.farm-supplies-header,.farm-settings-header,.farm-guide-header,.ranking-header,.mission-journal-header,.profile-header,.farm-lounge-header,.farm-map-header){padding:6px 12px!important;gap:8px;flex-wrap:nowrap;flex-shrink:0}
+ html.is-mobile-device body .game-shell :is(.farm-dealer-header,.farm-market-header,.farm-supplies-header,.farm-settings-header,.farm-guide-header,.ranking-header,.mission-journal-header,.profile-header,.farm-lounge-header,.farm-map-header) h2{font-size:19px!important;line-height:1.2;margin:0}
+ html.is-mobile-device body .game-shell :is(.farm-dealer-header,.farm-market-header,.farm-supplies-header,.farm-settings-header,.farm-guide-header,.ranking-header,.mission-journal-header,.farm-lounge-header,.farm-map-header) small{display:none}
+ html.is-mobile-device body .game-shell :is(.farm-dealer-logo,.farm-market-logo,.ranking-emblem){width:34px;height:34px;flex:none}
+ html.is-mobile-device body .game-shell :is(.farm-dealer-logo,.farm-market-logo,.ranking-emblem) img{width:30px!important;height:30px!important}
+ html.is-mobile-device body .game-shell :is(.farm-dealer-close,.farm-market-close,.ranking-close,.farm-guide-close,.farm-settings-close,.farm-supplies-close,.farm-lounge-close){width:36px;height:36px;flex:none;font-size:24px;padding:0}
+ html.is-mobile-device body .game-shell :is(.farm-dealer-wallet,.farm-market-wallet,.mission-journal-wallet){order:0;flex:0 0 auto;width:auto!important;margin:0 0 0 auto;padding:5px 8px}
+ html.is-mobile-device body .game-shell :is(.farm-dealer-wallet,.farm-market-wallet) img{width:22px!important;height:22px!important}
+ html.is-mobile-device body .game-shell :is(.farm-dealer-footer,.farm-market-footer,.farm-guide-footer,.ranking-mine,.mission-journal-footer){padding:6px 12px!important;flex-shrink:0;gap:8px}
+ html.is-mobile-device body .game-shell :is(.farm-dealer-footer,.farm-market-footer,.farm-guide-footer,.ranking-mine) button{min-height:38px;font-size:12px;padding:5px 12px}
+ html.is-mobile-device body .game-shell :is(.farm-market-tabs,.farm-settings-tabs,.farm-guide-tabs,.ranking-tabs,.mission-tabs){padding:5px 10px;gap:6px;flex-shrink:0}
+ html.is-mobile-device body .game-shell :is(.farm-market-tabs,.ranking-tabs,.mission-tabs) button{padding:5px 7px;font-size:11px;min-height:34px;line-height:1.2}
+ html.is-mobile-device body .game-shell .farm-dealer-body{display:grid!important;grid-template-columns:minmax(190px,.8fr) minmax(0,1.2fr);grid-template-rows:minmax(0,1fr);min-height:0;overflow:hidden}
+ html.is-mobile-device body .game-shell .farm-dealer-catalogue{display:flex;flex-direction:column;min-height:0;padding:8px;border-right:1px solid #d6e8d8}
+ html.is-mobile-device body .game-shell .farm-dealer-filters{padding:0;margin-bottom:7px;flex:none}
+ html.is-mobile-device body .game-shell .farm-dealer-filters button{padding:5px;font-size:11px;min-height:34px}
+ html.is-mobile-device body .game-shell .farm-dealer-list{display:flex;flex-direction:column;flex:1;min-height:0;overflow-x:hidden;overflow-y:auto;touch-action:pan-y;gap:6px}
+ html.is-mobile-device body .game-shell .farm-dealer-list>button{display:flex;flex-direction:row;align-items:center;flex:none;min-height:61px;padding:6px;gap:8px;text-align:left}
+ html.is-mobile-device body .game-shell .farm-dealer-thumb{width:48px;height:44px;flex:none}
+ html.is-mobile-device body .game-shell .farm-dealer-item-copy{flex:1;min-width:0}
+ html.is-mobile-device body .game-shell .farm-dealer-item-copy b{font-size:12px}
+ html.is-mobile-device body .game-shell .farm-dealer-detail{display:flex;flex-direction:column;min-height:0;overflow-y:auto!important;overflow-x:hidden;padding:8px;touch-action:pan-y}
+ html.is-mobile-device body .game-shell .vehicle-preview{min-height:85px;flex:1 0 85px;height:auto}
+ html.is-mobile-device body .game-shell .vehicle-preview-controls{padding:3px 6px}
+ html.is-mobile-device body .game-shell .vehicle-preview-controls small{display:none}
+ html.is-mobile-device body .game-shell .farm-dealer-info{flex:none;padding:8px;margin-top:5px}
+ html.is-mobile-device body .game-shell .farm-dealer-info h3{font-size:17px;line-height:1.2;margin:0}
+ html.is-mobile-device body .game-shell .farm-dealer-info>small,.farm-dealer-specs{display:none}
+ html.is-mobile-device body .game-shell .farm-dealer-buy-row{margin-top:5px;gap:8px}
+ html.is-mobile-device body .game-shell .farm-dealer-buy-row>button{min-height:40px}
+ html.is-mobile-device body .game-shell .farm-market-content:has(.farm-market-offers){display:block!important;min-height:0;overflow-y:auto!important;overflow-x:hidden;padding:10px;touch-action:pan-y}
+ html.is-mobile-device body .game-shell .farm-market-banner{margin-bottom:8px}
+ html.is-mobile-device body .game-shell .farm-market-offers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;gap:9px;flex:none}
+ html.is-mobile-device body .game-shell .farm-market-offer{display:grid;grid-template-columns:52px minmax(0,1fr);min-height:112px;height:auto;padding:8px;gap:8px;overflow:visible;align-items:center}
+ html.is-mobile-device body .game-shell .farm-market-product-art{width:52px;height:52px}
+ html.is-mobile-device body .game-shell .farm-market-product-art img{width:52px!important;height:52px!important}
+ html.is-mobile-device body .game-shell .farm-market-product-copy h3{font-size:13px;line-height:1.2}
+ html.is-mobile-device body .game-shell .farm-market-product-copy button{min-height:36px}
+ html.is-mobile-device body .game-shell .ranking-body{flex:1;min-height:0;overflow-y:auto;padding:8px 12px;touch-action:pan-y}
+ html.is-mobile-device body .game-shell .ranking-podium{padding-top:10px;margin:0 0 10px;gap:8px}
+ html.is-mobile-device body .game-shell .ranking-winner{min-height:0;padding:9px 6px 0;gap:3px}
+ html.is-mobile-device body .game-shell .ranking-winner .ranking-portrait{width:40px;height:40px}
+ html.is-mobile-device body .game-shell .ranking-winner-name{font-size:11px;line-height:1.2}
+ html.is-mobile-device body .game-shell .ranking-winner strong{font-size:12px;line-height:1.2}
+ html.is-mobile-device body .game-shell .ranking-podium-step{margin-top:4px;padding:3px;font-size:7px}
+ html.is-mobile-device body .game-shell .ranking-medal{width:22px;height:22px;font-size:13px}
+ html.is-mobile-device body .game-shell .ranking-mine .ranking-portrait{width:32px;height:32px}
+ html.is-mobile-device body .game-shell .farm-guide-content{min-height:0;overflow-y:auto;touch-action:pan-y;padding:10px}
+ html.is-mobile-device body .game-shell .farm-lounge-body{display:grid!important;grid-template-columns:minmax(165px,.65fr) minmax(0,1.35fr);min-height:0;overflow:hidden}
+ html.is-mobile-device body .game-shell .farm-lounge-games{min-height:0;overflow-y:auto;padding:8px;touch-action:pan-y}
+ html.is-mobile-device body .game-shell .farm-lounge-detail{display:flex;flex-direction:column;min-height:0;overflow-y:auto!important;padding:8px!important;touch-action:pan-y}
+ html.is-mobile-device body .game-shell .farm-lounge-actions{position:static!important;flex:none;margin-top:8px;padding:5px 0;box-shadow:none}
+ html.is-mobile-device body .game-shell .farm-lounge-actions button{min-height:38px}
+ html.is-mobile-device body .game-shell .farm-lounge-rooms{flex:none;overflow:visible}
+}
+@media (max-width:700px),(max-width:1100px) and (max-height:600px){
+ html.is-mobile-device body .game-shell :is(.farm-market-content,.farm-dealer-detail,.farm-guide-content,.ranking-body,.farm-notice-content,.mission-list,.farm-settings-body){overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+ html.is-mobile-device body .game-shell :is(.farm-giftcode-input-row input,.farm-partner-form input,.avatar-chat-input){font-size:16px}
+}
+@media (orientation:landscape) and (max-height:600px){
+ html.is-mobile-device body .game-shell .pt-inv-header{padding:6px 12px!important;gap:8px;flex-shrink:0}
+ html.is-mobile-device body .game-shell .pt-inv-header h2{font-size:19px;line-height:1.2;margin:0}
+ html.is-mobile-device body .game-shell .pt-inv-header p{display:none}
+ html.is-mobile-device body .game-shell .pt-inv-tabs{padding:4px 10px;flex-shrink:0}
+ html.is-mobile-device body .game-shell .pt-inv-tabs button{padding:4px 7px;flex-direction:row;min-height:34px;line-height:1.2}
+ html.is-mobile-device body .game-shell .pt-inv-tab-label small{display:none}
+ html.is-mobile-device body .game-shell .pt-inv-search{padding:5px 10px;flex-shrink:0}
+ html.is-mobile-device body .game-shell .pt-inv-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,.7fr);grid-template-rows:minmax(0,1fr);gap:8px;padding:8px;min-height:0}
+ html.is-mobile-device body .game-shell .pt-inv-grid-container{min-height:0;overflow-y:auto!important;overflow-x:hidden;touch-action:pan-y}
+ html.is-mobile-device body .game-shell .pt-inv-detail-card{display:flex;min-height:0;max-height:none;overflow-y:auto!important;overflow-x:hidden;padding:8px;touch-action:pan-y}
+ html.is-mobile-device body .game-shell .pt-detail-preview{height:70px;min-height:70px;flex:none}
+ html.is-mobile-device body .game-shell .pt-detail-preview img{max-height:65px}
+ html.is-mobile-device body .game-shell .pt-inv-detail-card .pt-btn-use{flex-shrink:0;min-height:40px}
+ html.is-mobile-device body .game-shell .farm-supplies-detail{min-height:0;overflow-y:auto!important;overflow-x:hidden;touch-action:pan-y}
+}
+@media(max-width:700px){
+ html.is-mobile-device body .game-shell .farm-market-content:has(.farm-market-offers){display:block!important;overflow-y:auto!important;overflow-x:hidden;touch-action:pan-y}
+ html.is-mobile-device body .game-shell .farm-market-offers{grid-template-rows:none;flex:none;align-items:stretch}
+ html.is-mobile-device body .game-shell .farm-market-offer{min-height:172px;height:auto;overflow:visible}
+ html.is-mobile-device body .game-shell .farm-market-product-copy button{min-height:40px}
+}
+@media(max-width:700px) and (orientation:landscape){html.is-mobile-device body .game-shell .farm-market-offer{min-height:112px}}
+/* On a phone with browser chrome open, decorative attendance chrome yields to rewards. */
+@media(orientation:landscape) and (max-height:340px){
+ html.is-mobile-device body .game-shell .attendance-mode .farm-attendance-banner{display:none}
+ html.is-mobile-device body .game-shell .attendance-mode .farm-attendance{gap:5px}
+ html.is-mobile-device body .game-shell .attendance-mode .farm-notice-tabs{padding:3px 10px!important}
+ html.is-mobile-device body .game-shell .attendance-mode .farm-notice-tabs button{padding:3px 6px;min-height:28px}
+ html.is-mobile-device body .game-shell .attendance-mode .farm-notice-header{padding:4px 10px!important}
+ html.is-mobile-device body .game-shell .attendance-mode .farm-attendance-footer{padding:5px 8px}
+ html.is-mobile-device body .game-shell .attendance-mode .farm-attendance-footer p:not([role=status]){display:none}
+ html.is-mobile-device body .game-shell .attendance-mode .farm-notice-primary{min-height:36px;padding:4px 12px}
+ html.is-mobile-device body .game-shell .attendance-mode .farm-day>img{width:22px!important;height:22px!important}
+ html.is-mobile-device body .game-shell .attendance-mode .farm-day.milestone>img{width:25px!important;height:25px!important}
+ html.is-mobile-device body .game-shell .attendance-mode .farm-day strong{font-size:15px}
+ html.is-mobile-device body .game-shell .attendance-mode .farm-day{gap:2px;padding:3px}
+ html.is-mobile-device body .game-shell .attendance-mode .farm-notice-content{padding:6px 10px}
+}
+@media(orientation:landscape) and (max-height:600px){
+ html.is-mobile-device body .game-shell .arrival-screen .pt-studio-controls fieldset{flex:1;min-height:0;overflow-y:auto!important;overflow-x:hidden;touch-action:pan-y;overscroll-behavior:contain}
+ html.is-mobile-device body .game-shell .arrival-screen .pt-input-with-dice input{font-size:16px!important}
+ html.is-mobile-device body .game-shell .fashion-modal-body{flex:1;min-height:0;height:auto!important;overflow:hidden;grid-template-columns:minmax(200px,.75fr) minmax(0,1.25fr)!important}
+ html.is-mobile-device body .game-shell .fashion-preview-column{min-height:0;height:100%;overflow-y:auto!important;overflow-x:hidden;justify-content:flex-start;padding:6px!important;touch-action:pan-y}
+ html.is-mobile-device body .game-shell .fashion-viewport-container{position:relative!important;inset:auto;height:160px!important;min-height:160px!important;flex:none}
+ html.is-mobile-device body .game-shell .fashion-viewport-tools.top-right{gap:3px;top:5px;right:5px}
+ html.is-mobile-device body .game-shell .fashion-angle-btn{padding:3px 6px;font-size:10px;line-height:1.2}
+ html.is-mobile-device body .game-shell .fashion-pose-bar,html.is-mobile-device body .game-shell .fashion-cart-summary{position:relative!important;inset:auto!important;flex:none;margin:6px 0 0;width:100%;padding:6px}
+ html.is-mobile-device body .game-shell .fashion-catalog-layout{min-height:0;height:100%}
+ html.is-mobile-device body .game-shell .fashion-tab-content{min-height:0;overflow-y:auto!important;overflow-x:hidden;touch-action:pan-y}
+}
+@media(orientation:landscape) and (max-height:600px){
+ html.is-mobile-device body .game-shell .fashion-modal-header{display:flex;flex-wrap:nowrap;padding:5px 10px!important;gap:7px;flex-shrink:0}
+ html.is-mobile-device body .game-shell .fashion-mode-switch{order:0;width:auto!important;margin:0;flex:0 1 auto;padding:3px}
+ html.is-mobile-device body .game-shell .fashion-mode-pill{padding:5px 8px;font-size:11px;min-height:34px}
+ html.is-mobile-device body .game-shell .fashion-brand h2{font-size:17px;line-height:1.2}
+ html.is-mobile-device body .game-shell .fashion-header-right{margin-left:auto}
+ html.is-mobile-device body .game-shell .fashion-modal-body{display:grid!important;flex-direction:row}
+ html.is-mobile-device body .game-shell .fashion-catalog-layout{display:grid!important;grid-template-columns:minmax(0,1fr) 58px!important;grid-template-rows:minmax(0,1fr)}
+ html.is-mobile-device body .game-shell .fashion-catalog-main{grid-column:1;grid-row:1;display:flex;min-height:0}
+ html.is-mobile-device body .game-shell .fashion-vertical-rail{grid-column:2;grid-row:1;order:0;display:flex;flex-direction:column;min-height:0;overflow-y:auto;overflow-x:hidden;width:58px;height:100%;align-items:center;padding:5px 2px;touch-action:pan-y}
+ html.is-mobile-device body .game-shell .fashion-catalog-top-bar{padding:6px 8px;flex-direction:column;align-items:flex-start;gap:5px;flex-shrink:0}
+ html.is-mobile-device body .game-shell .fashion-filter-row{display:flex;flex-wrap:wrap;gap:3px;max-width:100%}
+ html.is-mobile-device body .game-shell .fashion-viewport-container{height:185px!important;min-height:185px!important}
+ html.is-mobile-device body .game-shell .fashion-viewport-tools.bottom-center{bottom:8px}
+}
+@media(orientation:landscape) and (max-height:600px){
+ html.is-mobile-device body .game-shell .fashion-brand{order:0;flex:none}
+ html.is-mobile-device body .game-shell .fashion-mode-switch{order:1;margin-left:auto}
+ html.is-mobile-device body .game-shell .fashion-header-right{order:2;margin-left:0;flex:none}
+ html.is-mobile-device body .game-shell .fashion-mode-pill span{white-space:nowrap}
+ html.is-mobile-device body .game-shell .fashion-vertical-rail{justify-content:flex-start;gap:4px}
+ html.is-mobile-device body .game-shell .rail-tab-btn{flex:0 0 52px;min-height:52px;width:48px;margin:0}
+}
+@media(orientation:landscape) and (max-height:600px){
+ html.is-mobile-device body .game-shell .farm-map-header p{display:none}
+ html.is-mobile-device body .game-shell .farm-map-header>img{width:32px!important;height:32px!important}
+ html.is-mobile-device body .game-shell .farm-map-close{width:36px;height:36px;font-size:24px;flex:none}
+ html.is-mobile-device body .game-shell .farm-map-toolbar{display:flex;flex-direction:row;align-items:center;padding:5px 10px;gap:8px;flex:none}
+ html.is-mobile-device body .game-shell .farm-map-toolbar nav{min-width:0;flex:1;display:flex;gap:4px;overflow-x:auto}
+ html.is-mobile-device body .game-shell .farm-map-toolbar nav button{flex:none;min-height:34px;padding:4px 8px;font-size:11px}
+ html.is-mobile-device body .game-shell .farm-map-toolbar input{width:160px;min-width:0;flex:0 1 160px;font-size:16px;min-height:34px;padding:4px 8px}
+ html.is-mobile-device body .game-shell .farm-map-workspace{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(180px,.65fr)!important;grid-template-rows:minmax(0,1fr)!important;flex:1;min-height:0;overflow:hidden}
+ html.is-mobile-device body .game-shell .farm-map-canvas{min-height:0!important;height:100%}
+ html.is-mobile-device body .game-shell .farm-map-list{height:100%;min-height:0!important;max-height:none!important;overflow-y:auto;touch-action:pan-y}
+ html.is-mobile-device body .game-shell .farm-map-list button{min-height:53px;padding:6px;gap:5px}
+ html.is-mobile-device body .game-shell .farm-map-list button b{font-size:11px}
+ html.is-mobile-device body .game-shell .farm-map-list button small{font-size:9px}
+ html.is-mobile-device body .game-shell .farm-map-footer{flex:none;min-height:32px;padding:5px 10px;flex-direction:row;gap:8px}
+}

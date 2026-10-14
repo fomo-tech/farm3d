@@ -59,7 +59,8 @@
         min-height: 100dvh !important;
         overflow: hidden !important;
       }
-      #landscape-guard,
+      #landscape-guard { display: none !important; }
+      html.is-mobile-device.mobile-portrait:not(.guard-dismissed) #landscape-guard:not(.is-dismissed) { display: flex !important; }
       html.guard-dismissed #landscape-guard,
       #landscape-guard.is-dismissed {
         display: none !important;
@@ -88,110 +89,10 @@
       </div>
     </div>
 
-    <!-- Play Together Style Orientation Selector & Guide (Mobile Portrait) -->
-    <section id="landscape-guard" class="pt-landscape-guard" aria-live="polite">
-      <!-- Decorative Floating Background Clouds & Stars -->
-      <div class="pt-guard-bg-elements" aria-hidden="true">
-        <div class="pt-guard-cloud pt-cloud-1"></div>
-        <div class="pt-guard-cloud pt-cloud-2"></div>
-        <div class="pt-guard-cloud pt-cloud-3"></div>
-        <div class="pt-guard-star pt-star-1">✦</div>
-        <div class="pt-guard-star pt-star-2">★</div>
-        <div class="pt-guard-star pt-star-3">✦</div>
-      </div>
 
-      <!-- Main Play Together Modal Card -->
-      <div class="pt-guard-card">
-        <!-- Top Pill Tag -->
-        <div class="pt-guard-pill">
-          <span class="pt-guard-pill-icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" fill="#fde047" stroke="#ca8a04" stroke-width="1.5"/></svg>
-          </span>
-          <span>VIBE CITY · TỰ DO XOAY MÀN HÌNH</span>
-        </div>
 
-        <!-- Dual Mode Visual Stage (Portrait & Landscape side-by-side) -->
-        <div class="pt-guard-dual-stage">
-          <div class="pt-guard-mode-card is-portrait-mode">
-            <div class="pt-mode-phone-wrap">
-              <svg width="26" height="42" viewBox="0 0 28 46" fill="none">
-                <rect x="1.5" y="1.5" width="25" height="43" rx="6" fill="#0f172a" stroke="#ffffff" stroke-width="2.5" />
-                <rect x="9" y="4" width="10" height="2" rx="1" fill="#475569" />
-                <rect x="3.5" y="8" width="21" height="30" rx="3" fill="#4ade80" />
-                <circle cx="14" cy="41" r="1.5" fill="#94a3b8" />
-              </svg>
-            </div>
-            <span class="pt-mode-label">MÀN ĐỨNG</span>
-            <small class="pt-mode-sub">1 tay tiện lợi</small>
-          </div>
-
-          <div class="pt-guard-or-divider">
-            <span class="pt-or-badge">HOẶC</span>
-            <span class="pt-or-arrows">⇄</span>
-          </div>
-
-          <div class="pt-guard-mode-card is-landscape-mode">
-            <div class="pt-mode-phone-wrap">
-              <svg width="42" height="26" viewBox="0 0 46 28" fill="none">
-                <rect x="1.5" y="1.5" width="43" height="25" rx="6" fill="#0f172a" stroke="#ffffff" stroke-width="2.5" />
-                <rect x="4" y="9" width="2" height="10" rx="1" fill="#475569" />
-                <rect x="8" y="3.5" width="30" height="21" rx="3" fill="#38bdf8" />
-                <circle cx="41" cy="14" r="1.5" fill="#94a3b8" />
-              </svg>
-            </div>
-            <span class="pt-mode-label">MÀN NGANG</span>
-            <small class="pt-mode-sub">Góc nhìn 3D rộng</small>
-          </div>
-        </div>
-
-        <!-- Headings & Content -->
-        <h2 class="pt-guard-title">CHỌN CHẾ ĐỘ TRẢI NGHIỆM</h2>
-        <p class="pt-guard-desc">Thị trấn Vibe City hỗ trợ hoàn hảo cả <b>Màn hình đứng</b> lẫn <b>Màn hình ngang</b>. Bạn muốn bắt đầu thế nào?</p>
-
-        <!-- Chunky 3D Candy Action Buttons -->
-        <div class="pt-guard-actions">
-          <!-- Button 1: Play in Portrait Mode (Vibrant Green Candy Button) -->
-          <button id="landscape-dismiss" class="pt-guard-btn-portrait" type="button">
-            <span class="btn-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <rect x="5" y="2" width="14" height="20" rx="4" fill="#ffffff" stroke="#15803d" stroke-width="2" />
-                <circle cx="12" cy="18" r="1.5" fill="#15803d" />
-                <rect x="9" y="5" width="6" height="1.5" rx="0.75" fill="#15803d" />
-              </svg>
-            </span>
-            <div class="btn-text-wrap">
-              <strong>VÀO CHƠI MÀN HÌNH ĐỨNG</strong>
-              <small>Thao tác 1 tay · Chơi ngay lập tức</small>
-            </div>
-            <span class="btn-arrow">➜</span>
-          </button>
-
-          <!-- Button 2: Rotate to Landscape Mode (Sky Blue Candy Button) -->
-          <button id="landscape-start" class="pt-guard-btn-landscape" type="button">
-            <span class="btn-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <rect x="2" y="5" width="20" height="14" rx="4" fill="#ffffff" stroke="#0369a1" stroke-width="2" />
-                <circle cx="18" cy="12" r="1.5" fill="#0369a1" />
-                <path d="M7 10L10 13M10 10L7 13" stroke="#0369a1" stroke-width="1.8" stroke-linecap="round" />
-              </svg>
-            </span>
-            <div class="btn-text-wrap">
-              <strong>Xoay Ngang Máy (Toàn Cảnh 3D)</strong>
-              <small>Góc nhìn rộng · Tự động xoay khi lật máy</small>
-            </div>
-          </button>
-        </div>
-
-        <!-- Dynamic Device Hint -->
-        <div id="landscape-device-hint" class="pt-guard-hint">
-          <span class="hint-icon">💡</span>
-          <span class="hint-text">Mẹo: Bạn có thể lật xoay giữa màn đứng và màn ngang bất cứ lúc nào trong khi chơi!</span>
-        </div>
-      </div>
-    </section>
-
-    <script src="/orientation.js?v=chrome-landscape-v19"></script>
-    <script src="/mobile-debug.js?v=url-debug-v17"></script>
+    <script src="/orientation.js?v=mobile-viewport-v23"></script>
+    <script src="/mobile-debug.js?v=fps-debug-v18"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

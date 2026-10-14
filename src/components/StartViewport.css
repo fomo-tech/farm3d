@@ -1,0 +1,19 @@
+/* Start owns one logical viewport; browser orientation never sizes its content. */
+html body #root .pt-start-screen-backdrop.farm-start-v2{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;max-height:100%!important;box-sizing:border-box!important;padding:12px!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:auto!important}
+html body #root .farm-start-v2 .pt-start-center-content{position:relative!important;inset:auto!important;width:100%!important;max-width:760px!important;height:auto!important;min-height:0!important;margin:auto!important;padding:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:16px!important;flex:none!important}
+html body #root .farm-start-v2 .pt-generated-logo-lockup{width:min(280px,80%)!important;max-width:280px!important;height:auto!important;min-height:0!important;margin:0!important;flex:none!important;animation:none!important}
+html body #root .farm-start-v2 .pt-generated-brand-logo{display:block!important;width:100%!important;height:auto!important;max-height:210px!important;object-fit:contain!important;animation:none!important}
+html body #root .farm-start-v2 :is(.pt-ready-action-stage,.pt-loading-console,.pt-error-card){position:relative!important;inset:auto!important;display:flex!important;flex-direction:column!important;width:min(340px,100%)!important;max-width:340px!important;min-width:0!important;height:auto!important;margin:0!important;padding:12px!important;gap:10px!important;box-sizing:border-box!important;flex:none!important;opacity:1!important;visibility:visible!important;transform:none!important;animation:none!important}
+html body #root .farm-start-v2 .pt-play-now-btn{min-height:48px!important}
+html body #root .farm-start-v2 .pt-loading-console{padding:8px!important}
+@media (orientation:landscape){
+ html body #root .farm-start-v2 .pt-start-center-content{flex-direction:row!important;gap:24px!important}
+ html body #root .farm-start-v2 .pt-generated-logo-lockup{width:40%!important;flex:0 1 280px!important}
+ html body #root .farm-start-v2 :is(.pt-ready-action-stage,.pt-loading-console,.pt-error-card){width:48%!important;flex:0 1 340px!important}
+ html body #root .farm-start-v2 .pt-generated-brand-logo{max-height:calc(var(--game-viewport-height,100dvh) - 48px)!important}
+}
+
+html.mobile-landscape body #root .farm-start-v2 .pt-start-center-content{flex-direction:row!important;gap:24px!important}
+html.mobile-landscape body #root .farm-start-v2 .pt-generated-logo-lockup{width:40%!important;flex:0 1 280px!important}
+html.mobile-landscape body #root .farm-start-v2 :is(.pt-ready-action-stage,.pt-loading-console,.pt-error-card){width:48%!important;flex:0 1 340px!important}
+html body #root .pt-start-screen-backdrop.farm-start-v2{transform:none!important;opacity:1!important;visibility:visible!important;animation:none!important;isolation:auto!important}

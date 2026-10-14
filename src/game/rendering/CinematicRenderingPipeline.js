@@ -13,7 +13,8 @@ export function resolveAntialiasSamples(quality, supportedSamples = 1) {
 }
 
 export function resolveMobileAntialiasSamples(quality, supportedSamples = 1) {
-  return Math.min(quality === 'eco' ? 1 : 2, Math.max(1, supportedSamples));
+  // Keep FXAA on every phone preset; allocate multisample targets only on explicit Ultra.
+  return Math.min(quality === 'ultra' ? 2 : 1, Math.max(1, supportedSamples));
 }
 
 export function createCinematicRenderingPipeline(scene, camera, options = {}) {

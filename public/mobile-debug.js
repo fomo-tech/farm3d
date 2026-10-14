@@ -215,10 +215,11 @@
     },
     report(error, source) { report(source || 'APP ERROR', error); },
     stage(stage) {
+      if (!forced) return;
       finishStage(); runtimeStage = stage; stageStartedAt = performance.now();
       if (stage.startsWith('stream job:')) constructionStage = stage;
     },
-    endStage() { finishStage(); runtimeStage = 'outside measured render work'; },
+    endStage() { if (!forced) return; finishStage(); runtimeStage = 'outside measured render work'; },
     snapshot(value) { runtimeSnapshot = value; },
     measure(name, callback) {
       const start = performance.now();
@@ -346,9 +347,11 @@
       ['boot: farm animals', 15], ['boot: animal pen', 16],
     ];
     const bootStageCode = hasReachedReady ? 10 : bootStages.find(([label]) => stage.includes(label))?.[1] || 0;
-    const sample = { buildRevision: 2026100511, time: Date.now(), fps: runtimeSnapshot.fps, meshes: runtimeSnapshot.meshes,
+    const sample = { buildRevision: 2026101401, time: Date.now(), fps: runtimeSnapshot.fps, meshes: runtimeSnapshot.meshes,
       textures: runtimeSnapshot.textures, materials: runtimeSnapshot.materials, geometries: runtimeSnapshot.geometries,
       activeMeshes: runtimeSnapshot.activeMeshes, bootStageCode, ready: hasReachedReady,
+      sharedGeometries: runtimeSnapshot.sharedGeometry?.saved,
+      geometryQueue: runtimeSnapshot.sharedGeometry?.pending,
       foliagePlacements: foliageStats.placements, foliageDetailBatches: foliageStats.detailBatches,
       foliageLodBatches: foliageStats.lodBatches, schedulerPending: streamStats.pending,
       renderWidth: runtimeSnapshot.renderWidth, renderHeight: runtimeSnapshot.renderHeight,

@@ -53,7 +53,7 @@ export function installNearbyShadows(shadows, getPosition, options = {}) {
   const map = shadows?.getShadowMap?.();
   if (!map) return () => 0;
   const radius = options.radius ?? 36;
-  const maxCasters = options.maxCasters ?? 24;
+  let lastBudget = -1;
   let lastAt = -Infinity;
   let lastX = -999999;
   let lastZ = -999999;
@@ -63,16 +63,18 @@ export function installNearbyShadows(shadows, getPosition, options = {}) {
     const position = getPosition();
     if (!position) return [];
     const now = performance.now();
+    const maxCasters = typeof options.maxCasters === 'function' ? options.maxCasters() : (options.maxCasters ?? 24);
     const dx = position.x - lastX;
     const dz = position.z - lastZ;
     const distMovedSq = dx * dx + dz * dz;
 
     // Chỉ tính toán lại khi nhân vật di chuyển thực tế > 2.5m hoặc sau mỗi 1200ms
-    if (distMovedSq > 6.25 || now - lastAt > 1200) {
+    if (maxCasters !== lastBudget || distMovedSq > 6.25 || now - lastAt > 1200) {
       nearby = selectNearbyShadowCasters(meshes, position, radius, maxCasters);
       lastAt = now;
       lastX = position.x;
       lastZ = position.z;
+      lastBudget = maxCasters;
     }
     return nearby;
   };

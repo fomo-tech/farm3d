@@ -4,6 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "test:mobile-orientation": "node scripts/test-mobile-auto-landscape.mjs && node scripts/test-mobile-viewport.mjs",
+    "test:bus-network": "node scripts/test-bus-network.mjs && node scripts/test-coastal-bus.mjs",
+    "test:ground-bus": "node --import ./scripts/register-browser-assets.mjs scripts/test-ground-bus-regression.mjs && node scripts/test-ground-contact.mjs && node scripts/test-collision-system.mjs",
+    "test:animation": "node scripts/test-animation-gameplay.mjs && node scripts/test-locomotion-gait.mjs && node scripts/test-farm-interactions.mjs && node scripts/test-livestock-interaction.mjs && node scripts/test-owned-herd.mjs",
     "test:world-state-security": "node scripts/test-world-state-security.mjs && node scripts/test-world-delta.mjs",
     "test:auth": "node scripts/test-google-auth.mjs",
     "test:missions": "node scripts/test-missions.mjs && node scripts/test-missions-server.mjs",

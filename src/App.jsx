@@ -290,9 +290,8 @@ export default function App() {
   const missionRewardSerial = useRef(0);
   const [activeTool, setActiveTool] = useState('hand');
   const [boot, setBoot] = useState({ phase: 'idle', error: '' });
-  // Warm the 3D world behind the title screen so the player lands in the game
-  // world instead of waiting on a blank splash after pressing Play.
-  const [startRequested, setStartRequested] = useState(true);
+  // The welcome screen is DOM-only. Allocate the world only after Play.
+  const [startRequested, setStartRequested] = useState(false);
   const [bootProgress, setBootProgress] = useState({ phase: 'init', percentage: 0, message: 'Đang mở cửa thị trấn…', current: 0, total: 40 });
   const [debugEnabled, setDebugEnabled] = useState(() => Boolean(window.__farmDebug?.enabled));
   useEffect(() => { document.documentElement.dataset.debug = String(debugEnabled); }, [debugEnabled]);
@@ -1328,8 +1327,11 @@ export default function App() {
   const updateJoystick = event => {
     const pad = event.currentTarget;
     const rect = pad.getBoundingClientRect();
-    const dx = event.clientX - (rect.left + rect.width / 2);
-    const dy = event.clientY - (rect.top + rect.height / 2);
+    const rotated = document.documentElement.classList.contains('mobile-rotated');
+    const screenDx = event.clientX - (rect.left + rect.width / 2);
+    const screenDy = event.clientY - (rect.top + rect.height / 2);
+    const dx = rotated ? screenDy : screenDx;
+    const dy = rotated ? -screenDx : screenDy;
     const radius = rect.width * 0.32;
     const length = Math.hypot(dx, dy) || 1;
     const scale = Math.min(1, radius / length);
@@ -1617,8 +1619,8 @@ export default function App() {
             {phonePage === 'farm' && <div className="pt-phone-submenu" aria-label="Nông trại">
               <button type="button" onClick={() => { setPhoneOpen(false); setFocusedLand(null); setPanel('land'); }}><HudIcon asset="land" size={28} /> {session.farmId ? 'Đất đai' : 'Mua đất'}</button>
               <button type="button" onClick={() => { setPhoneOpen(false); handleMenuClick('orders'); }}><HudIcon asset="basket" size={28} /> Đơn hàng {ORDERS.some(order => canFillOrder(progress, order)) ? '• Có thể giao' : ''}</button>
-              <button type="button" onClick={() => { setPhoneOpen(false); handleMenuClick('factory'); }}><HudIcon asset="seeds" size={28} /> Chế biến {isFeatureLocked(progress, 'factory') ? '🔒' : ''}</button>
-              <button type="button" onClick={() => { setPhoneOpen(false); handleMenuClick('upgrade'); }}><HudIcon asset="gate" size={28} /> Nâng cấp {isFeatureLocked(progress, 'upgrade') ? '🔒' : ''}</button>
+              <button type="button" onClick={() => { setPhoneOpen(false); handleMenuClick('factory'); }}><HudIcon asset="seeds" size={28} /> Chế biến {isFeatureLocked(progress, 'factory') ? '(Chưa mở)' : ''}</button>
+              <button type="button" onClick={() => { setPhoneOpen(false); handleMenuClick('upgrade'); }}><HudIcon asset="gate" size={28} /> Nâng cấp {isFeatureLocked(progress, 'upgrade') ? '(Chưa mở)' : ''}</button>
             </div>}
 
 

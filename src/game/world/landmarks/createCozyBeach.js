@@ -193,7 +193,7 @@ export function createCozyBeach(scene, shadows, scheduler) {
           cylinder(node,'ice-cart-pole',cartX+.6,2.0,cartZ,1.5,.08,'wood');
           cylinder(node,'ice-cart-umbrella',cartX+.6,2.8,cartZ,.6,2.5,'yellow',.1);
           cylinder(node,'ice-cart-cap',cartX+.6,3.12,cartZ,.15,.4,'pink',.05);
-          sign(node,'KEM MÁT LẠNH 🍦',cartX,1.95,cartZ-.75,2.4,.65);
+          sign(node,'KEM MÁT LẠNH ',cartX,1.95,cartZ-.75,2.4,.65);
           cylinder(node,'ice-cone-1',cartX-.5,1.48,cartZ,.24,.12,'orange',.02);
           sphere(node,'ice-scoop-1',cartX-.5,1.62,cartZ,.18,'pink');
           cylinder(node,'ice-cone-2',cartX,1.48,cartZ,.24,.12,'orange',.02);

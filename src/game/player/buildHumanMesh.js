@@ -9,6 +9,8 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js'
 import { createAvatarHair, HAIR_STYLE_ALIASES } from './createAvatarHair.js';
 import { createFaceTexture } from './createFaceTexture.js';
 import { createLocomotionGait } from './LocomotionGait.js';
+import { actionMotionProgress, actionEnvelope, ACTION_CONTACT } from './ActionMotion.js';
+import { createJumpMotion } from './JumpMotion.js';
 import {
   CHARACTER_ANIMATION_CONFIG,
   CHARACTER_LOD_CONFIG,
@@ -3239,6 +3241,35 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     geometryBudget: CHARACTER_RENDER_CONFIG.geometryBudget,
   };
 
+  const footContactMeshes = [...new Set(shoeOutfitParts.flatMap(parts =>
+    Object.values(parts).flatMap(part => Array.isArray(part) ? part : [part])))];
+  const footContactParents = [...new Set(footContactMeshes.map(mesh => mesh.parent))];
+  function updateFootMatrices() {
+    root.computeWorldMatrix(true);
+    torsoNode.computeWorldMatrix(true);
+    leftLeg.computeWorldMatrix(true);
+    rightLeg.computeWorldMatrix(true);
+    legJoints.forEach(joint => joint.computeWorldMatrix(true));
+    footContactParents.forEach(parent => parent.computeWorldMatrix(true));
+  }
+  function groundFeet() {
+    updateFootMatrices();
+    const supportY = root.getAbsolutePosition().y;
+    let lowest = supportY;
+    for (const mesh of footContactMeshes) {
+      if (mesh.isDisposed() || !mesh.isEnabled()) continue;
+      mesh.computeWorldMatrix(true);
+      lowest = Math.min(lowest, mesh.getBoundingInfo().boundingBox.minimumWorld.y);
+    }
+    if (lowest < supportY) {
+      const verticalScale = root.getWorldMatrix().m[5];
+      if (verticalScale > .001) {
+        torsoNode.position.y += (supportY - lowest + .0001) / verticalScale;
+        updateFootMatrices();
+      }
+    }
+  }
+
   // Stretch clothing only: head and articulated limbs keep their own anchors.
   const bodyAnchors = new Set([headNode, leftArm, rightArm, leftLeg, rightLeg]);
   torsoNode.getChildren().forEach(node => {
@@ -3373,6 +3404,8 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   // Animation cycle & Action State Machine
   let animTimer = 0;
   const locomotionGait=createLocomotionGait();
+  const jumpMotion=createJumpMotion();
+  const previousTorsoPosition=new Vector3();
   const previousTorsoRotation=new Vector3(),previousHeadRotation=new Vector3();
   let activeToolId = 'hand';
   let currentAction = null;
@@ -3387,6 +3420,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
   let onFishingActionEnd = null;
   let fishingPose = false;
   let fishingCatchPose = false;
+  let fishingReeling = false;
 
   function updateToolVisibility() {
     const effective = currentAction;
@@ -3407,7 +3441,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
 
   function animateFishing(delta) {
     const elapsed = fishingAction ? fishingActionTime : animTimer;
-    const progress = fishingAction ? Math.min(1, fishingActionTime / fishingActionDuration) : 1;
+    const progress = fishingAction ? actionMotionProgress(fishingAction, fishingActionTime / fishingActionDuration) : 1;
     const bob = Math.sin(elapsed * 2.6) * 0.025;
     torsoNode.position.y = 0.60 + bob;
     torsoNode.rotation.y = fishingPose ? -0.10 : 0;
@@ -3433,6 +3467,13 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
       leftArm.rotation.y = -0.08;
       leftArm.rotation.z = 0.10;
       headNode.rotation.z = Math.sin(elapsed * 1.8) * 0.025;
+      if (fishingReeling) {
+        const pump=Math.sin(elapsed*7);
+        rightArm.rotation.x-=.12*pump;
+        leftArm.rotation.x-=.16*pump;
+        armJoints[0].rotation.x=-.65-.18*Math.sin(elapsed*9);
+        torsoNode.rotation.x=.045+Math.abs(pump)*.035;
+      }
       return;
     }
 
@@ -3487,6 +3528,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     sproutNode,
     faceSystem,
     joints: { elbows: armJoints, knees: legJoints },
+    groundFeet,
     toolGrip: toolsNode,
     fishingLineOrigin,
 
@@ -3606,6 +3648,7 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
       updateToolVisibility();
     },
     clearFishingPose() {
+      fishingReeling = false;
       fishingAction = null;
       fishingPose = false;
       fishingCatchPose = false;
@@ -3616,22 +3659,30 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
     isFishingBusy() {
       return Boolean(fishingAction || fishingPose);
     },
+    setFishingReeling(active) { fishingReeling=Boolean(active); },
     isPerformingAction() {
       return Boolean(currentAction);
     },
-    animate(delta, isMoving = false, speed = 1.0) {
+    animate(delta, isMoving = false, speed = 1.0, motion = {}) {
       // Preserve existing action timing while lifting the hips for longer legs.
       delta = Math.min(0.1, Math.max(0, Number(delta) || 0));
       animatedJoints.forEach((joint, i) => previousRotations[i].copyFrom(joint.rotation));
       previousTorsoRotation.copyFrom(torsoNode.rotation);
       previousHeadRotation.copyFrom(headNode.rotation);
-      const gait=locomotionGait.update(delta,isMoving&&!currentAction&&!fishingAction&&!fishingPose,speed);
+      previousTorsoPosition.copyFrom(torsoNode.position);
+      const jump=jumpMotion.update(delta,motion.airborne,motion.verticalSpeed);
+      const actionActive=Boolean(currentAction||fishingAction||fishingPose||fishingCatchPose);
+      const gait=locomotionGait.update(delta,isMoving&&!actionActive&&!motion.airborne,speed,motion.turn);
       try {
       torsoNode.position.y = 0.60;
       torsoNode.position.x = 0;
-      if (currentAction || fishingAction || fishingPose) {
-        torsoNode.rotation.y = 0;
-        headNode.rotation.y = 0;
+      if (actionActive) {
+        torsoNode.rotation.set(0,0,0);
+        headNode.rotation.set(0,0,0);
+        leftArm.rotation.set(0,0,0);
+        rightArm.rotation.set(0,0,0);
+        leftLeg.rotation.set(0,0,0);
+        rightLeg.rotation.set(0,0,0);
       }
       animTimer += delta;
       ponytailNode.rotation.x = Math.sin(animTimer * (isMoving ? 8 : 2)) * (isMoving ? 0.12 : 0.025);
@@ -3662,8 +3713,9 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
           fishingPose = false;
           fishingRodNode.setEnabled(false);
           resetFishingPose();
-          onFishingActionEnd?.();
+          const ended=onFishingActionEnd;
           onFishingActionEnd = null;
+          ended?.();
           faceSystem.setExpression('happy');
           updateToolVisibility();
         }
@@ -3673,7 +3725,15 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
       // 1. Xử lý Action Animation chuyên biệt
       if (currentAction) {
         actionTime += delta;
-        const p = Math.min(1.0, actionTime / actionDuration);
+        const rawProgress = Math.min(1.0, actionTime / actionDuration);
+        const p = actionMotionProgress(currentAction,rawProgress);
+        const contact=ACTION_CONTACT[currentAction];
+        if (contact!==undefined && rawProgress>=contact && !actionHitFired) {
+          actionHitFired=true;
+          const hit=onActionHit;
+          onActionHit=null;
+          hit?.();
+        }
 
         if (currentAction === 'till' || currentAction === 'hoe') {
           if (p < 0.4) {
@@ -3689,11 +3749,6 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
             leftArm.rotation.x = -1.6 + strike * 2.4;
             torsoNode.position.y = 0.65 - strike * 0.18;
             torsoNode.rotation.x = strike * 0.35;
-
-            if (p >= 0.55 && !actionHitFired) {
-              actionHitFired = true;
-              onActionHit?.();
-            }
           } else {
             const recover = (p - 0.7) / 0.3;
             rightArm.rotation.x = 1.0 - recover * 1.0;
@@ -3708,22 +3763,12 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
           rightArm.rotation.y = 0.25 * tilt;
           leftArm.rotation.x = -0.3 * tilt;
           torsoNode.rotation.x = 0.20 * tilt;
-
-          if (p >= 0.3 && !actionHitFired) {
-            actionHitFired = true;
-            onActionHit?.();
-          }
         } else if (currentAction === 'seed') {
           const sweep = Math.sin(p * Math.PI);
           rightArm.rotation.x = -0.6 * sweep;
           rightArm.rotation.y = -0.5 * sweep;
           rightArm.rotation.z = 0.4 * sweep;
           torsoNode.rotation.y = 0.2 * sweep;
-
-          if (p >= 0.45 && !actionHitFired) {
-            actionHitFired = true;
-            onActionHit?.();
-          }
         } else if (currentAction === 'feed' || currentAction === 'collect') {
           const bend = Math.sin(p * Math.PI);
           torsoNode.rotation.x = bend * .35;
@@ -3731,7 +3776,6 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
           rightArm.rotation.x = -.9 * bend;
           rightArm.rotation.z = .3 * bend;
           leftArm.rotation.x = -.6 * bend;
-          if (p >= .5 && !actionHitFired) { actionHitFired = true; onActionHit?.(); }
         } else if (currentAction === 'harvest' || currentAction === 'celebrate') {
           if (p < 0.4) {
             const bend = p / 0.4;
@@ -3739,10 +3783,6 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
             torsoNode.rotation.x = bend * 0.45;
             leftArm.rotation.x = bend * 0.7;
             rightArm.rotation.x = bend * 0.7;
-            if (p >= 0.35 && !actionHitFired) {
-              actionHitFired = true;
-              onActionHit?.();
-            }
           } else {
             const jump = (p - 0.4) / 0.6;
             torsoNode.position.y = 0.42 + Math.sin(jump * Math.PI) * 0.35;
@@ -3774,12 +3814,13 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
           // Bắn tim đôi tay chụm lại hình trái tim
           const ease = Math.sin(p * Math.PI);
           const bob = Math.sin(actionTime * 6) * 0.04 * ease;
-          leftArm.rotation.x = -1.65 * ease;
-          leftArm.rotation.z = 0.72 * ease;
-          leftArm.rotation.y = -0.35 * ease;
-          rightArm.rotation.x = -1.65 * ease;
-          rightArm.rotation.z = -0.72 * ease;
-          rightArm.rotation.y = 0.35 * ease;
+          leftArm.rotation.x = -1.05 * ease;
+          leftArm.rotation.z = -0.12 * ease;
+          leftArm.rotation.y = -0.65 * ease;
+          rightArm.rotation.x = -1.05 * ease;
+          rightArm.rotation.z = 0.12 * ease;
+          rightArm.rotation.y = 0.65 * ease;
+          armJoints.forEach(joint=>{joint.rotation.x=-.85*ease;});
           torsoNode.position.y = 0.60 + bob;
           headNode.rotation.x = 0.12 * ease;
           headNode.rotation.z = Math.sin(actionTime * 5) * 0.1 * ease;
@@ -3816,6 +3857,13 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
           torsoNode.position.y = 0.60 + Math.sin(p * Math.PI) * 0.14;
         }
 
+        if (['wave','fashion_pose','heart_pose','cheer','shy'].includes(currentAction)) {
+          const envelope=actionEnvelope(rawProgress);
+          torsoNode.position.y=.60+(torsoNode.position.y-.60)*envelope;
+          leftArm.rotation.scaleInPlace(envelope);
+          rightArm.rotation.scaleInPlace(envelope);
+        }
+
         leftLeg.rotation.x *= 0.8;
         rightLeg.rotation.x *= 0.8;
 
@@ -3828,7 +3876,10 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
           torsoNode.position.y = 0.60;
           torsoNode.rotation.set(0, 0, 0);
           headNode.rotation.set(0, 0, 0);
-          onActionEnd?.();
+          const ended=onActionEnd;
+          onActionEnd=null;
+          onActionHit=null;
+          ended?.();
         }
         return;
       }
@@ -3971,36 +4022,42 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
         }
 
         // Cute Chibi Play Together A-stance & relaxed curved mitten arms
-        leftLeg.rotation.x *= 0.85;
-        rightLeg.rotation.x *= 0.85;
-        leftLeg.rotation.z = leftLeg.rotation.z * 0.85 + 0.055 * 0.15;
-        rightLeg.rotation.z = rightLeg.rotation.z * 0.85 - 0.055 * 0.15;
-        leftLeg.rotation.y = leftLeg.rotation.y * 0.85 - 0.04 * 0.15;
-        rightLeg.rotation.y = rightLeg.rotation.y * 0.85 + 0.04 * 0.15;
+        const settle=1-Math.exp(-delta*10);
+        leftLeg.rotation.x *= 1-settle;
+        rightLeg.rotation.x *= 1-settle;
+        leftLeg.rotation.z = leftLeg.rotation.z * (1-settle) + 0.055 * settle;
+        rightLeg.rotation.z = rightLeg.rotation.z * 0.85 - 0.055 * settle;
+        leftLeg.rotation.y = leftLeg.rotation.y * 0.85 - 0.04 * settle;
+        rightLeg.rotation.y = rightLeg.rotation.y * (1-settle) + 0.04 * settle;
 
         const armBreathe = Math.sin(idleCycle) * 0.018;
-        leftArm.rotation.x = leftArm.rotation.x * 0.85 + (-0.14 + armBreathe) * 0.15;
-        leftArm.rotation.z = leftArm.rotation.z * 0.85 + 0.16 * 0.15;
+        leftArm.rotation.x = leftArm.rotation.x * (1-settle) + (-0.14 + armBreathe) * settle;
+        leftArm.rotation.z = leftArm.rotation.z * (1-settle) + 0.16 * settle;
         leftArm.rotation.y = 0;
 
-        rightArm.rotation.x = rightArm.rotation.x * 0.85 + (-0.14 + armBreathe) * 0.15;
-        rightArm.rotation.z = rightArm.rotation.z * 0.85 - 0.16 * 0.15;
+        rightArm.rotation.x = rightArm.rotation.x * (1-settle) + (-0.14 + armBreathe) * settle;
+        rightArm.rotation.z = rightArm.rotation.z * 0.85 - 0.16 * settle;
         rightArm.rotation.y = 0;
 
-        if (armJoints[0]) armJoints[0].rotation.x = armJoints[0].rotation.x * 0.85 + 0.22 * 0.15;
-        if (armJoints[1]) armJoints[1].rotation.x = armJoints[1].rotation.x * 0.85 + 0.22 * 0.15;
+        if (armJoints[0]) armJoints[0].rotation.x = armJoints[0].rotation.x * (1-settle) + 0.22 * settle;
+        if (armJoints[1]) armJoints[1].rotation.x = armJoints[1].rotation.x * (1-settle) + 0.22 * settle;
       }
       } finally {
         if (floatingStarsNode.isEnabled()) {
           floatingStarsNode.rotation.y += delta * 2.2;
         }
         torsoNode.position.y += proportions.hipHeight - 0.60;
-        const blend = 1 - Math.exp(-delta / CHARACTER_ANIMATION_CONFIG.locomotionBlendSeconds);
+        const blend = 1 - Math.exp(-delta / (actionActive ? .055 : CHARACTER_ANIMATION_CONFIG.locomotionBlendSeconds));
         animatedJoints.forEach((joint, i) => Vector3.LerpToRef(previousRotations[i], joint.rotation, blend, joint.rotation));
-        if (!currentAction && !fishingAction && !fishingPose && !fishingCatchPose) {
-          Vector3.LerpToRef(previousTorsoRotation,torsoNode.rotation,blend,torsoNode.rotation);
-          Vector3.LerpToRef(previousHeadRotation,headNode.rotation,blend,headNode.rotation);
-          if (isMoving || gait.weight > .001) {
+        if (currentAction !== 'spin') {
+          const yaw=previousTorsoRotation.y-torsoNode.rotation.y;
+          previousTorsoRotation.y=torsoNode.rotation.y+Math.atan2(Math.sin(yaw),Math.cos(yaw));
+        }
+        Vector3.LerpToRef(previousTorsoRotation,torsoNode.rotation,blend,torsoNode.rotation);
+        Vector3.LerpToRef(previousHeadRotation,headNode.rotation,blend,headNode.rotation);
+        if (actionActive) Vector3.LerpToRef(previousTorsoPosition,torsoNode.position,blend,torsoNode.position);
+        if (!actionActive) {
+          if (!motion.airborne && (isMoving || gait.weight > .001)) {
             // Use the actual blended angles, not the target gait: otherwise
             // slow joint blending leaves the character suspended above ground.
             const leftHip = leftLeg.rotation.x + torsoNode.rotation.x;
@@ -4014,6 +4071,17 @@ export function buildHumanMesh(scene, idPrefix, options = {}) {
             torsoNode.position.y = proportions.hipHeight - Math.max(0, standingReach - Math.max(leftReach, rightReach));
           }
         }
+        if (!actionActive && (jump.weight>.001 || jump.landing>.001)) {
+          leftLeg.rotation.x+=-.25*jump.weight;
+          rightLeg.rotation.x+=-.25*jump.weight;
+          legJoints.forEach(joint=>{joint.rotation.x+=jump.tuck+jump.landing*.28;});
+          leftArm.rotation.z-=.32*jump.weight;
+          rightArm.rotation.z+=.32*jump.weight;
+          torsoNode.position.y-=jump.landing*.075;
+          torsoNode.rotation.x+=jump.landing*.12;
+          headNode.rotation.x-=jump.weight*.06;
+        }
+        if (!motion.airborne) groundFeet();
         armSurfaces.forEach(surface => { if (surface.mesh.isEnabled()) surface.update(); });
       }
     },
