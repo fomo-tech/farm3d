@@ -24,6 +24,7 @@ import { applyWorldPowerPolicy, GRAPHICS_PRESETS, readGraphicsQuality, saveGraph
 import { getModelWorkStats } from '../rendering/ModelAssetManager.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
 import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
+import { VertexBuffer } from '@babylonjs/core/Buffers/buffer.js';
 import { Scene } from '@babylonjs/core/scene.js';
 import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator.js';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial.js';
@@ -68,7 +69,6 @@ import { createCasinoLoungeInterior } from './landmarks/createCasinoInterior.js'
 import { createCinematicRenderingPipeline } from '../rendering/CinematicRenderingPipeline.js';
 import { showCharacterChatBubble } from '../player/CharacterChatBubble.js';
 import { createFoliageFactory } from './createFoliage.js';
-import { createStylizedGrass } from './createStylizedGrass.js';
 import { createFarmAnimalsSteps } from './createFarmAnimals.js';
 import { createVietnameseCountrysideSteps, createVietnameseCountryside } from './createVietnameseCountryside.js';
 import { FARM_LOT_SPEC } from '../../../shared/farmLayout.js';
@@ -1094,15 +1094,41 @@ export class FarmWorld {
     const ground = MeshBuilder.CreateGround('world-ground', {
       width: FARM_CONFIG.worldSize,
       height: FARM_CONFIG.worldSize,
+      // A low-poly color field gives the lawn large soft patches without
+      // adding another material, decal, or decorative mesh.
+      subdivisions: 96,
     }, scene);
     yield;
     const groundMat = new StandardMaterial('world-grass-mat', scene);
     yield;
     groundMat.diffuseColor = Color3.White();
     yield;
-    groundMat.specularColor = new Color3(0.012, 0.012, 0.012);
+    const groundPositions = ground.getVerticesData(VertexBuffer.PositionKind);
+    const groundColors = new Float32Array((groundPositions.length / 3) * 4);
+    for (let i = 0; i < groundPositions.length; i += 3) {
+      const x = groundPositions[i];
+      const z = groundPositions[i + 2];
+      const broadPatch = (Math.sin(x * 0.018 + Math.sin(z * 0.011) * 1.8) + 1) * 0.5;
+      const softPatch = (Math.sin(z * 0.021 - x * 0.008 + 1.7) + 1) * 0.5;
+      const shade = 0.96 + broadPatch * 0.028 + softPatch * 0.012;
+      const index = (i / 3) * 4;
+      groundColors[index] = Math.min(1, shade * 0.985 + 0.015);
+      groundColors[index + 1] = Math.min(1, shade);
+      groundColors[index + 2] = Math.min(1, shade * 0.86 + 0.08);
+      groundColors[index + 3] = 1;
+    }
+    ground.setVerticesData(VertexBuffer.ColorKind, groundColors, false, 4);
+    groundMat.useVertexColors = true;
     yield;
-    groundMat.specularPower = 16;
+    // Matte toy-world grass: keep the painted color readable under the sun
+    // instead of letting a glossy highlight turn the meadow into a dark slab.
+    groundMat.ambientColor = new Color3(0.43, 0.54, 0.34);
+    yield;
+    groundMat.emissiveColor = new Color3(0.028, 0.045, 0.016);
+    yield;
+    groundMat.specularColor = new Color3(0.006, 0.008, 0.004);
+    yield;
+    groundMat.specularPower = 48;
     yield;
     yield 'boot: meadow texture';
     const meadowTex = createMeadowTexture(scene);
@@ -1124,6 +1150,7 @@ export class FarmWorld {
     ground.material = groundMat;
     yield;
     ground.receiveShadows = true;
+    ground.freezeWorldMatrix();
     yield;
     const initialLocation = this.callbacks.initialLocation;
     yield;
@@ -1208,7 +1235,8 @@ export class FarmWorld {
     skirtDisc.receiveShadows = false;
     yield;
 
-    // === GIAI ĐOẠN B: THẢM CỎ MỊN MÀNG TƯƠI SÁNG (Dùng Texture Ghibli chuẩn mịn, bỏ plane cỏ 2D tránh lỗi cỏ bay) ===
+    // === GIAI ĐOẠN B: THẢM CỎ MỊN MÀNG TƯƠI SÁNG ===
+    // Keep the meadow as one textured ground mesh; no fake grass instances.
     this.stylizedGrass = null;
     yield;
 

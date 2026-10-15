@@ -321,8 +321,22 @@ wss.on('connection', socket => {
     client.messages.push(now);
     try { message = JSON.parse(String(raw)); } catch { return socket.close(1008,'Invalid JSON'); }
     if(!message||typeof message!=='object'||Array.isArray(message)||typeof message.type!=='string')return socket.close(1008,'Invalid message');
-    if(!allowSocketOperation(client,message.type,now))return;
-    if((client.inFlight||0)>=4)return;
+    if(!allowSocketOperation(client,message.type,now)){
+      // Do not silently drop request/response actions: callers waiting on a
+      // requestId would otherwise hang until their own timeout expires.
+      if (typeof message.requestId === 'string' && message.requestId) {
+        safeSend(socket, { type: 'action_error', requestId: message.requestId, message: 'Bạn thao tác quá nhanh. Vui lòng thử lại.' });
+      }
+      return;
+    }
+    if((client.inFlight||0)>=4) {
+      // Never drop a request silently: clients waiting on a requestId would
+      // otherwise hang until their own timeout and may retry the same action.
+      if (typeof message.requestId === 'string' && message.requestId) {
+        safeSend(socket, { type: 'action_error', requestId: message.requestId, message: 'Máy chủ đang bận. Vui lòng thử lại.' });
+      }
+      return;
+    }
     client.inFlight=(client.inFlight||0)+1;counted=true;
     if (message.type === 'google_login' || message.type === 'google_link') {
       if (!allowAuthAttempt(clientAddress(socket))) {

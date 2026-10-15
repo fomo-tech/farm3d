@@ -5,8 +5,9 @@ export function createScreenNameplate(scene, parent, initialName, { local = true
   const canvas = scene.getEngine().getRenderingCanvas();
   const label = document.createElement('span');
   label.className = `player-name-label player-name-label--${local ? 'local' : 'remote'}`;
-  label.style.cssText = 'position:absolute;z-index:5;pointer-events:none;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;font:700 14px/20px "Segoe UI",system-ui,sans-serif;background:transparent;padding:2px;border:0;text-shadow:-1px -1px 0 #34434e,1px -1px 0 #34434e,-1px 1px 0 #34434e,1px 1px 0 #34434e,0 1px 0 #34434e;';
-  label.style.transform = 'translate(-50%, -100%)';
+  label.style.cssText = 'position:absolute;left:0;top:0;z-index:5;pointer-events:none;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;font:700 14px/18px "Segoe UI",system-ui,sans-serif;background:transparent;padding:2px;border:0;text-shadow:-1px -1px 0 #34434e,1px -1px 0 #34434e,-1px 1px 0 #34434e,1px 1px 0 #34434e,0 1px 0 #34434e;';
+  label.style.transformOrigin = '50% 100%';
+  label.style.transform = 'translate3d(0, 0, 0) translate(-50%, -100%)';
   label.style.willChange = 'transform';
   label.style.color = local ? '#ffe58a' : '#ffffff';
   canvas.parentElement.appendChild(label);
@@ -18,15 +19,12 @@ export function createScreenNameplate(scene, parent, initialName, { local = true
     label.title = `${local ? 'Bạn' : 'Người chơi khác'}: ${name}`;
   };
   setName(initialName);
-  let lastUpdate = -Infinity;
-  let previousFont, previousLeft, previousTop;
+  let previousScale = 1;
   const observer = scene.onBeforeRenderObservable.add(() => {
-    const now = performance.now();
-    if (now - lastUpdate < (local ? 33 : 66)) return;
-    lastUpdate = now;
     const camera = scene.activeCamera;
     if (!camera || !parent.isEnabled()) { label.hidden = true; return; }
     const rect = canvasOverlayViewport(canvas);
+    if (!rect.width || !rect.height) { label.hidden = true; return; }
     const world = Vector3.TransformCoordinates(anchor, parent.computeWorldMatrix(true));
     // Keep distant players from filling the screen with full-size labels.
     if (!local && Vector3.DistanceSquared(camera.globalPosition, world) > 45 * 45) {
@@ -37,20 +35,16 @@ export function createScreenNameplate(scene, parent, initialName, { local = true
     label.hidden = !Number.isFinite(point.x) || point.z < 0 || point.z > 1
       || point.x < 0 || point.x > rect.width || point.y < 0 || point.y > rect.height;
     if (label.hidden) return;
-    // Match world-space size without scaling a rasterized CSS text layer.
+    // Keep the text layout stable while scaling the whole label smoothly with depth.
+    // Reflowing the font size during movement makes the baseline visibly jump.
     const depth = Math.abs(Vector3.TransformCoordinates(world, camera.getViewMatrix()).z);
     const projectedSize = 0.26 * rect.height * Math.abs(camera.getProjectionMatrix().m[5]) / (2 * Math.max(0.01, depth));
     if (projectedSize < 6) { label.hidden = true; return; }
-    const fontSize = Math.min(16, Math.round(projectedSize));
-    if (fontSize !== previousFont) {
-      label.style.fontSize = `${fontSize}px`;
-      label.style.lineHeight = `${fontSize + 4}px`;
-      previousFont = fontSize;
-    }
-    // Integer CSS coordinates keep text out of a fractional transform layer.
-    const left = Math.round(rect.left + point.x), top = Math.round(rect.top + point.y - 3);
-    if (left !== previousLeft) { label.style.left = `${left}px`; previousLeft = left; }
-    if (top !== previousTop) { label.style.top = `${top}px`; previousTop = top; }
+    const scale = Math.max(.72, Math.min(1.16, projectedSize / 14));
+    const left = rect.left + point.x;
+    const top = rect.top + point.y - 3;
+    if (Math.abs(scale - previousScale) > .002) previousScale = scale;
+    label.style.transform = `translate3d(${left}px, ${top}px, 0) translate(-50%, -100%) scale(${previousScale})`;
   });
   const dispose = () => {
     if (disposed) return;

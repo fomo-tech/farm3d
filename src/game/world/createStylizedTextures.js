@@ -1,13 +1,12 @@
 import { DynamicTexture } from '@babylonjs/core/Materials/Textures/dynamicTexture.js';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture.js';
-import { WORLD_PALETTE } from './worldDesignSystem.js';
 import { addTextureGrain } from './TextureWorkerPool.js';
 
 /**
  * 1. THẢM CỎ ĐỒNG QUÊ COZY GHIBLI & ZELDA (HOÀN TOÀN KHÔNG CÒN BÀN CỜ / PIXEL LƯỚI VUÔNG)
  * Nền cỏ chuyển sắc màu nước mọng mượt, khóm cỏ ba lá uốn lượn, ngọn cỏ non và hoa cúc dại li ti
  */
-export function createMeadowTexture(scene, size = 1024) {
+export function createMeadowTexture(scene, size = 512) {
   // Grain generation reads every pixel. Request a CPU-backed canvas before
   // Babylon opens its context to avoid a synchronous GPU readback at boot.
   const canvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
@@ -26,56 +25,103 @@ export function createMeadowTexture(scene, size = 1024) {
   dynamic.anisotropicFilteringLevel = 16;
   const ctx = dynamic.getContext();
 
-  // 1. Nền cỏ vàng xanh tươi mát ngập tràn ánh nắng (Cozy Farmy Sunny Meadow)
-  // A directional gradient makes every repeated tile read as a checkerboard.
-  ctx.fillStyle = WORLD_PALETTE.grassMid;
+  // 1. Nền cỏ painted low-poly: màu nền sạch, hơi olive và không có gradient
+  // theo trục. Một gradient chéo sẽ lộ đường biên mỗi lần texture lặp lại.
+  ctx.fillStyle = '#83b861';
   ctx.fillRect(0, 0, size, size);
 
-  // 2. Các vệt loang màu nước tự nhiên (Watercolor organic patches)
-  const patchColors = ['#7EB644', '#94CB58', '#6FA638', '#A2D466'];
-  for (let i = 0; i < 54; i++) {
-    const px = ((i * 137) % size);
-    const py = ((i * 241) % size);
-    const rad = 45 + (i % 5) * 25;
-    for (const ox of [-size, 0, size]) for (const oy of [-size, 0, size]) {
-    if (px + ox + rad < 0 || px + ox - rad > size || py + oy + rad < 0 || py + oy - rad > size) continue;
-    const pGrad = ctx.createRadialGradient(px + ox, py + oy, 0, px + ox, py + oy, rad);
-    const c = patchColors[i % patchColors.length];
-    pGrad.addColorStop(0, c + '3a');
-    pGrad.addColorStop(0.7, c + '20');
-    pGrad.addColorStop(1, c + '00');
-    ctx.fillStyle = pGrad;
-    ctx.beginPath();
-    ctx.arc(px + ox, py + oy, rad, 0, Math.PI * 2);
-    ctx.fill();
+  // A deterministic random stream keeps the art identical between sessions,
+  // while avoiding the visibly mechanical x/y multiplication pattern.
+  let seed = 8127;
+  const random = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+
+  const rgbaHex = (hex, alpha) => `${hex}${Math.max(0, Math.min(255, Math.round(alpha))).toString(16).padStart(2, '0')}`;
+
+  // A wrapped mark has identical geometry at every tile edge, so the grass
+  // stays organic without producing seams or a checkerboard pattern.
+  const drawWrappedMark = (x, y, rx, ry, rotation, color, alpha) => {
+    for (const ox of [-size, 0, size]) {
+      for (const oy of [-size, 0, size]) {
+        const px = x + ox;
+        const py = y + oy;
+        if (px + rx < 0 || px - rx > size || py + ry < 0 || py - ry > size) continue;
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(rotation);
+        ctx.fillStyle = rgbaHex(color, alpha);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+  };
+
+  // 2. Mảng cỏ lớn kiểu hand-painted: tương phản thấp, hình bầu dục mềm và
+  // đủ lớn để tạo chiều sâu khi camera kéo xa mà không thành noise.
+  const patchColors = ['#659b4c', '#7eb356', '#b4d37d', '#d0e59a'];
+  const drawWrappedBlob = (x, y, radius, color, alpha) => {
+    const ellipseX = radius * (0.72 + random() * 0.26);
+    const ellipseY = radius * (0.58 + random() * 0.3);
+    const rotation = random() * Math.PI;
+    for (const ox of [-size, 0, size]) {
+      for (const oy of [-size, 0, size]) {
+        const px = x + ox;
+        const py = y + oy;
+        if (px + radius < 0 || px - radius > size || py + radius < 0 || py - radius > size) continue;
+        const gradient = ctx.createRadialGradient(px, py, radius * 0.08, px, py, radius);
+        gradient.addColorStop(0, rgbaHex(color, alpha));
+        gradient.addColorStop(0.62, rgbaHex(color, alpha * 0.52));
+        gradient.addColorStop(1, `${color}00`);
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.ellipse(px, py, ellipseX, ellipseY, rotation, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  };
+  for (let i = 0; i < 28; i++) {
+    drawWrappedBlob(
+      random() * size,
+      random() * size,
+      76 + random() * 122,
+      patchColors[i % patchColors.length],
+      36 + Math.floor(random() * 20)
+    );
+  }
+
+  // 3. Chi tiết cỏ cực nhỏ, sáng và mềm. Không dùng nét dark stroke vì khi
+  // phóng xa chúng biến thành các vệt đen lặp lại, làm nền trông bẩn.
+  for (let i = 0; i < 150; i++) {
+    const fx = random() * size;
+    const fy = random() * size;
+    const length = 1.4 + random() * 2.8;
+    drawWrappedMark(fx, fy, 0.65 + random() * 0.6, length, -0.7 + random() * 1.4, '#c5df8c', 30 + random() * 18);
+  }
+
+  // 4. Cụm lá ba chấm rất thưa để mặt cỏ có điểm nhận diện mà vẫn sạch.
+  for (let i = 0; i < 42; i++) {
+    const fx = random() * size;
+    const fy = random() * size;
+    const radius = 1.2 + random() * 1.5;
+    for (let leaf = 0; leaf < 3; leaf++) {
+      const angle = leaf * (Math.PI * 2 / 3) + random() * 0.24;
+      drawWrappedMark(
+        fx + Math.cos(angle) * radius * 1.15,
+        fy + Math.sin(angle) * radius * 0.8,
+        radius * 0.72,
+        radius,
+        angle,
+        leaf === 1 ? '#b9d783' : '#91be61',
+        36
+      );
     }
   }
 
-  // 3. Khóm cỏ ba lá & hoa cúc li ti điểm xuyết
-  for (let i = 0; i < 140; i++) {
-    const fx = ((i * 73 + 31) % (size - 20)) + 10;
-    const fy = ((i * 109 + 47) % (size - 20)) + 10;
-    const isFlower = i % 3 === 0;
-
-    if (isFlower) {
-      // Hoa cúc vàng/trắng nhỏ xinh
-      ctx.fillStyle = (i % 6 === 0) ? '#fef08a' : (i % 6 === 3 ? '#fed7aa' : '#ffffff');
-      ctx.beginPath();
-      ctx.arc(fx, fy, 2.4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#f59e0b';
-      ctx.beginPath();
-      ctx.arc(fx, fy, 1.1, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      // Khóm cỏ non
-      ctx.fillStyle = '#a6c58d';
-      ctx.fillRect(fx, fy, 2, 4);
-      ctx.fillRect(fx + 2, fy - 1, 2, 5);
-    }
-  }
-
-  // 4. Vi vân sợi cỏ siêu mịn
+  // 5. Vi vân sợi cỏ siêu mịn
   const imgData = ctx.getImageData(0, 0, size, size);
   dynamic.update();
   addTextureGrain(scene, imgData.data, size, size, pixels => {

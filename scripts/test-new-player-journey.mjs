@@ -16,7 +16,9 @@ for(const minutesPerDay of [30,60,120]){
  assert(r.farm.minCoins>=0);assert(r.farm.rows.every(row=>row.inventoryCount<=r.farm.capacity));
  assert(r.farm.progress.stats.harvested>=r.farm.harvests+1,'Tutorial counters preserved');
  assert(r.farm.ledger.attendance<=1220,'No attendance twice a day');
- assert(r.milestones[5]&&r.milestones[8]);
+ assert(r.milestones[5]);
+ const unlockedTiles=new Set(r.farm.unlocks.map(event=>event.tiles));
+ for(const tiles of [5,6,7,8]) assert.equal(Boolean(r.milestones[tiles]),unlockedTiles.has(tiles),`Milestone ${tiles} must match the simulated unlock horizon`);
  assert(r.milestones[5].calendarDay>=Math.floor(r.purchase.calendarHours/24)+1);
 }
 const pre=simulatePreLand({sessionMinutes:60,sessions:10,stopAtLand:true});

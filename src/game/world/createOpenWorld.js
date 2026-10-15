@@ -215,6 +215,12 @@ export function* createOpenWorldSteps(scene, shadows, scheduler = null) {
     yield;
   materials.meadow.diffuseTexture = meadowTex;
     yield;
+  materials.meadow.ambientColor = new Color3(0.43, 0.54, 0.34);
+    yield;
+  materials.meadow.emissiveColor = new Color3(0.028, 0.045, 0.016);
+    yield;
+  materials.meadow.specularColor = Color3.Black();
+    yield;
   materials.road.diffuseTexture = honeyPathTex;
     yield;
   materials.path.diffuseTexture = cobbleTex;
