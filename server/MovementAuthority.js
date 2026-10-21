@@ -4,11 +4,12 @@ import { vehicleCollisionRadius } from '../shared/vehicleCollision.js';
 import { busRouteForId, nearBusRoute } from '../shared/busAuthorityConfig.js';
 import { VEHICLES } from '../shared/vehicleConfig.js';
 import { getTerrainHeight } from '../src/game/world/TerrainHeightSystem.js';
+import {createCityCollision} from './CityWorldPolicy.js';
 
 // The collision implementation has no WebGL/DOM dependencies. Reuse the same
 // static geometry and swept sliding rules as the client instead of endpoints only.
 export class MovementAuthority {
-  constructor() { this.collision = new WorldCollisionSystem();this.budgets=new WeakMap();this.rides=new WeakMap(); }
+  constructor({cityMode=false}={}) { this.collision = cityMode?createCityCollision():new WorldCollisionSystem();this.budgets=new WeakMap();this.rides=new WeakMap(); }
   reset(client, now=Date.now()) { this.budgets.set(client,{at:now,credit:1.5});this.rides.delete(client); }
   board(client,id,now=Date.now()) {
     const route=busRouteForId(id);

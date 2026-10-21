@@ -558,6 +558,11 @@ export function createAtmosphere(scene, ambientLight, sunLight, shadows = null, 
 
       sunLight.intensity = k1.sunIntensity + (k2.sunIntensity - k1.sunIntensity) * s;
       sunLight.diffuse = Color3.Lerp(k1.sunColor, k2.sunColor, s);
+      if(scene.metadata?.cityLighting){
+        ambientLight.intensity=Math.max(.68,ambientLight.intensity);
+        ambientLight.diffuse=Color3.Lerp(ambientLight.diffuse,new Color3(.86,.9,1),.55);
+        if(ambientLight.groundColor)ambientLight.groundColor.set(.38,.4,.43);
+      }
       Vector3.LerpToRef(k1.sunDir, k2.sunDir, s, targetSunDirection);
       if (!sunDirectionInitialized) {
         sunLight.direction.copyFrom(targetSunDirection);

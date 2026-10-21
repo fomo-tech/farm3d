@@ -18,7 +18,7 @@ export function loadWorldSession() {
   if (!safeStorageGet(localStore, GUEST_ID_KEY)) safeStorageSet(localStore, GUEST_ID_KEY, playerId);
   const fallback = {
     playerId, farmId: null,
-    neighborhoodId: null, channelId: null, name: 'Nông dân mới', registrationIndex: 0,
+    neighborhoodId: null, channelId: null, name: 'Cư dân mới', registrationIndex: 0,
   };
   try {
     const sessionSaved = JSON.parse(safeStorageGet(sessionStore, SESSION_KEY));
@@ -55,7 +55,7 @@ export function switchWorldIdentity(identity) {
   const sessionStore = getBrowserStorage('sessionStorage');
   if (!/^player_[a-z0-9_-]{8,64}$/i.test(identity?.playerId) || !identity.sessionToken) throw new Error('Tài khoản không hợp lệ.');
   const profile = { playerId: identity.playerId, sessionToken: identity.sessionToken,
-    name: identity.name || 'Nông dân mới', googleLinked: Boolean(identity.googleLinked), farmId: null,
+    name: identity.name || 'Cư dân mới', googleLinked: Boolean(identity.googleLinked), farmId: null,
     neighborhoodId: null, channelId: null, registrationIndex: 0 };
   safeStorageSet(localStore, PLAYER_ID_KEY, profile.playerId);
   safeStorageSet(localStore, STORAGE_KEY, JSON.stringify(profile));
@@ -75,7 +75,7 @@ export function restoreGuestIdentity() {
     guest = null;
     safeStorageSet(localStore, GUEST_ID_KEY, guestId);
   }
-  const profile = guest?.playerId === guestId ? guest : { playerId: guestId, name: 'Nông dân mới', farmId: null, registrationIndex: 0 };
+  const profile = guest?.playerId === guestId ? guest : { playerId: guestId, name: 'Cư dân mới', farmId: null, registrationIndex: 0 };
   safeStorageSet(localStore, PLAYER_ID_KEY, guestId);
   safeStorageSet(localStore, STORAGE_KEY, JSON.stringify(profile));
   safeStorageSet(sessionStore, SESSION_KEY, JSON.stringify(profile));
@@ -107,5 +107,5 @@ export function startFreshGuestSession() {
   const playerId = createRuntimeId('player');
   safeStorageSet(localStore, PLAYER_ID_KEY, playerId);
   safeStorageSet(localStore, GUEST_ID_KEY, playerId);
-  return saveWorldSession({ playerId, name: 'Nông dân mới', farmId: null, villageId: null, channelId: null, registrationIndex: 0, googleLinked: false, signedOut: false });
+  return saveWorldSession({ playerId, name: 'Cư dân mới', farmId: null, villageId: null, channelId: null, registrationIndex: 0, googleLinked: false, signedOut: false });
 }

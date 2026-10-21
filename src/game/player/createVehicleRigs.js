@@ -49,8 +49,21 @@ export function createVehicleRigs(scene, parentNode, shadows) {
   let wheelContacts = [];
   const cache = new Map();
   const riderOffset = { height: 0, lean: 0 };
+  let cityPaint='#406f96',cityGT=false,citySpoiler=null;
 
   return {
+    setCityAppearance(color,gt=false){
+      if(!/^#[a-f0-9]{6}$/i.test(color||''))return;
+      cityPaint=color;cityGT=gt;
+      if(materials.convertiblePaint)materials.convertiblePaint.diffuseColor=Color3.FromHexString(cityPaint);
+      if(activeVehicleNode&&currentVehicleId==='convertible'){
+        if(!citySpoiler||citySpoiler.isDisposed()){
+          citySpoiler=MeshBuilder.CreateBox('city-gt-spoiler',{width:1.75,height:.12,depth:.45},scene);
+          citySpoiler.parent=activeVehicleNode;citySpoiler.position.set(0,1.12,-1.2);citySpoiler.material=materials.convertiblePaint;
+        }
+        citySpoiler.setEnabled(cityGT);
+      }
+    },
     setVisible(visible) { rigContainer.setEnabled(Boolean(visible)); },
     setVehicle(vehicleId) {
       vehicleId = Object.hasOwn(VEHICLES, vehicleId) ? vehicleId : 'walk';

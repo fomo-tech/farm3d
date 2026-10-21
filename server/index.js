@@ -1,34 +1,40 @@
 import { SocketGuard, allowSocketOperation } from './SocketGuard.js';
+import { cityActionAllowed, REMOVED_WORLD_MESSAGES } from '../shared/cityOnlyPolicy.js';
+import {cityVehicleHealth} from '../shared/cityGarage.js';
+import {cityVitals} from '../shared/cityVitals.js';
+import { advanceCityWanted, cityPatrolCanSee } from '../shared/cityTraffic.js';
+import { createCityTrafficFleet, stepCityTrafficFleet, fleetVehiclePose, citySignalPhase } from '../shared/cityTrafficFleet.js';
 import { presenceLimit, selectPresenceIndices } from './PresenceSelection.js';
-import {worldEvent} from './SeasonConfig.js';
+import { worldEvent } from './SeasonConfig.js';
 import { publicWorldPlayer } from './PublicWorldState.js';
 import { publicFishAppearance } from '../shared/fishAppearance.js';
-import {lotterySnapshot} from './LotteryStore.js';
-import {getFishingConditions} from '../shared/fishingConditions.js';
+import { lotterySnapshot } from './LotteryStore.js';
+import { getFishingConditions } from '../shared/fishingConditions.js';
 import { createServer } from 'node:http';
 import { travelCost } from '../shared/travelConfig.js';
-import {resolveTravelDestination} from '../shared/travelDestinations.js';
+import { resolveTravelDestination } from '../shared/travelDestinations.js';
 import { chargeTravel } from './GameStore.js';
 import { WebSocketServer, WebSocket } from 'ws';
-import { purchaseFarm, listLandMarket, getAssignment, initVillageRegistry, isAssignedFarm, listVillageAssignments, listVillages, positionForLot, villageChannel, villageForFarm } from './VillageRegistry.js';
-import { checkCharacterName, authenticate, deleteGameAccount, googleAccountLogin, linkGoogleAccount, revokeGameSession, casinoRefundStale, farmAction, initGameStore, initFarmSecurity, farmSecurity, fishingTelemetry, loadFarmAssignment, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadPublicPlayerProfile, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
+import { listLandMarket, getAssignment, isAssignedFarm, listVillageAssignments, listVillages, positionForLot, villageChannel, villageForFarm } from './VillageRegistry.js';
+import { checkCharacterName, authenticate, deleteGameAccount, googleAccountLogin, linkGoogleAccount, revokeGameSession, casinoRefundStale, initGameStore, farmSecurity, fishingTelemetry, likeFarm, loadFarms, loadPlayer, loadPublicFarmProfiles, loadPublicPlayerProfile, loadSocialState, performAction, savePosition, updateFriend } from './GameStore.js';
 import { verifyGoogleCredential } from './GoogleIdentity.js';
-import { decodeFarmId } from '../shared/villageLayout.js';
-import { farmGateOpen } from '../shared/farmSecurity.js';
 import { CasinoActionError } from './casino/CasinoActionError.js';
 import { publicFishingProgress } from '../shared/fishingSession.js';
 import { getGameStoreDatabase } from './GameStore.js';
 import { CasinoRoomManager } from './casino/CasinoRoomManager.js';
 import { FARM_ACTIVE_PLOTS, FARM_LOT_SPEC, FARM_TILE_KEY_PATTERN, farmTilePosition as sharedFarmTilePosition } from '../shared/farmLayout.js';
-import { WORLD_VILLAGES, villageGeometry } from '../shared/villageLayout.js';
+import { villageGeometry } from '../shared/villageLayout.js';
 import { VENUE_LAYOUT } from '../shared/venueLayout.js';
 import { normalizeVenuePosition } from '../shared/venuePosition.js';
 import { TOWN_SPAWN, recoverTownSpawn, insideTownFountain } from '../shared/playerSpawn.js';
 import { lakeMovementBlocked, recoverLakePosition } from '../shared/lakeConfig.js';
 import { MovementAuthority } from './MovementAuthority.js';
+import { cityWorldEnabled, cityMovementBlocked, resolveCityTravel, createCityCollision } from './CityWorldPolicy.js';
 import { CASINO_TABLE_ANCHORS } from '../shared/casinoTableAnchors.js';
 
 const PORT = Number(process.env.MULTIPLAYER_PORT || 8787);
+const CITY_WORLD=cityWorldEnabled(process.env);
+const citySightCollision=CITY_WORLD?createCityCollision():null;
 const TICK_MS = 100;
 const PLAYER_VIEW_RADIUS = 240;
 const FARM_VIEW_RADIUS = 115;
@@ -49,7 +55,18 @@ const ROOM_LAYOUT = VENUE_LAYOUT;
 // Keep authentication credentials outside objects used by game/broadcast code.
 const clientSessionTokens = new WeakMap();
 const clients = new Map();
-const movementAuthority = new MovementAuthority();
+const cityTrafficFleet=createCityTrafficFleet();
+if(CITY_WORLD)setInterval(()=>{
+ const now=Date.now(),patrolPosition=fleetVehiclePose(cityTrafficFleet[3]);
+ const obstacles=[...clients.values()].filter(p=>!p.venue&&Number.isFinite(p.x)&&Number.isFinite(p.z));
+ for(const p of clients.values())if(p.cityWanted?.stars){
+  const visible=!p.venue&&cityPatrolCanSee(patrolPosition,p,(x,z)=>citySightCollision.isColliding(x,z,.05));
+  p.cityWanted=advanceCityWanted(p.cityWanted,{now,x:p.x,z:p.z,vehicle:p.vehicle,speed:0,visible,patrolPosition});
+ }
+ const target=[...clients.values()].filter(p=>p.cityWanted?.stars&&p.cityWanted.lastKnown).sort((a,b)=>b.cityWanted.stars-a.cityWanted.stars||a.playerId.localeCompare(b.playerId))[0];
+ stepCityTrafficFleet(cityTrafficFleet,now,.05,obstacles,target?{target:target.cityWanted.lastKnown,phase:target.cityWanted.phase}:null);
+},50).unref();
+const movementAuthority = new MovementAuthority({cityMode:CITY_WORLD});
 let casinoManager;
 function broadcastCasinoState() {
   if (!casinoManager) return;
@@ -241,6 +258,7 @@ function publicMarket() {
   return publicMarketCache;
 }
 async function publicFarmScope(client, force = false) {
+  if(CITY_WORLD)return;
   if (!client.villageId || (!force && Date.now() - client.lastFarmScopeAt < 1000)) return;
   client.lastFarmScopeAt = Date.now();
   if (client.venue) {
@@ -373,17 +391,18 @@ wss.on('connection', socket => {
       if (recovered) account.progress = recovered.progress;
       client.name = account.name;
       client.fishing = fishingPresence(account.progress.fishing?.pending);
-      const recoveredPosition = recoverLakePosition(recoverTownSpawn(account.position));
+      const recoveredPosition = CITY_WORLD?recoverTownSpawn(account.position):recoverLakePosition(recoverTownSpawn(account.position));
       if (recoveredPosition !== account.position) {
         account.position = recoveredPosition;
         await savePosition(client.playerId, recoveredPosition);
       }
       client.vehicle = account.progress?.vehicle || 'walk';
+      client.vehicleHealth=cityVehicleHealth(account.progress);
+      client.cityHealth=cityVitals(account.progress.city).health;
       client.outfit = account.progress?.outfit || 'starter';
       safeSend(socket, { type: 'account_state', name: account.name, googleLinked: account.googleLinked, sessionToken: account.token, progress: account.progress, livestock: account.livestock, position: account.position?.layoutVersion === MAP_LAYOUT_VERSION ? account.position : null });
-      safeSend(socket, { type: 'village_list', villages: await listVillages() });
-      const existing = await getAssignment(client.playerId);
-      const assignedLot = existing || { farmId: null, villageId: 'town', villageName: 'Thị trấn', lot: null, spawn: TOWN_SPAWN, farmConfig: null };
+      const existing = CITY_WORLD?null:await getAssignment(client.playerId);
+      const assignedLot = existing || { farmId: null, villageId: 'town', villageName: 'Vibe City', lot: null, spawn: TOWN_SPAWN, farmConfig: null };
 
       client.farmId = assignedLot.farmId;
       client.villageId = assignedLot.villageId;
@@ -433,7 +452,7 @@ wss.on('connection', socket => {
         farmId: client.farmId,
         spawn: { x: client.x, y: client.y, z: client.z, venue: client.venue, rotation: client.rotation },
         farmConfig: assignedLot.farmConfig,
-        farmLayout: FARM_LAYOUT,
+        farmLayout: CITY_WORLD?null:FARM_LAYOUT,
         tickMs: TICK_MS,
         layoutVersion: MAP_LAYOUT_VERSION
         ,roomId: client.roomId
@@ -482,6 +501,9 @@ wss.on('connection', socket => {
       }
       return;
     }
+    if(REMOVED_WORLD_MESSAGES.has(message.type)||(message.type==='game_action'&&!cityActionAllowed(message.action))){
+      safeSend(socket,{type:'action_error',requestId:message.requestId,message:'Gameplay nông trại đã được gỡ khỏi Vibe City.'});return;
+    }
     if (message.type === 'land_market') {
       safeSend(socket, { type: 'land_market', lots: await listLandMarket() });
       return;
@@ -513,6 +535,8 @@ wss.on('connection', socket => {
       if (![x, y, z, rotation].every(Number.isFinite) || Math.abs(x) > 10_000_000 || Math.abs(z) > 10_000_000 || y < 0 || y > 40) return;
       const elapsed = Math.max(.1, (Date.now() - client.lastSeen) / 1000);
       const distance = Math.hypot(x - client.x, z - client.z);
+      if(client.cityHealth===0&&distance>.05){safeSend(socket,{type:'move_ack',accepted:false,x:client.x,y:client.y,z:client.z,rotation:client.rotation,venue:client.venue});return;}
+      if(client.vehicle==='convertible'&&client.vehicleHealth<=0&&distance>.05){safeSend(socket,{type:'move_ack',accepted:false,x:client.x,y:client.y,z:client.z,rotation:client.rotation,venue:client.venue});return;}
       const requestedVenue = VALID_VENUES.has(message.venue) ? message.venue : null;
       const roomTransition = isRoomTransition(client, x, y, z, requestedVenue);
       const casinoRoom=casinoManager.rooms.get(casinoManager.members.get(client.playerId));
@@ -529,17 +553,38 @@ wss.on('connection', socket => {
       }
       if (roomTransition || seatTravel) movementAuthority.reset(client);
       const previousRoom = client.roomId;
-      if (!requestedVenue && (insideTownFountain(x,z) || farmSecurity.blocksMovement(client, { x, z }) || lakeMovementBlocked(client, { x, z }))) {
+      if (!requestedVenue && (CITY_WORLD?cityMovementBlocked(x,z):(insideTownFountain(x,z) || farmSecurity.blocksMovement(client, { x, z }) || lakeMovementBlocked(client, { x, z })))) {
         safeSend(socket, { type: 'move_ack', accepted: false, x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, serverTime: Date.now() });
         return;
       }
       const previousVenue = client.venue;
+      if(CITY_WORLD){
+        const now=Date.now(),speed=distance/elapsed;
+        const traffic=cityTrafficFleet.map(fleetVehiclePose);
+        const hit=!requestedVenue&&traffic.some(car=>{
+          const dx=x-client.x,dz=z-client.z,l2=dx*dx+dz*dz;
+          const t=l2?Math.max(0,Math.min(1,((car.x-client.x)*dx+(car.z-client.z)*dz)/l2)):0;
+          return Math.hypot(car.x-client.x-t*dx,car.z-client.z-t*dz)<2.1;
+        });
+        const patrolPosition=traffic[3];
+        const visible=!requestedVenue&&cityPatrolCanSee(patrolPosition,{x,z},(px,pz)=>citySightCollision.isColliding(px,pz,.05));
+        client.cityWanted=advanceCityWanted(client.cityWanted,{now,x,z,vehicle:client.vehicle,speed,hit,visible,patrolPosition});
+        if(hit&&speed>=3&&client.vehicle==='convertible'&&!client.cityImpactPending&&now-(client.lastCityImpactAt||0)>2500){
+          client.cityImpactPending=true;client.lastCityImpactAt=now;
+          void performAction(client.playerId,'city_vehicle_impact',{}, {worldMode:'city',x,z,venue:null,trustedCityImpact:true,impactSpeed:speed}).then(result=>{
+            if(result.error)return;
+            client.vehicleHealth=cityVehicleHealth(result.player.progress);
+            client.cityHealth=cityVitals(result.player.progress.city).health;client.vehicle=result.player.progress.vehicle;
+            safeSend(socket,{type:'account_state',progress:result.player.progress,result:result.result});
+          }).catch(error=>console.error('City impact save failed:',error.message)).finally(()=>{client.cityImpactPending=false;});
+        }
+      }
       client.x = x; client.y = y; client.z = z; client.rotation = rotation; client.venue = requestedVenue; client.roomId = roomKey(client.villageId, client.venue); client.lastSeen = Date.now();
       fishingTelemetry.observe(client.telemetrySessionId, client, { meaningful: distance > .1 || previousVenue !== client.venue });
       if (previousVenue === 'casino' && requestedVenue !== 'casino' && ![...clients.values()].some(other => other !== client && other.playerId === client.playerId && other.venue === 'casino')) await casinoManager.disconnect(client.playerId);
       if (previousVenue !== 'casino' && requestedVenue === 'casino') { await casinoManager.reconnect(client.playerId); broadcastCasinoState(); }
-      farmSecurity.observeMovement(client.playerId, client, farmTilePosition);
-      safeSend(socket, { type: 'move_ack', accepted: true, x, y, z, rotation, venue: client.venue, roomId: client.roomId, serverTime: Date.now() });
+
+      safeSend(socket, { type: 'move_ack', accepted: true, x, y, z, rotation, venue: client.venue, roomId: client.roomId, serverTime: Date.now(), cityWanted:CITY_WORLD?client.cityWanted:undefined, cityTraffic:CITY_WORLD?{cars:cityTrafficFleet.map(fleetVehiclePose),signals:citySignalPhase(Date.now())}:undefined });
       if (Date.now() - client.lastPersisted > 2000) {
         client.lastPersisted = Date.now();
         savePosition(client.playerId, { x, y, z, rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION }).catch(error => console.error("Position save failed:", error.message));
@@ -549,10 +594,13 @@ wss.on('connection', socket => {
     }
     if (message.type === 'travel') {
       if (client.travelPending) return;
+      if(client.cityHealth===0){safeSend(socket,{type:'action_error',message:'Nhân vật đang bị hạ. Hãy chờ cứu hộ.'});return;}
+      if(client.cityWanted?.stars){safeSend(socket,{type:'action_error',message:'Không thể dịch chuyển khi đang bị truy nã. Hãy thoát khỏi tầm nhìn của cảnh sát.'});return;}
+      if(CITY_WORLD){const player=await loadPlayer(client.playerId);if(player?.progress.city?.contract){safeSend(socket,{type:'action_error',message:'Hãy hoàn thành hoặc hủy hợp đồng trước khi dịch chuyển.'});return;}}
       const x = Number(message.x); const z = Number(message.z);
       if (Number.isFinite(x) && Number.isFinite(z) && Math.abs(x) <= 10_000_000 && Math.abs(z) <= 10_000_000) {
         const previousRoom = client.roomId;
-        const target=resolveTravelDestination(x,z,client.farmId);
+        const target=CITY_WORLD?resolveCityTravel(x,z):resolveTravelDestination(x,z,client.farmId);
         if(!target){safeSend(socket,{type:'action_error',message:'Điểm đến chưa sẵn sàng. Hãy chọn lại trên bản đồ.'});return;}
         const cost = travelCost(client, target);
         client.travelPending = true;
@@ -580,76 +628,9 @@ wss.on('connection', socket => {
       if(!movementAuthority.board(client,message.busId))safeSend(socket,{type:'move_ack',accepted:false,busRejected:true,x:client.x,y:client.y,z:client.z,rotation:client.rotation,venue:client.venue});
       return;
     }
-    if (message.type === 'farm_action') {
-      const tracked = beginAction(client, message.requestId);
-      if (tracked.duplicate) return;
-      const { farmId, tileKey, action, crop, wateredAt, plantedAt } = message;
-      if (!farmId || !tileKey || !action) { recentActions.delete(tracked.key); return; }
-      if (client.venue) { const response = { type: 'action_error', requestId: message.requestId, message: 'Bạn phải rời cửa hàng trước khi làm ruộng.' }; safeSend(socket, response); finishAction(tracked.key, [response]); return; }
-      const tilePosition = farmTilePosition(farmId, tileKey);
-      if (!tilePosition || Math.hypot(tilePosition.x - client.x, tilePosition.z - client.z) > FARM_INTERACTION_RADIUS) {
-        const response = { type: 'action_error', requestId: message.requestId, message: 'Bạn đang đứng quá xa ô đất.' };
-        safeSend(socket, response); finishAction(tracked.key, [response]);
-        return;
-      }
-      const targetVillage = await villageForFarm(farmId);
-      if (!targetVillage || !(await isAssignedFarm(targetVillage.villageId, farmId))) {
-        const response = { type: 'action_error', requestId: message.requestId, message: 'Nông trại này chưa có chủ sở hữu.' };
-        safeSend(socket, response); finishAction(tracked.key, [response]);
-        return;
-      }
-      if (action === 'steal_start' || action === 'steal_finish') {
-        const assignment = await loadFarmAssignment(targetVillage.villageId, farmId);
-        const decoded = decodeFarmId(farmId);
-        const stolen = await farmSecurity.steal({ assignment, farmId, storageFarmId: `farm_${String(decoded.lot).padStart(6, '0')}`, tileKey, playerId: client.playerId, position: client, tilePosition,
-          phase: action === 'steal_start' ? 'start' : 'finish', token: message.token });
-        if (stolen.error) { const response = { type: 'action_error', requestId: message.requestId, message: stolen.error }; safeSend(socket, response); finishAction(tracked.key, [response]); return; }
-        if (stolen.pending) {
-          const response = { type: 'theft_pending', requestId: message.requestId, farmId, tileKey, token: stolen.pending.token, durationMs: stolen.pending.readyAt - Date.now() };
-          safeSend(socket, response); finishAction(tracked.key, [response]); return;
-        }
-        const player = await loadPlayer(client.playerId);
-        const response = { type: 'account_state', requestId: message.requestId, progress: player.progress, result: { stolenAmount: stolen.amount } };
-        const update = { type: 'farm_update', requestId: message.requestId, farmId, tileKey, action: 'steal', crop: stolen.tileData.crop, tileData: stolen.tileData, byPlayer: client.name, byPlayerId: client.playerId };
-        safeSend(socket, response); broadcastFarmUpdate(client, update); finishAction(tracked.key, [response, update]);
-        for (const other of clients.values()) if (other.playerId === assignment.playerId) safeSend(other.socket, { type: 'action_error', message: `${client.name} đã lấy ${stolen.amount} nông sản trong vườn khi cổng mở.` });
-        return;
-      }
-      const result = await farmAction(client.playerId, targetVillage.villageId, client.farmId, { farmId, tileKey, action, crop, wateredAt, plantedAt });
-      if (result.error) {
-        const errorResponse = { type: 'action_error', requestId: message.requestId, message: result.error };
-        const syncResponse = { type: 'farm_sync', farms: await loadFarms(targetVillage.villageId, [farmId]) };
-        safeSend(socket, errorResponse); safeSend(socket, syncResponse); finishAction(tracked.key, [errorResponse, syncResponse]); return;
-      }
-      const accountResponse = { type: 'account_state', requestId: message.requestId, progress: result.player.progress, livestock: result.player.livestock };
-      const farmResponse = {
-        type: 'farm_update',
-        requestId: message.requestId,
-        farmId,
-        tileKey,
-        action,
-        crop,
-        tileData: result.tileData,
-        byPlayer: client.name,
-        byPlayerId: client.playerId
-      };
-      safeSend(socket, accountResponse);
-      broadcastFarmUpdate(client, farmResponse);
-      finishAction(tracked.key, [accountResponse, farmResponse]);
-    }
     if (message.type === 'game_action') {
       const tracked = beginAction(client, message.requestId);
       if (tracked.duplicate) return;
-      if (message.action === 'farm_gate') {
-        const farmId = String(message.payload?.farmId || '');
-        const village = await villageForFarm(farmId);
-        const assignment = village && await loadFarmAssignment(village.villageId, farmId);
-        const result = assignment ? await farmSecurity.toggle(assignment, farmId, client.playerId, message.payload?.open, client, [...clients.values()]) : { error: 'Lô đất chưa có chủ.' };
-        const response = result.error ? { type: 'action_error', requestId: message.requestId, message: result.error } : { type: 'farm_gate', requestId: message.requestId, ...result };
-        safeSend(socket, response); finishAction(tracked.key, [response]);
-        if (!result.error) channelPlayers(client.channelId).filter(other => other !== client).forEach(other => safeSend(other.socket, { type: 'farm_gate', ...result }));
-        return;
-      }
       if (message.action === 'casino' || message.action === 'casino_bet') {
         if (client.venue !== 'casino') {
           const response = { type: 'action_error', requestId: message.requestId, message: 'Hãy vào hội quán trò chơi để đặt cược.' };
@@ -660,46 +641,22 @@ wss.on('connection', socket => {
         safeSend(socket, response); finishAction(tracked.key, [response]);
         broadcastCasinoState(); return;
       }
-      if (['steal_livestock_start','steal_livestock_finish'].includes(message.action)) {
-        const {farmId,animalId,token}=message.payload||{};
-        const village=typeof farmId==='string'?await villageForFarm(farmId):null;
-        const assignment=village&&village.villageId===client.villageId?await loadFarmAssignment(village.villageId,farmId):null;
-        if(!assignment){const response={type:'action_error',requestId:message.requestId,message:'Hãy đến nông trại có chủ trong làng của bạn.'};safeSend(socket,response);finishAction(tracked.key,[response]);return;}
-        const result=await farmSecurity.stealLivestock({assignment,farmId,animalId,playerId:client.playerId,position:client,phase:message.action==='steal_livestock_start'?'start':'finish',token});
-        if(result.error){const response={type:'action_error',requestId:message.requestId,message:result.error};safeSend(socket,response);finishAction(tracked.key,[response]);return;}
-        if(result.pending){const response={type:'theft_pending',kind:'livestock',requestId:message.requestId,farmId,animalId,token:result.pending.token,durationMs:Math.max(0,result.pending.readyAt-Date.now())};safeSend(socket,response);finishAction(tracked.key,[response]);return;}
-        const thief=await loadPlayer(client.playerId),owner=await loadPlayer(result.ownerId);
-        const response={type:'account_state',requestId:message.requestId,progress:thief.progress,livestock:thief.livestock,result:{livestockAction:'steal_livestock',stolenAmount:result.amount}};
-        safeSend(socket,response);finishAction(tracked.key,[response]);
-        for(const other of clients.values())if(other.playerId===result.ownerId)safeSend(other.socket,{type:'account_state',progress:owner.progress,livestock:owner.livestock,result:{livestockTheft:{product:result.product,amount:result.amount}}});
-        await refreshPublicFarms(client.channelId);return;
-      }
-      if (message.action === 'buy_land') {
-        const bought = await purchaseFarm(client.playerId, String(message.payload?.farmId || ''));
-        if (bought.error) {
-          const response = { type: 'action_error', requestId: message.requestId, message: bought.error };
-          safeSend(socket, response); finishAction(tracked.key, [response]); return;
-        }
-        const assignment = bought.assignment;
-        client.farmId = assignment.farmId; client.villageId = assignment.villageId;
-        farmSecurity.gates.set(`${assignment.villageId}:${assignment.lot}`, farmGateOpen(assignment));
-        const player = await loadPlayer(client.playerId);
-        const response = { type: 'account_state', requestId: message.requestId, progress: player.progress, livestock: player.livestock, result: { landPurchase: { farmId: assignment.farmId, villageId: assignment.villageId, villageName: assignment.villageName, lot: assignment.lot, farmConfig: assignment.farmConfig } } };
-        await savePosition(client.playerId, { x: client.x, y: client.y, z: client.z, rotation: client.rotation, venue: client.venue, villageId: client.villageId, layoutVersion: MAP_LAYOUT_VERSION });
-        safeSend(socket, response); finishAction(tracked.key, [response]);
-        await refreshPublicFarms(client.channelId); broadcastPresence(client.channelId); return;
-      }
-      if (!client.farmId && ['claim_seeds', 'unlock_plot', 'upgrade_land', 'upgrade_barn', 'upgrade_home', 'build_pen', 'sell_animal', 'buy_animal', 'retire_animal', 'feed_animals', 'collect_animals'].includes(message.action)) {
-        const response = { type: 'action_error', requestId: message.requestId, message: 'Bạn cần mua lô đất trước khi sử dụng tính năng nông trại.' };
-        safeSend(socket, response); finishAction(tracked.key, [response]); return;
-      }
-      const result = await performAction(client.playerId, String(message.action || ''), message.payload || {}, { x: client.x, z: client.z, rotation: client.rotation, venue: client.venue, farmId: client.farmId, villageId: client.villageId, telemetrySessionId: client.telemetrySessionId });
+      const result = await performAction(client.playerId, String(message.action || ''), message.payload || {}, { worldMode:CITY_WORLD?'city':'farm',x: client.x, z: client.z, rotation: client.rotation, venue: client.venue, wantedStars:client.cityWanted?.stars||0, farmId: client.farmId, villageId: client.villageId, telemetrySessionId: client.telemetrySessionId });
       if (result.error) { const response = { type: 'action_error', requestId: message.requestId, message: result.error }; safeSend(socket, response); finishAction(tracked.key, [response]); return; }
       fishingTelemetry.observe(client.telemetrySessionId, client, { meaningful: true });
       client.name = result.player.name;
       client.fishing = fishingPresence(result.player.progress.fishing?.pending);
       client.outfit = result.player.progress.outfit;
       client.vehicle = result.player.progress.vehicle;
+      client.vehicleHealth=cityVehicleHealth(result.player.progress);
+      client.cityHealth=cityVitals(result.player.progress.city).health;
+      if(result.result?.cityRespawn){
+        const point=result.result.cityRespawn;
+        client.x=point.x;client.y=point.y;client.z=point.z;client.venue=null;client.roomId=roomKey(client.villageId,null);
+        client.cityWanted=null;movementAuthority.reset(client);
+        await savePosition(client.playerId,{...point,rotation:client.rotation,venue:null,villageId:client.villageId,layoutVersion:MAP_LAYOUT_VERSION});
+        safeSend(socket,{type:'move_ack',accepted:false,...point,rotation:client.rotation,venue:null,cityWanted:{stars:0,phase:'clear'},serverTime:Date.now()});
+      }
       client.homeTier = result.player.progress.homeTier;
       if (result.player.progress.customization) {
         client.customization = result.player.progress.customization;
@@ -839,6 +796,5 @@ casinoManager = new CasinoRoomManager(getGameStoreDatabase(), { onWallet: async 
   });
 } });
 await casinoManager.init();
-await initVillageRegistry();
-await initFarmSecurity();
-httpServer.listen(PORT, LOCAL_LOAD_TEST && process.env.LOCAL_LOAD_TEST_LAN !== '1' ? '127.0.0.1' : '0.0.0.0', () => console.log(`Farm multiplayer listening on http://localhost:${PORT} · MongoDB connected`));
+
+httpServer.listen(PORT, LOCAL_LOAD_TEST && process.env.LOCAL_LOAD_TEST_LAN !== '1' ? '127.0.0.1' : '0.0.0.0', () => console.log(`Vibe City multiplayer listening on http://localhost:${PORT} · MongoDB connected`));

@@ -15,6 +15,7 @@ import { FISHING_CONFIG } from '../../../shared/fishingConfig.js';
 import { buildHumanMesh } from './buildHumanMesh.js';
 import { createVehicleRigs } from './createVehicleRigs.js';
 import { VEHICLE_MOTION, approachVehicleSpeed } from './vehicleMotion.js';
+import {stepCityDriving} from './cityDriving.js';
 import { applyVehiclePose, clearVehiclePose } from './applyVehiclePose.js';
 import { avatarAppearance } from '../../../shared/avatarAppearance.js';
 
@@ -741,11 +742,12 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
   const movementKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight']);
   const isEditing = target => target instanceof Element && Boolean(target.closest('input, textarea, select, [contenteditable="true"]'));
   const isModal = target => target instanceof Element && Boolean(target.closest('[role="dialog"], [aria-modal="true"]'));
-  const keyboardBlocked = () => isEditing(document.activeElement) || isModal(document.activeElement);
+  const keyboardBlocked = () => isEditing(document.activeElement) || isModal(document.activeElement) || Boolean(document.querySelector('[data-city-input-lock]'));
   const down = event => {
     if (isEditing(event.target) || isModal(event.target) || keyboardBlocked() || event.altKey || event.ctrlKey || event.metaKey) return;
     // Space on a HUD button belongs to that button, not the jump action.
     if (event.code === 'Space' && event.target instanceof Element && event.target.closest('button')) return;
+    if(event.code==='Space'&&controls.cityDriving&&vehicleRigs.getVehicleId()==='convertible'){keys.add('Space');event.preventDefault();return;}
     if (event.code === 'Space' && !event.repeat && !airborne && !fishingRig.isActive() && !controls.isRidingBus?.()) {
       airborne = true;
       jumpVelocity = 6.8;
@@ -808,8 +810,9 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       // HUD focus must pause gameplay keys without forgetting a physically held key.
       // Clearing on focusin used to discard W/A/S/D until the next keydown.
       const useKeyboard = !keyboardBlocked();
-      const horizontal = (useKeyboard ? Number(keys.has('KeyD') || keys.has('ArrowRight')) - Number(keys.has('KeyA') || keys.has('ArrowLeft')) : 0) + virtualInput.x;
-      const vertical = (useKeyboard ? Number(keys.has('KeyW') || keys.has('ArrowUp')) - Number(keys.has('KeyS') || keys.has('ArrowDown')) : 0) + virtualInput.y;
+      const horizontal = useKeyboard ? Number(keys.has('KeyD') || keys.has('ArrowRight')) - Number(keys.has('KeyA') || keys.has('ArrowLeft')) + virtualInput.x : 0;
+      const vertical = useKeyboard ? Number(keys.has('KeyW') || keys.has('ArrowUp')) - Number(keys.has('KeyS') || keys.has('ArrowDown')) + virtualInput.y : 0;
+      if(!useKeyboard){autoTarget=null;onArrive=null;}
       const hasManualInput = horizontal !== 0 || vertical !== 0;
       diagnostics.input = hasManualInput;
       diagnostics.ridingBus = false;
@@ -817,7 +820,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       diagnostics.speed = 0;
       let direction = Vector3.Zero();
       let isMoving = false;
-      const baseSpeed = controls.getSpeed?.() || FARM_CONFIG.playerSpeed;
+      const baseSpeed = controls.getSpeed?.() ?? FARM_CONFIG.playerSpeed;
       const speed = baseSpeed * ((sprinting || keys.has('ShiftLeft') || keys.has('ShiftRight')) ? 1.35 : 1);
 
       if (hasManualInput) {
@@ -854,7 +857,12 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       let actualSpeed = 0;
       let turn = 0;
       const vehicleProfile = VEHICLE_MOTION[vehicleRigs.getVehicleId()];
-      vehicleSpeed = vehicleProfile ? approachVehicleSpeed(vehicleSpeed, isMoving ? speed : 0, frameDelta, vehicleProfile) : 0;
+      const cityDriving=controls.cityDriving&&vehicleRigs.getVehicleId()==='convertible'&&!autoTarget;
+      if(cityDriving){
+        const motion=stepCityDriving(vehicleSpeed,root.rotation.y,vertical,horizontal,keys.has('Space')||!useKeyboard,frameDelta,baseSpeed);
+        turn=motion.yaw-root.rotation.y;vehicleSpeed=motion.speed;root.rotation.y=motion.yaw;
+        direction.set(Math.sin(root.rotation.y),0,Math.cos(root.rotation.y));isMoving=Math.abs(vehicleSpeed)>.01;
+      }else vehicleSpeed = vehicleProfile ? approachVehicleSpeed(vehicleSpeed, isMoving ? speed : 0, frameDelta, vehicleProfile) : 0;
       if (isMoving && direction.lengthSquared() > 0.0001) {
         direction.normalize();
         const moveDist = (vehicleProfile ? vehicleSpeed : speed) * frameDelta;
@@ -889,11 +897,11 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
         }
         const moved = Math.hypot(root.position.x - prevX, root.position.z - prevZ);
         actualSpeed = frameDelta > 0 ? moved / frameDelta : 0;
-        if (moved > 0.0001) {
+        if (moved > 0.0001 && !cityDriving) {
           const desiredYaw = Math.atan2(direction.x, direction.z);
           const difference = Math.atan2(Math.sin(desiredYaw - root.rotation.y), Math.cos(desiredYaw - root.rotation.y));
           turn = difference;
-          root.rotation.y += vehicleProfile ? difference * (1 - Math.exp(-18 * frameDelta)) : difference;
+          root.rotation.y += difference * (1 - Math.exp(-(vehicleProfile ? 18 : 16) * frameDelta));
         }
         if (diagnostics.collided && moved < 0.0001) vehicleSpeed = 0;
       }
@@ -968,6 +976,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       pedalPhase = 0;
       vehicleRigs.setVehicle(vehicleId);
     },
+    setCityVehicleAppearance(color,gt){vehicleRigs.setCityAppearance(color,gt);},
     setVirtualInput(x = 0, y = 0) {
       virtualInput.x = Math.max(-1, Math.min(1, Number(x) || 0));
       virtualInput.y = Math.max(-1, Math.min(1, Number(y) || 0));
@@ -976,6 +985,7 @@ export function createPlayer(scene, shadowGenerator, spawn = { x: 0, z: 18 }, co
       sprinting = Boolean(active);
     },
     jump() {
+      if (keyboardBlocked() || (controls.cityDriving && vehicleRigs.getVehicleId()==='convertible')) return;
       if (airborne) return;
       jumpGroundY = root.position.y;
       jumpVelocity = 7.2;

@@ -8,3 +8,9 @@
 .farm-minimap button:focus-visible {outline:3px solid #49b7c6;outline-offset:2px;}
 .farm-minimap button:active {transform:translateY(1px);}
 .hud-modal-open .farm-minimap,.game-shell.in-venue .farm-minimap {display:none;}
+.farm-minimap.city-radar{top:auto;right:auto;left:20px;bottom:78px;width:180px;padding:0;background:#11191ed9;border:2px solid #ffffff45;border-radius:4px;font-family:Arial,sans-serif}
+.farm-minimap.city-radar .pt-minimap-disc{width:176px;height:150px;border-radius:2px;background:#202b31}
+.city-radar .farm-minimap-surface{border-radius:2px;box-shadow:none}
+.city-radar .pt-radar-location-pill{color:#fff;font-size:11px;padding:4px}
+.city-radar .farm-minimap-destination{background:transparent;color:#ddc98a;border-radius:0;font-size:11px}
+@media(pointer:coarse){.farm-minimap.city-radar{bottom:166px;left:12px;width:126px}.farm-minimap.city-radar .pt-minimap-disc{width:122px;height:110px}}

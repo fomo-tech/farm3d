@@ -1,6 +1,8 @@
 import { FARM_LOT_SPEC, farmLotPosition } from '../../../shared/farmLayout.js';
 import { WORLD_VILLAGES } from '../../../shared/villageLayout.js';
 import { TOWN_SPAWN } from '../../../shared/playerSpawn.js';
+import {CITY_REGION_BOUNDS,CITY_REGION_DISTRICTS} from './cityRegionLayout.js';
+import {IS_CITY_MODE} from './gameMode.js';
 
 const FARM_COLORS = ['#e6ad45', '#e87994', '#5f91c8', '#8a72b8', '#58a66f', '#d97745'];
 
@@ -24,19 +26,30 @@ export const WORLD_LAYOUT = Object.freeze({
   version: MAP_LAYOUT_VERSION,
   spawn: TOWN_SPAWN,
   zones: {
-    city: { id: 'city-center', label: 'Thành phố Bình Minh', x: 0, z: 0, radius: 58 },
+    city: { id: 'city-center', label: 'Vibe City', x: 0, z: 0, radius: 176 },
     countryside: { id: 'rural-hoa-mai', label: 'Đồng quê Hoa Mai', x: 0, z: 182, radius: 102 },
     village: { id: 'west-village', label: 'Làng Mộc Lan', x: -132, z: 0, radius: 48 },
     lake: { id: 'crystal-lake', label: 'Hồ Pha Lê', x: 165, z: 2, radius: 48 },
     beach: { id: 'sunrise-beach', label: 'Biển Bình Minh', x: 0, z: 340, radius: 64 },
   },
   cityDistricts: Object.freeze([
-    { id: 'civic', label: 'Quảng trường', x: 0, z: 0, color: '#f5b942' },
-    { id: 'shopping', label: 'Phố mua sắm', x: -34, z: -28, color: '#ec7aa8' },
-    { id: 'entertainment', label: 'Khu vui chơi', x: 34, z: -28, color: '#8b7bd8' },
-    { id: 'services', label: 'Dịch vụ', x: -34, z: 28, color: '#4da8c7' },
-    { id: 'community', label: 'Cộng đồng', x: 34, z: 28, color: '#65a85b' },
+    ...CITY_REGION_DISTRICTS,
+    { id: 'civic', label: 'Quảng trường trung tâm', x: 0, z: 0, color: '#f5b942' },
+    { id: 'shopping', label: 'Phố mua sắm', x: -84, z: -25, color: '#ec7aa8' },
+    { id: 'entertainment', label: 'Khu giải trí', x: 84, z: -25, color: '#8b7bd8' },
+    { id: 'services', label: 'Khu hành chính', x: -30, z: 28, color: '#4da8c7' },
+    { id: 'community', label: 'Khu dân cư', x: 84, z: 78, color: '#65a85b' },
+    { id: 'old-town', label: 'Phố cổ ven Tây', x: -194, z: -82, color: '#c98d68' },
+    { id: 'university', label: 'Khu đại học', x: 116, z: -176, color: '#7f9fe4' },
+    { id: 'industrial', label: 'Khu công nghiệp', x: -178, z: 188, color: '#a58b72' },
+    { id: 'airport', label: 'Sân bay Vibe City', x: 142, z: 188, color: '#7f8c9a' },
   ]),
+  cityMap: Object.freeze({
+    id: 'vibe-city-island-v4',
+    theme: 'crime-city',
+    bounds: Object.freeze(CITY_REGION_BOUNDS),
+    waterfront: Object.freeze({ x: 169, z: 48, width: 42, depth: 132 }),
+  }),
   routes: Object.freeze({
     cityRingRadius: 51,
     mainAvenueHalfWidth: 5.5,
@@ -93,6 +106,10 @@ export const RENDER_CONFIG = Object.freeze({
 });
 
 export function zoneAtPosition(x, z) {
+  if(IS_CITY_MODE){
+    const district=WORLD_LAYOUT.cityDistricts.reduce((nearest,d)=>Math.hypot(x-d.x,z-d.z)<Math.hypot(x-nearest.x,z-nearest.z)?d:nearest,WORLD_LAYOUT.cityDistricts[0]);
+    return {key:'city',...district,radius:150};
+  }
   const village = WORLD_VILLAGES.find(v => Math.abs(x - v.x) < 70 && Math.abs(z - v.z) < 110);
   if (village) return { key: 'countryside', id: village.id, label: village.name, ...village };
   const orderedZones = ['city', 'village', 'lake', 'beach'];

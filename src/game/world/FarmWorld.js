@@ -2,8 +2,8 @@ import { installRotatedPointer } from '../input/rotatedPointer.js';
 import { installSharedStaticGeometry } from '../rendering/SharedStaticGeometry.js';
 import { collectVenueMeshes } from '../rendering/collectVenueMeshes.js';
 import { selectVisiblePlayers } from '../network/visiblePlayers.js';
-import {createFortuneNPC} from '../npc/FortuneNPC.js';
-import {LOTTERY_CONFIG} from '../../../shared/lotteryConfig.js';
+import { createFortuneNPC } from '../npc/FortuneNPC.js';
+import { LOTTERY_CONFIG } from '../../../shared/lotteryConfig.js';
 import { findWalkingPathAsync } from '../physics/findWalkingPath.js';
 import { FrameSafeResize } from '../rendering/FrameSafeResize.js';
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera.js';
@@ -23,7 +23,6 @@ import { installNearbyShadows } from '../rendering/NearbyShadowCasters.js';
 import { applyWorldPowerPolicy, GRAPHICS_PRESETS, readGraphicsQuality, saveGraphicsQuality, calculateRenderDpr, RenderResolutionController, AutoGraphicsController } from '../rendering/GraphicsSettings.js';
 import { getModelWorkStats } from '../rendering/ModelAssetManager.js';
 import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder.js';
-import { Mesh } from '@babylonjs/core/Meshes/mesh.js';
 import { VertexBuffer } from '@babylonjs/core/Buffers/buffer.js';
 import { Scene } from '@babylonjs/core/scene.js';
 import { ShadowGenerator } from '@babylonjs/core/Lights/Shadows/shadowGenerator.js';
@@ -50,9 +49,8 @@ import { createBusRouteSteps } from '../transport/createBusRoute.js';
 import { FarmingSystem } from '../farming/FarmingSystem.js';
 import { createVillageElderNPC } from '../npc/VillageElderNPC.js';
 import { createObjectiveMarker } from './ObjectiveMarker.js';
-import { createMeadowTexture, createHoneyPathTexture, createHorizonSkirtTexture } from './createStylizedTextures.js';
-import { WORLD_PALETTE } from './worldDesignSystem.js';
-import { createCountryRoadSteps, createCountryRoad, createCulDeSac, createZebraCrosswalk } from './createModernRoadSystem.js';
+import { createMeadowTexture, createHorizonSkirtTexture } from './createStylizedTextures.js';
+import { createCountryRoadSteps, createCulDeSac, createZebraCrosswalk } from './createModernRoadSystem.js';
 import { chunkAt } from './WorldPartition.js';
 import { RENDER_CONFIG, WORLD_LAYOUT } from './worldLayout.js';
 import { ProceduralWorld } from './ProceduralWorld.js';
@@ -62,14 +60,12 @@ import { createAtmosphere } from './createAtmosphere.js';
 import { createFarmGateAndSign } from '../farming/createFarmGateAndMailbox.js';
 import { createFarmhouse, createStarterFarmhouse } from './createFarmhouse.js';
 import { createOpenAirCorral } from '../farming/createOpenAirCorral.js';
-import { createClassicRedBarn } from './landmarks/createSocialFarmstead.js';
 import { createVillageGate } from './landmarks/createVillageGate.js';
 import { createFashionBoutiqueInterior } from './landmarks/createFashionInterior.js';
 import { createCasinoLoungeInterior } from './landmarks/createCasinoInterior.js';
 import { createCinematicRenderingPipeline } from '../rendering/CinematicRenderingPipeline.js';
 import { showCharacterChatBubble } from '../player/CharacterChatBubble.js';
 import { createFoliageFactory } from './createFoliage.js';
-import { createFarmAnimalsSteps } from './createFarmAnimals.js';
 import { createVietnameseCountrysideSteps, createVietnameseCountryside } from './createVietnameseCountryside.js';
 import { FARM_LOT_SPEC } from '../../../shared/farmLayout.js';
 import { SHOP_CONFIG } from '../../../shared/shopConfig.js';
@@ -82,17 +78,16 @@ import { WorldCollisionSystem } from '../physics/WorldCollisionSystem.js';
 import { vehicleCollisionRadius } from '../../../shared/vehicleCollision.js';
 import { CASINO_TABLE_ANCHORS } from '../../../shared/casinoTableAnchors.js';
 import { createScenicLandscapesSteps, createScenicLandscapes } from './createScenicLandscapes.js';
-import { createVillageAmenitiesAndGreenbeltsSteps, createVillageAmenitiesAndGreenbelts } from './createVillageAmenities.js';
-import { getTerrainHeight, MEADOW_KNOLLS } from './TerrainHeightSystem.js';
+import { createVillageAmenitiesAndGreenbeltsSteps } from './createVillageAmenities.js';
+import { getTerrainHeight } from './TerrainHeightSystem.js';
 import { createInterVillagePlainsSteps, createInterVillagePlains } from './createInterVillagePlains.js';
 import { createRoadsideMeadowsSteps, createRoadsideMeadows } from './createRoadsideMeadows.js';
 import { createVillageWoodlandsSteps } from './createVillageWoodlands.js';
-import { createLivingMeadowSteps } from './createLivingMeadow.js';
 import { FoliageInstancingEngine } from './FoliageInstancingEngine.js';
 import { getWorldChunkStreamer } from './WorldChunkStreamer.js';
 import { BEACH_CONFIG, beachRoadSegments } from '../../../shared/beachConfig.js';
 import { FogStreamingController } from './FogStreamingController.js';
-import { createGrandWindingRiverSteps, createGrandWindingRiver, RIVER_CONTROL_POINTS } from './nature/GrandWindingRiver.js';
+import { createGrandWindingRiverSteps, RIVER_CONTROL_POINTS } from './nature/GrandWindingRiver.js';
 import { CHARACTER_LOD_CONFIG } from '../../../shared/characterConfig.js';
 import { farmAudio } from '../audio/FarmAudioSystem.js';
 
@@ -461,6 +456,8 @@ export class FarmWorld {
     this.canvas = canvas;
     this.onStatus = onStatus;
     this.callbacks = callbacks;
+    this.worldMode = 'city';
+    this.cityMode = true;
     this.callbacks.initialLocation = recoverTownSpawn(normalizeVenuePosition(callbacks.initialLocation));
     this.isMobile = document.documentElement.classList.contains('is-mobile-device') || window.matchMedia('(pointer: coarse)').matches;
     this.graphicsQuality = ['auto', 'ultra', 'balanced', 'eco'].includes(callbacks.graphicsQuality)
@@ -508,7 +505,7 @@ export class FarmWorld {
     this.venueMeshesMap = new Map();
     this.currentVenueMeshes = null;
     this.scheduler = new FrameBudgetScheduler(2.5);
-    this.collisionSystem = new WorldCollisionSystem();
+    this.collisionSystem = new WorldCollisionSystem({ cityMode: this.cityMode });
     this.cinematicTourActive = false;
     this.toggleCinematicTour = () => {
       this.cinematicTourActive = !this.cinematicTourActive;
@@ -863,12 +860,21 @@ export class FarmWorld {
       console.error('[FarmWorld] Lỗi trong pipeline khởi động thế giới:', err);
       if (!this.renderFailure && !this.scene.isDisposed) {
         if (this.bootReady) window.__farmDebug?.report(err, 'BACKGROUND SCENERY');
-        else this.callbacks.onFatalError?.('Chưa thể mở thị trấn. Hãy tải lại để thử lần nữa.');
+        else this.callbacks.onFatalError?.(`Không thể tải thế giới: ${err?.message || 'Lỗi khởi động không xác định'}`);
       }
     }
   }
 
   async populateBackgroundScenery() {
+      // City mode owns its own urban district. The broad countryside passes
+      // are intentionally skipped so they cannot repaint the skyline with
+      // meadow/greenbelt props after the playable frame is ready.
+      if (this.cityMode) {
+        this.roadsideMeadows = null;
+        this.livingMeadow = null;
+        window.__farmDebug?.mark(`City scenery: ${this.scene.meshes.length} meshes`);
+        return;
+      }
       if (this.isMobile && this.grandRiver?.scenerySteps) {
         await this.scheduleConstruction(this.grandRiver.scenerySteps(), 'nearby waterfront scenery', 5);
         if (this.scene.isDisposed) return;
@@ -897,11 +903,24 @@ export class FarmWorld {
   }
 
   scheduleConstruction(iterator, label, priority = 10) {
+    let lastCityPercentage=18;
     return new Promise((resolve, reject) => {
       this.scheduler.enqueue({
         next: () => {
           if (this.scene.isDisposed) { iterator.return?.(); resolve(null); return { done: true }; }
-          try { const result = iterator.next(); if (result.done) resolve(result.value); return result; }
+          try {
+            const result = iterator.next();
+            if(!this.bootReady&&typeof result.value==='string'&&result.value.startsWith('city:')){
+              const progress=result.value.match(/buildings (\d+)\/(\d+)/);
+              const percentage=progress?Math.round(30+30*Number(progress[1])/Number(progress[2])):result.value.includes('batching')?64:result.value.includes('landmarks')?28:result.value.includes('roads')?23:lastCityPercentage;
+              if(percentage>lastCityPercentage){
+                lastCityPercentage=percentage;
+                this.callbacks.onBootProgress?.({phase:'terrain',percentage,current:1,total:4,message:percentage>=60?'Đang hoàn tất các khu phố…':'Đang dựng thành phố…'});
+              }
+            }
+            if (result.done) resolve(result.value);
+            return result;
+          }
           catch (error) { reject(error); throw error; }
         },
         return: () => { iterator.return?.(); resolve(null); },
@@ -1099,53 +1118,65 @@ export class FarmWorld {
       subdivisions: 96,
     }, scene);
     yield;
-    const groundMat = new StandardMaterial('world-grass-mat', scene);
+    const groundMat = new StandardMaterial(this.cityMode ? 'world-city-ground-mat' : 'world-grass-mat', scene);
     yield;
-    groundMat.diffuseColor = Color3.White();
-    yield;
-    const groundPositions = ground.getVerticesData(VertexBuffer.PositionKind);
-    const groundColors = new Float32Array((groundPositions.length / 3) * 4);
-    for (let i = 0; i < groundPositions.length; i += 3) {
-      const x = groundPositions[i];
-      const z = groundPositions[i + 2];
-      const broadPatch = (Math.sin(x * 0.018 + Math.sin(z * 0.011) * 1.8) + 1) * 0.5;
-      const softPatch = (Math.sin(z * 0.021 - x * 0.008 + 1.7) + 1) * 0.5;
-      const shade = 0.96 + broadPatch * 0.028 + softPatch * 0.012;
-      const index = (i / 3) * 4;
-      groundColors[index] = Math.min(1, shade * 0.985 + 0.015);
-      groundColors[index + 1] = Math.min(1, shade);
-      groundColors[index + 2] = Math.min(1, shade * 0.86 + 0.08);
-      groundColors[index + 3] = 1;
+    if (this.cityMode) {
+      // Neutral asphalt/concrete base: the authored roads, sidewalks and
+      // district blocks provide the color accents in the city scene.
+      ground.isVisible = false;
+      groundMat.diffuseColor = Color3.FromHexString('#59616a');
+      groundMat.ambientColor = Color3.FromHexString('#3f4851');
+      groundMat.emissiveColor = Color3.FromHexString('#111820');
+      groundMat.specularColor = new Color3(0.12, 0.14, 0.16);
+      groundMat.specularPower = 64;
+      groundMat.useVertexColors = false;
+    } else {
+      groundMat.diffuseColor = Color3.White();
+      yield;
+      const groundPositions = ground.getVerticesData(VertexBuffer.PositionKind);
+      const groundColors = new Float32Array((groundPositions.length / 3) * 4);
+      for (let i = 0; i < groundPositions.length; i += 3) {
+        const x = groundPositions[i];
+        const z = groundPositions[i + 2];
+        const broadPatch = (Math.sin(x * 0.018 + Math.sin(z * 0.011) * 1.8) + 1) * 0.5;
+        const softPatch = (Math.sin(z * 0.021 - x * 0.008 + 1.7) + 1) * 0.5;
+        const shade = 0.96 + broadPatch * 0.028 + softPatch * 0.012;
+        const index = (i / 3) * 4;
+        groundColors[index] = Math.min(1, shade * 0.985 + 0.015);
+        groundColors[index + 1] = Math.min(1, shade);
+        groundColors[index + 2] = Math.min(1, shade * 0.86 + 0.08);
+        groundColors[index + 3] = 1;
+      }
+      ground.setVerticesData(VertexBuffer.ColorKind, groundColors, false, 4);
+      groundMat.useVertexColors = true;
+      yield;
+      // Matte toy-world grass: keep the painted color readable under the sun
+      // instead of letting a glossy highlight turn the meadow into a dark slab.
+      groundMat.ambientColor = new Color3(0.43, 0.54, 0.34);
+      yield;
+      groundMat.emissiveColor = new Color3(0.028, 0.045, 0.016);
+      yield;
+      groundMat.specularColor = new Color3(0.006, 0.008, 0.004);
+      yield;
+      groundMat.specularPower = 48;
+      yield;
+      yield 'boot: meadow texture';
+      const meadowTex = createMeadowTexture(scene);
+      yield;
+      meadowTex.anisotropicFilteringLevel = this.textureAnisotropy;
+      yield;
+      const worldRepeat = Math.round(FARM_CONFIG.worldSize / 12);
+      yield; // ~350 lần lặp (12m/lần lặp chuẩn Cozy Farmy)
+      meadowTex.uScale = worldRepeat;
+      yield;
+      meadowTex.vScale = worldRepeat;
+      yield;
+      meadowTex.wrapU = Texture.WRAP_ADDRESSMODE;
+      yield;
+      meadowTex.wrapV = Texture.WRAP_ADDRESSMODE;
+      yield;
+      groundMat.diffuseTexture = meadowTex;
     }
-    ground.setVerticesData(VertexBuffer.ColorKind, groundColors, false, 4);
-    groundMat.useVertexColors = true;
-    yield;
-    // Matte toy-world grass: keep the painted color readable under the sun
-    // instead of letting a glossy highlight turn the meadow into a dark slab.
-    groundMat.ambientColor = new Color3(0.43, 0.54, 0.34);
-    yield;
-    groundMat.emissiveColor = new Color3(0.028, 0.045, 0.016);
-    yield;
-    groundMat.specularColor = new Color3(0.006, 0.008, 0.004);
-    yield;
-    groundMat.specularPower = 48;
-    yield;
-    yield 'boot: meadow texture';
-    const meadowTex = createMeadowTexture(scene);
-    yield;
-    meadowTex.anisotropicFilteringLevel = this.textureAnisotropy;
-    yield;
-    const worldRepeat = Math.round(FARM_CONFIG.worldSize / 12);
-    yield; // ~350 lần lặp (12m/lần lặp chuẩn Cozy Farmy)
-    meadowTex.uScale = worldRepeat;
-    yield;
-    meadowTex.vScale = worldRepeat;
-    yield;
-    meadowTex.wrapU = Texture.WRAP_ADDRESSMODE;
-    yield;
-    meadowTex.wrapV = Texture.WRAP_ADDRESSMODE;
-    yield;
-    groundMat.diffuseTexture = meadowTex;
     yield;
     ground.material = groundMat;
     yield;
@@ -1156,13 +1187,14 @@ export class FarmWorld {
     yield;
     yield 'boot: player model';
     const player = createPlayer(scene, shadows, initialLocation || WORLD_LAYOUT.spawn, {
-      getSpeed: () => this.callbacks.getPlayerSpeed?.() || FARM_CONFIG.playerSpeed,
+      cityDriving:this.cityMode,
+      getSpeed: () => this.callbacks.getPlayerSpeed?.() ?? FARM_CONFIG.playerSpeed,
       getVehicle: () => this.callbacks.getVehicle?.() || 'walk',
       getOutfitId: () => this.callbacks.getOutfitId?.() || 'starter',
       getOutfitColor: () => this.callbacks.getOutfitColor?.() || '#f8fafc',
       getCustomization: () => this.callbacks.getCustomization?.() || null,
       isRidingBus: () => this.busRoute?.isPlayerRiding() || false,
-      getTerrainHeight: (x, z) => (this.currentVenue ? VENUES[this.currentVenue].interior.y : getTerrainHeight(x, z)),
+      getTerrainHeight: (x, z) => (this.currentVenue ? VENUES[this.currentVenue].interior.y : this.cityMode ? .08 : getTerrainHeight(x, z)),
       resolveMovement: (cx, cz, dx, dz) => {
         const vehicle = this.player?.getVehicleId?.() || 'walk';
         this.collisionSystem.playerRadius = vehicleCollisionRadius(vehicle);
@@ -1240,128 +1272,37 @@ export class FarmWorld {
     this.stylizedGrass = null;
     yield;
 
-    // === GIAI ĐOẠN D: HỆ THỐNG ĐỘNG VẬT NÔNG TRẠI CHIBI ===
-    yield 'boot: farm animals';
-    this.farmAnimals = yield* createFarmAnimalsSteps(scene, shadows);
-    yield;
-
+    this.farmAnimals = null;
     yield 'boot: open world';
-    this.openWorld = (yield* createOpenWorldSteps(scene, shadows, this.scheduler));
-    yield;
-      yield 'boot: countryside';
-      this.vietnameseCountryside = (yield* createVietnameseCountrysideSteps(scene, shadows));
-    yield;
-      // Multi-parcel Neighborhood: Each player owns their assigned lot (Lot 1, 2, 3, or 4)
-      const allTiles = [];
-    yield;
-      this.farmGates = [];
-    yield;
-      this.playerFarmId = this.callbacks.getPlayerFarmId?.() || null;
-    yield;
-      for (const [index, farm] of (WORLD_LAYOUT.farms).entries()) {
-        const initial = this.callbacks.initialLocation || WORLD_LAYOUT.spawn;
-        const isOwner = farm.id === this.playerFarmId;
-        const ownerName = isOwner ? (this.callbacks.getPlayerName?.() || farm.owner) : farm.owner;
-        const distance = Math.hypot(farm.x - initial.x, farm.z - initial.z);
-        const shouldBeDetailed = isOwner;
-
-        yield `boot: farm proxy ${farm.id}`;
-        const farmChunk = new FarmChunk(scene, { ...farm, lotNumber: index + 1 }, shadows, {
-          isOwner,
-          ownerName,
-        });
-        this.farmChunks.set(farm.id, farmChunk);
-        this.farmEstateRoots.set(farm.id, farmChunk.root);
-
-        if (shouldBeDetailed) {
-          farmChunk.showDetail(this.scheduler, (tiles) => {
-            this.farming?.addTiles(tiles);
-          });
-
-          const gate = createFarmGateAndSign(scene, {
-            id: farm.id,
-            x: farm.x,
-            z: farm.z,
-            lotNumber: index + 1,
-            owner: ownerName,
-            isOwner,
-          }, shadows, () => this.callbacks.onMailbox?.(farm));
-          this.farmGates.push({ ...gate, farmId: farm.id, lotNumber: index + 1, defaultOwner: farm.owner });
-          const security = this.farmGateStates?.get(farm.id);
-          if (security) gate.setOpen(security.open, security.owned, true);
-          farmChunk.setGate(gate);
-        } else {
-          farmChunk.showHLOD();
+    this.openWorld = (yield* createOpenWorldSteps(scene, shadows, this.scheduler, { worldMode: this.worldMode }));
+      if (this.cityMode) {
+        for (const collider of this.openWorld?.collisionBoxes || []) {
+          this.collisionSystem.addBox(collider.id, collider.minX, collider.maxX, collider.minZ, collider.maxZ);
         }
-
-      yield;
-    }
+      }
     yield;
-
-      this.farming = new FarmingSystem(scene, allTiles, this.onStatus, this.playerFarmId, {
-        playerFarmId: this.playerFarmId,
-        getPlayer: () => this.player,
-        onNetworkAction: data => this.callbacks.onNetworkAction?.(data),
-        getGateState: id => this.farmGateStates?.get(id),
-        onTheftProgress: state => this.callbacks.onTheftProgress?.(state),
-        onFarmGateInteract: id => {
-          if (id !== this.playerFarmId) this.onStatus?.('Chỉ chủ đất được đóng/mở cổng.');
-          else if (!this.interactFarmGate()) this.onStatus?.('Hãy đứng gần cổng để đóng/mở.');
-        },
-        onHelpNeighbor: neighborFarmId => this.callbacks.onHelpNeighbor?.(neighborFarmId),
-        onMailboxInteract: mailbox => {
-          if (mailbox.isOwner) {
-            this.onStatus?.('Hòm thư nông trại của bạn · Đang có 3 lời nhắn chúc mừng từ bạn bè!');
-          } else {
-            this.callbacks.onMailbox?.(mailbox);
-          }
-        },
-        getCrop: () => this.callbacks.getCrop?.() || 'carrot',
-        getUnlockedPlots: () => this.callbacks.getUnlockedPlots?.() ?? 0,
-        getUnlockedTileKeys: () => this.callbacks.getUnlockedTileKeys?.(),
-        onUnlockPlot: tileKey => this.callbacks.onUnlockPlot?.(tileKey),
-        onAction: action => this.callbacks.onFarmAction?.(action) ?? true,
-        openVenue: venue => this.callbacks.onVenue?.(venue),
-        enterVenue: venue => this.enterVenue(venue),
-        exitVenue: () => this.exitVenue(),
-        onNpcInteract: npcId => this.callbacks.onNpcInteract?.(npcId),
-        onAppleInteract: target=>this.callbacks.onAppleInteract?.(target),
-        onLivestockInteract: target => {
-          this.selectLivestock(target);
-        },
-        onLandInteract: farmId => this.callbacks.onLandInteract?.(farmId),
-        isTutorialCrop: () => this.callbacks.isTutorialCrop?.() ?? false,
-        getFreeSeeds: () => this.callbacks.getFreeSeeds?.() || 0,
-        move: point => this.player?.moveTo(point),
-        interact: (tile, action) => {
-          if (!this.player) return;
-          const tilePosition = tile.getAbsolutePosition?.().clone() || tile.position.clone();
-          const approach = tilePosition.subtract(this.player.root.position);
-          approach.y = 0;
-          if (approach.lengthSquared() <= 9) {
-            action();
-            return;
-          }
-          if (approach.lengthSquared() > 0) approach.normalize();
-          const target = tilePosition.subtract(approach.scale(1.7));
-          target.y = 0;
-          this.onStatus?.('Đang đi tới ô đất…');
-          this.player.moveTo(target, action);
-        },
-      });
-    yield;
+      if (!this.cityMode) {
+        yield 'boot: countryside';
+        this.vietnameseCountryside = (yield* createVietnameseCountrysideSteps(scene, shadows));
+        yield;
+      } else {
+        this.vietnameseCountryside = null;
+      }
+      this.farmGates = [];
+      this.playerFarmId = null;
+      this.farming = null;
       this.homeTier = this.callbacks.getHomeTier?.() || 1;
     yield;
-      this.ensurePlayerHome();
+      if (!this.cityMode) this.ensurePlayerHome();
     yield;
       yield 'boot: animal pen';
-      this.animalPen = createAnimalPen(scene, WORLD_LAYOUT.animalPen, shadows);
+      this.animalPen = this.cityMode ? null : createAnimalPen(scene, WORLD_LAYOUT.animalPen, shadows);
     yield;
       yield 'boot: bus route';
-      this.busRoute = yield* createBusRouteSteps(scene, shadows);
+      this.busRoute = this.cityMode ? null : yield* createBusRouteSteps(scene, shadows);
     yield;
       this.fortuneNPC = createFortuneNPC(scene,shadows);
-      this.villageElder = createVillageElderNPC(scene, shadows, WORLD_LAYOUT.villageElder, () => this.callbacks.onNpcInteract?.('village_elder'));
+      this.villageElder = this.cityMode ? null : createVillageElderNPC(scene, shadows, WORLD_LAYOUT.villageElder, () => this.callbacks.onNpcInteract?.('village_elder'));
     yield;
       yield 'boot: foliage prototypes';
       this.foliageInstancing = new FoliageInstancingEngine(scene, shadows);
@@ -1371,13 +1312,14 @@ export class FarmWorld {
       this.foliage = foliage;
     yield;
       this.villageGates = [];
-      for (const village of WORLD_LAYOUT.villages) {
+      if (!this.cityMode) for (const village of WORLD_LAYOUT.villages) {
         yield `boot: village gate ${village.id}`;
         this.villageGates.push({ villageId: village.id, ...createVillageGate(scene, village.gate, village.name, shadows, village.id, foliage) });
         yield;
       }
     yield;
 
+      if (!this.cityMode) {
       // === ĐẠI THỐNG SÔNG UỐN LƯỢN HOÀN VŨ & HỆ THỐNG CẦU VƯỢT GIAO THÔNG ===
       yield 'boot: winding river';
       this.grandRiver = yield* createGrandWindingRiverSteps(scene, null, shadows, { deferScenery: this.isMobile });
@@ -1684,9 +1626,10 @@ export class FarmWorld {
         yield;
       }
     yield;
+      }
       this.objectiveMarker = createObjectiveMarker(scene);
     yield;
-    const farmRoadTrees = [
+    const farmRoadTrees = this.cityMode ? [] : [
       { x: -11.5, z: 48, type: 'oak', scale: 1.25 }, { x: 11.5, z: 48, type: 'maple', scale: 1.25 },
       { x: -11.5, z: 62, type: 'oak', scale: 1.25 }, { x: 11.5, z: 62, type: 'maple', scale: 1.2 },
       { x: -11.5, z: 74, type: 'sakura', scale: 1.15 }, { x: 11.5, z: 74, type: 'oak', scale: 1.2 },
@@ -1703,7 +1646,7 @@ export class FarmWorld {
     yield;
 
     // Bụi cây cảnh cắt tỉa gọn gàng ven đường dẫn vào nông trại (đặt lùi ra ngoài vỉa hè)
-    for (const [_index, fz] of ([54, 66, 78]).entries()) {
+    for (const [_index, fz] of (this.cityMode ? [] : [54, 66, 78]).entries()) {
       if (!isRoadFootprintBlocked(-9.6, fz, 1.3, 1.3, 0.4)) foliage.createHydrangeaBush(-9.6, fz, 1.1, '#10b981');
       if (!isRoadFootprintBlocked(9.6, fz, 1.3, 1.3, 0.4)) foliage.createHydrangeaBush(9.6, fz, 1.1, '#10b981');
 
@@ -1712,7 +1655,7 @@ export class FarmWorld {
     yield;
 
     // Hiên nghỉ chân & ghế băng cho Bác Trưởng Làng tại vỉa hè phía Tây (x: -6.8, z: 76)
-    if (!isRoadFootprintBlocked(-7.4, 76.8, 1.3, 0.8, 0.4)) {
+    if (!this.cityMode && !isRoadFootprintBlocked(-7.4, 76.8, 1.3, 0.8, 0.4)) {
     const elderBench = MeshBuilder.CreateBox('elder-rest-bench', { width: 2.2, height: 0.45, depth: 0.9 }, scene);
     yield;
     elderBench.position.set(-7.4, 0.23, 76.8);
@@ -1732,7 +1675,7 @@ export class FarmWorld {
     yield;
     let nodeIndex = 0;
     yield;
-    for (let gx = -330; gx <= 330; gx += step) {
+    if (!this.cityMode) for (let gx = -330; gx <= 330; gx += step) {
       for (let gz = -300; gz <= 360; gz += step) {
         nodeIndex += 1;
         // Jitter tự nhiên theo hàm sin/cos (phân bổ sinh động, không tạo khoảng trống hoang vắng)
@@ -1745,7 +1688,7 @@ export class FarmWorld {
         const onRoad = isPointOnRoadCorridor(x, z, 5.8);
         const onFarmPlots = isPointInsideAnyFarmLot(x, z, 2.0) || WORLD_LAYOUT.farms.some(farm => Math.abs(x - farm.x) < 18 && Math.abs(z - farm.z) < 16);
         const inWater = isPointInLakeOrRiver(x, z, 3.5);
-        const onPlaza = Math.hypot(x, z) < 38;
+        const onPlaza = Math.hypot(x, z) < (this.cityMode ? 72 : 38);
 
         if (!onRoad && !onFarmPlots && !inWater && !onPlaza) {
           const variant = (nodeIndex % 4);
@@ -1780,7 +1723,7 @@ export class FarmWorld {
 }
     yield;
 
-    for (const [_index, sign] of (WORLD_LAYOUT.destinationSigns).entries()) { createSign(scene, sign.label, new Vector3(sign.x, 1.6, sign.z), sign.color); yield; }
+    if (!this.cityMode) for (const [_index, sign] of (WORLD_LAYOUT.destinationSigns).entries()) { createSign(scene, sign.label, new Vector3(sign.x, 1.6, sign.z), sign.color); yield; }
     yield;
 
     let busStatusElapsed = 0;
@@ -2090,6 +2033,16 @@ export class FarmWorld {
 
   setPlayerVehicle(vehicleId) {
     this.player?.setVehicle(vehicleId);
+    if(this.cityVehicleAppearance)this.player?.setCityVehicleAppearance(...this.cityVehicleAppearance);
+  }
+  setCityVehicleAppearance(color,gt=false){
+    if(!/^#[a-f0-9]{6}$/i.test(color||''))return;
+    this.cityVehicleAppearance=[color,gt];this.player?.setCityVehicleAppearance(color,gt);
+    const body=this.scene?.getMeshByName('city-car-body-1');
+    if(body){
+      if(!this.cityParkedPaint)this.cityParkedPaint=body.material.clone('city-personal-car-paint');
+      body.material=this.cityParkedPaint;body.material.diffuseColor=Color3.FromHexString(color);
+    }
   }
 
   setVirtualInput(x, y) {
@@ -2364,7 +2317,7 @@ export class FarmWorld {
 
   getPlayerState() {
     const position = this.player?.root.position || Vector3.Zero();
-    return { x: position.x, y: position.y, z: position.z, rotation: this.player?.root.rotation.y || 0, venue: this.currentVenue };
+    return { x: position.x, y: position.y, z: position.z, rotation: this.player?.root.rotation.y || 0, venue: this.currentVenue, speed: this.player?.getDiagnostics?.().speed || 0 };
   }
 
   correctPlayerPosition(authoritative) {

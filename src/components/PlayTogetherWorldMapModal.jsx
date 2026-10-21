@@ -3,6 +3,7 @@ import {WorldMapSurface} from './WorldMapSurface.jsx';
 import {worldMapDestinations} from '../game/world/worldMapDestinations.js';
 import {validMapPoint} from '../game/world/minimapLayout.js';
 import {zoneAtPosition} from '../game/world/worldLayout.js';
+import {IS_CITY_MODE} from '../game/world/gameMode.js';
 import {travelCost} from '../../shared/travelConfig.js';
 import {HudIcon} from './icons3d/HudIcon.jsx';
 import './FarmWorldMap.css';
@@ -34,19 +35,20 @@ export default function PlayTogetherWorldMapModal({isOpen,onClose,onTravel,sessi
  const destinations=useMemo(()=>worldMapDestinations(session?.farmId,objectiveTarget),[session?.farmId,objectiveTarget]);
  const selected=destinations.find(d=>d.id===selectedId),home=destinations.find(d=>d.id==='farm');
  const query=search.trim().toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
- const visible=destinations.filter(d=>(tab==='all'||tab==='villages'&&d.category==='village'||tab==='nature'&&d.category==='nature'||tab==='home'&&d.category==='home')&&(!query||(d.label+' '+d.badge).toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').includes(query)));
+ const visible=destinations.filter(d=>(tab==='all'||tab==='city'&&d.category==='city'||tab==='villages'&&d.category==='village'||tab==='nature'&&d.category==='nature'||tab==='home'&&d.category==='home')&&(!query||(d.label+' '+d.badge).toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').includes(query)));
+ const mapTabs=IS_CITY_MODE?[['all','Tất cả'],['city','Các khu phố']]:[['all','Tất cả'],['villages','12 làng'],['nature','Biển & hồ'],['home','Nhà của bạn']];
  const distance=d=>Math.round(Math.hypot(d.x-player.x,d.z-player.z));
  const cost=selected?travelCost(player,selected):0;
  const zone=worldRef?zoneAtPosition(player.x,player.z):currentZone;
  if(!isOpen)return null;
  return <div className="farm-map-backdrop" onClick={onClose}>
-  <section ref={dialog} className="farm-map-dialog" role="dialog" aria-modal="true" aria-labelledby="farm-map-title" onClick={e=>e.stopPropagation()}>
-   <header className="farm-map-header"><HudIcon asset="map" size={44}/><div><h2 id="farm-map-title">Bản đồ Bình Minh</h2><p>{zone?.label||'Thế giới nông trại'} · Bắc ở phía trên</p></div><button ref={close} type="button" className="farm-map-close" aria-label="Đóng bản đồ" onClick={onClose}>×</button></header>
-   <div className="farm-map-toolbar"><nav aria-label="Lọc điểm đến">{[['all','Tất cả'],['villages','12 làng'],['nature','Biển & hồ'],['home','Nhà của bạn']].map(([id,label])=><button key={id} type="button" aria-pressed={tab===id} onClick={()=>{setTab(id);setSelectedId(null);setZoom(1);}}>{label}</button>)}</nav><input aria-label="Tìm điểm đến" placeholder="Tìm điểm đến…" value={search} onChange={e=>{setSearch(e.target.value);setSelectedId(null);setZoom(1);}}/></div>
+  <section ref={dialog} className={`farm-map-dialog${IS_CITY_MODE?' city-map-dialog':''}`} role="dialog" aria-modal="true" aria-labelledby="farm-map-title" onClick={e=>e.stopPropagation()}>
+   <header className="farm-map-header"><HudIcon asset="map" size={44}/><div><h2 id="farm-map-title">{IS_CITY_MODE?'Bản đồ Vibe City':'Bản đồ Bình Minh'}</h2><p>{zone?.label||(IS_CITY_MODE?'Thành phố Vibe City':'Thế giới nông trại')} · Bắc ở phía trên</p></div><button ref={close} type="button" className="farm-map-close" aria-label="Đóng bản đồ" onClick={onClose}>×</button></header>
+   <div className="farm-map-toolbar"><nav aria-label="Lọc điểm đến">{mapTabs.map(([id,label])=><button key={id} type="button" aria-pressed={tab===id} onClick={()=>{setTab(id);setSelectedId(null);setZoom(1);}}>{label}</button>)}</nav><input aria-label="Tìm điểm đến" placeholder="Tìm điểm đến…" value={search} onChange={e=>{setSearch(e.target.value);setSelectedId(null);setZoom(1);}}/></div>
    <div className="farm-map-workspace">
     <div className="farm-map-canvas"><WorldMapSurface playerCoord={player} destinations={visible} selectedId={selectedId} selectedDestination={selected} onSelect={d=>setSelectedId(d.id)} zoom={zoom}/>
      <div className="farm-map-north" aria-label="Hướng Bắc">N ↑</div>
-     <div className="farm-map-zoom"><button type="button" aria-label="Thu nhỏ bản đồ" disabled={zoom<=1} onClick={()=>setZoom(z=>Math.max(1,z-.5))}>−</button><button type="button" aria-label="Đặt lại toàn cảnh" onClick={()=>{setZoom(1);setSelectedId(null);}}>{Math.round(zoom*100)}%</button><button type="button" aria-label="Phóng to bản đồ" disabled={zoom>=3} onClick={()=>setZoom(z=>Math.min(3,z+.5))}>+</button></div>
+     <div className="farm-map-zoom"><button type="button" aria-label="Thu nhỏ bản đồ" disabled={zoom<=1} onClick={()=>setZoom(z=>Math.max(1,z-.5))}>−</button><button type="button" aria-label="Đặt lại toàn cảnh" onClick={()=>{setZoom(1);setSelectedId(null);}}>{Math.round(zoom*100)}%</button><button type="button" aria-label="Phóng to bản đồ" disabled={zoom>=(IS_CITY_MODE?6:3)} onClick={()=>setZoom(z=>Math.min(IS_CITY_MODE?6:3,z+.5))}>+</button></div>
      <div className="farm-map-key"><span><i className="player"/>Bạn</span><span><i className="goal"/>Nhiệm vụ</span><span><i className="home"/>Nhà</span></div>
     </div>
     <aside className="farm-map-list" aria-label="Danh sách điểm đến">{visible.length?visible.map(d=><button key={d.id} type="button" aria-pressed={d.id===selectedId} onClick={()=>setSelectedId(d.id)}><HudIcon asset={d.asset} size={36}/><span><b>{d.label}</b><small>{d.badge}</small></span><em>{distance(d)} m</em></button>):<p className="farm-map-empty">{tab==='home'&&!home?'Bạn chưa có nông trại.':'Không tìm thấy điểm đến.'}</p>}</aside>

@@ -1,4 +1,5 @@
 import { isPointOnRoadCorridor } from '../world/RoadSafetyZone.js';
+import {insideCityCoast,insideCityLake} from '../world/cityRegionLayout.js';
 import { APPLE_ORCHARD } from '../../../shared/appleOrchard.js';
 import {networkWaterAt,networkBridgeAt} from '../../../shared/waterNetwork.js';
 /**
@@ -16,7 +17,8 @@ import { lakeDeepWaterAt } from '../../../shared/lakeConfig.js';
 import { TOWN_FOUNTAIN, TOWN_SPAWN, insideTownFountain } from '../../../shared/playerSpawn.js';
 
 export class WorldCollisionSystem {
-  constructor() {
+  constructor({ cityMode = false } = {}) {
+    this.cityMode = Boolean(cityMode);
     this.staticBoxes = [];
     this.staticCircles = [];
     this.venueWalls = [];
@@ -35,6 +37,7 @@ export class WorldCollisionSystem {
     for (const [kind, venue] of Object.entries(VENUE_LAYOUT)) {
       const { x, z, yaw } = venue.exterior;
       const addWall = (part, localX, localZ, halfWidth, halfDepth) => {
+        if(this.cityMode)return;
         this.venueWalls.push({
           id: `${kind}-${part}`, x: x + localX * Math.cos(yaw) + localZ * Math.sin(yaw),
           z: z - localX * Math.sin(yaw) + localZ * Math.cos(yaw),
@@ -107,6 +110,7 @@ export class WorldCollisionSystem {
    * Initializes static landmark and municipal building colliders.
    */
   initStaticColliders() {
+    if (this.cityMode) return;
     // 0. Đài phun nước trung tâm (Central Fountain) tại (0, 0)
     // Đường kính hồ 18m, vành đá torus dày 0.7m => bán kính r = 9.35m
     this.addCircle('plaza-central-fountain', TOWN_FOUNTAIN.x, TOWN_FOUNTAIN.z, TOWN_FOUNTAIN.radius);
@@ -166,6 +170,7 @@ export class WorldCollisionSystem {
    * Includes house, barn, and parcel perimeter fences (preserving 5.5m open front gate).
    */
   initFarmColliders() {
+    if (this.cityMode) return;
     if (!WORLD_LAYOUT.farms) return;
 
     WORLD_LAYOUT.farms.forEach(farm => {
@@ -286,6 +291,10 @@ export class WorldCollisionSystem {
    * Prevents player from penetrating into hollow mountain meshes.
    */
   initMountainColliders() {
+    if (this.cityMode) {
+      this.mountainColliders = [];
+      return;
+    }
     this.mountainColliders = [];
     const countTier1 = 26;
     for (let i = 0; i < countTier1; i++) {
@@ -324,9 +333,13 @@ export class WorldCollisionSystem {
    * @returns {boolean} True if point collides with any solid obstacle.
    */
   isColliding(cx, cz, r = this.playerRadius, venue = null) {
-    if (!venue && !networkBridgeAt(cx,cz) && networkWaterAt(cx,cz,r)) return true;
-    if (!venue && lakeDeepWaterAt(cx, cz, r)) return true;
-    if(!venue && beachDeepWaterAt(cx,cz)) return true;
+    if(this.cityMode&&!venue&&(!insideCityCoast(cx,cz)||insideCityLake(cx,cz,r)))return true;
+    // City mode owns its compact waterfront colliders. Do not let the legacy
+    // farm world's river/lake/ocean envelopes create an invisible wall over
+    // the new city bridge and quay.
+    if (!this.cityMode && !venue && !networkBridgeAt(cx,cz) && networkWaterAt(cx,cz,r)) return true;
+    if (!this.cityMode && !venue && lakeDeepWaterAt(cx, cz, r)) return true;
+    if (!this.cityMode && !venue && beachDeepWaterAt(cx,cz)) return true;
     if (venue && this.interiorBoxes.has(venue)) {
       const room = VENUE_LAYOUT[venue]?.interior;
       if (room) {
@@ -344,7 +357,8 @@ export class WorldCollisionSystem {
       // Network water uses its exact shoreline above, not coarse raster bounds.
       if(b.id.startsWith('water-network-')) continue;
       const dsq = (cx - b.cx) * (cx - b.cx) + (cz - b.cz) * (cz - b.cz);
-      if (dsq > searchRadiusSq) continue;
+      const boxReachSq=this.cityMode?Math.max(searchRadiusSq,(Math.hypot(b.maxX-b.minX,b.maxZ-b.minZ)/2+r)**2):searchRadiusSq;
+      if (dsq > boxReachSq) continue;
 
       // Closest point on box
       if (this.circleHitsBox(cx, cz, r, b)) {
@@ -400,7 +414,7 @@ export class WorldCollisionSystem {
     }
 
     // 4. World Border Perimeter & Procedural Mountain Base Colliders
-    if (!venue) {
+    if (!venue && !this.cityMode) {
       // The ocean is in the central coastal corridor only. Southern villages
       // at x≈±300 extend past z=450 and must remain reachable on land.
       if (cz > 450 && Math.abs(cx) < 180) {
@@ -446,7 +460,7 @@ export class WorldCollisionSystem {
    */
   resolveMovement(curX, curZ, dx, dz, venue = null) {
     this.flushSceneObstacles?.();
-    if (!venue) for (const [id, open] of this.farmGateStates) {
+    if (!venue && !this.cityMode) for (const [id, open] of this.farmGateStates) {
       if (farmBoundaryBlocked(id, open, { x: curX, z: curZ }, { x: curX + dx, z: curZ + dz })) return { x: curX, z: curZ, collided: true };
     }
     if (![curX, curZ, dx, dz].every(Number.isFinite)) {

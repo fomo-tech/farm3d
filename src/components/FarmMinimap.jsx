@@ -4,7 +4,7 @@ import {farmAudio} from '../game/audio/FarmAudioSystem.js';
 import {MINIMAP_SCALE,minimapHeading,selectMinimapMarkers,validMapPoint,projectMapPoint} from '../game/world/minimapLayout.js';
 import './FarmMinimap.css';
 import {FarmMapTerrain} from './FarmMapTerrain.jsx';
-export function FarmMinimap({worldRef,farmTarget,objectiveTarget,onOpenMap}){
+export function FarmMinimap({worldRef,farmTarget,objectiveTarget,onOpenMap,cityMode=false}){
  const [position,setPosition]=useState({x:0,z:0,yaw:0});
  const clipId='minimap-'+useId().replace(/:/g,'');
  useEffect(()=>{
@@ -25,10 +25,10 @@ export function FarmMinimap({worldRef,farmTarget,objectiveTarget,onOpenMap}){
  const markers=selectMinimapMarkers(position,farmTarget,objectiveTarget);
  const distance=validMapPoint(objectiveTarget)?projectMapPoint(objectiveTarget,position).distance:null;
  const open=e=>{e.stopPropagation();try{farmAudio.playPop?.();}catch{}onOpenMap?.();};
- return <aside className="pt-chibi-minimap-root farm-minimap" aria-label="Bản đồ nhỏ">
+ return <aside className={`pt-chibi-minimap-root farm-minimap${cityMode?' city-radar':''}`} aria-label="Bản đồ nhỏ">
   <button type="button" className="pt-minimap-disc" onClick={open} aria-label="Mở bản đồ thế giới" title="Mở bản đồ (M)">
    <svg className="farm-minimap-surface" viewBox="0 0 100 100" aria-hidden="true">
-    <defs><clipPath id={clipId}><circle cx="50" cy="50" r="44"/></clipPath></defs>
+    <defs><clipPath id={clipId}>{cityMode?<rect x="3" y="3" width="94" height="94" rx="2"/>:<circle cx="50" cy="50" r="44"/>}</clipPath></defs>
     <circle cx="50" cy="50" r="49" fill="#e0eee5"/>
     <circle cx="50" cy="50" r="47" fill="#fffaf0" stroke="#fff" strokeWidth="1.5"/>
     <g clipPath={`url(#${clipId})`}><circle cx="50" cy="50" r="44" fill="#b4d99b"/>
@@ -42,7 +42,7 @@ export function FarmMinimap({worldRef,farmTarget,objectiveTarget,onOpenMap}){
     <circle cx="50" cy="50" r="9" fill="#276779" opacity=".12"/>
     <circle cx="50" cy="50" r="6.8" fill="#fff9ed"/>
     <g transform={`rotate(${minimapHeading(position.yaw)} 50 50)`} data-player-heading={minimapHeading(position.yaw)}><path d="M50 41 L55.5 55 L50 52.5 L44.5 55 Z" fill="#f58243" stroke="#fff" strokeWidth="1.7" strokeLinejoin="round"/></g>
-    <circle cx="50" cy="50" r="44" fill="none" stroke="#6e9c842e" strokeWidth="1"/>
+    {!cityMode&&<circle cx="50" cy="50" r="44" fill="none" stroke="#6e9c842e" strokeWidth="1"/>}
     <g className="farm-minimap-north"><rect x="44" y="1" width="12" height="11" rx="5" fill="#fff7e5"/><text x="50" y="9" textAnchor="middle" fill="#395765" fontSize="7" fontWeight="900">N</text></g>
    </svg>
   </button>

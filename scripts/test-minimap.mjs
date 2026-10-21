@@ -3,6 +3,7 @@ import {MINIMAP_RADIUS,MINIMAP_SCALE,MINIMAP_ROADS,MINIMAP_PARCELS,MINIMAP_POIS,
 import {WORLD_VILLAGES} from '../shared/villageLayout.js';
 import {beachRoadSegments} from '../shared/beachConfig.js';
 import {VENUE_LAYOUT} from '../shared/venueLayout.js';
+import {IS_CITY_MODE} from '../src/game/world/gameMode.js';
 const origin={x:0,z:0};
 for(const [yaw,heading] of [[0,180],[Math.PI/2,90],[Math.PI,0],[-Math.PI/2,270]])assert.ok(Math.abs(minimapHeading(yaw)-heading)<1e-8);
 const far={x:2000,z:-2000};
@@ -22,7 +23,11 @@ for(const player of [origin,{x:0,z:320},{x:145,z:2},...WORLD_VILLAGES.map(v=>({x
  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++)assert.ok(Math.hypot(nodes[i].x-nodes[j].x,nodes[i].y-nodes[j].y)>=13);
 }
 assert.equal(selectMinimapMarkers(origin,{x:NaN,z:0},{x:0,z:Infinity}).some(p=>p.kind!=='poi'),false);
-assert.equal(MINIMAP_PARCELS.length,24*WORLD_VILLAGES.length);
-for(const road of beachRoadSegments())assert.ok(MINIMAP_ROADS.some(r=>r.id===road.id&&r.x===road.x&&r.z===road.z&&r.length===road.length));
+assert.equal(MINIMAP_PARCELS.length,IS_CITY_MODE?0:24*WORLD_VILLAGES.length);
+if(!IS_CITY_MODE)for(const road of beachRoadSegments())assert.ok(MINIMAP_ROADS.some(r=>r.id===road.id&&r.x===road.x&&r.z===road.z&&r.length===road.length));
 for(const [id,venue] of Object.entries(VENUE_LAYOUT))assert.ok(MINIMAP_POIS.some(p=>p.id===id&&p.x===venue.entrance.x&&p.z===venue.entrance.z));
-console.log('PASS: north-up headings, unclamped terrain, rim navigation, collision priorities, 12 village layouts and coastal roads');
+if(IS_CITY_MODE){
+ assert.ok(MINIMAP_ROADS.some(r=>r.id==='city-north'&&r.width===12));
+ assert.ok(MINIMAP_POIS.some(p=>p.id==='city-waterfront'));
+}
+console.log(`PASS: ${IS_CITY_MODE?'city':'farm'} minimap headings, navigation, POIs and road layout`);

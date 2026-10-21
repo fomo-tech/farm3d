@@ -8,3 +8,15 @@
 .farm-map-footer{display:flex;align-items:center;gap:12px;padding:12px 18px;min-height:64px;flex-shrink:0}.farm-map-selected{flex:1;min-width:0}.farm-map-selected b{display:block;font-size:14px}.farm-map-selected small{display:block;margin-top:3px;font-size:12px;color:#64818a}.farm-map-travel,.farm-map-home{display:flex;align-items:center;gap:6px;border:0;border-radius:12px;padding:10px 14px;background:#49b7c6;color:#fff;font-size:13px!important;font-weight:800!important;min-height:40px}.farm-map-home{margin-left:auto;background:#e0f1ef;color:#25475b}.farm-map-hint{font-size:13px;color:#64818a}
 @media(max-width:700px){.farm-map-backdrop{padding:8px}.farm-map-dialog{height:calc(100dvh - 16px);border-radius:18px}.farm-map-header{padding:10px;gap:8px}.farm-map-header h2{font-size:18px}.farm-map-toolbar{padding:0 10px 9px;flex-direction:column;gap:7px}.farm-map-toolbar nav{overflow:auto}.farm-map-toolbar button{white-space:nowrap;padding:7px 9px}.farm-map-toolbar input{width:100%;min-height:36px}.farm-map-workspace{grid-template-columns:1fr;grid-template-rows:minmax(180px,1fr) 145px}.farm-map-list{border-left:0;border-top:1px solid #d8e5d8;padding:6px}.farm-map-list button{min-height:49px}.farm-map-footer{padding:9px;gap:7px;flex-wrap:wrap}.farm-map-footer>.hud-object-icon{width:30px;height:30px}.farm-map-selected b{font-size:12px}.farm-map-travel{font-size:12px!important;padding:9px}.farm-map-hint{font-size:11px}.farm-map-key{gap:8px;font-size:10px}}
 @media(max-height:500px) and (min-width:701px){.farm-map-header{padding:6px 12px}.farm-map-header h2{font-size:17px}.farm-map-header p{display:none}.farm-map-toolbar{padding-bottom:6px}.farm-map-footer{padding:6px 12px;min-height:48px}.farm-map-workspace{grid-template-columns:minmax(0,1fr) 230px}}
+.city-map-dialog{background:#171c20;border:1px solid #626c73;border-radius:5px;box-shadow:0 18px 60px #0009;color:#e7ecef}
+.city-map-dialog .farm-map-canvas,.city-map-dialog .farm-world-surface{background:#20282c}
+.city-map-dialog .farm-map-header,.city-map-dialog .farm-map-toolbar,.city-map-dialog .farm-map-footer{background:#171c20}
+.city-map-dialog .farm-map-header h2,.city-map-dialog .farm-map-selected b{color:#f3f5f6}
+.city-map-dialog .farm-map-header p,.city-map-dialog .farm-map-selected small,.city-map-dialog .farm-map-hint{color:#a8b3ba}
+.city-map-dialog .farm-map-list{background:#20262b;border-color:#46515a}
+.city-map-dialog .farm-map-list button,.city-map-dialog .farm-map-toolbar button,.city-map-dialog .farm-map-close,.city-map-dialog .farm-map-north,.city-map-dialog .farm-map-zoom,.city-map-dialog .farm-map-key{background:#303a42;color:#e7ecef;border-radius:4px}
+.city-map-dialog .farm-map-list button[aria-pressed=true]{background:#3c464e;border-color:#e3b460}
+.city-map-dialog .farm-map-list small,.city-map-dialog .farm-map-list em{color:#b0bdc5}
+.city-map-dialog .farm-map-workspace{border-color:#46515a}
+.city-map-dialog .farm-map-zoom button{background:#46525a;color:#fff;border-radius:3px}
+.city-map-dialog .farm-map-toolbar input{background:#252e35;border-color:#56626b;color:#fff;border-radius:4px}

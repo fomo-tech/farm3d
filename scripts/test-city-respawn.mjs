@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {applyCityAction,CITY_GARAGE} from '../shared/cityGameplay.js';
+import {cityVitals,CITY_RESPAWN} from '../shared/cityVitals.js';
+import {createCityCollision} from '../server/CityWorldPolicy.js';
+const p={coins:500,xp:0,vehicle:'walk',ownedVehicles:['walk']},c={worldMode:'city',...CITY_GARAGE};
+applyCityAction(p,'city_enter',{},c,1000);assert.equal(cityVitals(p.city).health,100);
+assert.throws(()=>applyCityAction(p,'city_respawn',{},c,2000));applyCityAction(p,'city_vehicle',{},c,3000);
+p.city.contract={id:'south-delivery',startedAt:3000};
+for(const now of [10000,14000,18000])applyCityAction(p,'city_vehicle_impact',{}, {...c,trustedCityImpact:true,impactSpeed:30},now);
+assert.equal(cityVitals(p.city).health,0);assert.equal(p.vehicle,'walk');assert.equal(p.city.contract,null);assert.equal(p.city.history.at(-1).status,'failed');
+assert.throws(()=>applyCityAction(p,'city_vehicle',{},c,19000));assert.throws(()=>applyCityAction(p,'city_garage_repair',{},c,19000));assert.throws(()=>applyCityAction(p,'city_respawn',{},c,20000));
+const saved=JSON.parse(JSON.stringify(p));assert.equal(cityVitals(saved.city).downedAt,18000);
+const reply=applyCityAction(saved,'city_respawn',{},c,23000);assert.deepEqual(reply.cityRespawn,CITY_RESPAWN);assert.equal(cityVitals(saved.city).health,100);assert.equal(saved.coins,500);assert.equal(saved.city.garage.health.roadster,0);
+assert.throws(()=>applyCityAction(saved,'city_respawn',{},c,23001));
+assert.equal(createCityCollision().isColliding(CITY_RESPAWN.x,CITY_RESPAWN.z,.45),false);
+console.log('PASS respawn: severe crash, downed locks, mission failure history, reload timer, delayed server respawn, safe position, no heal-car/money reset');

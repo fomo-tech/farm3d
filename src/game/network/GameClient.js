@@ -1,4 +1,5 @@
 import { applyWorldDelta } from '../../../shared/worldDelta.js';
+import {cityActionAllowed} from '../../../shared/cityOnlyPolicy.js';
 import { createRuntimeId } from '../runtime/BrowserRuntime.js';
 
 /**
@@ -282,10 +283,10 @@ export class GameClient {
 
   sendPosition(position) { this.send({ type: 'move', ...position }); }
   sendTravel(position) { this.send({ type: 'travel', x: position.x, y: position.y || 0, z: position.z, venue: position.venue || null }); }
-  sendFarmAction(actionData) { return this.sendReliable({ type: 'farm_action', ...actionData }); }
-  sendMailboxHeart(farmId) { this.send({ type: 'mailbox_heart', farmId }); }
+  sendFarmAction() { return false; }
+  sendMailboxHeart() { return false; }
   sendEmote(emote) { this.send({ type: 'emote', emote }); }
   sendChat(text, emote = null) { this.send({ type: 'chat', text, emote }); }
-  sendGameAction(action, payload = {}) { return this.sendReliable({ type: 'game_action', action, payload }); }
+  sendGameAction(action, payload = {}) { if(!cityActionAllowed(action))return false;return this.sendReliable({ type: 'game_action', action, payload }); }
   sendSocialAction(action, friendId) { this.send({ type: 'social_action', action, friendId }); }
 }
